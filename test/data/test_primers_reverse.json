@@ -1,0 +1,7 @@
+{
+    "Bacterial:v6" :  
+        { 
+            "SEQ_1_F_Primer"  : {"domain":"archaea", "region":"v6", "direction":"R", "sequence":"GGCCGG"},                        
+            "TAT_R_Primer" : {"domain":"archaea", "region":"v6", "direction":"F", "sequence":"AAAAA"}
+        }
+}

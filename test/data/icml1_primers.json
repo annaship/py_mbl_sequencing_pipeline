@@ -1,0 +1,8 @@
+{
+    "Archeal:v6" :  
+        { 
+			"1048R" : { "direction" : "R", "sequence" : "GWGGTRCATGGCY?GY?CG", "region" : "v6", "domain":"archaea"},
+			"958F" :  { "direction" : "F", "sequence" : "AATTGGA.?TCAACGCC.G", "region" : "v6", "domain":"archaea"}
+
+        }
+}

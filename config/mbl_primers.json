@@ -1,0 +1,93 @@
+{
+	"Eukaryal:ITS1" : 
+		{
+			"ITS-1F" :  {"domain":"eukarya", "region":"ITS1", "direction":"F","sequence":"GTAAAAGTCGTAACAAGGTTTC"},
+			"ITS-1R" :  {"domain":"eukarya", "region":"ITS1", "direction":"R","sequence":"GTGAATCATCGARTCTTTGAAC"}
+		},
+    "Bacterial:v1v3" : 
+        {
+            "534R-SHERI-1" : {"domain":"bacteria", "region":"v1v3", "direction":"R", "sequence":"GTNTTACNGCGGCKGCTG" },
+            "534R-SHERI-2" : {"domain":"bacteria", "region":"v1v3", "direction":"R", "sequence":"TACGGGAGGCAGCAG" },
+            "8F-SHERI"   : {"domain":"bacteria", "region":"v1v3", "direction":"F", "sequence":"GAGTTTGATCNTGGCTCAG" }
+        },
+    "Archaeal:v6" :  
+        { 
+            "958F"  : {"domain":"archaea", "region":"v6", "direction":"F", "sequence":"AATTGGA.?TCAACGCC.G"},                        
+            "1048R" : {"domain":"archaea", "region":"v6", "direction":"R", "sequence":"GWGGTRCATGGCY?GY?CG"}
+        },
+    "Archaeal:v6v4" : 
+        {
+            "685F-a" : {"domain":"archaea", "region":"v6v4", "direction":"F", "sequence":"G[TA]AG[GA][GA]GT[GA]AAAT" },
+            "1048R"  : {"domain":"archaea", "region":"v6v4", "direction":"R", "sequence":"GWGGTRCATGGCY?GY?CG" }
+        },
+    "Bacterial:v3" : 
+        {
+            "338F" : {"domain":"bacteria", "region":"v3", "direction":"F", "sequence":"ACTCCTACGGGAGGCAGCAG" },
+            "533R" : {"domain":"bacteria", "region":"v3", "direction":"R", "sequence":"GTGCCAGCAGCCGCGGTAA" }
+        },
+    "Bacterial:v3v1" : 
+        {
+            "534R-1" : {"domain":"bacteria", "region":"v3v1", "direction":"R", "sequence":"CCAGCAGCCGCGGTAAT" },
+            "534R-2" : {"domain":"bacteria", "region":"v3v1", "direction":"R", "sequence":"CCAGCAGCTGCGGTAA." },
+            "8F-2"   : {"domain":"bacteria", "region":"v3v1", "direction":"F", "sequence":"AGAGTTTGATCCTGGCTCAG" }
+        },
+    "Bacterial:v3v5" : 
+        {
+            "341F-1" : {"domain":"bacteria", "region":"v3v5", "direction":"F", "sequence":"CCTACGGGAGGCAGCAG" },
+            "341F-2" : {"domain":"bacteria", "region":"v3v5", "direction":"F", "sequence":"CCTACGGG.GGC[AT]GCAG" },
+            "341F-3" : {"domain":"bacteria", "region":"v3v5", "direction":"F", "sequence":"TCTACGGAAGGCTGCAG" },
+            "785F-a" : {"domain":"bacteria", "region":"v3v5", "direction":"R", "sequence":"GGATTAG.TACCC" }
+        },
+    "Bacterial:v4v5" : 
+        {
+            "518F-1" : {"domain":"bacteria", "region":"v4v5", "direction":"F", "sequence":"CCAGCAGCCGCGGTAA." },
+            "518F-2" : {"domain":"bacteria", "region":"v4v5", "direction":"F", "sequence":"CCAGCAGCTGCGGTAA." },
+            "926R-1" : {"domain":"bacteria", "region":"v4v5", "direction":"R", "sequence":"ACT[CT]AAA.GAATTGACGG" },
+            "926R-2" : {"domain":"bacteria", "region":"v4v5", "direction":"R", "sequence":"ACTCAAAAGAATTGACGG" },
+            "926R-3" : {"domain":"bacteria", "region":"v4v5", "direction":"R", "sequence":"ACTCAAAGAAATTGACGG" }
+        },
+    "Bacterial:v4v6" : 
+        {
+            "1046F-1" : {"domain":"bacteria", "region":"v4v6", "direction":"F", "sequence":"CGACAGCCATGCA.CACCT" },
+            "1046F-2" : {"domain":"bacteria", "region":"v4v6", "direction":"F", "sequence":"CGACAACCATGCA.CACCT" },
+            "1046F-3" : {"domain":"bacteria", "region":"v4v6", "direction":"F", "sequence":"CGACGGCCATGCA.CACCT" },
+            "1046F-4" : {"domain":"bacteria", "region":"v4v6", "direction":"F", "sequence":"CGACGACCATGCA.CACCT" },
+            "534R-1"  : {"domain":"bacteria", "region":"v4v6", "direction":"R", "sequence":"CCAGCAGCCGCGGTAAT" },
+            "534R-2"  : {"domain":"bacteria", "region":"v4v6", "direction":"R", "sequence":"CCAGCAGCTGCGGTAA." }
+        },
+    "Bacterial:v5v3" : 
+        {
+            "909F-1" : {"domain":"bacteria", "region":"v5v3", "direction":"F", "sequence":"CCGTCAATTC.?TTT.AGT" },
+            "909F-2" : {"domain":"bacteria", "region":"v5v3", "direction":"F", "sequence":"CCGTCAATTCTTTTGAGT" },
+            "909F-3" : {"domain":"bacteria", "region":"v5v3", "direction":"F", "sequence":"CCGTCAATTTCTTTGAGT" },
+            "357R-1" : {"domain":"bacteria", "region":"v5v3", "direction":"R", "sequence":"CTGCTGCCTCCCGTAGG" },
+            "357R-2" : {"domain":"bacteria", "region":"v5v3", "direction":"R", "sequence":"CTGC.GCC.CCCGTAGG" },
+            "357R-3" : {"domain":"bacteria", "region":"v5v3", "direction":"R", "sequence":"CTGCAGCCTTCCGTAGA" }
+        },
+    "Bacterial:v6" : 
+        {
+            "967F-AQ"   : {"domain":"bacteria", "region":"v6", "direction":"F", "sequence":"CTAACCGA.GAACCT[CT]ACC" },
+            "967F-PP"   : {"domain":"bacteria", "region":"v6", "direction":"F", "sequence":"C.ACGCGAAGAACCTTA.C" },
+            "967F-UC1"  : {"domain":"bacteria", "region":"v6", "direction":"F", "sequence":"CAACGCGAAAA+CCTTACC" },
+            "967F-UC2"  : {"domain":"bacteria", "region":"v6", "direction":"F", "sequence":"CAACGCGCAGAACCTTACC" },
+            "967F-UC3"  : {"domain":"bacteria", "region":"v6", "direction":"F", "sequence":"ATACGCGA[AG]GAACCTTACC" },
+            "1046R"     : {"domain":"bacteria", "region":"v6", "direction":"R", "sequence":"AGGTG.?TGCATGG*CTGTCG" },
+            "1046R-AQ1" : {"domain":"bacteria", "region":"v6", "direction":"R", "sequence":"AGGTG.?TGCATGG*CCGTCG" },
+            "1046R-AQ2" : {"domain":"bacteria", "region":"v6", "direction":"R", "sequence":"AGGTG.?TGCATGG*TCGTCG" },
+            "1046R-PP"  : {"domain":"bacteria", "region":"v6", "direction":"R", "sequence":"AGGTG.?TGCATGG*TTGTCG" }
+        },
+    "Bacterial:v6v4" : 
+        {
+            "565F"    : {"domain":"bacteria", "region":"v6v4", "direction":"F", "sequence":"TGGGCGTAAAG" },
+            "1064R-1" : {"domain":"bacteria", "region":"v6v4", "direction":"R", "sequence":"AGGTG.TGCATGGCTGTCG" },
+            "1064R-2" : {"domain":"bacteria", "region":"v6v4", "direction":"R", "sequence":"AGGTG.TGCATGGTTGTCG" },
+            "1064R-3" : {"domain":"bacteria", "region":"v6v4", "direction":"R", "sequence":"AGGTG.TGCATGGCCGTCG" },
+            "1064R-4" : {"domain":"bacteria", "region":"v6v4", "direction":"R", "sequence":"AGGTG.TGCATGGTCGTCG" }
+        },
+    "Eukaryal:v9" :
+        {
+            "1380F" : {"domain":"eukarya", "region":"v9", "direction":"F", "sequence":"CCC+TGCC.TTT+GTACACAC..?CCC+" },
+            "1389F" : {"domain":"eukarya", "region":"v9", "direction":"F", "sequence":"TTGTACACACCGCCC+" },
+            "1510R" : {"domain":"eukarya", "region":"v9", "direction":"R", "sequence":"GTAGGTGAACCTGC.?GAAGG" }
+        }
+}

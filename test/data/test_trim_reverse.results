@@ -1,0 +1,58 @@
+{
+	"trim_status" : {"status": "success", "new_lane_keys": ["2_ACACA","1_ACACA"]},
+	"unique" : {
+					"2_ACACA" : { 
+								"SEQ1" : "CCCCCGGGGGGGGG"
+								},
+					"1_ACACA" : { 
+								"SEQ3" : "CCCCCGGGGGGGGG",
+								"SEQ4" : "CCCCCGGGGGCCGG",
+								"FIND_DISTAL_NOT_ANCHOR" : "GGGGGCCGG",
+								"FIND_PROXIMAL_WITH_OFFSET" : "GGGGGCCGGA",
+								"FIND_DISTAL_WITH_OFFSET_NOT_ANCHOR" : "GGGGGTTGG"
+								}
+				},
+	"trimmed" : {
+					"2_ACACA" : { 
+								"SEQ1" : "CCCCCGGGGGGGGG",
+								"SEQ2" : "CCCCCGGGGGGGGG"
+								},
+					"1_ACACA" : { 
+								"SEQ3" : "CCCCCGGGGGGGGG",
+								"SEQ4" : "CCCCCGGGGGCCGG",
+								"FIND_DISTAL_NOT_ANCHOR" : "GGGGGCCGG",
+								"FIND_PROXIMAL_WITH_OFFSET" : "GGGGGCCGGA",
+								"FIND_DISTAL_WITH_OFFSET_NOT_ANCHOR" : "GGGGGTTGG",
+								"FIND_SHRINKING_DISTAL" : "GGGGGTTGG"
+								}
+				},
+	"no_key_deletions" : ["NO_RUNKEY2", "NO_RUNKEY"],
+	"names" : {
+							"2_ACACA" : { "SEQ1" : ["SEQ1","SEQ2"] },
+							"1_ACACA" : { 
+										"SEQ3" : ["SEQ3"],
+										"FIND_DISTAL_WITH_OFFSET_NOT_ANCHOR" : ["FIND_DISTAL_WITH_OFFSET_NOT_ANCHOR","FIND_SHRINKING_DISTAL"],
+										"FIND_PROXIMAL_WITH_OFFSET" : ["FIND_PROXIMAL_WITH_OFFSET"],
+										"FIND_DISTAL_NOT_ANCHOR" : ["FIND_DISTAL_NOT_ANCHOR"],
+										"SEQ4" : ["SEQ4"]
+										}
+						},
+	"delete_reasons" : {
+							"2_ACACA" : { "NO_PROXIMAL_2" : "proximal" },
+							"1_ACACA" : { "NO_PROXIMAL" : "proximal",
+										  "TOO_SHORT_AFTER_DISTAL_TRIM" : "minimum length" 
+										  }
+						},
+	"abundance" : {
+					"2_ACACA" : {
+									"SEQ1" : {"size" : 2, "seq" : "CCCCCGGGGGGGGG"}
+								   },
+					"1_ACACA" : {
+									"SEQ3" : {"size" : 1, "seq" : "CCCCCGGGGGGGGG"},
+									"SEQ4" : {"size" : 1, "seq" : "CCCCCGGGGGCCGG"},
+									"FIND_DISTAL_NOT_ANCHOR" : {"size" : 1, "seq" : "GGGGGCCGG"},
+									"FIND_DISTAL_WITH_OFFSET_NOT_ANCHOR" : {"size" : 2, "seq" : "GGGGGTTGG"},
+									"FIND_PROXIMAL_WITH_OFFSET" : {"seq": "GGGGGCCGGA", "size": 1}
+								   }
+				}
+}

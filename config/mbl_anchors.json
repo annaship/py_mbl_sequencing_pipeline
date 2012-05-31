@@ -1,0 +1,17 @@
+{
+      "v6v4-361": {"reversed" : "True",  "start"   : 361, "freedom" : 50, "length"  : 13,
+                   "sequence" : "G[T,G]AG.[A,G]GT[A,G][A,G]AAT",
+                   "_comment" : " # previously determiend anchor consensus: G[T,G]AG.[A,G]GT[A,G][A,G]AAT  ....do these comments look kooky?  cuz json can't have comments!!!"},
+
+      "v6v4-4xx": {"reversed" : "True",  "start"   : 480, "freedom" : 60, "length"  : 11,
+                   "sequence" : "G[T,G]AG.[A,G]GT[A,G][A,G]AAT",
+                   "_comment" : " # previously determiend anchor consensus: G[T,G]AG.[A,G]GT[A,G][A,G]AAT"},
+
+      "v3v5-440": {"reversed" : "False", "start"   : 440, "freedom" : 30, "length"  : 13,
+                   "sequence" : "GGATTAGA[T,G]ACCC",
+                   "_comment" : " # previously determined anchor consensus: GGATTAGA[T,G]ACCC"},
+
+      "v3v5-370": {"reversed" : "False", "start"   : 370, "freedom" : 50, "length"  : 12,
+                   "sequence" : "[A,T,C][A,T,G]GCGAA[A,G]GC[A,G][A,C,G]",
+                   "_comment" : " # previously determined anchor consensus: [A,T,C][A,T,G]GCGAA[A,G]GC[A,G][A,C,G]"}
+}
