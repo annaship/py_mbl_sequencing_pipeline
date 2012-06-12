@@ -1,4 +1,6 @@
-#!/usr/local/www/vamps/software/python/bin/python
+#!/usr/bin/env python
+
+##!/usr/local/www/vamps/software/python/bin/python
 
 ##!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -188,11 +190,12 @@ def chimera(run):
         mymblutils.write_clean_files_to_database()
 
 def gast(run):  
-    pass
-#        mygast = Gast(run, outputdir, args)
-#        mygast.clustergast(new_lane_keys)
-#        mygast.gast_cleanup(new_lane_keys)
-#        mygast.gast2tax(new_lane_keys)
+    
+    mygast = Gast(run) 
+    new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+    #mygast.clustergast(new_lane_keys)
+    mygast.gast_cleanup(new_lane_keys)
+    #mygast.gast2tax(new_lane_keys)
 
     
 def vampsupload(run):

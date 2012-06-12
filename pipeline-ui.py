@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #!/usr/local/www/vamps/software/python/bin/python
 
 ##!/usr/bin/env python
