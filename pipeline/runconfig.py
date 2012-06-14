@@ -47,24 +47,28 @@ class RunConfig:
         # if the config_info was a file path to an .ini file then convert to a dictionary
         # we'll take the info as an ini file or dictionary so we can be called by an api
         config_dict = config_info if (type(config_info)==dict) else configDictionaryFromFile(config_info)
-
         # now extract it all from the dictionary form
         self.initializeFromDictionary(config_dict)
-
-        # primers should be in json format in a file and that file should be specified in the general section
-#        print "curr dir: " + os.getcwd()
-#        print "curr file all: " + os.path.realpath(__file__)
-#        print "curr file dir: " + os.path.dirname(os.path.realpath(__file__))
-#        primer_file = open(config_dict['general']['primer_file'])
-        primer_file = open(os.path.join(self.base_python_dir, "config/mbl_primers.json"))
-        ascii_primer_str = primer_file.read()
-        self.primer_suites = ast.literal_eval(ascii_primer_str)
-        
-        # anchors should be similarly specified
-#        anchor_json_text = open(config_dict['general']['anchor_file']).read()
-        anchor_json_text = open(os.path.join(self.base_python_dir, "config/mbl_anchors.json")).read()
-        self.anchors = ast.literal_eval(anchor_json_text)
-
+        if 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
+            pass 
+            
+        else:
+            
+    
+            # primers should be in json format in a file and that file should be specified in the general section
+            # print "curr dir: " + os.getcwd()
+            # print "curr file all: " + os.path.realpath(__file__)
+            # print "curr file dir: " + os.path.dirname(os.path.realpath(__file__))
+            # primer_file = open(config_dict['general']['primer_file'])
+            primer_file = open(os.path.join(self.base_python_dir, "config/mbl_primers.json"))
+            ascii_primer_str = primer_file.read()
+            self.primer_suites = ast.literal_eval(ascii_primer_str)
+            
+            # anchors should be similarly specified
+            # anchor_json_text = open(config_dict['general']['anchor_file']).read()
+            anchor_json_text = open(os.path.join(self.base_python_dir, "config/mbl_anchors.json")).read()
+            self.anchors = ast.literal_eval(anchor_json_text)
+    
         # this is our default output dir
         self.base_output_dir = baseoutputdir #user supplied or default
         self.output_dir = os.path.join(self.base_output_dir, self.run_date)
