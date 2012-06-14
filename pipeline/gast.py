@@ -165,14 +165,14 @@ class Gast:
                 grep_cmd += " clustergast_tophit >> " + clustergast_filename
                 logger.debug("grep command: "+grep_cmd)
                 if self.use_cluster:                
-                	fh.write(grep_cmd + "\n")
-                	fh.close()
-					
-					# make script executable and run it
-					os.chmod(script_filename, stat.S_IRWXU)
-					qsub_cmd = qsub + " " + script_filename
-					logger.debug("qsub command: "+qsub_cmd)
-					subprocess.call(qsub_cmd, shell=True)
+                    fh.write(grep_cmd + "\n")
+                    fh.close()
+                    
+                    # make script executable and run it
+                    os.chmod(script_filename, stat.S_IRWXU)
+                    qsub_cmd = qsub + " " + script_filename
+                    logger.debug("qsub command: "+qsub_cmd)
+                    subprocess.call(qsub_cmd, shell=True)
                 else:
                 	subprocess.call(grep_cmd,shell=True)
                 	
@@ -233,8 +233,8 @@ class Gast:
     		# Step through the gast records and insert the dupes
     		#
     		########################################
-    		logger.debug("length of nonhits: Before:"+len(nonhits))
-    		logger.info("Inserting BLAST hits into Gast File");
+            logger.debug("length of nonhits: Before:"+len(nonhits))
+            logger.info("Inserting BLAST hits into Gast File");
             for line in in_gast_fh:
             	(read_id, refhvr_id, distance, alignment) = line.strip().split()
             	
@@ -242,11 +242,12 @@ class Gast:
             	# if this was in the gast table zero it out because it had a valid hit
         		# so we don't insert them as non-hits later
             	if read_id in nonhits:
-            	    delete nonhits[read_id]
+#                    delete nonhits[read_id]
+                    pass
             	    
                 if not read_id in copies:
-                	logger.info(read_id+' not in names file: Skipping')
-                	continue
+                    logger.info(read_id+' not in names file: Skipping')
+                    continue
                 # give the same ref and dist for each duplicate
                 for id in copies[read_id]:
                 	if id != read_id:
@@ -259,11 +260,11 @@ class Gast:
     		# Insert a record for any valid sequence that had no blast hit and therefore no gast result
     		#
     		#######################################
-    		logger.info("Inserting non-BLAST hits into Gast File");
+            logger.info("Inserting non-BLAST hits into Gast File");
         	# for the list of remaining reads add them in with their duplicates
-        	for read in nonhits.sort():
-        		for d in copies[read]:
-        			out_gast_fh.write(d+"\t0\t1\t\n")
+            for read in nonhits.sort():
+                for d in copies[read]:
+                    out_gast_fh.write(d+"\t0\t1\t\n")
         	
         	out_gast_fh.close()
         	
