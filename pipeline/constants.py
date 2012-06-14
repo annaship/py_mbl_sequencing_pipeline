@@ -15,7 +15,13 @@ complementary_bases = {'A':'T',
                        'T':'A',
                        'C':'G',
                        'G':'C'}
-                       
+
+############# defaults for GAST ##########################
+max_accepts = 10
+max_rejects = 0
+pctid_threshold = 0.70
+
+#################################################                           
 # ==================================================================================================
 # cluster and chimera checking
 regions_to_chimera_check = ['v6v4','v3v5','v4v5','v4v6','v3v1','v5v3']
