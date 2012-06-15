@@ -193,8 +193,8 @@ def gast(run):
     
     mygast = Gast(run) 
     new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
-    #mygast.clustergast(new_lane_keys)
-    mygast.gast_cleanup(new_lane_keys)
+    mygast.clustergast(new_lane_keys)
+    #mygast.gast_cleanup(new_lane_keys)
     #mygast.gast2tax(new_lane_keys)
 
     

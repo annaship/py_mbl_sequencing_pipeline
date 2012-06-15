@@ -1,9 +1,10 @@
 # constants.py
 # for mbl sequncing pipeline
 
-minimumLength    = 8
-minAvgQual       = 30
-maxN             = 0
+minimumLength   = 50
+maximumLength   = ''
+minAvgQual      = 30
+maxN            = 0
 
 # this is the maximum distance from the end of the sequence where script
 # will accept a distal primer if found

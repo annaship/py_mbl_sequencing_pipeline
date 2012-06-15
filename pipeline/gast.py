@@ -119,7 +119,9 @@ class Gast:
                     fh.write("#$ -j y\n" )
                     fh.write("#$ -o " + log_file + "\n")
                     fh.write("#$ -N " + qstat_name + "\n\n")
-                    #fh.write("#$ -log /xraid2-2/vampsweb/vampsdev/clusterize.log \n\n")
+                    fh.write("source /xraid/bioware/Modules/etc/profile.modules\n");
+                    fh.write("module load bioware\n\n");
+
                 data = line.split()
                 
                 if len(data) < 2:
@@ -279,5 +281,7 @@ class Gast:
         logger.info("Finished gast_cleanup")
         
     def gast2tax(self, lane_keys):
-    
+        """
+        Follows gast_cleanup
+        """
         logger.info("Finished gast2tax")

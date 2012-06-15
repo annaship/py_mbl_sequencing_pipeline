@@ -85,12 +85,25 @@ class RunConfig:
     def initializeFromDictionary(self, configDict):
         # get the general stuff
         general_config = configDict['general']
-        self.run_date   = general_config['run_date']
-        self.platform   = general_config['platform']
-        self.input_dir  = general_config['input_dir']
-        self.require_distal = general_config.get('require_distal', "1")
-        self.force_runkey = general_config.get('force_runkey', None)
+        #if general_config['gast_data_source'] != 'database':
+        self.run_date       = general_config['run_date']
+        self.platform       = general_config.get('platform', "unknown")
+        self.input_dir      = general_config.get('input_dir', None)
+        self.require_distal = general_config.get('require_distal', True)
+        self.minimumLength  = general_config.get('minimumLength', C.minimumLength)
+        self.maximumLength  = general_config.get('maximumLength', C.maximumLength)
+        self.minAvgQual     = general_config.get('minAvgQual',    C.minAvgQual)
+        self.force_runkey   = general_config.get('force_runkey', None)
         
+        # added gast_input_source for vamps uploads
+        # so when users want to gast at a later time they will
+        # look in the database and not the files (which may be missing)
+        # see /xraid2-2/vampsweb/vampsdev/vamps_trim.py
+        self.gast_input_source = 'files' # for regular gast pipeline
+        if 'gast_input_source' in general_config: 
+            self.gast_input_source = general_config['gast_input_source']
+        
+        #print general_config
         # parse out the input file info
         input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
         input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]

@@ -24,23 +24,25 @@ from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
 from pipeline.pipelinelogging import logger
 from Bio import SeqIO
+import subprocess
 
 class TrimRun( object ):
-    DELETED_RUNKEY = 'Runkey'
-    DELETED_PROXIMAL = 'Proximal'
-    DELETED_DISTAL = 'Distal'
-    DELETED_N = 'N'
-    DELETED_QUALITY = 'Quality'
-    DELETED_NO_INSERT = 'No Insert'
-    DELETED_MINIMUM_LENGTH = 'Minimum Length'
-    DELETED_UNKNOWN_LANE_RUNKEY = 'Unknown Runkey'
+    DELETED_RUNKEY      = 'Runkey: no key found'
+    DELETED_LANEKEY     = 'Lanekey: unknown lane/key'
+    DELETED_PROXIMAL    = 'Proximal: no proximal primer found'
+    DELETED_DISTAL      = 'Distal: no distal primer found'
+    DELETED_N           = 'N'
+    DELETED_QUALITY     = 'Quality'
+    DELETED_NO_INSERT   = 'No Insert'
+    DELETED_MINIMUM_LENGTH      = 'Minimum Length'
+    DELETED_MAXIMUM_LENGTH      = 'Maximum Length'
 
     """ Define here"""
     def __init__(self, run):
     
         self.run       = run
         self.outdir    = run.output_dir
-        
+        self.indir     = run.base_output_dir
         # do something with 'run'.
         self.rundate = self.run.run_date
         logger.debug("Rundate:" + str(self.rundate))
@@ -66,10 +68,11 @@ class TrimRun( object ):
         self.fa ={}
         self.statsFileName     = 'run_trim_stats'
         
-                   
+             
         self.runbin={}
         #if VERBOSE: print "Run Keys from .ini file: ", run_keys
         for lane_key in self.run.run_keys:
+            
             sample = self.run.samples[lane_key]
             # strip off surrounding single or double quotes
             self.seqDirs[lane_key]          = sample.direction
@@ -147,13 +150,15 @@ class TrimRun( object ):
             # post processed :(
             if file_format == "fastq-illumina":
                 parsing_format = "fastq"
+            elif file_format == "fastq-sanger":
+                parsing_format = "fastq"
             elif file_format == "sff":
                 parsing_format = "sff-trim"
             elif file_format == "fasta-mbl":
                 parsing_format = "fasta"
             else:
                 parsing_format = file_format
-            
+            logger.debug(file_info["name"]+' '+parsing_format)
             # sff and fasta (non-mbl) get their lane info from this .ini field
             lane = file_info["lane"]   
             for record in SeqIO.parse(file_info["name"], parsing_format):            
@@ -167,10 +172,23 @@ class TrimRun( object ):
                     # will need lots of other stuff here for fastq-illumina
                     id = record.id
                 # should merge these with above if/else
+                
                 if file_format == "fasta" or file_format == "fasta-mbl":
                     q_scores = ''
+                    # for vamps user upload:
+                    if os.path.exists(self.indir + "/qualfile_qual_clean"):
+                        # for vamps uploads use '_clean' file 
+                        # format is on one line ( created from reg fasta in upload_file.php: 
+                        #  >FRZPY5Q02G73IH	37 37 37 37 37 37 37 37 37 37
+                        q_scores = subprocess.check_output("grep "+ id +" " + self.indir + "/qualfile_qual_clean", shell=True).strip().split("\t")[1].split()                    
+                        q_scores = [int(q) for q in q_scores]
+                        
+                    else:
+                        logger.debug("No qual file found")
+                elif file_format == "fastq-sanger":
+                    q_scores = record.letter_annotations["phred_quality"]  
                 elif file_format == "fastq-illumina":
-                    pass  # TODO
+                    q_scores = record.letter_annotations["phred_quality"]  
                 else:
                     q_scores = record.letter_annotations["phred_quality"]  
                 
@@ -254,7 +272,7 @@ class TrimRun( object ):
 
         # did we find a run key
         if( not tag ):
-            delete_reason = 'nokey'
+            delete_reason = DELETED_RUNKEY
             self.deleted_count_for_nokey += 1
             self.deleted_ids['nokey'][read_id] = delete_reason
             logger.debug("deleted: " + tag)
@@ -264,7 +282,7 @@ class TrimRun( object ):
             # is there a run_key with this tag?  Samples are keyed by this
             if self.run.samples.get(lane_tag,None)==None:
                 # bad lane_runkey 
-                delete_reason = 'lane/runkey'
+                delete_reason = DELETED_LANEKEY
                 self.deleted_count_for_unknown_lane_runkey += 1
                 logger.debug("lane/runkey error got a runkey of: " + tag + " but could not find entry in Samples for lane_tag: " + lane_tag + " deleted: " + tag)
                 return {"deleted" : True,"delete_reason" : delete_reason}
@@ -281,7 +299,7 @@ class TrimRun( object ):
         #       proximal === closest to runkey
         #       distal   === furthest from run_key
         #       forward 'F' === sequences was read R->L  ie v3v5
-        #       reverse 'R' === sequence was read L->R   ie v6v4
+        #       reverse 'R' === sequence was read L->R   ie v4v6
         ###################################################################
         exactRight = ''
         exactLeft=''
@@ -313,12 +331,12 @@ class TrimRun( object ):
         # if we could not find a proximal but we wanted to find them then fail the sequence                
         if not exactLeft and proximals_exist:
                 logger.debug('proximal primer not found...deleted reason: proximal')                        
-                delete_reason = 'proximal'
+                delete_reason = DELETED_PROXIMAL
                 self.deleted_count_for_proximal += 1
                                        
         # try to trim the anchor if we have enough sequence left at this point 
-        if len(trimmed_sequence) < C.minimumLength:
-            delete_reason = 'minimum length'
+        if len(trimmed_sequence) < self.run.minimumLength:
+            delete_reason = DELETED_MINIMUM_LENGTH
             self.deleted_count_for_minimum_length += 1
         else:
             # possible anchor trimming
@@ -331,8 +349,8 @@ class TrimRun( object ):
                     anchor_found = True 
                     logger.debug( 'found exactRight-anchor: ' + exactRight)
                     logger.debug('after anchor trimming seq: ' + trimmed_sequence)
-                    if len(trimmed_sequence) < C.minimumLength:
-                        delete_reason = 'minimum length'
+                    if len(trimmed_sequence) < self.run.minimumLength:
+                        delete_reason = DELETED_MINIMUM_LENGTH
                         self.deleted_count_for_minimum_length += 1
                     
             # try to find and trim distal primer if we have them and we did not already find an anchor and clip the sequence
@@ -344,9 +362,9 @@ class TrimRun( object ):
                     logger.debug( 'found distal-primer: ' + exactRight)
                     logger.debug('after distal primer trimming seq: ' + trimmed_sequence)
             
-            if not exactRight and self.run.require_distal == '1':
+            if not exactRight and self.run.require_distal == True:
                 logger.debug('deleted: no distal found')                        
-                delete_reason = 'distal'
+                delete_reason = DELETED_DISTAL
                 self.deleted_count_for_distal += 1
                     
         ###################################################################
@@ -355,15 +373,15 @@ class TrimRun( object ):
         #
         ###################################################################
         logger.debug('length raw:' + str(len(raw_sequence)) + ' length trimmed: ' + str(len(trimmed_sequence)))
-        if( delete_reason != 'runkey' and not trimmed_sequence ):
-            delete_reason = 'no insert'
+        if( delete_reason != DELETED_RUNKEY and not trimmed_sequence ):
+            delete_reason = DELETED_NO_INSERT
             self.deleted_count_for_no_insert += 1
-        elif( delete_reason != 'runkey' and len(trimmed_sequence) < C.minimumLength):
-            delete_reason = 'minimum length'
+        elif( delete_reason != DELETED_RUNKEY and len(trimmed_sequence) < self.run.minimumLength):
+            delete_reason = DELETED_MINIMUM_LENGTH
             self.deleted_count_for_minimum_length += 1
         
         if ( (not delete_reason) and (countNs > C.maxN) ):     
-            delete_reason = 'N'
+            delete_reason = DELETED_N
             self.deleted_count_for_n += 1
             logger.debug('deleted N')
         
@@ -381,8 +399,8 @@ class TrimRun( object ):
         ###################################################################
         if(quality_scores and not delete_reason):
             average_score = check_for_quality(raw_sequence, trimmed_sequence, quality_scores)
-            if average_score < C.minAvgQual:
-                delete_reason = 'quality'
+            if average_score < self.run.minAvgQual:
+                delete_reason = DELETED_QUALITY
                 self.deleted_count_for_quality += 1
                 
                 logger.debug('deleted quality')
