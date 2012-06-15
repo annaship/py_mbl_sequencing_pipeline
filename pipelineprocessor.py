@@ -197,7 +197,9 @@ def gast(run):
     #mygast.gast_cleanup(new_lane_keys)
     #mygast.gast2tax(new_lane_keys)
 
-    
+def innerdb_upload(run):
+    pass
+
 def vampsupload(run):
     pass  
 #        myvamps = Vamps(run, outputdir, args)
