@@ -26,17 +26,18 @@ from pipeline.pipelinelogging import logger
 from Bio import SeqIO
 import subprocess
 
-class TrimRun( object ):
-    DELETED_RUNKEY      = 'Runkey: no key found'
-    DELETED_LANEKEY     = 'Lanekey: unknown lane/key'
-    DELETED_PROXIMAL    = 'Proximal: no proximal primer found'
-    DELETED_DISTAL      = 'Distal: no distal primer found'
-    DELETED_N           = 'N'
-    DELETED_QUALITY     = 'Quality'
-    DELETED_NO_INSERT   = 'No Insert'
-    DELETED_MINIMUM_LENGTH      = 'Minimum Length'
-    DELETED_MAXIMUM_LENGTH      = 'Maximum Length'
+DELETED_RUNKEY      = 'Runkey: no key found'
+DELETED_LANEKEY     = 'Lanekey: unknown lane/key'
+DELETED_PROXIMAL    = 'Proximal: no proximal primer found'
+DELETED_DISTAL      = 'Distal: no distal primer found'
+DELETED_N           = 'N'
+DELETED_QUALITY     = 'Quality'
+DELETED_NO_INSERT   = 'No Insert'
+DELETED_MINIMUM_LENGTH      = 'Minimum Length'
+DELETED_MAXIMUM_LENGTH      = 'Maximum Length'
 
+class TrimRun( object ):
+    
     """ Define here"""
     def __init__(self, run):
     

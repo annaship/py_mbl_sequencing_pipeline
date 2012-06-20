@@ -46,14 +46,14 @@ class RunConfig:
 
         # if the config_info was a file path to an .ini file then convert to a dictionary
         # we'll take the info as an ini file or dictionary so we can be called by an api
+        # ie vamps user uploads: the config info is a dictionary
         config_dict = config_info if (type(config_info)==dict) else configDictionaryFromFile(config_info)
         # now extract it all from the dictionary form
         self.initializeFromDictionary(config_dict)
         if 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
-            pass 
-            
+            self.vamps_user_upload = True            
         else:
-            
+            self.vamps_user_upload = False
     
             # primers should be in json format in a file and that file should be specified in the general section
             # print "curr dir: " + os.getcwd()

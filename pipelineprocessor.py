@@ -27,6 +27,7 @@ from pipeline.runconfig import RunConfig
 from pipeline.run import Run
 from pipeline.chimera import Chimera
 from pipeline.gast import Gast
+from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 import logging
@@ -70,8 +71,10 @@ def process(run, steps):
 def trim(run):
     # (re) create the trim status file
     run.trim_status_file_h = open(run.trim_status_file_name, "w")
+    
     # do the trim work
-    mytrim = TrimRun(run)        
+    mytrim = TrimRun(run) 
+    
     # pass True to write out the straight fasta file of all trimmed non-deleted seqs
     # Remember: this is before chimera checking
     trim_codes = mytrim.trimrun(True)
@@ -191,21 +194,35 @@ def chimera(run):
 
 def gast(run):  
     
-    mygast = Gast(run) 
-    new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
-    mygast.clustergast(new_lane_keys)
-    #mygast.gast_cleanup(new_lane_keys)
-    #mygast.gast2tax(new_lane_keys)
+    mygast = Gast(run)
+    
+    # for vamps 'new_lane_keys' will be prefix 
+    # of the uniques and names file
+    # that was just created in vamps_gast.py
+    if(run.vamps_user_upload):
+        lane_keys = [run.user+run.runcode]        
+    else:
+        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+        
+    mygast.clustergast(lane_keys)
+    sleep(5)
+    mygast.gast_cleanup(lane_keys)
+    sleep(5)
+    mygast.gast2tax(lane_keys)
 
-def innerdb_upload(run):
-    pass
-
+    
 def vampsupload(run):
-    pass  
-#        myvamps = Vamps(run, outputdir, args)
-#        myvamps.info(new_lane_keys)
-#        myvamps.projects(new_lane_keys)
-#        myvamps.taxonomy(new_lane_keys)
-#        myvamps.sequences(new_lane_keys)        
-#        myvamps.exports(new_lane_keys)
+    
+    myvamps = Vamps(run)
+    
+    if(run.vamps_user_upload):
+        lane_keys = [run.user+run.runcode]        
+    else:
+        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+        
+    myvamps.taxonomy(lane_keys)
+    #myvamps.sequences(lane_keys)        
+    #myvamps.exports(lane_keys)
+    #myvamps.projects(lane_keys)
+    #myvamps.info(lane_keys)
         
