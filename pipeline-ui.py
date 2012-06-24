@@ -52,6 +52,7 @@ if __name__ == '__main__':
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
     
     args = parser.parse_args() 
+    print "Log Level set to:",args.loglevel.upper()
     # deal with logging level
     loggerlevel = logging.ERROR
     if args.loglevel.upper() == 'DEBUG':

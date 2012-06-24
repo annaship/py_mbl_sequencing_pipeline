@@ -57,6 +57,9 @@ max_rejects = 0
 pctid_threshold = 0.70
 majority = 66
 max_distance = {'default': 0.30, 'v6': 0.30, 'v6a': 0.30, 'v6v4': 0.25, 'v3v5': 0.25}
+#cluster wait
+maxwaittime = 1000  # seconds
+sleeptime = 5      # seconds
 ################################################################################################      
 
   

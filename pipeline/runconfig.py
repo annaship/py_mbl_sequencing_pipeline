@@ -50,7 +50,7 @@ class RunConfig:
         config_dict = config_info if (type(config_info)==dict) else configDictionaryFromFile(config_info)
         # now extract it all from the dictionary form
         self.initializeFromDictionary(config_dict)
-        if 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
+        if type(config_info)==dict and 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
             self.vamps_user_upload = True            
         else:
             self.vamps_user_upload = False

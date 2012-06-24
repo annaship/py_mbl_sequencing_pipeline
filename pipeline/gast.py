@@ -13,7 +13,10 @@ class Gast:
 
         self.run 	 = run
         self.outdir  = run.output_dir
-        self.basedir = run.basedir
+        try:
+            self.basedir = run.basedir
+        except:
+            self.basedir = self.outdir
         self.rundate = self.run.run_date
         self.use_cluster = 1
         
@@ -87,7 +90,7 @@ class Gast:
             refdb = self.refdb_dir + 'ref' + dna_region
             if not os.path.exists(refdb):
             	if dna_region == 'v6v4':
-            		refdb = refdb_dir + 'refv4v6'
+            		refdb = self.refdb_dir + 'refv4v6'
             
             unique_file = self.basedir +'/'+lane_key+'.unique.fa'
             
@@ -202,8 +205,8 @@ class Gast:
             # wait here for all the clustergast scripts to finish
             temp_file_list = file_list
             c = False
-            maxwaittime = 1000  # seconds
-            sleeptime = 3      # seconds
+            maxwaittime = C.maxwaittime  # seconds
+            sleeptime   = C.sleeptime    # seconds
             counter = 0
             while c == False:
             	counter += 1
@@ -217,8 +220,8 @@ class Gast:
                         temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
                 
                 if temp_file_list:
-                    print "waiting for all clustergast files to fill..."
-                    print "    time:",counter * sleeptime,"| file list length:",len(temp_file_list)
+                    print "waiting for clustergast files to fill..."
+                    print "    time:",counter * sleeptime,"| files left:",len(temp_file_list)
                     time.sleep(sleeptime)
                 else:
                     c = True
@@ -389,11 +392,15 @@ class Gast:
             else:            
                 dna_region = self.run.dna_region
             if not dna_region:
-                logger.debug("gast_cleanup: We have no DNA Region: Exiting")
+                logger.error("gast_cleanup: We have no DNA Region: Exiting")
                 sys.exit()
+            
             refdb = self.refdb_dir + 'ref' + dna_region
             if not os.path.exists(refdb):
-                logger.debug("Could not find reference database: "+refdb+" Exiting")
+                if dna_region == 'v6v4':
+                    refdb = self.refdb_dir + 'refv4v6'
+            if not os.path.exists(refdb):
+                logger.error("Could not find reference database: "+refdb+" Exiting")
                 sys.exit()
             max_distance = C.max_distance['default']
             if dna_region in C.max_distance:
@@ -410,16 +417,16 @@ class Gast:
             gast_dir    = self.outdir  +'/'+lane_key+'_gast/'
             # 
             if not os.path.exists(gast_dir):
-                logger.debug("Could not find gast directory: "+gast_dir+" Exiting")
+                logger.error("Could not find gast directory: "+gast_dir+" Exiting")
                 sys.exit()
             tagtax_filename     = gast_dir + lane_key+".tagtax_table"
             gast_filename       = gast_dir + lane_key+".gast";
             if not os.path.exists(gast_filename):
-                logger.debug("Could not find gast file from gast_cleanup: "+os.path.basename(gast_filename)+" Exiting")
+                logger.error("Could not find gast file from gast_cleanup: "+os.path.basename(gast_filename)+" Exiting")
                 sys.exit()
             gastconcat_filename = gast_dir + lane_key+".gast_concat_table";  
             if not os.path.exists(gastconcat_filename):
-                logger.debug("Could not find gast_concat file from gast_cleanup: "+os.path.basename(gastconcat_filename)+" Exiting")
+                logger.error("Could not find gast_concat file from gast_cleanup: "+os.path.basename(gastconcat_filename)+" Exiting")
                 sys.exit()
             #######################################
             #
