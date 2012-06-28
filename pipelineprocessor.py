@@ -235,11 +235,15 @@ def vampsupload(run):
     
     myvamps = Vamps(run)
     
-
+    if(run.vamps_user_upload):
+        lane_keys = [run.user+run.runcode]        
+    else:
+        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
         
     myvamps.taxonomy(lane_keys)
     #myvamps.sequences(lane_keys)        
     #myvamps.exports(lane_keys)
     #myvamps.projects(lane_keys)
     #myvamps.info(lane_keys)
+        
         
