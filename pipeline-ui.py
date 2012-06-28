@@ -28,6 +28,7 @@ from pipeline.chimera import Chimera
 from pipeline.gast import Gast
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
+from pipeline.db_upload import MyConnection, dbUpload 
 import logging
 import argparse
 from pipelineprocessor import process    
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdirarg", 
                                                 help="Comma seperated list of steps.  Choices are: trim,chimera,gast,vampsupload,all")
     parser.add_argument("-s", "--steps",     required=True,  action="store",   dest = "steps", 
-                                                help="Comma seperated list of steps.  Choices are: trim,chimera,gast,vampsupload,all")
+                                                help="Comma seperated list of steps.  Choices are: trim,chimera,gast,env454upload, vampsupload,all")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
     

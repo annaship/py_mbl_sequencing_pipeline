@@ -33,13 +33,15 @@ from pipeline.trim_run import TrimRun
 import logging
 import json    
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
+from pipeline.db_upload import MyConnection, dbUpload 
 
 TRIM_STEP = "trim"
 CHIMERA_STEP = "chimera"
 GAST_STEP = "gast"
 VAMPSUPLOAD = "vampsupload"
+ENV454UPLOAD = "env454upload"
 
-existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, VAMPSUPLOAD]
+existing_steps = [TRIM_STEP, CHIMERA_STEP, ENV454UPLOAD, GAST_STEP, VAMPSUPLOAD]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -192,6 +194,24 @@ def chimera(run):
         # run primers
         mymblutils.write_clean_files_to_database()
 
+def env454upload(run):  
+    
+    my_conn = MyConnection(server_name = 'newbpcdb2_ill')
+#    my_env454upload = dbUpload(run)
+    # for vamps 'new_lane_keys' will be prefix 
+    # of the uniques and names file
+    # that was just created in vamps_gast.py
+#    if(run.vamps_user_upload):
+#        lane_keys = [run.user+run.runcode]        
+#    else:
+#        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+    
+    print "PPP run = %s" % run
+    logger.debug("PPP run = ")
+    logger.debug(run)
+#    my_env454upload.select_run(lane_keys)
+
+
 def gast(run):  
     
     mygast = Gast(run)
@@ -215,10 +235,7 @@ def vampsupload(run):
     
     myvamps = Vamps(run)
     
-    if(run.vamps_user_upload):
-        lane_keys = [run.user+run.runcode]        
-    else:
-        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+
         
     myvamps.taxonomy(lane_keys)
     #myvamps.sequences(lane_keys)        

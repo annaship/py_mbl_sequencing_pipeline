@@ -10,6 +10,18 @@ results/*
 *.cfg
 .pydevproject
 .project
+db_conn.conf
+
+# Result files #
+################
+*.abund.fa
+*.deleted.txt
+*.names
+*.trimmed.fa
+*.unique.fa
+run_trim_stats
+trim_status.txt
+
 
 # Packages #
 ############
