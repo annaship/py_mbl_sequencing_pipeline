@@ -198,18 +198,18 @@ def chimera(run):
 
 def env454upload(run):  
     
-    my_conn = MyConnection(server_name = 'newbpcdb2_ill')  
     my_env454upload = dbUpload(run)
     filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
-    print "filenames = %s" % filenames
+#    print "filenames = %s" % filenames
 
     for filename in filenames:
         fasta_file_path = my_env454upload.fasta_dir + filename
-        print "fasta_file_path = %s" % fasta_file_path
         fasta           = u.SequenceSource(fasta_file_path) 
         try:
             while fasta.next():
-                print "fasta.next() = %s" % fasta.next()
+#                print "fasta.seq = %s" % fasta.seq
+                my_env454upload.insert_seq(fasta.seq)
+
         except Exception, e:          # catch all deriving from Exception (instance e)
             print "Exception: ", e.__str__()      # address the instance, print e.__str__()
         except:                       # catch everything

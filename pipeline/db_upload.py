@@ -40,6 +40,12 @@ class MyConnection:
       print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
       raise                       # re-throw caught exception   
 
+    def execute_sql(self, sql):
+        if self.cursor:
+            self.cursor.execute(sql)
+            res = self.cursor.fetchall ()
+            return res
+
 
 class dbUpload:
     """db upload methods"""
@@ -56,6 +62,8 @@ class dbUpload:
         self.use_cluster = 1
         self.fasta_dir        = self.run.input_dir + "/fasta/" 
         self.filenames   = []
+        self.my_conn = MyConnection(server_name = 'newbpcdb2_ill')  
+
 #        get_fasta_file_names(fasta_file_path)
 #        self.fasta       = u.SequenceSource(fasta_file_path) 
 
@@ -73,11 +81,26 @@ class dbUpload:
         self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
     def get_fasta_file_names(self, fasta_dir):
-      for (dirpath, dirname, files) in walk(fasta_dir):
-        return files
+        for (dirpath, dirname, files) in walk(fasta_dir):
+            return files
         
-        
-#    def 
+
+    def insert_seq(self, seq):
+        t_name = "rank"
+        self.my_conn.cursor.execute("""Select * from rank""")
+#        self.cursor.execute(sql)
+        res = self.my_conn.cursor.fetchall ()
+        print res
+#        print "dir(my_conn) = %s" % dir(my_conn)
+
+        # ------- insert unique sequences --------
+        # INSERT INTO sequence_ill (sequence_comp) VALUES (COMPRESS('TGGTCTTGACATCCACAGAACTTTCCAGAGATGGATTGGTGCCTTCGGGAACTGTGAGAC'))
+        # works:
+#        my_conn.execute("""INSERT IGNORE INTO sequence_ill (sequence_comp) VALUES (COMPRESS(%s))""", (seq))
+#        conn.commit() 
+#        if (conn.affected_rows()):
+#            print "affected_rows = %s" % (conn.affected_rows()) 
+       
 #            logger.info("Finished clustergast")
 
      
