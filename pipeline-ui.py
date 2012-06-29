@@ -28,7 +28,6 @@ from pipeline.chimera import Chimera
 from pipeline.gast import Gast
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
-from pipeline.db_upload import MyConnection, dbUpload 
 import logging
 import argparse
 from pipelineprocessor import process    

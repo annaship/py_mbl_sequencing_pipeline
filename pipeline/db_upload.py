@@ -54,7 +54,11 @@ class dbUpload:
             self.basedir = self.outdir
         self.rundate = self.run.run_date
         self.use_cluster = 1
-        
+        self.fasta_dir        = self.run.input_dir + "/fasta/" 
+        self.filenames   = []
+#        get_fasta_file_names(fasta_file_path)
+#        self.fasta       = u.SequenceSource(fasta_file_path) 
+
         
 #        os.environ['SGE_ROOT']='/usr/local/sge'
 #        os.environ['SGE_CELL']='grendel'
@@ -68,9 +72,12 @@ class dbUpload:
         # but if MBL pipe then many datasets are prbably involved.
         self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
+    def get_fasta_file_names(self, fasta_dir):
+      for (dirpath, dirname, files) in walk(fasta_dir):
+        return files
         
         
-
+#    def 
 #            logger.info("Finished clustergast")
 
      

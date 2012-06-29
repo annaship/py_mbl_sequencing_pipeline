@@ -11,6 +11,8 @@ results/*
 .pydevproject
 .project
 db_conn.conf
+fasta/*
+gast/*
 
 # Result files #
 ################

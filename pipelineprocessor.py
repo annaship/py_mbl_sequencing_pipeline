@@ -32,6 +32,8 @@ from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 import logging
 import json    
+#sys.path.append("/bioware/pythonmodules/fastalib")
+import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
 
@@ -196,8 +198,26 @@ def chimera(run):
 
 def env454upload(run):  
     
-    my_conn = MyConnection(server_name = 'newbpcdb2_ill')
-#    my_env454upload = dbUpload(run)
+    my_conn = MyConnection(server_name = 'newbpcdb2_ill')  
+    my_env454upload = dbUpload(run)
+    filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
+    print "filenames = %s" % filenames
+
+    for filename in filenames:
+        fasta_file_path = my_env454upload.fasta_dir + filename
+        print "fasta_file_path = %s" % fasta_file_path
+        fasta           = u.SequenceSource(fasta_file_path) 
+        try:
+            while fasta.next():
+                print "fasta.next() = %s" % fasta.next()
+        except Exception, e:          # catch all deriving from Exception (instance e)
+            print "Exception: ", e.__str__()      # address the instance, print e.__str__()
+        except:                       # catch everything
+            print "Unexpected:"         # handle unexpected exceptions
+            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+            raise                       # re-throw caught exception   
+
+    
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file
     # that was just created in vamps_gast.py
@@ -206,9 +226,17 @@ def env454upload(run):
 #    else:
 #        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
     
-    print "PPP run = %s" % run
-    logger.debug("PPP run = ")
-    logger.debug(run)
+#    print "PPP anchors = %s, base_output_dir = %s, base_python_dir = %s, chimera_status_file_h = %s, chimera_status_file_name = %s,\n\
+#     force_runkey = %s, gast_input_source = %s, initializeFromDictionary = %s, input_dir = %s, input_file_info = %s, maximumLength = %s,\n\
+#      minAvgQual = %s, minimumLength = %s, output_dir = %s, platform = %s, primer_suites = %s, require_distal = %s, run_date = %s, \n\
+#      run_key_lane_dict = %s, run_keys = %s, samples = %s, sff_files = %s, trim_status_file_h = %s, trim_status_file_name = %s, vamps_user_upload = %s\n" % (run.anchors, run.base_output_dir, run.base_python_dir, run.chimera_status_file_h, run.chimera_status_file_name, run.force_runkey, run.gast_input_source, run.initializeFromDictionary, run.input_dir, run.input_file_info, run.maximumLength, run.minAvgQual, run.minimumLength, run.output_dir, run.platform, run.primer_suites, run.require_distal, run.run_date, run.run_key_lane_dict, run.run_keys, run.samples, run.sff_files, run.trim_status_file_h, run.trim_status_file_name, run.vamps_user_upload)
+#   dir(run) = ['__doc__', '__init__', '__module__', 'anchors', 'base_output_dir', 'base_python_dir', 'chimera_status_file_h', 
+#'chimera_status_file_name', 'force_runkey', 'gast_input_source', 'initializeFromDictionary', 'input_dir', 'input_file_info', 'maximumLength', 
+#'minAvgQual', 'minimumLength', 'output_dir', 'platform', 'primer_suites', 'require_distal', 'run_date', 'run_key_lane_dict', 'run_keys', 'samples', 
+#'sff_files', 'trim_status_file_h', 'trim_status_file_name', 'vamps_user_upload']
+
+#    logger.debug("PPP run.rundate = ")
+#    logger.debug(run.rundate)
 #    my_env454upload.select_run(lane_keys)
 
 
