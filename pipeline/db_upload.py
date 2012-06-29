@@ -45,11 +45,28 @@ class MyConnection:
             raise                       # re-throw caught exception   
 
 
-    def execute_sql(self, sql):
+    def execute_fetch_select(self, sql):
         if self.cursor:
             self.cursor.execute(sql)
             res = self.cursor.fetchall ()
             return res
+
+    def execute_insert(self, sql):
+        if self.cursor:
+            self.cursor.execute(sql)
+            self.conn.commit()
+            if (self.conn.affected_rows()):
+                logger.info("affected_rows = "  + self.conn.affected_rows())
+
+#            print "affected_rows = %s" % (conn.affected_rows()) 
+    
+    #        my_conn.execute("""INSERT IGNORE INTO sequence_ill (sequence_comp) VALUES (COMPRESS(%s))""", (seq))
+#        conn.commit() 
+#        if (conn.affected_rows()):
+#            print "affected_rows = %s" % (conn.affected_rows()) 
+       
+#            logger.info("Finished clustergast")
+    
 
 
 
@@ -92,7 +109,7 @@ class dbUpload:
         
     def insert_seq(self, seq):
         t_name = "rank"
-        res = self.my_conn.execute_sql("""Select * from rank""")
+        res = self.my_conn.execute_fetch_select("Select * from " + t_name)
 #        self.my_conn.cursor.execute("""Select * from rank""")
 #        self.cursor.execute(sql)
 #        res = self.my_conn.cursor.fetchall ()
