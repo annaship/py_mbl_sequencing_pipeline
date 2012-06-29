@@ -21,6 +21,7 @@ class MyConnection:
         self.server_name = server_name
         self.conn        = None
         self.cursor      = None
+        self.rows        = 0
         
         try:
             content = [line.strip() for line in open(self.file_name).readlines()]
@@ -44,7 +45,6 @@ class MyConnection:
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
 
-
     def execute_fetch_select(self, sql):
         if self.cursor:
             self.cursor.execute(sql)
@@ -55,18 +55,11 @@ class MyConnection:
         if self.cursor:
             self.cursor.execute(sql)
             self.conn.commit()
-            if (self.conn.affected_rows()):
-                logger.info("affected_rows = "  + self.conn.affected_rows())
-
-#            print "affected_rows = %s" % (conn.affected_rows()) 
-    
-    #        my_conn.execute("""INSERT IGNORE INTO sequence_ill (sequence_comp) VALUES (COMPRESS(%s))""", (seq))
-#        conn.commit() 
-#        if (conn.affected_rows()):
-#            print "affected_rows = %s" % (conn.affected_rows()) 
-       
-#            logger.info("Finished clustergast")
-    
+#            if (self.conn.affected_rows()):
+            if (self.conn.insert_id):
+                self.rows +=1
+        logger.debug("rows = "  + str(self.rows))
+ 
 
 
 
@@ -75,56 +68,29 @@ class dbUpload:
     Name = "dbUpload"
     def __init__(self, run = None):
 
-        self.run 	 = run
-        self.outdir  = run.output_dir
+        self.run 	= run
+        self.outdir = run.output_dir
         try:
             self.basedir = run.basedir
         except:
             self.basedir = self.outdir
-        self.rundate = self.run.run_date
+        self.rundate     = self.run.run_date
         self.use_cluster = 1
-        self.fasta_dir        = self.run.input_dir + "/fasta/" 
+        self.fasta_dir   = self.run.input_dir + "/fasta/" 
         self.filenames   = []
-        self.my_conn = MyConnection(server_name = 'newbpcdb2_ill')  
+        self.my_conn     = MyConnection(server_name = 'newbpcdb2_ill')  
+        self.sequence_table_name = "sequence_ill" 
+        self.sequence_field_name = "sequence_comp" 
 
-#        get_fasta_file_names(fasta_file_path)
-#        self.fasta       = u.SequenceSource(fasta_file_path) 
-
-        
-#        os.environ['SGE_ROOT']='/usr/local/sge'
-#        os.environ['SGE_CELL']='grendel'
-#        path = os.environ['PATH']
-#        os.environ['PATH'] = path + ':/usr/local/sge/bin/lx24-amd64'
-        #First step is to check for (or create via mothur)
-        # a uniques fasta file and a names file 
-        # one for each dataset.
-        # If we are here from a vamps gast process
-        # then there should be just one dataset to gast
-        # but if MBL pipe then many datasets are prbably involved.
-        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
+#        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
     def get_fasta_file_names(self, fasta_dir):
         for (dirpath, dirname, files) in walk(fasta_dir):
             return files
         
     def insert_seq(self, seq):
-        t_name = "rank"
-        res = self.my_conn.execute_fetch_select("Select * from " + t_name)
-#        self.my_conn.cursor.execute("""Select * from rank""")
-#        self.cursor.execute(sql)
-#        res = self.my_conn.cursor.fetchall ()
-        print res
-#        print "dir(my_conn) = %s" % dir(my_conn)
-
-        # ------- insert unique sequences --------
-        # INSERT INTO sequence_ill (sequence_comp) VALUES (COMPRESS('TGGTCTTGACATCCACAGAACTTTCCAGAGATGGATTGGTGCCTTCGGGAACTGTGAGAC'))
-        # works:
-#        my_conn.execute("""INSERT IGNORE INTO sequence_ill (sequence_comp) VALUES (COMPRESS(%s))""", (seq))
-#        conn.commit() 
-#        if (conn.affected_rows()):
-#            print "affected_rows = %s" % (conn.affected_rows()) 
-       
-#            logger.info("Finished clustergast")
+        my_sql = """INSERT IGNORE INTO %s (%s) VALUES (COMPRESS('%s'))""" % (self.sequence_table_name, self.sequence_field_name, seq)
+        self.my_conn.execute_insert(my_sql)
 
      
 
