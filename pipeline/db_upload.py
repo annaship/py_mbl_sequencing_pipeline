@@ -15,7 +15,10 @@ class MyConnection:
     if different: change conf.txt and use my_conn = MyConnection(config_file_name, server_name)
     Conf.txt has lines as: bpcdb2:bpcdb2:3306:my_password                                                                                                            
     """
-         
+        
+    """
+    TODO: change hardcoded values to args: file_name="db_conn.conf", server_name="newbpcdb2_ill", user = "ashipunova", 
+    """
     def __init__(self, file_name="db_conn.conf", server_name="newbpcdb2_ill"):
         self.file_name   = file_name
         self.server_name = server_name
@@ -66,6 +69,11 @@ class MyConnection:
 class dbUpload:
     """db upload methods"""
     Name = "dbUpload"
+    """
+    TODO: change hardcoded values to args: server_name="newbpcdb2_ill",
+        self.sequence_table_name = "sequence_ill", 
+        self.sequence_field_name = "sequence_comp"  
+    """
     def __init__(self, run = None):
 
         self.run 	= run
