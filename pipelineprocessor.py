@@ -30,6 +30,7 @@ from pipeline.gast import Gast
 from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
+
 import logging
 import json    
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
@@ -37,9 +38,11 @@ from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 TRIM_STEP = "trim"
 CHIMERA_STEP = "chimera"
 GAST_STEP = "gast"
-VAMPSUPLOAD = "vampsupload"
+UPLOAD_VAMPS_STEP  = "upload_vamps"
+UPLOAD_ENV454_STEP = "upload_env454"
+STATUS_STEP = 'status'
 
-existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, VAMPSUPLOAD]
+existing_steps = [ TRIM_STEP, CHIMERA_STEP, GAST_STEP, UPLOAD_VAMPS_STEP, UPLOAD_ENV454_STEP, STATUS_STEP ]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -62,6 +65,9 @@ def process(run, steps):
             step_method(run)
 
 
+
+    
+    
 # perform trim step
 # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
 # all the stats are kept in the trimrun object
@@ -77,7 +83,15 @@ def trim(run):
     
     # pass True to write out the straight fasta file of all trimmed non-deleted seqs
     # Remember: this is before chimera checking
-    trim_codes = mytrim.trimrun(True)
+    if run.platform == 'illumina':
+        trim_codes = mytrim.trimrun_illumina(True)
+    elif run.platform == '454':
+        trim_codes = mytrim.trimrun_454(True)
+    elif run.platform == 'ion-torrent':
+    	trim_codes = mytrim.trimrun_ion_torrent(True)
+    else:
+        trim_codes = ['ERROR','No Platform Found']
+        
     trim_results_dict = {}
     if trim_codes[0] == 'SUCCESS':
         # setup to write the status
@@ -210,8 +224,27 @@ def gast(run):
     sleep(5)
     mygast.gast2tax(lane_keys)
 
+def upload_env454(run):
+    print "TODO upload_env454(run)"
+    # where are files?
+    input_dir = run.input_dir
+    print run.input_dir
+    # config file has been validated and we know the data is there
     
-def vampsupload(run):
+    # is upload appropriate? that is, are the sequences trimmed?
+    # how can I tell?
+    # maybe there should be a status file
+    # in the output_dir that receives updates during the entire run
+    # or should that be in the db or both?
+    # for a 454 run the data is in 20100917
+    # the seqs are in 1_GATGA.trimmed.fa
+    # and the trim data is in the run variable
+    
+    # presumably when illumina gets going the input_dir
+    # will have a 'fa.unique' suffix (Meren's code will do this)
+    
+    
+def upload_vamps(run):
     
     myvamps = Vamps(run)
     
@@ -225,4 +258,5 @@ def vampsupload(run):
     #myvamps.exports(lane_keys)
     #myvamps.projects(lane_keys)
     #myvamps.info(lane_keys)
-        
+def status(run):
+    print "TODO status(run)"

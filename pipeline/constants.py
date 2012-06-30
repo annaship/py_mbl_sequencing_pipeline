@@ -60,6 +60,24 @@ max_distance = {'default': 0.30, 'v6': 0.30, 'v6a': 0.30, 'v6v4': 0.25, 'v3v5': 
 #cluster wait
 maxwaittime = 1000  # seconds
 sleeptime = 5      # seconds
+refdbs = {'unknown':'refssu_all',
+        'v1v3':'refv1v3',
+        'v1v3a':'refv1v3a',
+        'v3'    :'refv3',
+        'v3a'   :'refv3a',
+        'v3v5'  :'refv3v5',
+        'v4'    :'refv4',
+        'v4v5'  :'refv4v5',
+        'v4v6'  :'refv4v6',
+        'v6v4'  :'refv4v6',
+        'v4v6a' :'refv4v6a',
+        'v6v4a' :'refv4v6a',
+        'v5'    :'refv5',
+        'v6'    :'refv6',
+        'v6a'   :'refv6a',
+        'v9'    :'refv9',
+        'ITS'   :'refITS'       
+        }
 ################################################################################################      
 
   

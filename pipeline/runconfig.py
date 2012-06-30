@@ -10,12 +10,13 @@
 
 from pipeline.sample import Sample
 from pipeline.configurationexception import ConfigurationException
-import os
+from pipeline.validate import Validate
+import sys,os
 import constants as C
 import ast
-
+from pipeline.validate import Validate
 # read a config file and convert to a dictionary
-def configDictionaryFromFile(config_file_path):
+def configDictionaryFromFile_ini(config_file_path):
     import ConfigParser
     
     configDict = {}
@@ -29,25 +30,48 @@ def configDictionaryFromFile(config_file_path):
 
     return configDict
 
+def configDictionaryFromFile_csv(config_file_path):
+    import csv
+    
+    csvReader = csv.reader(open(config_file_path, 'rb'), delimiter=',', quotechar='"')
+    for row in csvReader:
+        print ' -- '.join(row)
+
+    sys.exit()
+    #return configDict
 
 class RunConfig:
     """Doc string here."""
-    def __init__(self, config_info, baseoutputdir, basepythondir):
+    def __init__(self, config_info, baseoutputdir, config_file_type, basepythondir):
         self.run_date   = None
         self.platform   = None # enum('454','illumina','ion_torrent','')
         self.input_dir  = None
         self.output_dir = None
+        self.config_file_type = config_file_type  # ini, csv or dict
         self.sff_files  = []
         self.run_keys = []
         self.run_key_lane_dict = {}
         self.samples = {}
         self.base_python_dir = basepythondir
 
-
+        
+        # Validate here and return the dict for both ini and csv
+            
+    	v = Validate(config_info) # either a file path or dict
+    	if self.config_file_type == 'csv':
+        	config_dict = v.validate_csv()        
+        elif self.config_file_type == 'ini':
+        	config_dict = v.validate_ini()
+        elif self.config_file_type == 'dict':
+        	config_dict = v.validate_dict()
+        else:
+             sys.exit("could not determine config type: "+self.config_file_type)
+        
         # if the config_info was a file path to an .ini file then convert to a dictionary
         # we'll take the info as an ini file or dictionary so we can be called by an api
         # ie vamps user uploads: the config info is a dictionary
-        config_dict = config_info if (type(config_info)==dict) else configDictionaryFromFile(config_info)
+
+#        config_dict = config_info if (type(config_info)==dict) else configDictionaryFromFile_ini(config_info)
         # now extract it all from the dictionary form
         self.initializeFromDictionary(config_dict)
         if type(config_info)==dict and 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
@@ -158,12 +182,60 @@ class RunConfig:
                 sample.use_mbl_primers = lane_run_dict['use_mbl_primers']
             except:
                 sample.use_mbl_primers = 1
-            # required
-            sample.direction = lane_run_dict['direction']                                                                   
-            sample.project = lane_run_dict['project_name']
-            sample.dataset = lane_run_dict['dataset_name']
+#################################
+            try:
+                sample.run_key = lane_run_dict['run_key']
+            except:
+                sample.run_key = ''
+            try:
+                sample.lane = lane_run_dict['lane']
+            except:
+                sample.lane = ''
+            try:
+                sample.adaptor = lane_run_dict['adaptor']
+            except:
+                sample.adaptor = ''
+            try:
+                sample.barcode = lane_run_dict['barcode']
+            except:
+                sample.barcode = ''
+            try:
+                sample.seq_operator = lane_run_dict['seq_operator']
+            except:
+                sample.seq_operator = ''
+            try:
+                sample.amp_operator = lane_run_dict['amp_operator']
+            except:
+                sample.amp_operator = ''
+            try:
+                sample.primer_suite = lane_run_dict['primer_suite']
+            except:
+                sample.primer_suite = ''
+            try:
+                sample.tubelabel = lane_run_dict['tubelabel']
+            except:
+                sample.tubelabel = ''
+            
+            
+            
+            if self.platform == 'illumina':
+                # req specifically fro illumina
+                sample.barcode_index = lane_run_dict['barcode_index'] 
+                sample.overlap = lane_run_dict['overlap'] 
+                sample.read_length = lane_run_dict['read_length'] 
+                sample.file_prefix = lane_run_dict['file_prefix'] 
+                sample.insert_size = lane_run_dict['insert_size']             
+                
+                
+            elif self.platform == '454':
+                # required for 454
+                sample.direction = lane_run_dict['direction'] 
+                sample.taxonomic_domain = lane_run_dict['taxonomic_domain']
+                                                                              
+            sample.project = lane_run_dict['project']
+            sample.dataset = lane_run_dict['dataset']
             sample.dna_region = lane_run_dict['dna_region']
-            sample.taxonomic_domain = lane_run_dict['taxonomic_domain']
+            
 
             # a list of run_keys
             # convert: change ':' to '_'

@@ -28,6 +28,7 @@ from pipeline.chimera import Chimera
 from pipeline.gast import Gast
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
+
 import logging
 import argparse
 from pipelineprocessor import process    
@@ -44,13 +45,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
     parser.add_argument('-c', '--configuration', required=True, dest = "configPath",
                                                  help = 'Configuration parameters of the run. See README File')
+    parser.add_argument('-f', '--config_format',  required=False,   action="store",   default='ini', dest = "config_file_type",        
+                                                 help = 'ini or csv')                                              
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdirarg", 
                                                 help="Comma seperated list of steps.  Choices are: trim,chimera,gast,vampsupload,all")
+    
     parser.add_argument("-s", "--steps",     required=True,  action="store",   dest = "steps", 
-                                                help="Comma seperated list of steps.  Choices are: trim,chimera,gast,vampsupload,all")
+                                                help="Comma seperated list of steps.  Choices are: trim,chimera,status,upload_env454,gast,upload_vamps")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
     
+                                                 
     args = parser.parse_args() 
     print "Log Level set to:",args.loglevel.upper()
     # deal with logging level
@@ -59,10 +64,14 @@ if __name__ == '__main__':
         loggerlevel = logging.DEBUG
     elif  args.loglevel.upper() == 'INFO':     
         loggerlevel = logging.INFO
-    logger.setLevel(loggerlevel)    
-    # read the config file
-    run = Run(args.configPath, args.baseoutputdirarg, os.path.dirname(os.path.realpath(__file__)))  
+    logger.setLevel(loggerlevel)
+    
+   
+    run = Run(args.configPath, args.baseoutputdirarg, args.config_file_type, os.path.dirname(os.path.realpath(__file__)))  
 
+    
+    # read the config file
+    
     # now do all the work
     process(run, args.steps)
 

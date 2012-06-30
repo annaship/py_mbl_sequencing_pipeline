@@ -12,7 +12,10 @@ class Vamps:
 
         self.run 	 = run
         self.outdir  = run.output_dir
-        self.basedir = run.basedir
+        try:
+            self.basedir = run.basedir
+        except:
+            self.basedir = self.outdir
         self.rundate = self.run.run_date
         self.use_cluster = 1
         self.project = run.project
