@@ -43,7 +43,7 @@ GAST_STEP = "gast"
 VAMPSUPLOAD = "vampsupload"
 ENV454UPLOAD = "env454upload"
 
-existing_steps = [TRIM_STEP, CHIMERA_STEP, ENV454UPLOAD, GAST_STEP, VAMPSUPLOAD]
+existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454UPLOAD, VAMPSUPLOAD]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -203,21 +203,25 @@ def env454upload(run):
 #    print "filenames = %s" % filenames
 
     for filename in filenames:
-        fasta_file_path = my_env454upload.fasta_dir + filename
-        fasta           = u.SequenceSource(fasta_file_path) 
-        filename_base   = filename.split("-")[0]
-        run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
-        print "run_info_ill_id = %s" % run_info_ill_id
-        
         try:
+            fasta_file_path = my_env454upload.fasta_dir + filename
+            fasta           = u.SequenceSource(fasta_file_path) 
+            filename_base   = filename.split("-")[0]
+            run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
+            gast_dict       = my_env454upload.get_gasta_result(filename)
+
             while fasta.next():
 #                print "fasta.seq = %s" % fasta.seq
                 my_env454upload.insert_seq(fasta.seq)
                 my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
 
+                (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+                my_env454upload.insert_taxonomy(taxonomy)
+
+
         except Exception, e:          # catch all deriving from Exception (instance e)
             print "Exception: ", e.__str__()      # address the instance, print e.__str__()
-            raise                       # re-throw caught exception   
+#            raise                       # re-throw caught exception   
         except:                       # catch everything
             print "Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)

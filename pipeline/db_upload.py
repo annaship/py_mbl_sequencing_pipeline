@@ -61,10 +61,8 @@ class MyConnection:
 #            if (self.conn.affected_rows()):
             if (self.conn.insert_id):
                 self.rows +=1
-        logger.debug("rows = "  + str(self.rows))
+#        logger.debug("rows = "  + str(self.rows))
  
-
-
 
 class dbUpload:
     """db upload methods"""
@@ -92,6 +90,7 @@ class dbUpload:
         self.rundate     = self.run.run_date
         self.use_cluster = 1
         self.fasta_dir   = self.run.input_dir + "/fasta/" 
+        self.gast_dir    = self.run.input_dir + "/gast/"
         self.filenames   = []
         self.my_conn     = MyConnection(server_name = 'newbpcdb2_ill')  
         self.sequence_table_name = "sequence_ill" 
@@ -123,7 +122,15 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                     VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
         self.my_conn.execute_insert(my_sql)
+ 
+    def get_gasta_result(self, filename):
+        gast_file_name = self.gast_dir + filename + '.gast'
+#        print "gast_file_name = %s" % gast_file_name
+        with open(gast_file_name) as fd:
+            gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
+        return gast_dict
 
-
-     
+    def insert_taxonomy(self, taxonomy):
+        my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
+        self.my_conn.execute_insert(my_sql)
 
