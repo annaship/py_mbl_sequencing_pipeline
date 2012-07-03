@@ -205,13 +205,19 @@ def env454upload(run):
     for filename in filenames:
         fasta_file_path = my_env454upload.fasta_dir + filename
         fasta           = u.SequenceSource(fasta_file_path) 
+        filename_base   = filename.split("-")[0]
+        run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
+        print "run_info_ill_id = %s" % run_info_ill_id
+        
         try:
             while fasta.next():
 #                print "fasta.seq = %s" % fasta.seq
                 my_env454upload.insert_seq(fasta.seq)
+                my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
 
         except Exception, e:          # catch all deriving from Exception (instance e)
             print "Exception: ", e.__str__()      # address the instance, print e.__str__()
+            raise                       # re-throw caught exception   
         except:                       # catch everything
             print "Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)

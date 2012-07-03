@@ -73,6 +73,13 @@ class dbUpload:
     TODO: change hardcoded values to args: server_name="newbpcdb2_ill",
         self.sequence_table_name = "sequence_ill", 
         self.sequence_field_name = "sequence_comp"  
+    TODO: run_key_id into run_info_ill
+        # insert_seq(fasta.seq)
+        # insert_pdr_info()
+        # gast
+        # insert_taxonomy()
+        # insert_sequence_uniq_info_ill()
+
     """
     def __init__(self, run = None):
 
@@ -96,9 +103,27 @@ class dbUpload:
         for (dirpath, dirname, files) in walk(fasta_dir):
             return files
         
+    def get_run_info_ill_id(self, filename_base):
+        my_sql = """SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'""" % (filename_base)
+        res    = self.my_conn.execute_fetch_select(my_sql)
+        if res:
+            return int(res[0][0])
+        
     def insert_seq(self, seq):
         my_sql = """INSERT IGNORE INTO %s (%s) VALUES (COMPRESS('%s'))""" % (self.sequence_table_name, self.sequence_field_name, seq)
         self.my_conn.execute_insert(my_sql)
+    
+    def insert_pdr_info(self, fasta, run_info_ill_id):
+        # ------- insert sequence info per run/project/dataset --------
+        seq_count       = int(fasta.id.split('|')[1].split(':')[1])
+        my_sql          = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (fasta.seq)
+        res             = self.my_conn.execute_fetch_select(my_sql)
+        sequence_ill_id = int(res[0][0])
+        
+        my_sql = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
+                    VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
+        self.my_conn.execute_insert(my_sql)
+
 
      
 
