@@ -26,6 +26,7 @@ from pipeline.runconfig import RunConfig
 from pipeline.run import Run
 from pipeline.chimera import Chimera
 from pipeline.gast import Gast
+from pipeline.validate import Validate
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 
@@ -45,11 +46,20 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
     parser.add_argument('-c', '--configuration', required=True, dest = "configPath",
                                                  help = 'Configuration parameters of the run. See README File')
-    parser.add_argument('-f', '--config_format',  required=False,   action="store",   default='ini', dest = "config_file_type",        
-                                                 help = 'ini or csv')                                              
-    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdirarg", 
-                                                help="Comma seperated list of steps.  Choices are: trim,chimera,gast,vampsupload,all")
-    
+    parser.add_argument('-f', '--config_format',  required=False,   action="store",   default='csv', dest = "config_file_type",        
+                                                 help = 'ini or csv') 
+    parser.add_argument("-p", "--platform",     required=True,  action="store",   dest = "platform", 
+                                                    help="Platform ")  
+    parser.add_argument("-d", "--input_directory",     required=False,  action="store",   dest = "input_dir", default='.',
+                                                    help="Directory where sequence files can be found. ")
+    parser.add_argument("-r", "--run",     required=True,  action="store",   dest = "run", 
+                                                    help="unique run number ")
+    parser.add_argument("-ft", "--seq_file_type",     required=True,  action="store",   dest = "input_file_format",
+                                                    help="Sequence file type: fasta, fatsq or sff ")
+    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='',
+                                                    help="Sequence file suffix [optional] ")                                                
+    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdir", 
+                                                help="default: ./")
     parser.add_argument("-s", "--steps",     required=True,  action="store",   dest = "steps", 
                                                 help="Comma seperated list of steps.  Choices are: trim,chimera,status,upload_env454,gast,upload_vamps")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
@@ -66,8 +76,14 @@ if __name__ == '__main__':
         loggerlevel = logging.INFO
     logger.setLevel(loggerlevel)
     
-   
-    run = Run(args.configPath, args.baseoutputdirarg, args.config_file_type, os.path.dirname(os.path.realpath(__file__)))  
+    if args.platform == 'illumina' and args.config_file_type == 'csv':
+        v = Validate()
+        v.validate_csv(args)
+    elif args.platform == '454' and args.config_file_type == 'ini':
+        pass
+    else:
+        sys.exit("Unknown platform and configFile type for validation")
+    run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))  
 
     
     # read the config file

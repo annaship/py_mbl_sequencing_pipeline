@@ -52,6 +52,12 @@ cluster_initial_check_interval  = 10
 ################################################################################################  
 
 ############# defaults for GAST ################################################################ 
+usearch = '/bioware/uclust/usearch'
+fastasampler = '/bioware/seqinfo/bin/fastasampler'
+calcnodes = '/bioware/seqinfo/bin/calcnodes'
+mysqlimport = '/usr/bin/mysqlimport'
+#qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
+clusterize = '/bioware/seqinfo/bin/clusterize'
 max_accepts = 10
 max_rejects = 0
 pctid_threshold = 0.70

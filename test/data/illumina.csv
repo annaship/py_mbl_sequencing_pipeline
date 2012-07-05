@@ -4,6 +4,7 @@
 "input_file_format","fasta"
 input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
 "file_suffix","fa.unique"
+output_dir,"2134"
 "x"
 ,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,

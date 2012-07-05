@@ -73,8 +73,8 @@ class Validate:
     or .csv  config  file (or input dictionary)
     """
     Name = "VALIDATE"
-    def __init__(self, config_info):
-        self.config_info = config_info
+    def __init__(self, run=None):
+        self.run = run
         
         
             
@@ -112,8 +112,235 @@ class Validate:
         configDict = self.config_info
         print "Finished Validating"
         return configDict
+
+    def validate_csv(self, args):
+        data = {}
+        projects = {}
+        megadata = {}
+        megadata['general'] = {}
+        if self.run:
+            infile = self.configPath
+            megadata['general']['input_dir'] = self.run.input_dir
+            #megadata['general']['output_dir'] = self.args.output_dir
+            megadata['general']['platform'] = self.run.platform
+            megadata['general']['run'] = self.run.run_date
+            megadata['general']['run_date'] = self.run.run_date
+            #megadata['general']['run'] = self.args.run
+            megadata['general']["input_file_format"] = self.run.input_file_format
+            #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
+            megadata['general']["input_file_suffix"] = self.run.input_file_suffix
+        else:
+            
+            infile = args.configPath
+            megadata['general']['input_dir'] = args.input_dir
+            #megadata['general']['output_dir'] = self.args.output_dir
+            megadata['general']['platform'] = args.platform
+            megadata['general']['run'] = args.run
+            megadata['general']['run_date'] = args.run
+            #megadata['general']['run'] = self.args.run
+            #megadata['general']["input_file_format"] = indata_obj['input_file_format']
+            #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
+            #megadata['general']["input_file_suffix"] = indata_obj['input_file_suffix']
+        print "Validating csv type ConfigFile"
         
-    def validate_csv(self):
+        # changes spaces to '_' and all lowercase
+        known_header_list = [   "run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
+                                "amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length","primer_suite" ]
+        primer_suites = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
+        dna_regions = ["v1","v3","v4","v5","v6","v9"]
+        
+        
+        test_datasets = {}
+        dataset_counter = {}
+        headers = ''
+        f_in_md = open(infile, 'r')
+        # must be comma sep
+        lines = f_in_md.readlines()
+        #headerLine = lines.pop(0).strip() #removes and returns the first line
+        #headers = [i.strip('"').lower().replace(" ", "_") for i in headerLine.split(',')]
+        
+        
+    
+        #lines.pop(0)
+        
+        
+        #[general] section
+        #run_date = 20120601
+        #platform = illumina
+        #input_dir = /xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/
+        #output_dir = .
+        #input_file_names = 
+        #input_file_suffix = fa.uniques
+
+        #input_file_formats = fasta
+        #input_file_lanes = 1 
+        found_data_lines = False
+        
+        
+        
+        for line in lines:
+            line = line.strip()
+            
+            if not line:
+                continue
+            lst = [i.strip('"').replace(" ", "_") for i in line.strip().split(',')]
+            
+            
+            if not lst[0]:
+                continue
+            print line
+
+            temp = {}   
+            if not headers:
+                headers = [i.strip('"').lower().replace(" ", "_") for i in line.split(',')]
+    
+                if sorted(known_header_list) != sorted(headers):
+                    sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(known_header_list)))
+            else:
+                for n in range(0,len(headers)):
+                    #print headers[n], lst[n]
+                    try:
+                        temp[headers[n]] = lst[n]
+                    except:
+                        sys.exit("ERROR:It looks like the header count and the data column count are different.")
+            
+                temp['file_prefix'] = temp['dataset']+'_'+temp['barcode'].upper().replace('N','')
+            
+                #data[lst[0]] = temp
+                
+                
+                unique_identifier = temp['barcode_index']+'_'+temp['run_key']+'_'+temp['lane']
+                megadata[unique_identifier]={}
+                if unique_identifier in test_datasets:
+                    sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
+                else:                     
+                    test_datasets[unique_identifier] = 1
+                    
+                megadata[unique_identifier]['dataset'] = temp['dataset']
+                megadata[unique_identifier]['project'] = temp['project']
+                
+                if temp['project'] in dataset_counter:
+                    dataset_counter[temp['project']] += 1
+                else:
+                    dataset_counter[temp['project']] = 1
+                
+                #megadata[unique_identifier]['ds_count'] = 1
+                megadata[unique_identifier]['project']      = temp['project']
+                megadata[unique_identifier]['run_key']      = temp['run_key']
+                megadata[unique_identifier]['lane']         = temp['lane']
+                megadata[unique_identifier]['tubelabel']    = temp['tubelabel']
+                megadata[unique_identifier]['barcode']      = temp['barcode']
+                megadata[unique_identifier]['adaptor']      = temp['adaptor']
+                megadata[unique_identifier]['dna_region']   = temp['dna_region']
+                megadata[unique_identifier]['amp_operator'] = temp['amp_operator']
+                megadata[unique_identifier]['seq_operator'] = temp['seq_operator']
+                megadata[unique_identifier]['barcode_index']= temp['barcode_index']
+                megadata[unique_identifier]['overlap']      = temp['overlap']
+                megadata[unique_identifier]['insert_size']  = temp['insert_size']
+                megadata[unique_identifier]['file_prefix']  = temp['file_prefix']
+                megadata[unique_identifier]['read_length']  = temp['read_length']
+                megadata[unique_identifier]['primer_suite'] = temp['primer_suite']
+                
+   
+        print 'general:',megadata['general']
+        
+        
+        
+        # start error checking here
+        # MUST be in list: "Domain","Primer Suite","DNA Region"
+        # MUST MATCH: "Domain","Primer Suite","DNA Region"
+        #
+        #
+        # VAMPS project name format:  SLM_GCB_Bv6
+        #
+        #
+        if 'file_suffix' not in megadata['general']:
+            megadata['general']['file_suffix'] = ''
+        file_count = 0
+        files_list = []
+        if os.path.isdir(megadata['general']['input_dir']):
+            p = megadata['general']['input_dir'], '*'+megadata['general']['file_suffix']
+            print p
+            for infile in glob.glob( os.path.join(megadata['general']['input_dir'], '*'+megadata['general']['file_suffix']) ):
+                files_list.append(os.path.basename(infile))
+                file_count += 1
+        else:
+            sys.exit("ERROR: no input directory or directory permissions problem: "+megadata['general']['input_dir'])
+            
+        if not file_count:
+            sys.exit("ERROR: No files were found in '"+megadata['general']['input_dir']+"' with a suffix of '"+megadata['general']['file_suffix']+"'")
+            
+       
+        #print dataset_counter
+        for item in megadata:
+            if item != 'general':
+                
+            
+                #dataset_items['domain']        = dataset_items['domain'].lower().replace(" ", "_")
+                megadata[item]['primer_suite']  = megadata[item]['primer_suite'].lower().replace(" ", "_")
+                megadata[item]['dna_region']    = megadata[item]['dna_region'].lower().replace(" ", "_")
+                megadata[item]['barcode']        = megadata[item]['barcode'].upper()
+                megadata[item]['barcode_index']  = megadata[item]['barcode_index'].upper()
+                megadata[item]['ds_count'] = str(dataset_counter[megadata[item]['project']])
+                #print    dataset_counter,megadata[item]['project']
+                
+                #print project,dataset_items,"\n\n"
+    
+                if not megadata[item]['dataset']:
+                    sys.exit("ERROR:Current dataset name is missing or corrupt - Exiting")
+                
+                missing_key = ''
+                missing_value = ''
+                for k,v in megadata[item].iteritems():
+                    if not k:
+                        #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
+                        logger.warn("ERROR: key for: '"+v+"' is missing or corrupt - Continuing")
+                        missing_key = v
+                    if not v:
+                        
+                        logger.warn("ERROR: value of: '"+k+"' is missing or corrupt - Continuing")
+                        missing_value = k
+                if missing_key:
+                    sys.exit("ERROR: value of: "+missing_key+" is missing or corrupt - Exiting")
+                if missing_value:
+                    sys.exit("ERROR: value of: "+missing_value+" is missing or corrupt - Exiting")
+                # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
+                if megadata[item]['primer_suite'] not in primer_suites:
+                    sys.exit("ERROR: Primer Suite not found: "+megadata[item]['primer_suite'])
+                #if dataset_items['domain'] not in domains:
+                 #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
+                if megadata[item]['dna_region'] not in dna_regions:
+                    sys.exit("ERROR: DNA Region not found: "+megadata[item]['dna_region'])
+                # "Bacterial v6","BacterialV6Suite","v6"
+                #if dataset_items['domain'][:6] != dataset_items['primer_suite'][:6]:
+                #    sys.exit("ERROR: Domain ("+dataset_items['domain']+") -- Primer Suite ("+dataset_items['primer_suite']+") mismatch.")
+                #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
+                #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
+                if megadata[item]['dna_region'] not in megadata[item]['primer_suite']:
+                    sys.exit("ERROR: DNA Region ("+megadata[item]['dna_region']+") not found in Primer Suite ("+megadata[item]['primer_suite']+")")
+                
+            
+                # CHECK: project name format: 3 parts; end with Bv6,Ev9,Av6 or something similar
+                try:
+                    (a,b,c) = megadata[item]['project'].split('_')
+                except:
+                    sys.exit("ERROR: project not in correct format: "+megadata[item]['project'])
+                (a,b,c) = megadata[item]['project'].split('_')
+                #if c[0] not in [i[0].upper() for i in domains]:
+                #    sys.exit("ERROR : Project suffix has incorrect/non-existant domain: "+c)
+                if c[1:] not in dna_regions:
+                    sys.exit("ERROR : Project suffix has incorrect DNA region: "+c)
+                   
+                    
+                #print item,megadata[item],"\n\n"
+        # other checks to put in:
+        # check for duplicate dataset name:  NO
+        # that data == file prefix
+        # if we have an input directory that each dataset has a coresponding file - for illumina
+        # Missing data is ok for barcode and adaptor (illumina only)
+        # get tube number back:  yes ds_count
+        print "SUCCESS: Finished Validating"        
+    def validate_csv2(self):
         print "Validating csv type Config File"
         
         # changes spaces to '_' and all lowercase
