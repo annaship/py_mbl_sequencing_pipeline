@@ -150,6 +150,17 @@ class dbUpload:
                )
                """ % (fasta.seq, taxonomy, distance, refssu_count, rank, refhvr_ids.rstrip())
         self.my_conn.execute_insert(my_sql)
+    
+    def put_run_info(self):
+        my_csv = readCSV(self.run)
+        content = my_csv.read_csv()
+        print "\nList of lines"
+        print content.keys()
+        # To see the list of statistics available for each line
+        for k, v in content.items():
+            print k, v['dataset'], v 
+#            182 H38 {'platform': 'Illumina', 'run_key': 'NNNNGCTAC', 'lane': '4', 'run': '20120613', 'IDX': 'GGCTAC', 'dna_region': 'v6', 'vamps_user': 'jreveillaud', 'adaptor': '', 'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H38', 'project': 'JCR_SPO_Bv6', 'read_length': '101', 'file_prefix': 'H38', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H38', 'amp_operator': 'JR', 'insert_size': '230'}
+
 
             
 class readCSV:
@@ -157,6 +168,9 @@ class readCSV:
     Name = "readCSV"
     """
     TODO: run_key_id into run_info_ill
+    write into ini:
+    for item in thelist:
+      thefile.write("%s\n" % item)
     """
     def __init__(self, run = None):
 
@@ -188,8 +202,34 @@ class readCSV:
 
 
     def read_csv(self):
-#            spamReader = csv.reader(open('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv', 'rb'), delimiter=' ', quotechar='|')
-        spamReader = csv.reader(open('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv', 'rb'), delimiter=',')
-        for row in spamReader:
-            print ', '.join(row)
+        content = {}
+        headers = None
 
+        inputFile = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv'
+#            spamReader = csv.reader(open('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv', 'rb'), delimiter=' ', quotechar='|')
+        reader = csv.reader(open(inputFile, 'rb'), delimiter=',')
+        rownum = 0
+        for row in reader:
+            if reader.line_num == 1:
+                """
+                If we are on the first line, create the headers list from the first row
+                """
+                headers = row
+            else:
+                """
+                Create the sub-dictionary by using the zip() function.
+                """
+                content[rownum] = dict(zip(headers, row))
+#                content[row[0]]['Stabling'] = [s.strip() for s in content[row[0]]['Stabling'].split(',')]
+            rownum += 1
+
+#        
+        """
+        print dir(myReader)
+        ['__class__', '__delattr__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__iter__', '__new__', '__reduce__',
+         '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'dialect', 'line_num', 'next']
+        """ 
+        return content
+    
+    def create_conf(self):
+        pass

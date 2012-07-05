@@ -42,8 +42,9 @@ CHIMERA_STEP = "chimera"
 GAST_STEP = "gast"
 VAMPSUPLOAD = "vampsupload"
 ENV454UPLOAD = "env454upload"
+ENV454RUN_INFO_UPLOAD = "env454run_info_upload"
 
-existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454UPLOAD, VAMPSUPLOAD]
+existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -196,9 +197,11 @@ def chimera(run):
         # run primers
         mymblutils.write_clean_files_to_database()
 
-def env454run_info_upload(run):  
-    pass
-
+def env454run_info_upload(run):
+    my_read_csv = dbUpload(run)
+    my_read_csv.put_run_info()  
+#    my_read_csv.read_csv()
+    
 def env454upload(run):  
     """
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
@@ -207,8 +210,6 @@ def env454upload(run):
         1) Illumina - provide a link to the directory with fasta and gast files
         2) Upload env454 data into raw, trim, gast etc tables from files
     """
-    my_read_csv = readCSV(run)
-    my_read_csv.read_csv()
     
     my_env454upload = dbUpload(run)
     filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
