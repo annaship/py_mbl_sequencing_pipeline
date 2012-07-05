@@ -34,7 +34,7 @@ from pipeline.trim_run import TrimRun
 import logging
 import json    
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
-from pipeline.db_upload import MyConnection, dbUpload 
+from pipeline.db_upload import MyConnection, dbUpload, readCSV 
 
 TRIM_STEP           = "trim"
 CHIMERA_STEP        = "chimera"
@@ -43,7 +43,11 @@ VAMPSUPLOAD = "vampsupload"
 ENV454UPLOAD = "env454upload"
 STATUS_STEP         = 'status'
 
+<<<<<<< HEAD:pipelineprocessor.py
 existing_steps = [ TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP ]
+=======
+existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454UPLOAD, VAMPSUPLOAD]
+>>>>>>> dc8f4f1ede9451e4e0e9af6189acb96aa53e6365:pipelineprocessor.py
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -220,6 +224,9 @@ def chimera(run):
         # run primers
         mymblutils.write_clean_files_to_database()
 
+def env454run_info_upload(run):  
+    pass
+
 def env454upload(run):  
     """
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
@@ -228,6 +235,11 @@ def env454upload(run):
         1) Illumina - provide a link to the directory with fasta and gast files
         2) Upload env454 data into raw, trim, gast etc tables from files
     """
+<<<<<<< HEAD:pipelineprocessor.py
+=======
+    my_read_csv = readCSV(run)
+    my_read_csv.read_csv()
+>>>>>>> dc8f4f1ede9451e4e0e9af6189acb96aa53e6365:pipelineprocessor.py
     
     my_env454upload = dbUpload(run)
     filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
