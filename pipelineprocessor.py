@@ -30,21 +30,21 @@ from pipeline.gast import Gast
 from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
+
 import logging
 import json    
-#sys.path.append("/bioware/pythonmodules/fastalib")
-import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload, readCSV 
 
-TRIM_STEP = "trim"
-CHIMERA_STEP = "chimera"
-GAST_STEP = "gast"
-VAMPSUPLOAD = "vampsupload"
-ENV454UPLOAD = "env454upload"
+TRIM_STEP           = "trim"
+CHIMERA_STEP        = "chimera"
+GAST_STEP           = "gast"
+VAMPSUPLOAD         = "vampsupload"
+ENV454UPLOAD        = "env454upload"
 ENV454RUN_INFO_UPLOAD = "env454run_info_upload"
+STATUS_STEP         = 'status'
 
-existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD]
+existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -53,8 +53,14 @@ def process(run, steps):
     
     if not os.path.exists(run.output_dir):
         logger.debug("Creating output directory: "+run.output_dir)
-        os.makedirs(run.output_dir)      
-                    
+        os.makedirs(run.output_dir)  
+    
+    # Open run STATUS File here.
+    # open in append mode because we may start the run in the middle
+    # say at the gast stage and don't want to over write.
+    # if we re-run trimming we'll get two trim status reports
+    run.run_status_file_h = open(run.run_status_file_name, "a")
+    
     # loop through official list...this way we execute the
     # users requested steps in the correct order                
     for step in requested_steps:
@@ -82,7 +88,15 @@ def trim(run):
     
     # pass True to write out the straight fasta file of all trimmed non-deleted seqs
     # Remember: this is before chimera checking
-    trim_codes = mytrim.trimrun(True)
+    if run.platform == 'illumina':
+        trim_codes = mytrim.trimrun_illumina(True)
+    elif run.platform == '454':
+        trim_codes = mytrim.trimrun_454(True)
+    elif run.platform == 'ion-torrent':
+    	trim_codes = mytrim.trimrun_ion_torrent(True)
+    else:
+        trim_codes = ['ERROR','No Platform Found']
+        
     trim_results_dict = {}
     if trim_codes[0] == 'SUCCESS':
         # setup to write the status
@@ -94,6 +108,8 @@ def trim(run):
         mytrim.write_data_files(new_lane_keys)
         run.trim_status_file_h.write(json.dumps(trim_results_dict))
         run.trim_status_file_h.close()
+        run.run_status_file_h.write(json.dumps(trim_results_dict))
+        run.run_status_file_h.close()
     else:
         logger.debug("Trimming finished ERROR")
         trim_results_dict['status'] = "error"
@@ -101,7 +117,9 @@ def trim(run):
         trim_results_dict['code2'] = trim_codes[2]
         run.trim_status_file_h.write(json.dumps(trim_results_dict))
         run.trim_status_file_h.close()
-        sys.exit()
+        run.run_status_file_h.write(json.dumps(trim_results_dict))
+        run.run_status_file_h.close()
+        sys.exit("Trim Error")
 
 # chimera assumes that a trim has been run and that there are files
 # sitting around that describe the results of each lane:runkey sequences
@@ -112,7 +130,9 @@ def chimera(run):
     logger.debug("Starting Chimera Checker")
     # lets read the trim status file out here and keep those details out of the Chimera code
     new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+    
     mychimera = Chimera(run)
+    
     c_den    = mychimera.chimera_denovo(new_lane_keys)
     if c_den[0] == 'SUCCESS':
         chimera_cluster_ids += c_den[2]
@@ -144,25 +164,29 @@ def chimera(run):
         if chimera_cluster_code[0] == 'SUCCESS':
             logger.info("Chimera checking finished successfully")
             run.chimera_status_file_h.write("CHIMERA SUCCESS\n")
-            
+            run.run_status_file_h.write("CHIMERA SUCCESS\n")
             
         else:
-            logger.info("Chimera checking Failed")
-            run.chimera_status_file_h.write("CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
-            sys.exit()
+            logger.info("3-Chimera checking Failed")
+            run.chimera_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
+            run.run_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
+            sys.exit("3-Chimera checking Failed")
             
     elif chimera_code == 'NOREGION':
         logger.info("No regions found that need chimera checking")
         run.chimera_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")
+        run.run_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")
         
     elif chimera_code == 'FAIL':
-        logger.info("Chimera checking Failed")
-        run.chimera_status_file_h.write("CHIMERA ERROR: \n")
-        sys.exit()
+        logger.info("1-Chimera checking Failed")
+        run.chimera_status_file_h.write("1-CHIMERA ERROR: \n")
+        run.run_status_file_h.write("1-CHIMERA ERROR: \n")
+        sys.exit("1-Chimera Failed")
     else:
-        logger.info("Chimera checking Failed")
-        run.chimera_status_file_h.write("CHIMERA ERROR: \n")
-        sys.exit()
+        logger.info("2-Chimera checking Failed")
+        run.chimera_status_file_h.write("2-CHIMERA ERROR: \n")
+        run.run_status_file_h.write("2-CHIMERA ERROR: \n")
+        sys.exit("2-Chimera checking Failed")
     sleep(2)   
     if  chimera_code == 'PASS' and  chimera_cluster_code[0] == 'SUCCESS':
         mychimera.write_chimeras_to_deleted_file(new_lane_keys)
@@ -210,7 +234,10 @@ def env454upload(run):
         1) Illumina - provide a link to the directory with fasta and gast files
         2) Upload env454 data into raw, trim, gast etc tables from files
     """
-    
+
+    my_read_csv = readCSV(run)
+    my_read_csv.read_csv()
+
     my_env454upload = dbUpload(run)
     filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
 #    print "filenames = %s" % filenames
@@ -258,8 +285,6 @@ def env454upload(run):
 #    logger.debug("PPP run.rundate = ")
 #    logger.debug(run.rundate)
 #    my_env454upload.select_run(lane_keys)
-
-
 def gast(run):  
     
     mygast = Gast(run)
@@ -267,31 +292,83 @@ def gast(run):
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file
     # that was just created in vamps_gast.py
+    # or we can get the 'lane_keys' directly from the config_file
+    # for illumina:
+    # a unique idx_key is a concatenation of barcode_index and run_key
     if(run.vamps_user_upload):
-        lane_keys = [run.user+run.runcode]        
+        idx_keys = [run.user+run.runcode]        
     else:
-        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+        try:
+            idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+            # {"status": "success", "new_lane_keys": ["1_GATGA"]}
+        except:
+            # here we have no idx_keys - must create them from run
+            # if illumina they are index_runkey_lane concatenation
+            # if 454 the are lane_key
+            if run.platform == 'illumina':  
+                idx_keys = run.run_keys
+                ct = 0
+                for h in run.samples:
+                    print h,run.samples[h]
+                    ct +=1
+                print ct
+            elif run.platform == '454':
+                pass
+            elif run.platform == 'ion_torrent':
+                pass
+      
+    result_code = mygast.clustergast(idx_keys)
+    run.run_status_file_h.write(json.dumps(result_code))
+    if result_code[0] == 'ERROR':
+        logger.error("clutergast failed")
+        sys.exit("clutergast failed")
+    sleep(5)
+    result_code = mygast.gast_cleanup(idx_keys)
+    run.run_status_file_h.write(json.dumps(result_code))
+    if result_code[0] == 'ERROR':
+        logger.error("gast_cleanup failed")
+        sys.exit("gast_cleanup failed")
+    sleep(5)
+    result_code = mygast.gast2tax(idx_keys)
+    run.run_status_file_h.write(json.dumps(result_code))
+    if result_code[0] == 'ERROR':
+        logger.error("gast2tax failed")
+        sys.exit("gast2tax failed")
         
-    mygast.clustergast(lane_keys)
-    sleep(5)
-    mygast.gast_cleanup(lane_keys)
-    sleep(5)
-    mygast.gast2tax(lane_keys)
-
+def upload_env454(run):
+    print "TODO upload_env454(run)"
+    run.run_status_file_h.write("starting to load env454")
+    # where are files?
+    input_dir = run.input_dir
+    print run.input_dir
+    # config file has been validated and we know the data is there
     
-def vampsupload(run):
+    # is upload appropriate? that is, are the sequences trimmed?
+    # how can I tell?
+    # maybe there should be a status file
+    # in the output_dir that receives updates during the entire run
+    # or should that be in the db or both?
+    # for a 454 run the data is in 20100917
+    # the seqs are in 1_GATGA.trimmed.fa
+    # and the trim data is in the run variable
+    
+    # presumably when illumina gets going the input_dir
+    # will have a 'fa.unique' suffix (Meren's code will do this)
+    
+    
+def upload_vamps(run):
     
     myvamps = Vamps(run)
     
     if(run.vamps_user_upload):
-        lane_keys = [run.user+run.runcode]        
+        idx_keys = [run.user+run.runcode]        
     else:
-        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+        idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
         
-    myvamps.taxonomy(lane_keys)
-    #myvamps.sequences(lane_keys)        
-    #myvamps.exports(lane_keys)
-    #myvamps.projects(lane_keys)
-    #myvamps.info(lane_keys)
-        
-        
+    myvamps.taxonomy(idx_keys)
+    #myvamps.sequences(idx_keys)        
+    #myvamps.exports(idx_keys)
+    #myvamps.projects(idx_keys)
+    #myvamps.info(idx_keys)
+def status(run):
+    print "TODO status(run)"

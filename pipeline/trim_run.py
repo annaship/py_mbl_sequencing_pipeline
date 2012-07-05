@@ -126,7 +126,7 @@ class TrimRun( object ):
     #      for each sequence
     #         call do_trim(seq...)  (this routine will keep stats on per runkey/lane basis)
     #         write out sequence data
-    def trimrun(self, write_files = False):
+    def trimrun_454(self, write_files = False):
         
         self.stats_fp = open( os.path.join(self.outdir, self.statsFileName),"w" )
         self.number_of_raw_sequences  = 0
@@ -165,13 +165,18 @@ class TrimRun( object ):
             for record in SeqIO.parse(file_info["name"], parsing_format):            
                 self.number_of_raw_sequences += 1
                 
+                # get ids
                 if file_format == "fasta-mbl":
                     id_line_parts = record.description.split(' ')
                     id = id_line_parts[0]
                     lane = id_line_parts[2]
-                else:
-                    # will need lots of other stuff here for fastq-illumina
+                elif file_format == "fastq-sanger":                    
                     id = record.id
+                elif file_format == "fastq-illumina":
+                	# will need lots of other stuff here for fastq-illumina
+                	id = record.id
+                else:
+                	id = record.id
                 # should merge these with above if/else
                 
                 if file_format == "fasta" or file_format == "fasta-mbl":
