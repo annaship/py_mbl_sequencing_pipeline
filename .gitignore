@@ -13,6 +13,7 @@ results/*
 db_conn.conf
 fasta/*
 gast/*
+csv/*
 
 # Result files #
 ################

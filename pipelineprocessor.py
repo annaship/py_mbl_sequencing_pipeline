@@ -35,7 +35,7 @@ import json
 #sys.path.append("/bioware/pythonmodules/fastalib")
 import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
-from pipeline.db_upload import MyConnection, dbUpload 
+from pipeline.db_upload import MyConnection, dbUpload, readCSV 
 
 TRIM_STEP = "trim"
 CHIMERA_STEP = "chimera"
@@ -207,6 +207,8 @@ def env454upload(run):
         1) Illumina - provide a link to the directory with fasta and gast files
         2) Upload env454 data into raw, trim, gast etc tables from files
     """
+    my_read_csv = readCSV(run)
+    my_read_csv.read_csv()
     
     my_env454upload = dbUpload(run)
     filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)

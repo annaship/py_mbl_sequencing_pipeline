@@ -3,6 +3,7 @@ import fastalib as u
 import MySQLdb
 from os import listdir, walk
 from os.path import isfile, join
+import csv
 
 from pipeline.pipelinelogging import logger
 #import logging
@@ -151,5 +152,44 @@ class dbUpload:
         self.my_conn.execute_insert(my_sql)
 
             
+class readCSV:
+    """read a CSV submition data"""
+    Name = "readCSV"
+    """
+    TODO: run_key_id into run_info_ill
+    """
+    def __init__(self, run = None):
 
+        self.run         = run
+        self.outdir      = run.output_dir
+        try:
+            self.basedir = run.basedir
+        except:
+            self.basedir = self.outdir
+        self.rundate     = self.run.run_date
+        self.use_cluster = 1
+        self.csv_dir   = self.run.input_dir + "/csv/" 
+        self.filenames   = []
+        #Tables:
+        self.dataset_table_name                = "dataset"
+        self.dna_region_table_name             = "dna_region"
+        self.primer_suite_table_name           = "primer_suite"
+        self.project_table_name                = "project"
+        self.rank_table_name                   = "rank"
+        self.run_table_name                    = "run"
+        self.run_info_ill_table_name           = "run_info_ill"
+        self.run_key_table_name                = "run_key"
+        self.sequence_ill_table_name           = "sequence_ill"
+        self.sequence_pdr_info_ill_table_name  = "sequence_pdr_info_ill"
+        self.sequence_uniq_info_ill_table_name = "sequence_uniq_info_ill"
+        self.taxonomy_table_name               = "taxonomy"
+        #Fields:
+        self.sequence_field_name               = "sequence_comp" 
+
+
+    def read_csv(self):
+#            spamReader = csv.reader(open('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv', 'rb'), delimiter=' ', quotechar='|')
+        spamReader = csv.reader(open('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv', 'rb'), delimiter=',')
+        for row in spamReader:
+            print ', '.join(row)
 
