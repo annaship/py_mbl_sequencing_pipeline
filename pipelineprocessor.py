@@ -33,6 +33,7 @@ from pipeline.trim_run import TrimRun
 
 import logging
 import json    
+import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload, readCSV 
 
@@ -93,7 +94,7 @@ def trim(run):
     elif run.platform == '454':
         trim_codes = mytrim.trimrun_454(True)
     elif run.platform == 'ion-torrent':
-    	trim_codes = mytrim.trimrun_ion_torrent(True)
+        trim_codes = mytrim.trimrun_ion_torrent(True)
     else:
         trim_codes = ['ERROR','No Platform Found']
         

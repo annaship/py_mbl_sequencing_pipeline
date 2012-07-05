@@ -76,8 +76,6 @@ class Validate:
     def __init__(self, run=None):
         self.run = run
         
-        
-            
     def validate_ini(self):
         print "Validating ini type Config File -TODO"
         # must be a general section
@@ -297,9 +295,9 @@ class Validate:
                         logger.warn("ERROR: key for: '"+v+"' is missing or corrupt - Continuing")
                         missing_key = v
                     if not v:
-                        
-                        logger.warn("ERROR: value of: '"+k+"' is missing or corrupt - Continuing")
-                        missing_value = k
+                        if (k != 'barcode' and k != 'adaptor'):
+                            logger.warn("ERROR: value of: '"+k+"' is missing or corrupt - Continuing")
+                            missing_value = k
                 if missing_key:
                     sys.exit("ERROR: value of: "+missing_key+" is missing or corrupt - Exiting")
                 if missing_value:
