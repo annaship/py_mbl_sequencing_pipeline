@@ -196,7 +196,17 @@ def chimera(run):
         # run primers
         mymblutils.write_clean_files_to_database()
 
+def env454run_info_upload(run):  
+    pass
+
 def env454upload(run):  
+    """
+    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
+    For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
+    TODO: 
+        1) Illumina - provide a link to the directory with fasta and gast files
+        2) Upload env454 data into raw, trim, gast etc tables from files
+    """
     
     my_env454upload = dbUpload(run)
     filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
@@ -211,13 +221,10 @@ def env454upload(run):
             gast_dict       = my_env454upload.get_gasta_result(filename)
 
             while fasta.next():
-#                print "fasta.seq = %s" % fasta.seq
                 my_env454upload.insert_seq(fasta.seq)
                 my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
-
-                (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-                my_env454upload.insert_taxonomy(taxonomy)
-
+                my_env454upload.insert_taxonomy(fasta, gast_dict)
+                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
 
         except Exception, e:          # catch all deriving from Exception (instance e)
             print "Exception: ", e.__str__()      # address the instance, print e.__str__()

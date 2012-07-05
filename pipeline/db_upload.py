@@ -11,9 +11,9 @@ import constants as C
 class MyConnection:
     """
     Connection to env454
-    By default takes parameters from "conf.txt", host = "newbpcdb2"
-    if different: change conf.txt and use my_conn = MyConnection(config_file_name, server_name)
-    Conf.txt has lines as: bpcdb2:bpcdb2:3306:my_password                                                                                                            
+    By default takes parameters from "db_conn.conf", host = "newbpcdb2"
+    if different: change db_conn.conf and use my_conn = MyConnection(config_file_name, server_name)
+    db_conn.conf has lines as: bpcdb2:bpcdb2:3306:my_password                                                                                                            
     """
         
     """
@@ -72,6 +72,7 @@ class dbUpload:
         self.sequence_table_name = "sequence_ill", 
         self.sequence_field_name = "sequence_comp"  
     TODO: run_key_id into run_info_ill
+    Order:
         # insert_seq(fasta.seq)
         # insert_pdr_info()
         # gast
@@ -130,7 +131,25 @@ class dbUpload:
             gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
         return gast_dict
 
-    def insert_taxonomy(self, taxonomy):
+    def insert_taxonomy(self, fasta, gast_dict):
+        (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
         self.my_conn.execute_insert(my_sql)
+        
+    def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
+        (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+        my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+               (
+                (SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp),
+                (SELECT taxonomy_id     FROM taxonomy WHERE taxonomy = '%s'),
+                '%s',
+                '%s',
+                (SELECT rank_id         FROM rank WHERE rank = '%s'),
+                '%s'                
+               )
+               """ % (fasta.seq, taxonomy, distance, refssu_count, rank, refhvr_ids.rstrip())
+        self.my_conn.execute_insert(my_sql)
+
+            
+
 
