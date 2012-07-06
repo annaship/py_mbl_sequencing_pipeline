@@ -28,8 +28,9 @@ class readCSV:
                 self.basedir = self.outdir
             self.rundate     = self.run.run_date
             self.use_cluster = 1
-            self.csv_dir   = self.run.input_dir + "/csv/" 
-        self.filenames   = []
+            self.csv_dir     = self.run.input_dir + "/csv/" 
+        self.file_path = file_path
+        self.filenames = []
         #Tables:
         self.dataset_table_name                = "dataset"
         self.dna_region_table_name             = "dna_region"
@@ -51,9 +52,10 @@ class readCSV:
         content = {}
         headers = None
 
-        inputFile = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv'
+#        inputFile = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv'
 #            spamReader = csv.reader(open('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv', 'rb'), delimiter=' ', quotechar='|')
-        reader = csv.reader(open(inputFile, 'rb'), delimiter=',')
+        
+        reader = csv.reader(open(self.file_path, 'rb'), delimiter=',')
         rownum = 0
         for row in reader:
             if reader.line_num == 1:

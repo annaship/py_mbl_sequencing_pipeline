@@ -164,6 +164,7 @@ class Validate:
 #            print k, v['dataset'], v 
 
         my_csv      = readCSV(file_path = infile)
+        print "infile = %s" % infile
         content     = my_csv.read_csv()
         headers     = content[1].keys()
         headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
