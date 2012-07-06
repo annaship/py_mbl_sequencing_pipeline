@@ -20,6 +20,7 @@ import time
 import shutil
 import random
 from pipeline.pipelinelogging import logger
+from pipeline.get_ini import readCSV
 import constants as C
 #import pipeline.fastalib
 
@@ -112,10 +113,13 @@ class Validate:
         return configDict
 
     def validate_csv(self, args):
-        data = {}
-        projects = {}
+#        data                = {}
+#        projects = {}
         megadata = {}
         megadata['general'] = {}
+        test_datasets = {}
+        dataset_counter = {}
+        headers = ''
         if self.run:
             infile = self.configPath
             megadata['general']['input_dir'] = self.run.input_dir
@@ -127,8 +131,7 @@ class Validate:
             megadata['general']["input_file_format"] = self.run.input_file_format
             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
             megadata['general']["input_file_suffix"] = self.run.input_file_suffix
-        else:
-            
+        else:            
             infile = args.configPath
             megadata['general']['input_dir'] = args.input_dir
             #megadata['general']['output_dir'] = self.args.output_dir
@@ -142,15 +145,22 @@ class Validate:
         print "Validating csv type ConfigFile"
         
         # changes spaces to '_' and all lowercase
-        known_header_list = [   "run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
+        known_header_list = ["run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
                                 "amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length","primer_suite" ]
-        primer_suites = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
-        dna_regions = ["v1","v3","v4","v5","v6","v9"]
+        primer_suites     = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
+        dna_regions       = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6"]
         
         
-        test_datasets = {}
-        dataset_counter = {}
-        headers = ''
+#        my_read_csv = readCSV(file_path = infile)
+#        my_read_csv.put_run_info()
+        my_csv = readCSV(file_path = infile)
+        content = my_csv.read_csv()
+        print "content[1].keys(): "
+        print content[1].keys()
+        # To see the list of statistics available for each line
+        for k, v in content.items():
+            print k, v['dataset'], v 
+            
         f_in_md = open(infile, 'r')
         # must be comma sep
         lines = f_in_md.readlines()
