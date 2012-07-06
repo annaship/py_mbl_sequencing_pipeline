@@ -164,12 +164,10 @@ class Validate:
 #            print k, v['dataset'], v 
 
         my_csv      = readCSV(file_path = infile)
-        print "infile = %s" % infile
         content     = my_csv.read_csv()
         headers     = content[1].keys()
         headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
         if self.check_headers(headers_clean):
-			print "headers_clean"
 			#            for n in range(0,len(headers)):
 #                #print headers[n], lst[n]
 #				lst = [i.strip('"').replace(" ", "_") for i in line.strip().split(',')]
@@ -178,16 +176,21 @@ class Validate:
 #                    temp[headers[n]] = lst[n]
 #                except:
 #                    sys.exit("ERROR:It looks like the header count and the data column count are different.")
-			temp['file_prefix'] = temp['dataset']+'_'+temp['barcode'].upper().replace('N','')
-        
-            #data[lst[0]] = temp
-            
-			unique_identifier = temp['barcode_index']+'_'+temp['run_key']+'_'+temp['lane']
-			megadata[unique_identifier]={}
-			if unique_identifier in test_datasets:
-				sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
-			else:
-				test_datasets[unique_identifier] = 1
+            for k, v in content.items():
+                run_key = v['run_key'].replace('N','').upper()
+                temp['file_prefix'] = v['dataset']+'_'+ run_key
+#                print "v = %s\n" % v
+#                v = {'barcode_index': 'ATCACG', 'project': 'JCR_SPO_Bv6', 'lane': '3', 'run': '20120613', 'dna_region': 'v6', 'adaptor': '', 
+#                      'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H40', 'run_key': 'NNNNACGCA', 'read_length': '101', 
+#                       'file_prefix': 'H40', 'data_owner': 'jreveillaud', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H40', 'amp_operator': 'JR', 'insert_size': '230'}; 
+#                        temp['file_prefix'] = H40_
+                unique_identifier   = v['barcode_index']+'_'+run_key+'_'+v['lane']
+                megadata[unique_identifier] = {}
+                if unique_identifier in test_datasets:
+                    sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
+                else:
+                    test_datasets[unique_identifier] = 1
+                print "test_datasets = %s;\ntemp['file_prefix'] = %s\nunique_identifier = %s" % (test_datasets,temp['file_prefix'], unique_identifier)
                 
 #			megadata[unique_identifier]['dataset'] = temp['dataset']
 #            megadata[unique_identifier]['project'] = temp['project']
@@ -315,11 +318,9 @@ class Validate:
 #        print "SUCCESS: Finished Validating"        
 
     def check_headers(self, headers):
-        print "sorted(self.known_header_list) = %s\n headers_low_sort = %s" % (sorted(self.known_header_list), sorted(headers))
         if sorted(self.known_header_list) != sorted(headers):
             sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(self.known_header_list)))
         else:
-            print "GOOD: sorted(self.known_header_list)\t\t= %s\n headers_low_sort\t\t\t= %s" % (sorted(self.known_header_list), sorted(headers))
             return True
 
     def validate_csv2(self):
