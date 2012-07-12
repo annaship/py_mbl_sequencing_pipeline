@@ -20,7 +20,6 @@ import time
 import shutil
 import random
 from pipeline.pipelinelogging import logger
-from pipeline.get_ini import readCSV
 import constants as C
 #import pipeline.fastalib
 
@@ -116,7 +115,7 @@ class Validate:
         print "Finished Validating"
         return configDict
 
-    def validate_csv(self, args):
+    def validate_csv(self, args, my_csv):
 #        data                = {}
 #        projects = {}
         megadata = {}
@@ -162,8 +161,6 @@ class Validate:
 #        # To see the list of statistics available for each line
 #        for k, v in content.items():
 #            print k, v['dataset'], v 
-
-        my_csv      = readCSV(file_path = infile)
         content     = my_csv.read_csv()
         headers     = content[1].keys()
         headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
@@ -190,7 +187,7 @@ class Validate:
                     sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
                 else:
                     test_datasets[unique_identifier] = 1
-                print "test_datasets = %s;\ntemp['file_prefix'] = %s\nunique_identifier = %s" % (test_datasets,temp['file_prefix'], unique_identifier)
+#                print "test_datasets = %s;\ntemp['file_prefix'] = %s\nunique_identifier = %s" % (test_datasets,temp['file_prefix'], unique_identifier)
                 
                 megadata[unique_identifier]['dataset'] = v['dataset']
                 megadata[unique_identifier]['project'] = v['project']
@@ -222,7 +219,7 @@ class Validate:
             move population of megadata and other variables into a separate function, this one should VALIDATE only
         """
 
-        print 'general:', megadata['general']
+#        print 'general:', megadata['general']
         
         
         

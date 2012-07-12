@@ -29,6 +29,8 @@ from pipeline.gast import Gast
 from pipeline.validate import Validate
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
+from pipeline.get_ini import readCSV
+
 
 import logging
 import argparse
@@ -78,7 +80,9 @@ if __name__ == '__main__':
     
     if args.platform == 'illumina' and args.config_file_type == 'csv':
         v = Validate()
-        v.validate_csv(args)
+#        infile = args.configPath
+        my_csv = readCSV(file_path = args.configPath)
+        v.validate_csv(args, my_csv)
     elif args.platform == '454' and args.config_file_type == 'ini':
         pass
     else:

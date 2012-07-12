@@ -4,6 +4,7 @@ import MySQLdb
 from os import listdir, walk
 from os.path import isfile, join
 import csv
+from pipeline.validate import Validate
 
 from pipeline.pipelinelogging import logger
 #import logging
@@ -152,7 +153,9 @@ class dbUpload:
         self.my_conn.execute_insert(my_sql)
     
     def put_run_info(self):
-        pass
+        mycsv = Validate.my_csv 
+        print "mycsv = %s" % mycsv
+#        pass
 #        my_csv = readCSV(self.run)
 #        content = my_csv.read_csv()
 #        print "\nList of lines"
