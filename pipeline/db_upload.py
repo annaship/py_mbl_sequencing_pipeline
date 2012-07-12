@@ -82,7 +82,7 @@ class dbUpload:
         # insert_sequence_uniq_info_ill()
 
     """
-    def __init__(self, run = None):
+    def __init__(self, run = None, cfg = None):
 
         self.run 	= run
         self.outdir = run.output_dir
@@ -98,6 +98,7 @@ class dbUpload:
         self.my_conn     = MyConnection(server_name = 'newbpcdb2_ill')  
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
+        self.my_csv      = cfg 
 
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
@@ -153,8 +154,10 @@ class dbUpload:
         self.my_conn.execute_insert(my_sql)
     
     def put_run_info(self):
-        mycsv = Validate.my_csv 
-        print "mycsv = %s" % mycsv
+        content = self.my_csv.read_csv()
+        for k, v in content.items():
+            print k, v['dataset'], v 
+        return content[1].keys()
 #        pass
 #        my_csv = readCSV(self.run)
 #        content = my_csv.read_csv()

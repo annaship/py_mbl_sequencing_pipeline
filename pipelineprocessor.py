@@ -48,7 +48,8 @@ STATUS_STEP         = 'status'
 existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
 
 # the main loop for performing each of the user's supplied steps
-def process(run, steps):
+def process(run, steps, cfg = None):
+#    print "cfg = %s" % cfg
     # create output directory:
     requested_steps = steps.split(",")            
     
@@ -71,7 +72,7 @@ def process(run, steps):
         else:
             # call the method in here
             step_method = globals()[step]
-            step_method(run)
+            step_method(run, cfg)
 
 
 # perform trim step
@@ -222,9 +223,12 @@ def chimera(run):
         # run primers
         mymblutils.write_clean_files_to_database()
 
-def env454run_info_upload(run):
-    pass
-#    my_read_csv = dbUpload(run)
+def env454run_info_upload(run, cfg):
+#    print cfg
+#    pass
+    my_read_csv = dbUpload(run, cfg)
+    t = my_read_csv.put_run_info()
+    print "TTT = %s" % t
 #    my_read_csv.put_run_info()  
 #    my_read_csv.read_csv()
     

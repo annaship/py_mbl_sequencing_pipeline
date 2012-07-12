@@ -78,20 +78,23 @@ if __name__ == '__main__':
         loggerlevel = logging.INFO
     logger.setLevel(loggerlevel)
     
+    """
+    TODO: read the config file here, depending on its type
+    """
     if args.platform == 'illumina' and args.config_file_type == 'csv':
         v = Validate()
-#        infile = args.configPath
+        # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
         v.validate_csv(args, my_csv)
     elif args.platform == '454' and args.config_file_type == 'ini':
         pass
     else:
         sys.exit("Unknown platform and configFile type for validation")
-    run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))  
-
+    run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
     
-    # read the config file
-    
+    cfg = None
+    if my_csv:
+        cfg = my_csv
     # now do all the work
-    process(run, args.steps)
+    process(run, args.steps, cfg)
 
