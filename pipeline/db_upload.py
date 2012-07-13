@@ -155,22 +155,38 @@ class dbUpload:
     
     def put_run_info(self):
         content = self.my_csv.read_csv()
+        
+        self.bulk_inserts()
+        
+        run_keys = list(set([content[entry]['run_key'] for entry in content]))
+        self.insert_run_key(run_keys)
+
+        self.indiv_inserts()
+
         for k, v in content.items():
 #            print k, v['dataset'], v
             self.get_contact_v_info()
             self.insert_contact()
-            contact_id = self.get_contact_id(v['data_owner'])
-            self.insert_project(v, contact_id)
-            
-            self.insert_run_key()
-            self.insert_run()
-            self.insert_dataset() 
-            self.insert_dna_region()
-            self.insert_run_info()
-            self.insert_primer()
+#            contact_id = self.get_contact_id(v['data_owner'])
+#            self.insert_project(v, contact_id)
+#            self.insert_run()
+#            self.insert_dataset() 
+#            self.insert_dna_region()
+#            self.insert_run_info()
+#            self.insert_primer()
         return content[1].keys()
     
+    
+    def bulk_inserts(self):
+        pass
+    def indiv_inserts(self):
+        pass
+    
+    
     def get_contact_v_info(self):
+        """
+        TODO: get info from Jiary? from vamps?
+        """
         pass
     def insert_contact(self):
         pass
@@ -181,14 +197,21 @@ class dbUpload:
             return int(res[0][0])        
 
     def insert_project(self, content_row, contact_id):
-#        , title, project_description, funding, env_sample_source_id, 
+        """
+        TODO: get title, project_description, funding, env_sample_source_id
+        """
         my_sql = """INSERT IGNORE INTO project (project, rev_project_name, env_sample_source_id, contact_id) VALUES
         ('%s', reverse('%s'), 0, %s)
         """ % (content_row['project'], content_row['project'], contact_id)
         self.my_conn.execute_insert(my_sql)
 
-    def insert_run_key(self):
-        pass
+    def insert_run_key(self, run_keys):    
+        print run_keys
+        query_tmpl  = "INSERT IGNORE INTO run_key (run_key) VALUES (%s)"
+        runkey_tmpl = "'%s'"
+        my_sql = query_tmpl % '), ('.join([runkey_tmpl % runkey for runkey in run_keys])
+        self.my_conn.execute_insert(my_sql)
+        
     def insert_run(self):
         pass
     def insert_dataset(self):
