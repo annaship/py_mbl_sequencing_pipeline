@@ -158,12 +158,17 @@ class dbUpload:
         
         self.bulk_inserts()
         
+        '''
+        TODO: make one function, send field_name as arg
+        '''
         run_keys = list(set([content[entry]['run_key'] for entry in content]))
         self.insert_run_key(run_keys)
         runs = list(set([content[entry]['run'] for entry in content]))
-        print runs
         self.insert_run(runs)
-        
+        dna_regions = list(set([content[entry]['dna_region'] for entry in content]))       
+        print dna_regions
+        self.insert_dna_region(dna_regions)
+
         self.indiv_inserts()
 
         for k, v in content.items():
@@ -173,7 +178,6 @@ class dbUpload:
 #            contact_id = self.get_contact_id(v['data_owner'])
 #            self.insert_project(v, contact_id)
 #            self.insert_dataset() 
-#            self.insert_dna_region()
 #            self.insert_run_info()
 #            self.insert_primer()
         return content[1].keys()
@@ -187,7 +191,7 @@ class dbUpload:
     
     def get_contact_v_info(self):
         """
-        TODO: get info from Jiary? from vamps?
+        TODO: get info from Hilary? from vamps?
         """
         pass
     def insert_contact(self):
@@ -210,20 +214,25 @@ class dbUpload:
     def insert_run_key(self, run_keys):    
         query_tmpl  = "INSERT IGNORE INTO run_key (run_key) VALUES (%s)"
         runkey_tmpl = "'%s'"
-        my_sql = query_tmpl % '), ('.join([runkey_tmpl % runkey for runkey in run_keys])
+        my_sql      = query_tmpl % '), ('.join([runkey_tmpl % runkey for runkey in run_keys])
         self.my_conn.execute_insert(my_sql)
         
     def insert_run(self, runs):
         query_tmpl = "INSERT IGNORE INTO run (run) VALUES (%s)"
         run_tmpl   = "'%s'"
-        my_sql = query_tmpl % '), ('.join([run_tmpl % run for run in runs])
-        print my_sql
-#        self.my_conn.execute_insert(my_sql)
+        my_sql     = query_tmpl % '), ('.join([run_tmpl % run for run in runs])
+        self.my_conn.execute_insert(my_sql)
         
     def insert_dataset(self):
         pass
-    def insert_dna_region(self):
-        pass
+    
+    def insert_dna_region(self, dna_regions):
+        query_tmpl = "INSERT IGNORE INTO dna_region (dna_region) VALUES (%s)"
+        dna_region_tmpl   = "'%s'"
+        my_sql     = query_tmpl % '), ('.join([dna_region_tmpl % dna_region for dna_region in dna_regions])
+#        print my_sql
+        self.my_conn.execute_insert(my_sql)
+
     def insert_run_info(self):
         pass
     def insert_primer(self):
