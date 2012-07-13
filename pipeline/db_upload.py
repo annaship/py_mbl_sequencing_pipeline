@@ -156,14 +156,45 @@ class dbUpload:
     def put_run_info(self):
         content = self.my_csv.read_csv()
         for k, v in content.items():
-            print k, v['dataset'], v 
+#            print k, v['dataset'], v
+            self.get_contact_v_info()
+            self.insert_contact()
+            contact_id = self.get_contact_id(v['data_owner'])
+            self.insert_project()
+            
+            self.insert_run_key()
+            self.insert_run()
+            self.insert_dataset() 
+            self.insert_dna_region()
+            self.insert_run_info()
+            self.insert_primer()
         return content[1].keys()
-#        pass
-#        my_csv = readCSV(self.run)
-#        content = my_csv.read_csv()
-#        print "\nList of lines"
-#        print content.keys()
-#        # To see the list of statistics available for each line
+    
+    def get_contact_v_info(self):
+        pass
+    def insert_contact(self):
+        pass
+    def get_contact_id(self, data_owner):
+        my_sql = """SELECT contact_id FROM contact WHERE vamps_name = '%s'""" % (data_owner)
+        res    = self.my_conn.execute_fetch_select(my_sql)
+        if res:
+            return int(res[0][0])        
+
+    def insert_project(self):
+        pass
+    def insert_run_key(self):
+        pass
+    def insert_run(self):
+        pass
+    def insert_dataset(self):
+        pass
+    def insert_dna_region(self):
+        pass
+    def insert_run_info(self):
+        pass
+    def insert_primer(self):
+        pass
+        
 #        for k, v in content.items():
 #            print k, v['dataset'], v 
 #            182 H38 {'platform': 'Illumina', 'run_key': 'NNNNGCTAC', 'lane': '4', 'run': '20120613', 'IDX': 'GGCTAC', 'dna_region': 'v6', 'vamps_user': 'jreveillaud', 'adaptor': '', 'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H38', 'project': 'JCR_SPO_Bv6', 'read_length': '101', 'file_prefix': 'H38', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H38', 'amp_operator': 'JR', 'insert_size': '230'}

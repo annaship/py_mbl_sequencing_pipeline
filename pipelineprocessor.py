@@ -227,8 +227,7 @@ def env454run_info_upload(run, cfg):
 #    print cfg
 #    pass
     my_read_csv = dbUpload(run, cfg)
-    t = my_read_csv.put_run_info()
-    print "TTT = %s" % t
+    my_read_csv.put_run_info()
 #    my_read_csv.put_run_info()  
 #    my_read_csv.read_csv()
     
