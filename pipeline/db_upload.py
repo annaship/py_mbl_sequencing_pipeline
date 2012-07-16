@@ -13,13 +13,8 @@ import constants as C
 class MyConnection:
     """
     Connection to env454
-    By default takes parameters from "db_conn.conf", host = "newbpcdb2"
-    if different: change db_conn.conf and use my_conn = MyConnection(config_file_name, server_name)
-    db_conn.conf has lines as: bpcdb2:bpcdb2:3306:my_password                                                                                                            
-    """
-        
-    """
-    TODO: change hardcoded values to args: file_name="db_conn.conf", server_name="newbpcdb2_ill", user = "ashipunova", 
+    Takes parameters from ~/.my.cnf, default host = "newbpcdb2", db="illumina_reads"
+    if different: use my_conn = MyConnection(host, db)
     """
     def __init__(self, host="newbpcdb2", db="illumina_reads"):
         self.conn        = None
