@@ -22,31 +22,17 @@ class MyConnection:
     TODO: change hardcoded values to args: file_name="db_conn.conf", server_name="newbpcdb2_ill", user = "ashipunova", 
     """
     def __init__(self, file_name="db_conn.conf", server_name="newbpcdb2_ill", host="newbpcdb2", db="illumina_reads"):
-        self.file_name   = file_name
-        self.server_name = server_name
-        self.host        = host
-        self.db          = db
         self.conn        = None
         self.cursor      = None
         self.rows        = 0
         
         try:
-            content = [line.strip() for line in open(self.file_name).readlines()]
-    #        print dir(MySQLdb)
-    #        ['BINARY', 'Binary', 'Connect', 'Connection', 'DATE', 'DATETIME', 'DBAPISet', 'DataError', 'DatabaseError', 'Date', 'DateFromTicks', 'Error', 'FIELD_TYPE', 'IntegrityError', 'InterfaceError', 'InternalError', 'MySQLError', 'NULL', 'NUMBER', 'NotSupportedError', 'OperationalError', 'ProgrammingError', 'ROWID', 'STRING', 'TIME', 'TIMESTAMP', 'Time', 'TimeFromTicks', 'Timestamp', 'TimestampFromTicks', 'Warning', '__all__', '__author__', '__builtins__', '__doc__', '__file__', '__name__', '__package__', '__path__', '__revision__', '__version__', '_mysql', 'apilevel', 'connect', 'connection', 'constants', 'debug', 'escape', 'escape_dict', 'escape_sequence', 'escape_string', 'get_client_info', 'paramstyle', 'release', 'result', 'server_end', 'server_init', 'string_literal', 'test_DBAPISet_set_equality', 'test_DBAPISet_set_equality_membership', 'test_DBAPISet_set_inequality', 'test_DBAPISet_set_inequality_membership', 'thread_safe', 'threadsafety', 'times', 'version_info']
+            if server_name:
+                print "server_name = " + str(server_name)
+                print "=" * 40
     
-            for line in content:
-                fields = line.split(':')
-                if fields[0] == self.server_name:
-                    print "server_name = " + str(self.server_name)
-                    print "=" * 40
-                    # conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = "env454")
-                    # self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = "env454")
-#                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = str(fields[4]))
-#                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), passwd = str(fields[3]), db = str(fields[4]))
-#                    self.conn=MySQLdb.connect(host="newbpcdb2",db="illumina_reads",read_default_file="~/.my.cnf")
-                    self.conn=MySQLdb.connect(host=self.host, db=self.db, read_default_file="~/.my.cnf")
-                    self.cursor = self.conn.cursor()       
+                self.conn=MySQLdb.connect(host=host, db=db, read_default_file="~/.my.cnf")
+                self.cursor = self.conn.cursor()       
         except MySQLdb.Error, e:
             print "Error %d: %s" % (e.args[0], e.args[1])
             raise
