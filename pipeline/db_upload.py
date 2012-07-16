@@ -155,19 +155,16 @@ class dbUpload:
     
     def put_run_info(self):
         content = self.my_csv.read_csv()
+#        182 H38 {'platform': 'Illumina', 'run_key': 'NNNNGCTAC', 'lane': '4', 'run': '20120613', 'IDX': 'GGCTAC', 'dna_region': 'v6', 'vamps_user': 'jreveillaud', 'adaptor': '', 'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H38', 'project': 'JCR_SPO_Bv6', 'read_length': '101', 'file_prefix': 'H38', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H38', 'amp_operator': 'JR', 'insert_size': '230'}
         
-#        bulk_inserts
+#        --------- bulk_inserts --------- 
         
-        '''
-        TODO: make one function, send field_name as arg
-        '''
         bulk_data = ['run_key', 'run', 'dna_region']
         for datum in bulk_data:
             values = list(set([content[entry][datum] for entry in content]))
             self.insert_bulk_data(datum, values)
             
-
-#        self.indiv_inserts()
+#        --------- indiv_inserts --------- 
 
         for k, v in content.items():
 #            print k, v['dataset'], v
@@ -177,18 +174,15 @@ class dbUpload:
             self.insert_project(v, contact_id)
             self.insert_dataset(v) 
 
-#            self.insert_run_info()
+            self.insert_run_info(v)
 #            self.insert_primer()
-        return content[1].keys()
+#        return content[1].keys()
 
     def insert_bulk_data(self, key, values):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
         self.my_conn.execute_insert(my_sql)
-    
-    def indiv_inserts(self):
-        pass
     
     def get_contact_v_info(self):
         """
@@ -215,25 +209,43 @@ class dbUpload:
     def insert_dataset(self, content_row):
         """
         TODO: get dataset_description
-        """
-        
+        """        
         my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
         ('%s', '')
         """ % (content_row['dataset'])
         self.my_conn.execute_insert(my_sql)
-
-
-        
-#        self.my_conn.execute_insert(my_sql)
     
-    def insert_run_info(self):
-        pass
+    def get_id(self, table_name, value):
+        id_name = table_name + '_id'
+        my_sql  = """SELECT %s FROM %s WHERE %s = '%s'""" % (id_name, table_name, table_name, value)
+        res     = self.my_conn.execute_fetch_select(my_sql)
+        if res:
+            return int(res[0][0])     
+    
+    def insert_run_info(self, content_row):
+        run_key_id      = self.get_id('run_key',      content_row['run_key'])
+        run_id          = self.get_id('run',          content_row['run'])
+        dataset_id      = self.get_id('dataset',      content_row['dataset'])
+        project_id      = self.get_id('project',      content_row['project'])
+        dna_region_id   = self.get_id('dna_region',   content_row['dna_region'])
+        primer_suite_id = self.get_id('primer_suite', content_row['primer_suite'])
+        if (content_row['overlap'] == 'complete'):
+            overlap = 0
+        
+        my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode, 
+                                                    adaptor, dna_region_id, amp_operator, seq_operator, barcode_index, overlap, insert_size, 
+                                                    file_prefix, read_length, primer_suite_id) 
+                                            VALUES (%s, %s, %s, %s, %s, '%s', '%s',  
+                                                    '%s', %s, '%s', '%s', '%s', %s, %s, 
+                                                    '%s', %s, %s)
+        """ % (run_key_id, run_id, content_row['lane'], dataset_id, project_id, content_row['tubelabel'], content_row['barcode'], 
+               content_row['adaptor'], dna_region_id, content_row['amp_operator'], content_row['seq_operator'], content_row['barcode_index'], overlap, content_row['insert_size'],
+                                                    content_row['file_prefix'], content_row['read_length'], primer_suite_id)
+        self.my_conn.execute_insert(my_sql)
+
     def insert_primer(self):
         pass
         
-#        for k, v in content.items():
-#            print k, v['dataset'], v 
-#            182 H38 {'platform': 'Illumina', 'run_key': 'NNNNGCTAC', 'lane': '4', 'run': '20120613', 'IDX': 'GGCTAC', 'dna_region': 'v6', 'vamps_user': 'jreveillaud', 'adaptor': '', 'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H38', 'project': 'JCR_SPO_Bv6', 'read_length': '101', 'file_prefix': 'H38', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H38', 'amp_operator': 'JR', 'insert_size': '230'}
 
 
             
