@@ -166,22 +166,29 @@ class dbUpload:
             values = list(set([content[entry][datum] for entry in content]))
             self.insert_bulk_data(datum, values)
             
-        self.indiv_inserts()
+
+#        self.indiv_inserts()
 
         for k, v in content.items():
 #            print k, v['dataset'], v
             self.get_contact_v_info()
             self.insert_contact()
-#            contact_id = self.get_contact_id(v['data_owner'])
-#            self.insert_project(v, contact_id)
-#            self.insert_dataset() 
+            contact_id = self.get_contact_id(v['data_owner'])
+            self.insert_project(v, contact_id)
+            self.insert_dataset(v) 
+
 #            self.insert_run_info()
 #            self.insert_primer()
         return content[1].keys()
+
+    def insert_bulk_data(self, key, values):
+        query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
+        val_tmpl   = "'%s'"
+        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
+        self.my_conn.execute_insert(my_sql)
     
     def indiv_inserts(self):
         pass
-    
     
     def get_contact_v_info(self):
         """
@@ -205,14 +212,19 @@ class dbUpload:
         """ % (content_row['project'], content_row['project'], contact_id)
         self.my_conn.execute_insert(my_sql)
 
-    def insert_bulk_data(self, key, values):
-        query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
-        val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
-        self.my_conn.execute_insert(my_sql)
+    def insert_dataset(self, content_row):
+        """
+        TODO: get dataset_description
+        """
         
-    def insert_dataset(self):
-        pass
+        my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
+        ('%s', '')
+        """ % (content_row['dataset'])
+        self.my_conn.execute_insert(my_sql)
+
+
+        
+#        self.my_conn.execute_insert(my_sql)
     
     def insert_run_info(self):
         pass
