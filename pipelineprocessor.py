@@ -249,13 +249,16 @@ def env454upload(run, cfg):
     for filename in filenames:
         try:
             fasta_file_path = my_env454upload.fasta_dir + filename
-            fasta           = u.SequenceSource(fasta_file_path) 
             filename_base   = "-".join(filename.split("-")[:-1])
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
             gast_dict       = my_env454upload.get_gasta_result(filename)
             read_fasta      = u.ReadFasta(fasta_file_path)
             sequences       = read_fasta.sequences
-
+            read_fasta.close()
+            fasta           = u.SequenceSource(fasta_file_path) 
+            
+            print "len(sequences) = %s" % len(sequences)
+            
             my_env454upload.insert_seq(sequences)
 
             while fasta.next():

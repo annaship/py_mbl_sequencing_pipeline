@@ -116,6 +116,7 @@ class dbUpload:
         
         my_sql = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                     VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
+        print "sequence_pdr_info_ill = %s\n" % my_sql
         self.my_conn.execute_insert(my_sql)
  
     def get_gasta_result(self, filename):
@@ -128,6 +129,7 @@ class dbUpload:
     def insert_taxonomy(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
+        print "taxonomy = %s\n" % my_sql
         self.my_conn.execute_insert(my_sql)
         
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
