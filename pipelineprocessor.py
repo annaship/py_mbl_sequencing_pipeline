@@ -254,19 +254,21 @@ def env454upload(run, cfg):
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
             gast_dict       = my_env454upload.get_gasta_result(filename)
 
-#            while fasta.next():
-#                my_env454upload.insert_seq(fasta.seq)
+            while fasta.next():
+                my_env454upload.insert_seq(fasta.seq)
+                
+
 #                my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
 ##                my_env454upload.insert_taxonomy(fasta, gast_dict)
 ##                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
 #
-#        except Exception, e:          # catch all deriving from Exception (instance e)
-#            print "Exception: ", e.__str__()      # address the instance, print e.__str__()
-##            raise                       # re-throw caught exception   
-#        except:                       # catch everything
-#            print "Unexpected:"         # handle unexpected exceptions
-#            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+        except Exception, e:          # catch all deriving from Exception (instance e)
+            print "Exception: ", e.__str__()      # address the instance, print e.__str__()
 #            raise                       # re-throw caught exception   
+        except:                       # catch everything
+            print "Unexpected:"         # handle unexpected exceptions
+            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+            raise                       # re-throw caught exception   
 
     
     # for vamps 'new_lane_keys' will be prefix 
@@ -289,6 +291,7 @@ def env454upload(run, cfg):
 #    logger.debug("PPP run.rundate = ")
 #    logger.debug(run.rundate)
 #    my_env454upload.select_run(lane_keys)
+
 def gast(run):  
     
     mygast = Gast(run)
