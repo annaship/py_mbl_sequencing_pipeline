@@ -21,18 +21,18 @@ class MyConnection:
     """
     TODO: change hardcoded values to args: file_name="db_conn.conf", server_name="newbpcdb2_ill", user = "ashipunova", 
     """
-    def __init__(self, file_name="db_conn.conf", server_name="newbpcdb2_ill", host="newbpcdb2", db="illumina_reads"):
+    def __init__(self, host="newbpcdb2", db="illumina_reads"):
         self.conn        = None
         self.cursor      = None
         self.rows        = 0
         
         try:
-            if server_name:
-                print "server_name = " + str(server_name)
-                print "=" * 40
-    
-                self.conn=MySQLdb.connect(host=host, db=db, read_default_file="~/.my.cnf")
-                self.cursor = self.conn.cursor()       
+            print "=" * 40
+            print "host = " + str(host)
+            print "=" * 40
+
+            self.conn=MySQLdb.connect(host=host, db=db, read_default_file="~/.my.cnf")
+            self.cursor = self.conn.cursor()       
         except MySQLdb.Error, e:
             print "Error %d: %s" % (e.args[0], e.args[1])
             raise
@@ -86,7 +86,7 @@ class dbUpload:
         self.fasta_dir   = self.run.input_dir + "/fasta/" 
         self.gast_dir    = self.run.input_dir + "/gast/"
         self.filenames   = []
-        self.my_conn     = MyConnection(server_name = 'newbpcdb2_ill')  
+        self.my_conn     = MyConnection(host = 'newbpcdb2', db="illumina_reads")  
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = cfg 
