@@ -249,6 +249,7 @@ def env454upload(run, cfg):
 
     for filename in filenames:
         try:
+            print "FFF: filename = %s" % filename
             fasta_file_path = my_env454upload.fasta_dir + filename
             fasta           = u.SequenceSource(fasta_file_path) 
             filename_base   = filename.split("-")[0]
