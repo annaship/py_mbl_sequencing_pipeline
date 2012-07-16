@@ -250,13 +250,12 @@ def env454upload(run, cfg):
         try:
             fasta_file_path = my_env454upload.fasta_dir + filename
             fasta           = u.SequenceSource(fasta_file_path) 
-            filename_base   = filename.split("-")[0]
+            filename_base   = "-".join(filename.split("-")[:-1])
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
             gast_dict       = my_env454upload.get_gasta_result(filename)
             read_fasta      = u.ReadFasta(fasta_file_path)
             sequences       = read_fasta.sequences
 
-            
             my_env454upload.insert_seq(sequences)
 
             while fasta.next():
@@ -267,10 +266,12 @@ def env454upload(run, cfg):
 ##                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
 #
         except Exception, e:          # catch all deriving from Exception (instance e)
-            print "Exception: ", e.__str__()      # address the instance, print e.__str__()
+#            sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
+
+            print "\r[pipelineprocessor] Exception: ", e.__str__()      # address the instance, print e.__str__()
 #            raise                       # re-throw caught exception   
         except:                       # catch everything
-            print "Unexpected:"         # handle unexpected exceptions
+            print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
 
