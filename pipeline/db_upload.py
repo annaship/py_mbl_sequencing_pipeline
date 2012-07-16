@@ -23,7 +23,7 @@ class MyConnection:
         
         try:
             print "=" * 40
-            print "host = " + str(host)
+            print "host = " + str(host) + ", db = "  + str(db)
             print "=" * 40
 
             self.conn=MySQLdb.connect(host=host, db=db, read_default_file="~/.my.cnf")
