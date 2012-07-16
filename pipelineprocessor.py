@@ -231,7 +231,7 @@ def env454run_info_upload(run, cfg):
 #    my_read_csv.put_run_info()  
 #    my_read_csv.read_csv()
     
-def env454upload(run):  
+def env454upload(run, cfg):  
     """
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
