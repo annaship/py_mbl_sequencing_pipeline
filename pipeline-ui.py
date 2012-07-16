@@ -52,7 +52,7 @@ if __name__ == '__main__':
                                                  help = 'ini or csv') 
     parser.add_argument("-p", "--platform",     required=True,  action="store",   dest = "platform", 
                                                     help="Platform ")  
-    parser.add_argument("-d", "--input_directory",     required=False,  action="store",   dest = "input_dir", default='.',
+    parser.add_argument("-d", "--input_directory",     required=False,  action="store",   dest = "input_dir", default='./',
                                                     help="Directory where sequence files can be found. ")
     parser.add_argument("-r", "--run",     required=True,  action="store",   dest = "run", 
                                                     help="unique run number ")

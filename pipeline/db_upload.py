@@ -78,9 +78,9 @@ class dbUpload:
             self.basedir = self.outdir
         self.rundate     = self.run.run_date
         self.use_cluster = 1
-        self.fasta_dir   = self.run.input_dir + "/fasta/" 
+        self.fasta_dir   = self.run.input_dir + "fasta/" 
         print "self.fasta_dir = %s" % self.fasta_dir
-        self.gast_dir    = self.run.input_dir + "/gast/"
+        self.gast_dir    = self.run.input_dir + "gast/"
         self.filenames   = []
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
         self.my_conn     = MyConnection(host = 'newbpcdb2')    
