@@ -40,7 +40,8 @@ class MyConnection:
                     print "=" * 40
                     # conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = "env454")
                     # self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = "env454")
-                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = str(fields[4]))
+#                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = str(fields[4]))
+                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), passwd = str(fields[3]), db = str(fields[4]))
                     self.cursor = self.conn.cursor()       
         except MySQLdb.Error, e:
             print "Error %d: %s" % (e.args[0], e.args[1])

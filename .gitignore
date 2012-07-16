@@ -11,6 +11,7 @@ results/*
 .pydevproject
 .project
 db_conn.conf
+db_conn_ok.conf
 fasta/*
 gast/*
 csv/*
