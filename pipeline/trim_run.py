@@ -14,7 +14,7 @@
 #
 import os
 import shutil
-import hashlib
+#import hashlib
 
 from suites.primer import PrimerSuite 
 from pipeline.primer_utils import *
