@@ -79,7 +79,6 @@ class dbUpload:
         self.rundate     = self.run.run_date
         self.use_cluster = 1
         self.fasta_dir   = self.run.input_dir + "fasta/" 
-        print "self.fasta_dir = %s" % self.fasta_dir
         self.gast_dir    = self.run.input_dir + "gast/"
         self.filenames   = []
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
@@ -92,7 +91,6 @@ class dbUpload:
    
     def get_fasta_file_names(self, fasta_dir):
         for (dirpath, dirname, files) in walk(fasta_dir):
-            print "(dirpath, dirname, files): %s, %s, %s" % (dirpath, dirname, files)
             return files
         
     def get_run_info_ill_id(self, filename_base):
