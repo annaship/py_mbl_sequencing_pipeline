@@ -21,9 +21,11 @@ class MyConnection:
     """
     TODO: change hardcoded values to args: file_name="db_conn.conf", server_name="newbpcdb2_ill", user = "ashipunova", 
     """
-    def __init__(self, file_name="db_conn.conf", server_name="newbpcdb2_ill"):
+    def __init__(self, file_name="db_conn.conf", server_name="newbpcdb2_ill", host="newbpcdb2", db="illumina_reads"):
         self.file_name   = file_name
         self.server_name = server_name
+        self.host        = host
+        self.db          = db
         self.conn        = None
         self.cursor      = None
         self.rows        = 0
@@ -41,7 +43,9 @@ class MyConnection:
                     # conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = "env454")
                     # self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = "env454")
 #                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), user = "ashipunova", passwd = str(fields[3]), db = str(fields[4]))
-                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), passwd = str(fields[3]), db = str(fields[4]))
+#                    self.conn = MySQLdb.connect (host = str(fields[1]), port = int(fields[2]), passwd = str(fields[3]), db = str(fields[4]))
+#                    self.conn=MySQLdb.connect(host="newbpcdb2",db="illumina_reads",read_default_file="~/.my.cnf")
+                    self.conn=MySQLdb.connect(host=self.host, db=self.db, read_default_file="~/.my.cnf")
                     self.cursor = self.conn.cursor()       
         except MySQLdb.Error, e:
             print "Error %d: %s" % (e.args[0], e.args[1])
