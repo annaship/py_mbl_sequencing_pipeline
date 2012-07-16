@@ -60,8 +60,10 @@ class dbUpload:
         self.sequence_table_name = "sequence_ill", 
         self.sequence_field_name = "sequence_comp"  
     TODO: run_key_id into run_info_ill
+    TODO: generalize all bulk uploads and all inserts? to not copy and paste
     Order:
-        # insert_seq(fasta.seq)
+        # put_run_info
+        # insert_seq()
         # insert_pdr_info()
         # gast
         # insert_taxonomy()
@@ -96,9 +98,7 @@ class dbUpload:
     def get_run_info_ill_id(self, filename_base):
         my_sql = """SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'""" % (filename_base)
         res    = self.my_conn.execute_fetch_select(my_sql)
-        print "my_sql = %s\nfilename_base = %s" % (my_sql, filename_base)
         if res:
-            print "run_info_ill = %s" % (int(res[0][0]))
             return int(res[0][0])
         
     def insert_seq(self, sequences):
@@ -116,7 +116,7 @@ class dbUpload:
         
         my_sql = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                     VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-        print "sequence_pdr_info_ill = %s\n" % my_sql
+#        print "sequence_pdr_info_ill = %s\n" % my_sql
         self.my_conn.execute_insert(my_sql)
  
     def get_gasta_result(self, filename):
@@ -129,7 +129,7 @@ class dbUpload:
     def insert_taxonomy(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-        print "taxonomy = %s\n" % my_sql
+#        print "taxonomy = %s\n" % my_sql
         self.my_conn.execute_insert(my_sql)
         
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
