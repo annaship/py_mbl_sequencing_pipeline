@@ -101,8 +101,10 @@ class dbUpload:
             print "run_info_ill = %s" % (int(res[0][0]))
             return int(res[0][0])
         
-    def insert_seq(self, seq):
-        my_sql = """INSERT IGNORE INTO %s (%s) VALUES (COMPRESS('%s'))""" % (self.sequence_table_name, self.sequence_field_name, seq)
+    def insert_seq(self, sequences):
+        query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
+        val_tmpl   = "'%s'"
+        my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
         self.my_conn.execute_insert(my_sql)
     
     def insert_pdr_info(self, fasta, run_info_ill_id):
