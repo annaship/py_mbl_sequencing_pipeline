@@ -78,7 +78,9 @@ class Validate:
     def __init__(self, run=None):
         self.run = run
         self.known_header_list = ["run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
-								"amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length","primer_suite" ]
+								"amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length",
+								"primer_suite","first_name","last_name","email","institution","project_title","project_description",
+								"funding","env_sample_source","dataset_description" ]
         self.primer_suites     = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
         self.dna_regions       = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6"]
 
@@ -165,7 +167,7 @@ class Validate:
                  that data == file prefix
                      if we have an input directory that each dataset has a coresponding file - for illumina
                  Missing data is ok for barcode and adaptor (illumina only - for env454 also - A.)
-                 get tube number back:  yes ds_count
+                 
             
         """
                 #print item,megadata[item],"\n\n"
@@ -173,38 +175,39 @@ class Validate:
 
 
     def populate_data_object(self, args, my_csv):
-        megadata = {}
-        megadata['general'] = {}
+        data = {}
+        data['general'] = {}
         test_datasets = {}
         dataset_counter = {}
         headers = ''
         if self.run:
             infile = self.configPath
-            megadata['general']['input_dir'] = self.run.input_dir
+            data['general']['input_dir'] = self.run.input_dir
             #megadata['general']['output_dir'] = self.args.output_dir
-            megadata['general']['platform'] = self.run.platform
-            megadata['general']['run'] = self.run.run_date
-            megadata['general']['run_date'] = self.run.run_date
+            data['general']['platform'] = self.run.platform
+            data['general']['run'] = self.run.run_date
+            data['general']['run_date'] = self.run.run_date
             #megadata['general']['run'] = self.args.run
-            megadata['general']["input_file_format"] = self.run.input_file_format
+            data['general']["input_file_format"] = self.run.input_file_format
             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-            megadata['general']["input_file_suffix"] = self.run.input_file_suffix
+            data['general']["input_file_suffix"] = self.run.input_file_suffix
         else:            
             infile = args.configPath
-            megadata['general']['input_dir'] = args.input_dir
+            data['general']['input_dir'] = args.input_dir
             #megadata['general']['output_dir'] = self.args.output_dir
-            megadata['general']['platform'] = args.platform
-            megadata['general']['run'] = args.run
-            megadata['general']['run_date'] = args.run
+            data['general']['platform'] = args.platform
+            data['general']['run'] = args.run
+            data['general']['run_date'] = args.run
             #megadata['general']['run'] = self.args.run
             #megadata['general']["input_file_format"] = indata_obj['input_file_format']
             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
             #megadata['general']["input_file_suffix"] = indata_obj['input_file_suffix']
+            
         print "Validating csv type ConfigFile"
         
         # changes spaces to '_' and all lowercase
 
-        temp 			  = {}   
+        temp = {}   
 
         
 #        my_read_csv = readCSV(file_path = infile)
@@ -218,9 +221,7 @@ class Validate:
         headers     = content[1].keys()
         headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
         if self.check_headers(headers_clean):
-			#            for n in range(0,len(headers)):
-#                #print headers[n], lst[n]
-#				lst = [i.strip('"').replace(" ", "_") for i in line.strip().split(',')]
+
 #
 #                try:
 #                    temp[headers[n]] = lst[n]
@@ -235,15 +236,15 @@ class Validate:
 #                       'file_prefix': 'H40', 'data_owner': 'jreveillaud', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H40', 'amp_operator': 'JR', 'insert_size': '230'}; 
 #                        temp['file_prefix'] = H40_
                 unique_identifier   = v['barcode_index']+'_'+run_key+'_'+v['lane']
-                megadata[unique_identifier] = {}
+                data[unique_identifier] = {}
                 if unique_identifier in test_datasets:
                     sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
                 else:
                     test_datasets[unique_identifier] = 1
 #                print "test_datasets = %s;\ntemp['file_prefix'] = %s\nunique_identifier = %s" % (test_datasets,temp['file_prefix'], unique_identifier)
                 
-                megadata[unique_identifier]['dataset'] = v['dataset']
-                megadata[unique_identifier]['project'] = v['project']
+                data[unique_identifier]['dataset'] = v['dataset']
+                data[unique_identifier]['project'] = v['project']
                 
                 if v['project'] in dataset_counter:
                     dataset_counter[v['project']] += 1
@@ -251,29 +252,38 @@ class Validate:
                     dataset_counter[v['project']] = 1
                 
                 #megadata[unique_identifier]['ds_count'] = 1
-                megadata[unique_identifier]['project']      = v['project']
-                megadata[unique_identifier]['run_key']      = v['run_key']
-                megadata[unique_identifier]['lane']         = v['lane']
-                megadata[unique_identifier]['tubelabel']    = v['tubelabel']
-                megadata[unique_identifier]['barcode']      = v['barcode']
-                megadata[unique_identifier]['adaptor']      = v['adaptor']
-                megadata[unique_identifier]['dna_region']   = v['dna_region']
-                megadata[unique_identifier]['amp_operator'] = v['amp_operator']
-                megadata[unique_identifier]['seq_operator'] = v['seq_operator']
-                megadata[unique_identifier]['barcode_index']= v['barcode_index']
-                megadata[unique_identifier]['overlap']      = v['overlap']
-                megadata[unique_identifier]['insert_size']  = v['insert_size']
-                megadata[unique_identifier]['file_prefix']  = v['file_prefix']
-                megadata[unique_identifier]['read_length']  = v['read_length']
-                megadata[unique_identifier]['primer_suite'] = v['primer_suite']
-        for item in megadata:
+                data[unique_identifier]['project']              = v['project']
+                data[unique_identifier]['run_key']              = v['run_key']
+                data[unique_identifier]['lane']                 = v['lane']
+                data[unique_identifier]['tubelabel']            = v['tubelabel']
+                data[unique_identifier]['barcode']              = v['barcode']
+                data[unique_identifier]['adaptor']              = v['adaptor']
+                data[unique_identifier]['dna_region']           = v['dna_region']
+                data[unique_identifier]['amp_operator']         = v['amp_operator']
+                data[unique_identifier]['seq_operator']         = v['seq_operator']
+                data[unique_identifier]['barcode_index']        = v['barcode_index']
+                data[unique_identifier]['overlap']              = v['overlap']
+                data[unique_identifier]['insert_size']          = v['insert_size']
+                data[unique_identifier]['file_prefix']          = v['file_prefix']
+                data[unique_identifier]['read_length']          = v['read_length']
+                data[unique_identifier]['primer_suite']         = v['primer_suite']								
+                data[unique_identifier]['first_name']           = v['first_name']
+                data[unique_identifier]['last_name']            = v['last_name']
+                data[unique_identifier]['email']                = v['email']
+                data[unique_identifier]['institution']          = v['institution']
+                data[unique_identifier]['project_title']        = v['project_title']
+                data[unique_identifier]['project_description']  = v['project_description']
+                data[unique_identifier]['funding']              = v['funding']
+                data[unique_identifier]['env_sample_source']    = v['env_sample_source']
+                data[unique_identifier]['dataset_description']  = v['dataset_description']				
+        for item in data:
             if item != 'general':
-                megadata[item]['primer_suite']  = megadata[item]['primer_suite'].lower().replace(" ", "_")
-                megadata[item]['dna_region']    = megadata[item]['dna_region'].lower().replace(" ", "_")
-                megadata[item]['barcode']       = megadata[item]['barcode'].upper()
-                megadata[item]['barcode_index'] = megadata[item]['barcode_index'].upper()
-                megadata[item]['ds_count']      = str(dataset_counter[megadata[item]['project']])
-        return megadata
+                data[item]['primer_suite']  = data[item]['primer_suite'].lower().replace(" ", "_")
+                data[item]['dna_region']    = data[item]['dna_region'].lower().replace(" ", "_")
+                data[item]['barcode']       = data[item]['barcode'].upper()
+                data[item]['barcode_index'] = data[item]['barcode_index'].upper()
+                data[item]['ds_count']      = str(dataset_counter[data[item]['project']])
+        return data
         
     def check_for_input_files(self,data_object):
     
@@ -313,6 +323,7 @@ class Validate:
                 if (k != 'barcode' and k != 'adaptor'): #these could be empty
                     logger.warn("ERROR: value of: '"+k+"' is missing or corrupt - Continuing")
                     missing_value = k
+        
         if missing_key:
             sys.exit("ERROR: value of: "+missing_key+" is missing or corrupt - Exiting")
         if missing_value:

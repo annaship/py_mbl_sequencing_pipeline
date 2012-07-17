@@ -90,6 +90,7 @@ if __name__ == '__main__':
         pass
     else:
         sys.exit("Unknown platform and configFile type for validation")
+    #sys.exit()
     run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
     
     cfg = None
