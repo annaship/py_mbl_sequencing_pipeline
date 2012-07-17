@@ -4,7 +4,7 @@ import MySQLdb
 from os import listdir, walk
 from os.path import isfile, join
 import csv
-from pipeline.validate import Validate
+
 
 from pipeline.pipelinelogging import logger
 #import logging
