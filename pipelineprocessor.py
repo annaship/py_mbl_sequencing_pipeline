@@ -276,14 +276,16 @@ def env454upload(run, cfg):
 #                print "insert_pdr_info() took ", elapsed, " time to finish"                
 
                 start = time()
-                my_env454upload.insert_taxonomy(fasta, gast_dict)
+                tax_id = my_env454upload.insert_taxonomy(fasta, gast_dict)
+
                 elapsed = (time() - start)
                 insert_taxonomy_time += elapsed
 
-#                print "insert_taxonomy() took ", elapsed, " time to finish"                
+#                print "tax_id = ", tax_id ,"; insert_taxonomy() took ", elapsed, " time to finish"                
+#                print "tax_id = ", tax_id            
 
                 start = time()
-                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict, sequence_ill_id)
+                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict, sequence_ill_id, tax_id)
                 elapsed = (time() - start)
                 insert_sequence_uniq_info_ill_time += elapsed
 
