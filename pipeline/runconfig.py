@@ -257,14 +257,20 @@ class RunConfig:
             input_file_names = general_config['files_list']
         else:
             input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
-            
-        input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
+        
+        if 'file_formats_list' in general_config:    
+            input_file_types = general_config['file_formats_list']
+        else:
+            input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
         
         if len(input_file_names) != len(input_file_types):
             raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
         
-        lane_info = general_config['input_file_lanes'].strip()
-        input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
+        if 'lanes_list' in general_config: 
+            input_file_lanes = general_config['lanes_list']
+        else:        
+            lane_info = general_config['input_file_lanes'].strip()
+            input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
 
         # no lane info? better by our custom fasta-mbl format then
         if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:

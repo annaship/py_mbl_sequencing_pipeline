@@ -116,8 +116,11 @@ class CSV_utils:
         
 
     def create_dictionary_from_csv(self, args, my_csv):
+    
         data_object = self.populate_data_object(args, my_csv)
+        
         data_object = self.check_for_input_files(data_object)
+        
         return data_object
         
     def validate_csv(self, args, my_csv):
@@ -141,6 +144,9 @@ class CSV_utils:
         data_object = self.check_for_input_files(data_object)
         
         
+        
+        for x in data_object['general']:
+            print "%s = %s" % (x, data_object['general'][x])
         
         
         
@@ -200,9 +206,9 @@ class CSV_utils:
             data['general']['run'] = args.run
             data['general']['run_date'] = args.run
             #megadata['general']['run'] = self.args.run
-            #megadata['general']["input_file_format"] = indata_obj['input_file_format']
+            data['general']["input_file_format"] = args.input_file_format
             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-            #megadata['general']["input_file_suffix"] = indata_obj['input_file_suffix']
+            data['general']["input_file_suffix"] = args.input_file_suffix
             
         print "Validating csv type ConfigFile"
         
@@ -267,7 +273,7 @@ class CSV_utils:
                 data[unique_identifier]['insert_size']          = v['insert_size']
                 data[unique_identifier]['file_prefix']          = v['file_prefix']
                 data[unique_identifier]['read_length']          = v['read_length']
-                data[unique_identifier]['primer_suite']         = v['primer_suite']								
+                data[unique_identifier]['primer_suite']         = v['primer_suite']
                 data[unique_identifier]['first_name']           = v['first_name']
                 data[unique_identifier]['last_name']            = v['last_name']
                 data[unique_identifier]['email']                = v['email']
@@ -276,7 +282,7 @@ class CSV_utils:
                 data[unique_identifier]['project_description']  = v['project_description']
                 data[unique_identifier]['funding']              = v['funding']
                 data[unique_identifier]['env_sample_source']    = v['env_sample_source']
-                data[unique_identifier]['dataset_description']  = v['dataset_description']				
+                data[unique_identifier]['dataset_description']  = v['dataset_description']
         for item in data:
             if item != 'general':
                 data[item]['primer_suite']  = data[item]['primer_suite'].lower().replace(" ", "_")
@@ -288,15 +294,24 @@ class CSV_utils:
         
     def check_for_input_files(self,data_object):
     
-        if 'file_suffix' not in data_object['general']:
-            data_object['general']['file_suffix'] = ''
+        if 'input_file_suffix' not in data_object['general']:
+            data_object['general']['input_file_suffix'] = ''
         file_count = 0
         files_list = []
+        imports_list = []
+        lanes_list = []
         if os.path.isdir(data_object['general']['input_dir']):
-            p = data_object['general']['input_dir'], '*'+data_object['general']['file_suffix']
-            print p
-            for infile in glob.glob( os.path.join(data_object['general']['input_dir'], '*'+data_object['general']['file_suffix']) ):
+            p = data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']
+            
+            for infile in glob.glob( os.path.join(data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']) ):
                 files_list.append(os.path.basename(infile))
+                for x in data_object:
+                    if 'file_prefix' in data_object[x]:
+                        #print data_object[x]['file_prefix']
+                        
+                        if os.path.basename(infile).split('-')[0] == data_object[x]['file_prefix']:
+                            lanes_list.append(data_object[x]['lane'])
+                        
                 file_count += 1
         else:
             sys.exit("ERROR: no input directory or directory permissions problem: "+data_object['general']['input_dir'])
@@ -307,7 +322,15 @@ class CSV_utils:
         data_object['general']['files_list'] = files_list
         
         data_object['general']['file_count'] = file_count
+        # all the files in an illumina directory should be the same type
+        data_object['general']['file_formats_list'] = [data_object['general']["input_file_format"]] * file_count
+        data_object['general']['lanes_list'] = lanes_list
+        
+        
+        
         return data_object
+        
+        
         
     def check_for_datasets(self,item):
         if not item['dataset']:

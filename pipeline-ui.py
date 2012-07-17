@@ -58,7 +58,7 @@ if __name__ == '__main__':
                                                     help="unique run number ")
     parser.add_argument("-ft", "--seq_file_type",     required=True,  action="store",   dest = "input_file_format",
                                                     help="Sequence file type: fasta, fatsq or sff ")
-    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='',
+    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='fa.unique',
                                                     help="Sequence file suffix [optional] ")                                                
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdir", 
                                                 help="default: ./")
