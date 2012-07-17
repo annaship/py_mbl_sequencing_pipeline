@@ -26,7 +26,7 @@ from pipeline.runconfig import RunConfig
 from pipeline.run import Run
 from pipeline.chimera import Chimera
 from pipeline.gast import Gast
-from pipeline.validate import Validate
+from pipeline.validate import CSV_utils
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     TODO: read the config file here, depending on its type
     """
     if args.platform == 'illumina' and args.config_file_type == 'csv':
-        v = Validate()
+        v = CSV()
         # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
         v.validate_csv(args, my_csv)
