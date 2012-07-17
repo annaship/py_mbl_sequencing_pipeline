@@ -61,6 +61,7 @@ class dbUpload:
         self.sequence_field_name = "sequence_comp"  
     TODO: run_key_id into run_info_ill
     TODO: generalize all bulk uploads and all inserts? to not copy and paste
+    TODO: add refssu_id
     Order:
         # put_run_info
         # insert_seq()
@@ -83,8 +84,8 @@ class dbUpload:
         self.fasta_dir   = self.run.input_dir + "fasta/" 
         self.gast_dir    = self.run.input_dir + "gast/"
         self.filenames   = []
-#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-        self.my_conn     = MyConnection(host = 'newbpcdb2')    
+        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+#        self.my_conn     = MyConnection(host = 'newbpcdb2')    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = cfg 

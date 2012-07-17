@@ -245,7 +245,8 @@ def env454upload(run, cfg):
 
     my_env454upload = dbUpload(run)
     filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
-
+    total_seq = 0
+    
     for filename in filenames:
         try:
             fasta_file_path = my_env454upload.fasta_dir + filename
@@ -258,6 +259,7 @@ def env454upload(run, cfg):
             fasta           = u.SequenceSource(fasta_file_path) 
             
             print "len(sequences) = %s" % len(sequences)
+            total_seq += len(sequences)
             
             my_env454upload.insert_seq(sequences)
 
@@ -265,7 +267,8 @@ def env454upload(run, cfg):
                 my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
                 my_env454upload.insert_taxonomy(fasta, gast_dict)
                 my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
-#
+            print "total_seq = %s" % total_seq
+            
         except Exception, e:          # catch all deriving from Exception (instance e)
 #            sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
 
