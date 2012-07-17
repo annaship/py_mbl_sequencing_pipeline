@@ -135,86 +135,28 @@ class Validate:
         # VAMPS project name format:  SLM_GCB_Bv6
         #
         #
+        data_object = self.check_for_input_files(data_object)
         
-        if 'file_suffix' not in data_object['general']:
-            data_object['general']['file_suffix'] = ''
-        file_count = 0
-        files_list = []
-        if os.path.isdir(data_object['general']['input_dir']):
-            p = data_object['general']['input_dir'], '*'+data_object['general']['file_suffix']
-            print p
-            for infile in glob.glob( os.path.join(data_object['general']['input_dir'], '*'+data_object['general']['file_suffix']) ):
-                files_list.append(os.path.basename(infile))
-                file_count += 1
-        else:
-            sys.exit("ERROR: no input directory or directory permissions problem: "+data_object['general']['input_dir'])
-            
-        if not file_count:
-            sys.exit("ERROR: No files were found in '"+data_object['general']['input_dir']+"' with a suffix of '"+data_object['general']['file_suffix']+"'")
-            
+        
+        
+        
+        
         """
         TODO:
             1) split into methods
             2) we can use "content" variable instead of megadata here
         """       
         #print dataset_counter
-        for item in megadata:
-            if item != 'general':
-            
-                #dataset_items['domain']        = dataset_items['domain'].lower().replace(" ", "_")
-                data_object[item]['primer_suite']  = data_object[item]['primer_suite'].lower().replace(" ", "_")
-                data_object[item]['dna_region']    = data_object[item]['dna_region'].lower().replace(" ", "_")
-                data_object[item]['barcode']       = data_object[item]['barcode'].upper()
-                data_object[item]['barcode_index'] = data_object[item]['barcode_index'].upper()
-                data_object[item]['ds_count']      = str(dataset_counter[data_object[item]['project']])
-                #print    dataset_counter,megadata[item]['project']
-                
-                #print project,dataset_items,"\n\n"
-    
-                if not data_object[item]['dataset']:
-                    sys.exit("ERROR:Current dataset name is missing or corrupt - Exiting")
-                
-                missing_key   = ''
-                missing_value = ''
-                for k,v in data_object[item].iteritems():
-                    if not k:
-                        #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
-                        logger.warn("ERROR: key for: '"+v+"' is missing or corrupt - Continuing")
-                        missing_key = v
-                    if not v:
-                        if (k != 'barcode' and k != 'adaptor'): #these could be empty
-                            logger.warn("ERROR: value of: '"+k+"' is missing or corrupt - Continuing")
-                            missing_value = k
-                if missing_key:
-                    sys.exit("ERROR: value of: "+missing_key+" is missing or corrupt - Exiting")
-                if missing_value:
-                    sys.exit("ERROR: value of: "+missing_value+" is missing or corrupt - Exiting")
-                # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
-                if megadata[item]['primer_suite'] not in self.primer_suites:
-                    sys.exit("ERROR: Primer Suite not found: "+megadata[item]['primer_suite'])
-                #if dataset_items['domain'] not in domains:
-                #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
-                if megadata[item]['dna_region'] not in self.dna_regions:
-                    sys.exit("ERROR: DNA Region not found: "+data_object[item]['dna_region'])
-                # "Bacterial v6","BacterialV6Suite","v6"
-                #if dataset_items['domain'][:6] != dataset_items['primer_suite'][:6]:
-                #    sys.exit("ERROR: Domain ("+dataset_items['domain']+") -- Primer Suite ("+dataset_items['primer_suite']+") mismatch.")
-                #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
-                #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
-                if data_object[item]['dna_region'] not in data_object[item]['primer_suite']:
-                    sys.exit("ERROR: DNA Region ("+data_object[item]['dna_region']+") not found in Primer Suite ("+data_object[item]['primer_suite']+")")
+        for item in data_object:
+            if item != 'general':            
+                self.check_for_datasets(data_object[item])
+                self.check_for_missing_values(data_object[item])
+                self.check_domain_suite_region(data_object[item])
+                self.check_project_name(data_object[item])
+               
                 
             
-                # CHECK: project name format: 3 parts; end with Bv6,Ev9,Av6 or something similar
-                try:
-                    (a,b,c) = data_object[item]['project'].split('_')
-                except:
-                    sys.exit("ERROR: project not in correct format: "+data_object[item]['project'])
-                (a,b,c) = data_object[item]['project'].split('_')
-                #if c[0] not in [i[0].upper() for i in domains]:
-                #    sys.exit("ERROR : Project suffix has incorrect/non-existant domain: "+c)
-                if c[1:] not in self.dna_regions:
-                    sys.exit("ERROR : Project suffix has incorrect DNA region: "+c)
+                
                    
         """
             TODO:
@@ -324,9 +266,90 @@ class Validate:
                 megadata[unique_identifier]['file_prefix']  = v['file_prefix']
                 megadata[unique_identifier]['read_length']  = v['read_length']
                 megadata[unique_identifier]['primer_suite'] = v['primer_suite']
+        for item in megadata:
+            if item != 'general':
+                megadata[item]['primer_suite']  = megadata[item]['primer_suite'].lower().replace(" ", "_")
+                megadata[item]['dna_region']    = megadata[item]['dna_region'].lower().replace(" ", "_")
+                megadata[item]['barcode']       = megadata[item]['barcode'].upper()
+                megadata[item]['barcode_index'] = megadata[item]['barcode_index'].upper()
+                megadata[item]['ds_count']      = str(dataset_counter[megadata[item]['project']])
         return megadata
         
+    def check_for_input_files(self,data_object):
+    
+        if 'file_suffix' not in data_object['general']:
+            data_object['general']['file_suffix'] = ''
+        file_count = 0
+        files_list = []
+        if os.path.isdir(data_object['general']['input_dir']):
+            p = data_object['general']['input_dir'], '*'+data_object['general']['file_suffix']
+            print p
+            for infile in glob.glob( os.path.join(data_object['general']['input_dir'], '*'+data_object['general']['file_suffix']) ):
+                files_list.append(os.path.basename(infile))
+                file_count += 1
+        else:
+            sys.exit("ERROR: no input directory or directory permissions problem: "+data_object['general']['input_dir'])
+            
+        if not file_count:
+            sys.exit("ERROR: No files were found in '"+data_object['general']['input_dir']+"' with a suffix of '"+data_object['general']['file_suffix']+"'")
         
+        data_object['general']['files_list'] = files_list
+        data_object['general']['file_count'] = file_count
+        return data_object
+        
+    def check_for_datasets(self,item):
+        if not item['dataset']:
+            sys.exit("ERROR:Current dataset name is missing or corrupt - Exiting")
+            
+    def check_for_missing_values(self,item):
+        missing_key   = ''
+        missing_value = ''
+        for k,v in item.iteritems():
+            if not k:
+                #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
+                logger.warn("ERROR: key for: '"+v+"' is missing or corrupt - Continuing")
+                missing_key = v
+            if not v:
+                if (k != 'barcode' and k != 'adaptor'): #these could be empty
+                    logger.warn("ERROR: value of: '"+k+"' is missing or corrupt - Continuing")
+                    missing_value = k
+        if missing_key:
+            sys.exit("ERROR: value of: "+missing_key+" is missing or corrupt - Exiting")
+        if missing_value:
+            sys.exit("ERROR: value of: "+missing_value+" is missing or corrupt - Exiting")
+        
+    def check_domain_suite_region(self,item):       
+        
+        # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
+        if item['primer_suite'] not in self.primer_suites:
+            sys.exit("ERROR: Primer Suite not found: "+item['primer_suite'])
+        #if dataset_items['domain'] not in domains:
+        #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
+        if item['dna_region'] not in self.dna_regions:
+            sys.exit("ERROR: DNA Region not found: "+item['dna_region'])
+        # "Bacterial v6","BacterialV6Suite","v6"
+        #if dataset_items['domain'][:6] != dataset_items['primer_suite'][:6]:
+        #    sys.exit("ERROR: Domain ("+dataset_items['domain']+") -- Primer Suite ("+dataset_items['primer_suite']+") mismatch.")
+        #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
+        #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
+        if item['dna_region'] not in item['primer_suite']:
+            sys.exit("ERROR: DNA Region ("+item['dna_region']+") not found in Primer Suite ("+item['primer_suite']+")")
+                
+        
+        
+    def check_project_name(self,item):
+        # CHECK: project name format: 3 parts; end with Bv6,Ev9,Av6 or something similar
+        try:
+            (a,b,c) = item['project'].split('_')
+        except:
+            sys.exit("ERROR: project not in correct format: "+item['project'])
+        (a,b,c) = item['project'].split('_')
+        #if c[0] not in [i[0].upper() for i in domains]:
+        #    sys.exit("ERROR : Project suffix has incorrect/non-existant domain: "+c)
+        if c[1:] not in self.dna_regions:
+            sys.exit("ERROR : Project suffix has incorrect DNA region: "+c)
+            
+            
     def check_headers(self, headers):
         if sorted(self.known_header_list) != sorted(headers):
             sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(self.known_header_list)))
