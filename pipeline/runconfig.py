@@ -168,7 +168,7 @@ class RunConfig:
             config_dict = config_info
     	elif args.platform == 'illumina' and args.config_file_type == 'csv':
             #config_dict = configDictionaryFromFile_csv(config_info, args)
-            v = CSV()
+            v = CSV_utils()
             # read the csv config file
             my_csv = readCSV(file_path = args.configPath)
             config_dict = v.create_dictionary_from_csv(args, my_csv)
