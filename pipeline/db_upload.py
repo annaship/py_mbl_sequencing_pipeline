@@ -150,19 +150,19 @@ class dbUpload:
         
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict, sequence_ill_id, tax_id):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-        if (tax_id == 0):
-            tax_id = self.get_id('taxonomy', taxonomy)
+    #        if (tax_id == 0):
+    #            tax_id = self.get_id('taxonomy', taxonomy)
             
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
                 %s,
-                %s,
+                (SELECT taxonomy_id FROM taxonomy WHERE taxonomy = '%s'),
                 '%s',
                 '%s',
                 (SELECT rank_id FROM rank WHERE rank = '%s'),
                 '%s'                
                )
-               """ % (sequence_ill_id, tax_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+               """ % (sequence_ill_id, taxonomy, distance, refssu_count, rank, refhvr_ids.rstrip())
         self.my_conn.execute_insert(my_sql)
     
     def put_run_info(self):
@@ -251,6 +251,16 @@ class dbUpload:
     def insert_primer(self):
         pass
         
+    def del_sequence_uniq_info(self, run_date):
+        my_sql = """DELETE FROM sequence_uniq_info_ill
+                    USING sequence_uniq_info_ill 
+                    JOIN sequence_ill USING(sequence_ill_id) 
+                    JOIN sequence_pdr_info_ill USING(sequence_ill_id)
+                    JOIN run_info_ill USING (run_info_ill_id) 
+                    JOIN run USING(run_id) WHERE run = "%s"
+                """ % run_date
+        self.my_conn.execute_insert(my_sql)
+
     def del_sequences(self, run_date):
         my_sql = """DELETE FROM sequence_ill
                     USING sequence_ill JOIN sequence_pdr_info_ill USING(sequence_ill_id)
@@ -263,19 +273,9 @@ class dbUpload:
                     USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
                 """ % run_date
         self.my_conn.execute_insert(my_sql)
-        
-    def del_sequence_uniq_info(self, run_date):
-        my_sql = """DELETE FROM sequence_uniq_info_ill
-                    USING sequence_uniq_info_ill 
-                    JOIN sequence_ill USING(sequence_ill) 
-                    JOIN sequence_pdr_info_ill USING(sequence_ill_id)
-                    JOIN run_info_ill USING (run_info_ill_id) 
-                    JOIN run USING(run_id) WHERE run = "%s"
-                """ % run_date
-        self.my_conn.execute_insert(my_sql)
 
     #That order is important!
     def del_all_seq_info(self, run_date):
         self.del_sequence_uniq_info(run_date)
-        self.del_sequence_pdr_info(run_date)
         self.del_sequences(run_date)
+        self.del_sequence_pdr_info(run_date)
