@@ -20,7 +20,7 @@ from stat import * # ST_SIZE etc
 import sys
 import shutil
 import types
-from time import sleep
+from time import sleep, time
 from pipeline.utils import *
 from pipeline.sample import Sample
 from pipeline.runconfig import RunConfig
@@ -236,7 +236,6 @@ def env454upload(run, cfg):
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
     TODO: 
-        1) Illumina - provide a link to the directory with fasta and gast files
         2) Upload env454 data into raw, trim, gast etc tables from files
     """
 
@@ -244,8 +243,9 @@ def env454upload(run, cfg):
 #    my_read_csv.read_csv()
 
     my_env454upload = dbUpload(run)
-    filenames = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
-    total_seq = 0
+    filenames   = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
+    seq_in_file = 0
+    total_seq   = 0
     
     for filename in filenames:
         try:
@@ -256,18 +256,47 @@ def env454upload(run, cfg):
             read_fasta      = u.ReadFasta(fasta_file_path)
             sequences       = read_fasta.sequences
             read_fasta.close()
-            fasta           = u.SequenceSource(fasta_file_path) 
+            fasta           = u.SequenceSource(fasta_file_path, lazy_init = False) 
             
-            print "len(sequences) = %s" % len(sequences)
-            total_seq += len(sequences)
-            
+            start = time()
             my_env454upload.insert_seq(sequences)
-
+            elapsed = (time() - start)
+            print "insert_seq() took ", elapsed, " time to finish"
+            
+            insert_pdr_info_time = 0
+            insert_taxonomy_time = 0
+            insert_sequence_uniq_info_ill_time = 0
+            
             while fasta.next():
-                my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
+                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
+                start = time()
+                my_env454upload.insert_pdr_info(fasta, run_info_ill_id, sequence_ill_id)
+                elapsed = (time() - start)
+                insert_pdr_info_time += elapsed
+#                print "insert_pdr_info() took ", elapsed, " time to finish"                
+
+                start = time()
                 my_env454upload.insert_taxonomy(fasta, gast_dict)
-                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
-            print "total_seq = %s" % total_seq
+                elapsed = (time() - start)
+                insert_taxonomy_time += elapsed
+
+#                print "insert_taxonomy() took ", elapsed, " time to finish"                
+
+                start = time()
+                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict, sequence_ill_id)
+                elapsed = (time() - start)
+                insert_sequence_uniq_info_ill_time += elapsed
+
+#                print "insert_sequence_uniq_info_ill() took ", elapsed, " time to finish"
+
+            seq_in_file = fasta.total_seq            
+            total_seq += seq_in_file
+            print "seq_in_file = %s" % seq_in_file
+            
+            print "insert_pdr_info() took ", insert_pdr_info_time, " time to finish"
+            print "insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish"
+            print "insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish"
+
             
         except Exception, e:          # catch all deriving from Exception (instance e)
 #            sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
@@ -278,6 +307,7 @@ def env454upload(run, cfg):
             print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
+    print "total_seq = %s" % total_seq
 
     
     # for vamps 'new_lane_keys' will be prefix 

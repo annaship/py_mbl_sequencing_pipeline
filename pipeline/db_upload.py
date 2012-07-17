@@ -17,17 +17,20 @@ class MyConnection:
     if different: use my_conn = MyConnection(host, db)
     """
     def __init__(self, host="newbpcdb2", db="illumina_reads"):
-        self.conn        = None
-        self.cursor      = None
-        self.rows        = 0
-        
+        self.conn   = None
+        self.cursor = None
+        self.rows   = 0
+        self.new_id = None
+        self.lastrowid = None
+                
         try:
             print "=" * 40
             print "host = " + str(host) + ", db = "  + str(db)
             print "=" * 40
 
-            self.conn=MySQLdb.connect(host=host, db=db, read_default_file="~/.my.cnf")
-            self.cursor = self.conn.cursor()       
+            self.conn   = MySQLdb.connect(host=host, db=db, read_default_file="~/.my.cnf")
+            self.cursor = self.conn.cursor()
+                   
         except MySQLdb.Error, e:
             print "Error %d: %s" % (e.args[0], e.args[1])
             raise
@@ -47,8 +50,12 @@ class MyConnection:
             self.cursor.execute(sql)
             self.conn.commit()
 #            if (self.conn.affected_rows()):
-            if (self.conn.insert_id):
+            self.new_id = self.conn.insert_id()
+            if (self.new_id):
                 self.rows +=1
+                self.lastrowid = self.cursor.lastrowid
+                print "lastrowid = %s; new_id = %s" % (self.lastrowid, self.new_id)
+
 #        logger.debug("rows = "  + str(self.rows))
  
 
@@ -56,12 +63,13 @@ class dbUpload:
     """db upload methods"""
     Name = "dbUpload"
     """
-    TODO: change hardcoded values to args: server_name="newbpcdb2_ill",
+    TODO: change hardcoded values to args: 
         self.sequence_table_name = "sequence_ill", 
         self.sequence_field_name = "sequence_comp"  
     TODO: run_key_id into run_info_ill
     TODO: generalize all bulk uploads and all inserts? to not copy and paste
     TODO: add refssu_id
+    TODO: change csv validaton for new fields
     Order:
         # put_run_info
         # insert_seq()
@@ -84,8 +92,8 @@ class dbUpload:
         self.fasta_dir   = self.run.input_dir + "fasta/" 
         self.gast_dir    = self.run.input_dir + "gast/"
         self.filenames   = []
-        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#        self.my_conn     = MyConnection(host = 'newbpcdb2')    
+#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+        self.my_conn     = MyConnection(host = 'newbpcdb2')    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = cfg 
@@ -108,15 +116,17 @@ class dbUpload:
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
         self.my_conn.execute_insert(my_sql)
     
-    def insert_pdr_info(self, fasta, run_info_ill_id):
+    def get_sequence_id(self, seq):
+        my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (seq)
+        res    = self.my_conn.execute_fetch_select(my_sql)
+        if res:
+            return int(res[0][0])     
+    
+    def insert_pdr_info(self, fasta, run_info_ill_id, sequence_ill_id):
         # ------- insert sequence info per run/project/dataset --------
         seq_count       = int(fasta.id.split('|')[1].split(':')[1])
-        my_sql          = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (fasta.seq)
-        res             = self.my_conn.execute_fetch_select(my_sql)
-        sequence_ill_id = int(res[0][0])
-        
-        my_sql = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
-                    VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
+        my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
+                             VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
 #        print "sequence_pdr_info_ill = %s\n" % my_sql
         self.my_conn.execute_insert(my_sql)
  
@@ -132,19 +142,23 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
 #        print "taxonomy = %s\n" % my_sql
         self.my_conn.execute_insert(my_sql)
+#        tax_id = self.my_conn.insert_id()
+#        print "tax_id = %s" % tax_id
         
-    def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
+        
+        
+    def insert_sequence_uniq_info_ill(self, fasta, gast_dict,sequence_ill_id):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
-                (SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp),
+                (%s),
                 (SELECT taxonomy_id     FROM taxonomy WHERE taxonomy = '%s'),
                 '%s',
                 '%s',
                 (SELECT rank_id         FROM rank WHERE rank = '%s'),
                 '%s'                
                )
-               """ % (fasta.seq, taxonomy, distance, refssu_count, rank, refhvr_ids.rstrip())
+               """ % (sequence_ill_id, taxonomy, distance, refssu_count, rank, refhvr_ids.rstrip())
         self.my_conn.execute_insert(my_sql)
     
     def put_run_info(self):
