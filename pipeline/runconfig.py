@@ -283,7 +283,7 @@ class RunConfig:
         self.input_file_info = {}
         for idx,input_file in enumerate(input_file_names):
             input_file_format = input_file_types[idx]
-            if input_file_format not in C.input_file_types:
+            if input_file_format not in C.input_file_formats:
                 raise Exception("Invalid sequence input file format: " + self.input_file_format)
             # make up a hash...they are allowed to not put in any input_file_lanes...could be 3 mbl fasta files which would all have lane
             # info encoded on each id/description line of the sequence record

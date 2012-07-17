@@ -294,8 +294,6 @@ class CSV_utils:
         
     def check_for_input_files(self,data_object):
     
-        if 'input_file_suffix' not in data_object['general']:
-            data_object['general']['input_file_suffix'] = ''
         file_count = 0
         files_list = []
         imports_list = []
