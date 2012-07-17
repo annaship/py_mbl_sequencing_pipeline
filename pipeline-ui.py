@@ -63,7 +63,7 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdir", 
                                                 help="default: ./")
     parser.add_argument("-s", "--steps",     required=True,  action="store",   dest = "steps", 
-                                                help="Comma seperated list of steps.  Choices are: trim,chimera,status,upload_env454,gast,upload_vamps")
+                                                help="Comma seperated list of steps.  Choices are: test,trim,chimera,status,upload_env454,gast,upload_vamps")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
     
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         pass
     else:
         sys.exit("Unknown platform and configFile type for validation")
-    #sys.exit()
+    
     run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
     
     cfg = None

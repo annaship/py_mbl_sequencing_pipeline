@@ -6,6 +6,11 @@
 #
 #
 
+
+csv_header_list = ["run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
+                            "amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length",
+                            "primer_suite","first_name","last_name","email","institution","project_title","project_description",
+                            "funding","env_sample_source","dataset_description" ]
 ############# defaults for TRIMMING ############################################################
 minimumLength   = 50
 maximumLength   = ''

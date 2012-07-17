@@ -33,8 +33,7 @@ def configDictionaryFromFile_ini(config_file_path):
 
 def configDictionaryFromFile_csv(config_file_path, args):
     
-    known_header_list = ["run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
-                                "amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length","primer_suite" ]
+    known_header_list = C.csv_header_list
     primer_suites = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
     dna_regions = ["v1","v3","v4","v5","v6","v9"]
     data = {}

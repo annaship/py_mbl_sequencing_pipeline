@@ -36,7 +36,7 @@ import json
 import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
-
+TEST_STEP           = "test"
 TRIM_STEP           = "trim"
 CHIMERA_STEP        = "chimera"
 GAST_STEP           = "gast"
@@ -45,7 +45,7 @@ ENV454UPLOAD        = "env454upload"
 ENV454RUN_INFO_UPLOAD = "env454run_info_upload"
 STATUS_STEP         = 'status'
 
-existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
+existing_steps = [TEST_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps, cfg = None):
@@ -74,7 +74,8 @@ def process(run, steps, cfg = None):
             step_method = globals()[step]
             step_method(run, cfg)
 
-
+def test(run):
+    print 'Testing and Exiting'
 # perform trim step
 # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
 # all the stats are kept in the trimrun object
