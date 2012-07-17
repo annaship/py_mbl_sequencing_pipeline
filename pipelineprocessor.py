@@ -261,7 +261,7 @@ def env454upload(run, cfg):
             start = time()
             my_env454upload.insert_seq(sequences)
             elapsed = (time() - start)
-            print "insert_seq() took ", elapsed, " time to finish"
+#            print "insert_seq() took ", elapsed, " time to finish"
             
             insert_pdr_info_time = 0
             insert_taxonomy_time = 0
@@ -285,7 +285,7 @@ def env454upload(run, cfg):
 #                print "tax_id = ", tax_id            
 
                 start = time()
-                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict, sequence_ill_id, tax_id)
+                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict, sequence_ill_id)
                 elapsed = (time() - start)
                 insert_sequence_uniq_info_ill_time += elapsed
 
@@ -293,11 +293,15 @@ def env454upload(run, cfg):
 
             seq_in_file = fasta.total_seq            
             total_seq += seq_in_file
-            print "seq_in_file = %s" % seq_in_file
-            
-            print "insert_pdr_info() took ", insert_pdr_info_time, " time to finish"
-            print "insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish"
-            print "insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish"
+#            print "seq_in_file = %s" % seq_in_file
+#            
+#            print "insert_pdr_info() took ", insert_pdr_info_time, " time to finish"
+#            print "insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish"
+#            print "insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish"
+            logger.debug("seq_in_file = %s" % seq_in_file)
+            logger.debug("insert_pdr_info() took ", insert_pdr_info_time, " time to finish")
+            logger.debug("insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish")
+            logger.debug("insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish")
 
             
         except Exception, e:          # catch all deriving from Exception (instance e)
@@ -309,7 +313,8 @@ def env454upload(run, cfg):
             print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
-    print "total_seq = %s" % total_seq
+#    print "total_seq = %s" % total_seq
+    logger.debug("total_seq = %s" % total_seq)
 
     
     # for vamps 'new_lane_keys' will be prefix 

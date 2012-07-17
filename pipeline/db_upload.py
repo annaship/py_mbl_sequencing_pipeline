@@ -148,10 +148,8 @@ class dbUpload:
         if res:
             return int(res[0][0])         
         
-    def insert_sequence_uniq_info_ill(self, fasta, gast_dict, sequence_ill_id, tax_id):
+    def insert_sequence_uniq_info_ill(self, fasta, gast_dict, sequence_ill_id):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-    #        if (tax_id == 0):
-    #            tax_id = self.get_id('taxonomy', taxonomy)
             
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
