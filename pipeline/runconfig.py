@@ -10,11 +10,12 @@
 
 from pipeline.sample import Sample
 from pipeline.configurationexception import ConfigurationException
-from pipeline.validate import Validate
+from pipeline.validate import CSV_utils
 import sys,os
 import glob
 import constants as C
 import ast
+from pipeline.get_ini import readCSV
 
 # read a config file and convert to a dictionary
 def configDictionaryFromFile_ini(config_file_path):
@@ -33,9 +34,7 @@ def configDictionaryFromFile_ini(config_file_path):
 
 def configDictionaryFromFile_csv(config_file_path, args):
     
-    known_header_list = C.csv_header_list
-    primer_suites = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
-    dna_regions = ["v1","v3","v4","v5","v6","v9"]
+    
     data = {}
     projects = {}
     megadata = {}
@@ -168,7 +167,11 @@ class RunConfig:
     	if type(config_info)==dict:
             config_dict = config_info
     	elif args.platform == 'illumina' and args.config_file_type == 'csv':
-            config_dict = configDictionaryFromFile_csv(config_info, args)
+            #config_dict = configDictionaryFromFile_csv(config_info, args)
+            v = CSV()
+            # read the csv config file
+            my_csv = readCSV(file_path = args.configPath)
+            config_dict = v.create_dictionary_from_csv(args, my_csv)
         else:
             sys.exit("Unknown platform and configFile type for dictionary conversion")
 #         
@@ -250,7 +253,11 @@ class RunConfig:
         
         #print general_config
         # parse out the input file info
-        input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
+        if 'files_list' in general_config:
+            input_file_names = general_config['files_list']
+        else:
+            input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
+            
         input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
         
         if len(input_file_names) != len(input_file_types):

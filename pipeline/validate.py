@@ -14,7 +14,7 @@
 #
 
 import subprocess
-import sys, os,stat
+import sys, os, stat
 import glob
 import time
 import shutil
@@ -67,53 +67,59 @@ class FastaReader:
         if self.id:
             return True    
 
-class Validate:
+def validate_ini():
+    print "Validating ini type Config File -TODO"
+    # must be a general section
+    # should I create a dict here??? -That would render much code in
+    #    runconfig useless.
+    # are we going to continue developing ini style config files if
+    #   no one uses them?
+    
+    import ConfigParser
+
+    configDict = {}
+    user_config = ConfigParser.ConfigParser()
+    try:
+        user_config.read(config_info)
+    except:
+        sys.exit("Failed to read Config file: Are you sure it is in the correct .ini format?")
+    for section in user_config.sections():
+
+        section_dict = configDict[section] = {}
+        for option in user_config.options(section):
+            section_dict[option] = user_config.get(section,option)
+    print "Finished Validating"
+    return configDict
+
+def validate_dict():
+    print "Validating input dictionary -TODO"
+    # must be a general section
+    # should I create a dict here??? -That would render much code in
+    #    runconfig useless.
+    # are we going to continue developing ini style config files if
+    #   no one uses them?  
+    configDict = config_info
+    print "Finished Validating"
+    return configDict
+    
+    
+class CSV_utils:
     """
-    Validates the structure and content of a pipeline .ini file
-    or .csv  config  file (or input dictionary)
+    
     """
-    Name = "VALIDATE"
+    Name = "CSV"
     def __init__(self, run=None):
         self.run = run
         self.known_header_list = C.csv_header_list
-        self.primer_suites     = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
-        self.dna_regions       = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6"]
-
-    def validate_ini(self):
-        print "Validating ini type Config File -TODO"
-        # must be a general section
-        # should I create a dict here??? -That would render much code in
-        #    runconfig useless.
-        # are we going to continue developing ini style config files if
-        #   no one uses them?
+        self.primer_suites     = C.primer_suites 
+        self.dna_regions       = C.dna_regions
         
-        import ConfigParser
-    
-        configDict = {}
-        user_config = ConfigParser.ConfigParser()
-        try:
-            user_config.read(self.config_info)
-        except:
-            sys.exit("Failed to read Config file: Are you sure it is in the correct .ini format?")
-        for section in user_config.sections():
 
-            section_dict = configDict[section] = {}
-            for option in user_config.options(section):
-                section_dict[option] = user_config.get(section,option)
-        print "Finished Validating"
-        return configDict
-
-    def validate_dict(self):
-        print "Validating input dictionary -TODO"
-        # must be a general section
-        # should I create a dict here??? -That would render much code in
-        #    runconfig useless.
-        # are we going to continue developing ini style config files if
-        #   no one uses them?  
-        configDict = self.config_info
-        print "Finished Validating"
-        return configDict
-
+    def create_dictionary_from_csv(self, args, my_csv):
+        data_object = self.populate_data_object(args, my_csv)
+        data_object = self.check_for_input_files(data_object)
+        return data_object
+        
     def validate_csv(self, args, my_csv):
     
         data_object = self.populate_data_object(args, my_csv)
@@ -150,11 +156,11 @@ class Validate:
                 self.check_for_missing_values(data_object[item])
                 self.check_domain_suite_region(data_object[item])
                 self.check_project_name(data_object[item])
-               
-                
-            
-                
-                   
+
+
+
+
+
         """
             TODO:
                  other checks to put in:
@@ -299,6 +305,7 @@ class Validate:
             sys.exit("ERROR: No files were found in '"+data_object['general']['input_dir']+"' with a suffix of '"+data_object['general']['file_suffix']+"'")
         
         data_object['general']['files_list'] = files_list
+        
         data_object['general']['file_count'] = file_count
         return data_object
         
