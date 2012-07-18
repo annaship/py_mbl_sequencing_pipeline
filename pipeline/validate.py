@@ -68,7 +68,7 @@ class FastaReader:
         if self.id:
             return True    
 
-# read a config file and convert to a dictionary
+
 
 
 
@@ -103,7 +103,9 @@ class MetadataUtils:
         return data_object
         
     def create_dictionary_from_454_ini(self, config_file_path):
-    
+        """
+        # read a config file and convert to a dictionary
+        """
         import ConfigParser
         
         configDict = {}
@@ -119,14 +121,14 @@ class MetadataUtils:
         
     def validate_454_csv(self, args, my_csv):
         print "TODO: write validate_454_csv def"
-        pass
+        
         
     def validate_454_ini(self, args, my_csv):
         print "TODO - Validating ini type Config File ()"
         # must be a general section
         # Should all the ini files validate the same: 454, illumina and ion_torrent?
         #  
-        # are we going to continue developing ini style config files if   no one uses them?  
+        # are we going to continue developing ini style config files if no one uses them?  
         
         
         
@@ -328,10 +330,11 @@ class MetadataUtils:
                 files_list.append(os.path.basename(infile))
                 for x in data_object:
                     if 'file_prefix' in data_object[x]:
+                        pass
                         #print data_object[x]['file_prefix']
                         
-                        if os.path.basename(infile).split('-')[0] == data_object[x]['file_prefix']:
-                            lanes_list.append(data_object[x]['lane'])
+                        #if os.path.basename(infile).split('-')[0] == data_object[x]['file_prefix']:
+                            #lanes_list.append(data_object[x]['lane'])
                         
                 file_count += 1
         else:
@@ -344,8 +347,8 @@ class MetadataUtils:
         
         data_object['general']['file_count'] = file_count
         # all the files in an illumina directory should be the same type
-        data_object['general']['file_formats_list'] = [data_object['general']["input_file_format"]] * file_count
-        data_object['general']['lanes_list'] = lanes_list
+        #data_object['general']['file_formats_list'] = [data_object['general']["input_file_format"]] * file_count
+        #data_object['general']['lanes_list'] = lanes_list
         
         
         
@@ -397,7 +400,9 @@ class MetadataUtils:
         
         
     def check_project_name(self,item):
+        """
         # CHECK: project name format: 3 parts; end with Bv6,Ev9,Av6 or something similar
+        """
         try:
             (a,b,c) = item['project'].split('_')
         except:

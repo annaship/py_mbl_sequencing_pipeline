@@ -74,7 +74,7 @@ def process(run, steps, cfg = None):
             step_method = globals()[step]
             step_method(run, cfg)
             
-def test(run):
+def test(run, cfg=None):
     print 'Testing and Exiting'
 # perform trim step
 # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
@@ -82,7 +82,7 @@ def test(run):
 #
 # when complete...write out the datafiles for the most part on a lane/runkey basis
 #
-def trim(run):
+def trim(run, cfg=None):
     # (re) create the trim status file
     run.trim_status_file_h = open(run.trim_status_file_name, "w")
     
@@ -128,7 +128,7 @@ def trim(run):
 # sitting around that describe the results of each lane:runkey sequences
 # it also expectes there to be a trim_status.txt file around
 # which should have a json format with status and the run keys listed        
-def chimera(run):
+def chimera(run, cfg=None):
     chimera_cluster_ids = [] 
     logger.debug("Starting Chimera Checker")
     # lets read the trim status file out here and keep those details out of the Chimera code
@@ -302,7 +302,7 @@ def env454upload(run, cfg):
 #    logger.debug(run.rundate)
 #    my_env454upload.select_run(lane_keys)
 
-def gast(run):  
+def gast(run, cfg=None):  
     
     mygast = Gast(run)
     
@@ -352,7 +352,7 @@ def gast(run):
         logger.error("gast2tax failed")
         sys.exit("gast2tax failed")
         
-def upload_env454(run):
+def upload_env454(run, cfg=None):
     print "TODO upload_env454(run)"
     run.run_status_file_h.write("starting to load env454")
     # where are files?
@@ -373,7 +373,7 @@ def upload_env454(run):
     # will have a 'fa.unique' suffix (Meren's code will do this)
     
     
-def upload_vamps(run):
+def upload_vamps(run, cfg=None):
     
     myvamps = Vamps(run)
     
@@ -387,5 +387,5 @@ def upload_vamps(run):
     #myvamps.exports(idx_keys)
     #myvamps.projects(idx_keys)
     #myvamps.info(idx_keys)
-def status(run):
+def status(run, cfg=None):
     print "TODO status(run)"

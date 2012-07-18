@@ -282,36 +282,50 @@ class RunConfig:
         else:
             input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
         
-        if 'file_formats_list' in general_config:    
-            input_file_types = general_config['file_formats_list']
+        
+        
+        if self.platform == '454':
+            if 'file_formats_list' in general_config:    
+                input_file_types = general_config['file_formats_list']
+            else:
+                input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
+            
+            if len(input_file_names) != len(input_file_types):
+                raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
+            
+            if 'lanes_list' in general_config: 
+                input_file_lanes = general_config['lanes_list']
+            else:        
+                lane_info = general_config['input_file_lanes'].strip()
+                input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
+    
+            # no lane info? better by our custom fasta-mbl format then
+            if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:
+                raise Exception("Only fasta-mbl formatted sequence files are allowed to not provide a value for input_file_lanes")
+    
+            # if they give any lane information it then needs to either be 1 value (for all files) or match them exactly
+            if len(input_file_lanes) > 1 and (len(input_file_names) != len(input_file_lanes)):
+                raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and lanes(" + str(len(input_file_lanes)) + ") in configuration information")
         else:
-            input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
+            input_file_types = []   
+            input_file_lanes = []
         
-        if len(input_file_names) != len(input_file_types):
-            raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
         
-        if 'lanes_list' in general_config: 
-            input_file_lanes = general_config['lanes_list']
-        else:        
-            lane_info = general_config['input_file_lanes'].strip()
-            input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
-
-        # no lane info? better by our custom fasta-mbl format then
-        if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:
-            raise Exception("Only fasta-mbl formatted sequence files are allowed to not provide a value for input_file_lanes")
-
-        # if they give any lane information it then needs to either be 1 value (for all files) or match them exactly
-        if len(input_file_lanes) > 1 and (len(input_file_names) != len(input_file_lanes)):
-            raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and lanes(" + str(len(input_file_lanes)) + ") in configuration information")
+        
         
         self.input_file_info = {}
         for idx,input_file in enumerate(input_file_names):
-            input_file_format = input_file_types[idx]
+            if idx in input_file_types:
+                input_file_format = input_file_types[idx]
+            else:
+                input_file_format = general_config['input_file_format']
+                
+            
             if input_file_format not in C.input_file_formats:
                 raise Exception("Invalid sequence input file format: " + self.input_file_format)
             # make up a hash...they are allowed to not put in any input_file_lanes...could be 3 mbl fasta files which would all have lane
             # info encoded on each id/description line of the sequence record
-            self.input_file_info[input_file] = {"name" : input_file, "format" : input_file_types[idx], "lane" : input_file_lanes[idx] if idx < len(input_file_lanes) else ""}
+            self.input_file_info[input_file] = {"name" : input_file, "format" : input_file_format, "lane" : input_file_lanes[idx] if idx < len(input_file_lanes) else ""}
         
         # now deal with each lane_runkey combo (Sample) that is misnamed though
         # populate sample information for every run_key
