@@ -268,15 +268,26 @@ def env454upload(run, cfg):
             sequences       = read_fasta.sequences
             read_fasta.close()
             fasta           = u.SequenceSource(fasta_file_path, lazy_init = False) 
+
+            insert_seq_time      = 0   
+            get_seq_id_dict_time = 0
+            insert_pdr_info_time = 0
+            insert_taxonomy_time = 0
+            insert_sequence_uniq_info_ill_time = 0
             
             start = time()
             my_env454upload.insert_seq(sequences)
             elapsed = (time() - start)
+            insert_seq_time = elapsed
+            logger.debug("seq_in_file = %s" % seq_in_file)
+            logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
 #            print "insert_seq() took ", elapsed, " time to finish"
-            
-            insert_pdr_info_time = 0
-            insert_taxonomy_time = 0
-            insert_sequence_uniq_info_ill_time = 0
+            start = time()
+            all_seq = my_env454upload.get_seq_id_dict(sequences)
+#            print "all_seq = %s" % all_seq
+            elapsed = (time() - start)
+            get_seq_id_dict_time = elapsed
+            logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
             
             while fasta.next():
                 sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
@@ -309,7 +320,6 @@ def env454upload(run, cfg):
 #            print "insert_pdr_info() took ", insert_pdr_info_time, " time to finish"
 #            print "insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish"
 #            print "insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish"
-            logger.debug("seq_in_file = %s" % seq_in_file)
             logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
             logger.debug("insert_taxonomy_time() took %s time to finish" % insert_taxonomy_time)
             logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)

@@ -84,6 +84,7 @@ class dbUpload:
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = cfg 
         self.unique_file_counts = "unique_file_counts"
+        self.seq_id_dict = {}
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
     def get_fasta_file_names(self, fasta_dir):
@@ -101,6 +102,17 @@ class dbUpload:
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
         self.my_conn.execute_no_fetch(my_sql)
+        
+    def get_seq_id_dict(self, sequences):
+        id_name    = self.sequence_table_name + "_id" 
+        query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
+        val_tmpl   = "'%s'"
+        my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
+#        print "my_sql = %s" % my_sql
+        res    = self.my_conn.execute_fetch_select(my_sql)
+        print "res[0] = %s, str(res[0][0]) = %s, res[0][1] = %s" % (res[0], str(res[0][0]), res[0][1])
+        if res:
+            return res
     
     def get_sequence_id(self, seq):
         my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (seq)
@@ -282,17 +294,6 @@ class dbUpload:
 #        print os.getcwd()        
         for i in my_list:
             print i
-#            comm = "cd " + self.fasta_dir + "; wc -l " + i
             comm = "cd " + self.fasta_dir + "; wc -l " + i + " >> " + file_full
             print comm
             os.system(comm)
-            
-#            print res
-            
-#        import os 
-#for i in files:
-#    os.system("wc -l " + i)
-#        /xraid2-2/sequencing/Illumina/20120613/JulieR/analysis$ for file in *.fa.unique
-#> do
-#>   wc -l $file >> unique_file_counts
-#> done
