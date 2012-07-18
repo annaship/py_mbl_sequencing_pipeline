@@ -1,6 +1,7 @@
 import sys
 import MySQLdb
 import os
+from pipeline.utils import PipelneUtils
 
 class MyConnection:
     """
@@ -86,6 +87,7 @@ class dbUpload:
         self.unique_file_counts = "unique_file_counts"
         self.seq_id_dict = {}
         self.tax_id_dict = {}
+        
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
     def get_fasta_file_names(self, fasta_dir):
@@ -152,9 +154,6 @@ class dbUpload:
 
     def insert_taxonomy(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-        my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-        tax_id = self.my_conn.execute_no_fetch(my_sql)
-#        collect taxonomy and id info into dict, to use later in insert
         if taxonomy in self.tax_id_dict:
             next
         else:
@@ -314,3 +313,16 @@ class dbUpload:
             comm = "cd " + self.fasta_dir + "; wc -l " + i + " >> " + file_full
             print comm
             os.system(comm)
+
+    def seq_statistics(self, filename, seq_in_file):
+        pipelne_utils   = PipelneUtils()
+        run_output_dir  = self.outdir + "/"
+        count_file_name = self.unique_file_counts
+#        if count_file_name in my_list:
+#            my_list.remove(count_file_name)
+        file_full = run_output_dir + count_file_name        
+#        if os.path.exists(file_full):
+#            os.remove(file_full)
+        print "file_full = %s" % file_full
+#        out_file      = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/20120613/seq_in_file"
+        pipelne_utils.write_seq_frequencies_in_file(file_full, filename, seq_in_file)       

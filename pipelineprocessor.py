@@ -276,7 +276,7 @@ def env454upload(run, cfg):
     filenames   = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
     seq_in_file = 0
     total_seq   = 0
-    my_env454upload.check_seq_upload()
+#    my_env454upload.check_seq_upload()
     
     for filename in filenames:
         try:
@@ -323,7 +323,8 @@ def env454upload(run, cfg):
 
 #                print "insert_sequence_uniq_info_ill() took ", elapsed, " time to finish"
 
-            seq_in_file = fasta.total_seq            
+            seq_in_file = fasta.total_seq
+            my_env454upload.seq_statistics(filename, fasta.total_seq)
             total_seq += seq_in_file
 #            print "seq_in_file = %s" % seq_in_file
 #            
