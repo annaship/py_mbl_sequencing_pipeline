@@ -258,7 +258,6 @@ def env454upload(run, cfg):
     filenames   = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
     seq_in_file = 0
     total_seq   = 0
-#    my_env454upload.check_seq_upload()
     
     for filename in filenames:
         try:
@@ -338,6 +337,7 @@ def env454upload(run, cfg):
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
 #    print "total_seq = %s" % total_seq
+    my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time() - whole_start)
     print "The whole_upload took %s s" % whole_elapsed

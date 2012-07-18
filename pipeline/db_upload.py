@@ -268,59 +268,82 @@ class dbUpload:
     def insert_primer(self):
         pass
         
-    def del_sequence_uniq_info(self, run_date):
+    def del_sequence_uniq_info(self):
         my_sql = """DELETE FROM sequence_uniq_info_ill
                     USING sequence_uniq_info_ill 
                     JOIN sequence_ill USING(sequence_ill_id) 
                     JOIN sequence_pdr_info_ill USING(sequence_ill_id)
                     JOIN run_info_ill USING (run_info_ill_id) 
                     JOIN run USING(run_id) WHERE run = "%s"
-                """ % run_date
+                """ % self.rundate
         self.my_conn.execute_no_fetch(my_sql)
 
-    def del_sequences(self, run_date):
+    def del_sequences(self):
         my_sql = """DELETE FROM sequence_ill
                     USING sequence_ill JOIN sequence_pdr_info_ill USING(sequence_ill_id)
                     JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
-                """ % run_date
+                """ % self.rundate
         self.my_conn.execute_no_fetch(my_sql)
 
-    def del_sequence_pdr_info(self, run_date):
+    def del_sequence_pdr_info(self):
         my_sql = """DELETE FROM sequence_pdr_info_ill
                     USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
-                """ % run_date
+                """ % self.rundate
         self.my_conn.execute_no_fetch(my_sql)
 
     #That order is important!
-    def del_all_seq_info(self, run_date):
-        self.del_sequence_uniq_info(run_date)
-        self.del_sequences(run_date)
-        self.del_sequence_pdr_info(run_date)
+    def del_all_seq_info(self):
+        self.del_sequence_uniq_info(self.rundate)
+        self.del_sequences(self.rundate)
+        self.del_sequence_pdr_info(self.rundate)
+
+    def count_sequence_pdr_info_ill(self):
+        my_sql = """SELECT count(sequence_pdr_info_ill_id) 
+                    FROM sequence_pdr_info_ill 
+                      JOIN run_info_ill USING(run_info_ill_id) 
+                      JOIN run USING(run_id) 
+                    WHERE run = '%s'""" % (self.rundate)
+        res    = self.my_conn.execute_fetch_select(my_sql)
+        if res:
+            return int(res[0][0])              
 
     def check_seq_upload(self):
-        run_output_dir = self.outdir + "/"
-        count_file_name = self.unique_file_counts
-        my_list = self.get_fasta_file_names(self.fasta_dir)
-        if count_file_name in my_list:
-            my_list.remove(count_file_name)
-        file_full = "../" + run_output_dir + count_file_name
-        print "file_full = %s" % file_full
-        if os.path.exists(file_full):
-            os.remove(file_full)
-#        print os.getcwd()        
-        for i in my_list:
-            print i
-            comm = "cd " + self.fasta_dir + "; wc -l " + i + " >> " + file_full
-            print comm
-            os.system(comm)
+        file_seq_db_count   = self.count_sequence_pdr_info_ill()
+        print "file_seq_db_count = %s" % file_seq_db_count
+#        if 'k' not in mydict:
+#            mydict.update(myitem)
+        file_full = self.outdir + "/" + self.unique_file_counts        
+        with open(file_full) as fd:
+            file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
+        file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
+
+        if (file_seq_orig_count == file_seq_db_count):
+            print "URA: %s == %s" % (file_seq_orig_count, file_seq_db_count)
+        else:
+            print "UVY: %s != %s" % (file_seq_orig_count, file_seq_db_count)
+            
+        print "DDD: %s" % file_seq_orig 
+        
+        
+#        run_output_dir = self.outdir + "/"
+#        count_file_name = self.unique_file_counts
+#        my_list = self.get_fasta_file_names(self.fasta_dir)
+#        if count_file_name in my_list:
+#            my_list.remove(count_file_name)
+#        file_full = "../" + run_output_dir + count_file_name
+#        print "file_full = %s" % file_full
+#        if os.path.exists(file_full):
+#            os.remove(file_full)
+##        print os.getcwd()        
+#        for i in my_list:
+#            print i
+#            comm = "cd " + self.fasta_dir + "; wc -l " + i + " >> " + file_full
+#            print comm
+#            os.system(comm)
 
     def seq_statistics(self, filename, seq_in_file):
         pipelne_utils   = PipelneUtils()
-        run_output_dir  = self.outdir + "/"
-        count_file_name = self.unique_file_counts
-#        if count_file_name in my_list:
-#            my_list.remove(count_file_name)
-        file_full = run_output_dir + count_file_name        
+        file_full = self.outdir + "/" + self.unique_file_counts        
 #        if os.path.exists(file_full):
 #            os.remove(file_full)
         print "file_full = %s" % file_full
