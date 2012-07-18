@@ -126,11 +126,6 @@ class CSV_utils:
     def validate_csv(self, args, my_csv):
     
         data_object = self.populate_data_object(args, my_csv)
-                      
-       
-
-#        print 'general:', megadata['general']
-        
         
         
         # start error checking here
