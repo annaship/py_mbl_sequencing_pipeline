@@ -219,7 +219,7 @@ class RunConfig:
             if idx in input_file_types:
                 input_file_format = input_file_types[idx]
             else:
-                input_file_format = general_config['input_file_formats']
+                input_file_format = general_config['input_file_format']
                 
             
             if input_file_format not in C.input_file_formats:

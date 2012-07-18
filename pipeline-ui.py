@@ -61,7 +61,7 @@ if __name__ == '__main__':
     parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='fa.unique',
                                                     help="Sequence file suffix [optional] ") 
     # see note for base_output_dir in runconfig.py  about line: 130                                               
-    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=None, dest = "baseoutputdir", 
+    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  dest = "baseoutputdir", default='./',
                                                 help="default: ./")
     parser.add_argument("-s", "--steps",     required=False,  action="store",   dest = "steps", default = 'status',
                                                 help="Comma seperated list of steps.  Choices are: test,trim,chimera,status,upload_env454,gast,upload_vamps")
