@@ -67,7 +67,6 @@ class dbUpload:
 
     """
     def __init__(self, run = None, cfg = None):
-
         self.run     = run
         self.outdir = run.output_dir
         try:
@@ -271,14 +270,16 @@ class dbUpload:
         self.del_sequence_pdr_info(run_date)
 
     def check_seq_upload(self):
+        run_output_dir = self.outdir + "/"
         count_file_name = self.unique_file_counts
         my_list = self.get_fasta_file_names(self.fasta_dir)
         if count_file_name in my_list:
             my_list.remove(count_file_name)
-        file_full = self.fasta_dir + count_file_name
-
+        file_full = "../" + run_output_dir + count_file_name
+        print "file_full = %s" % file_full
         if os.path.exists(file_full):
-            os.remove(file_full)        
+            os.remove(file_full)
+#        print os.getcwd()        
         for i in my_list:
             print i
 #            comm = "cd " + self.fasta_dir + "; wc -l " + i

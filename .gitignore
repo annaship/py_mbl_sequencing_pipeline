@@ -15,6 +15,7 @@ db_conn_ok.conf
 fasta/*
 gast/*
 csv/*
+unique_file_counts
 
 # Result files #
 ################
