@@ -158,6 +158,9 @@ class dbUpload:
         if taxonomy in self.tax_id_dict:
             next
         else:
+            my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
+            tax_id = self.my_conn.execute_no_fetch(my_sql)
+    #        collect taxonomy and id info into dict, to use later in insert
             self.tax_id_dict[taxonomy] = tax_id
 #        self.tax_id_dict[taxonomy] = tax_id or self.get_id('taxonomy', taxonomy)
         
