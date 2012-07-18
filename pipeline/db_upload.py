@@ -84,7 +84,7 @@ class dbUpload:
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = cfg 
-        self.unique_file_counts = "unique_file_counts"
+        self.unique_file_counts = self.outdir + "/unique_file_counts"
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         
@@ -307,45 +307,27 @@ class dbUpload:
         if res:
             return int(res[0][0])              
 
-    def check_seq_upload(self):
-        file_seq_db_count   = self.count_sequence_pdr_info_ill()
-        print "file_seq_db_count = %s" % file_seq_db_count
-#        if 'k' not in mydict:
-#            mydict.update(myitem)
-        file_full = self.outdir + "/" + self.unique_file_counts        
-        with open(file_full) as fd:
+    def count_seq_from_file(self):
+        with open(self.unique_file_counts) as fd:
             file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
         file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
+        return file_seq_orig_count
+    
 
+    def check_seq_upload(self):
+        """
+        TODO: remove file after use
+        """
+        file_seq_db_count   = self.count_sequence_pdr_info_ill()
+#        print "file_seq_db_count = %s" % file_seq_db_count
+        file_seq_orig_count = self.count_seq_from_file()
         if (file_seq_orig_count == file_seq_db_count):
             print "URA: %s == %s" % (file_seq_orig_count, file_seq_db_count)
         else:
             print "UVY: %s != %s" % (file_seq_orig_count, file_seq_db_count)
             
-        print "DDD: %s" % file_seq_orig 
-        
-        
-#        run_output_dir = self.outdir + "/"
-#        count_file_name = self.unique_file_counts
-#        my_list = self.get_fasta_file_names(self.fasta_dir)
-#        if count_file_name in my_list:
-#            my_list.remove(count_file_name)
-#        file_full = "../" + run_output_dir + count_file_name
-#        print "file_full = %s" % file_full
-#        if os.path.exists(file_full):
-#            os.remove(file_full)
-##        print os.getcwd()        
-#        for i in my_list:
-#            print i
-#            comm = "cd " + self.fasta_dir + "; wc -l " + i + " >> " + file_full
-#            print comm
-#            os.system(comm)
-
-    def seq_statistics(self, filename, seq_in_file):
+    def put_seq_statistics_in_file(self, filename, seq_in_file):
         pipelne_utils   = PipelneUtils()
-        file_full = self.outdir + "/" + self.unique_file_counts        
 #        if os.path.exists(file_full):
 #            os.remove(file_full)
-        print "file_full = %s" % file_full
-#        out_file      = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/20120613/seq_in_file"
-        pipelne_utils.write_seq_frequencies_in_file(file_full, filename, seq_in_file)       
+        pipelne_utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)       

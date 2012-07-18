@@ -315,7 +315,7 @@ def env454upload(run, cfg):
 #                print "insert_sequence_uniq_info_ill() took ", elapsed, " time to finish"
 
             seq_in_file = fasta.total_seq
-            my_env454upload.seq_statistics(filename, fasta.total_seq)
+            my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
             total_seq += seq_in_file
 #            print "seq_in_file = %s" % seq_in_file
 #            
