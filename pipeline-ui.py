@@ -26,7 +26,7 @@ from pipeline.runconfig import RunConfig
 from pipeline.run import Run
 from pipeline.chimera import Chimera
 from pipeline.gast import Gast
-from pipeline.validate import CSV_utils
+from pipeline.validate import MetadataUtils
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
@@ -82,11 +82,22 @@ if __name__ == '__main__':
     TODO: read the config file here, depending on its type
     """
     if args.platform == 'illumina' and args.config_file_type == 'csv':
-        v = CSV_utils()
+        v = MetadataUtils()
         # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
-        v.validate_csv(args, my_csv)
+        v.validate_illumina_csv(args, my_csv)
+    elif args.platform == 'illumina' and args.config_file_type == 'ini':
+        pass
+    elif args.platform == '454' and args.config_file_type == 'csv':
+        v = MetadataUtils()
+        # read the csv config file
+        my_csv = readCSV(file_path = args.configPath)
+        v.validate_454_csv(args, my_csv)
     elif args.platform == '454' and args.config_file_type == 'ini':
+        pass
+    elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
+        pass
+    elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
         pass
     else:
         sys.exit("Unknown platform and configFile type for validation")

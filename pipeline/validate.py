@@ -67,31 +67,26 @@ class FastaReader:
         if self.id:
             return True    
 
-def validate_ini():
-    print "Validating ini type Config File -TODO"
-    # must be a general section
-    # should I create a dict here??? -That would render much code in
-    #    runconfig useless.
-    # are we going to continue developing ini style config files if
-    #   no one uses them?
-    
+# read a config file and convert to a dictionary
+def configDictionaryFromFile_ini(config_file_path):
     import ConfigParser
-
+    
     configDict = {}
     user_config = ConfigParser.ConfigParser()
-    try:
-        user_config.read(config_info)
-    except:
-        sys.exit("Failed to read Config file: Are you sure it is in the correct .ini format?")
+    user_config.read(config_file_path)
+    
     for section in user_config.sections():
-
         section_dict = configDict[section] = {}
         for option in user_config.options(section):
             section_dict[option] = user_config.get(section,option)
-    print "Finished Validating"
+
     return configDict
 
 def validate_dict():
+    """
+    This is only used for data that comes in as a dictionary rather than a file
+    such as with vamps user uploads
+    """
     print "Validating input dictionary -TODO"
     # must be a general section
     # should I create a dict here??? -That would render much code in
@@ -103,11 +98,12 @@ def validate_dict():
     return configDict
     
     
-class CSV_utils:
+class MetadataUtils:
     """
-    
+    Class to read metadata files (csv and ini style)
+    validate and create a dictionary from them
     """
-    Name = "CSV"
+    Name = "Metadata_utils"
     def __init__(self, run=None):
         self.run = run
         self.known_header_list = C.csv_header_list
@@ -115,17 +111,26 @@ class CSV_utils:
         self.dna_regions       = C.dna_regions
         
 
-    def create_dictionary_from_csv(self, args, my_csv):
+    def create_dictionary_from_illumina_csv(self, args, my_csv):
     
-        data_object = self.populate_data_object(args, my_csv)
+        data_object = self.populate_data_object_illumina(args, my_csv)
         
         data_object = self.check_for_input_files(data_object)
         
         return data_object
+    def create_dictionary_from_454_csv(args, my_csv):
+        data_object = self.populate_data_object_454(args, my_csv)
         
-    def validate_csv(self, args, my_csv):
+        data_object = self.check_for_input_files(data_object)
+        
+        return data_object
     
-        data_object = self.populate_data_object(args, my_csv)
+    def validate_454_csv(args, my_csv):
+        print "TODO: write validate_454_csv def"
+        pass
+    def validate_illumina_csv(self, args, my_csv):
+    
+        data_object = self.populate_data_object_illumina(args, my_csv)
                       
        
 
@@ -180,8 +185,12 @@ class CSV_utils:
                 #print item,megadata[item],"\n\n"
         print "SUCCESS: Finished Validating"        
 
-
-    def populate_data_object(self, args, my_csv):
+    def populate_data_object_454(self, args, my_csv):
+        print "TODO: write populate_data_object_454 def"
+        pass
+        
+        
+    def populate_data_object_illumina(self, args, my_csv):
         data = {}
         data['general'] = {}
         test_datasets = {}
@@ -391,7 +400,32 @@ class CSV_utils:
             sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(self.known_header_list)))
         else:
             return True
-
+            
+    def validate_454_ini():
+        print "Validating ini type Config File -TODO"
+        # must be a general section
+        # should I create a dict here??? -That would render much code in
+        #    runconfig useless.
+        # are we going to continue developing ini style config files if
+        #   no one uses them?
+        
+        import ConfigParser
+    
+        configDict = {}
+        user_config = ConfigParser.ConfigParser()
+        try:
+            user_config.read(config_info)
+        except:
+            sys.exit("Failed to read Config file: Are you sure it is in the correct .ini format?")
+        for section in user_config.sections():
+    
+            section_dict = configDict[section] = {}
+            for option in user_config.options(section):
+                section_dict[option] = user_config.get(section,option)
+        print "Finished Validating"
+        return configDict
+        
+        
 #     def validate_csv2(self):
 #         print "Validating csv type Config File"
 #         
@@ -615,235 +649,238 @@ class CSV_utils:
 #         print "Finished Validating"
 #         return megadata
     
-def send_metadata_to_database(data, data_object):
-    cursor = data_object['cursor']
-    cursor_env454 = data_object['cursor_env454']
-    sub_table = data_object['submission_tbl']
-    tubes_table_vamps = data_object['tubes_tbl']
-    seqs_table_env454 = data_object['seqs_454']
-    metadata_table_env454 = data_object['metadata_454']
-    vamps_user = data_object['vamps_user']
-    upload_code = data_object['upload_code']
-    datetime = data_object['datetime']
-    submit_code = upload_code+'_'+vamps_user
-    env_source = '100'  # 100 is unknown
-    platform = 'illumina' # this is ONLY for illumina data - right?
-    # get contact
-    cursor.execute("select last_name,first_name,email,institution from vamps_auth where user='"+vamps_user+"'")
-    (last_name,first_name,email,institution) = cursor.fetchone()
-    for project in data:
-        
-        insert_string = "insert ignore into %s (\
-            upload_code,\
-            temp_project,\
-            user,\
-            last_name,\
-            first_name,\
-            email,\
-            institution,\
-            env_source_id,\
-            num_of_tubes,\
-            date_initial\
-            ) \
-            values('"+upload_code+"',\
-                '"+project+"',\
-                '"+vamps_user+"',\
-                '"+last_name+"',\
-                '"+first_name+"',\
-                '"+email+"',\
-                '"+institution+"',\
-                '"+env_source+"',\
-                '"+str(data[project]['ds_count'])+"',\
-                '"+datetime+"'\
-                )"
-        print insert_string
-        cursor.execute(insert_string % (sub_table))
-        ds_num = 0
-        #known_header_list = ["run_key","run","lane","dataset","project",
-        #"tubelabel","barcode","adaptor","dna_region","amp_operator",
-        #"seq_operator","barcode_index","overlap","insert_size",
-        #"file_prefix","read_length","primer_suite"]
-        for dataset_items in data[project]['datasets']:
-            ds_num += 1
-            insert_string = "insert into %s (\
-                upload_code,\
-                runkey,\
-                run,\
-                lane,\
-                project,\
-                dataset,\
-                tubelabel,\
-                barcode,\
-                adaptor,\
-                dna_region,\
-                amp_operator,\
-                seq_operator,\
-                barcode_index,\
-                overlap,\
-                insert_size,\
-                file_prefix,\
-                read_length,\
-                primer_suite,\
-                date_initial\
-                ) \
-                values('"+upload_code+"',\
-                    '"+dataset_items['run_key']+"',\
-                    '"+dataset_items['run']+"',\
-                    '"+dataset_items['lane']+"',\
-                    '"+project+"',\
-                    '"+dataset_items['dataset']+"',\
-                    '"+dataset_items['tubelabel']+"',\
-                    '"+dataset_items['barcode']+"',\
-                    '"+dataset_items['adaptor']+"',\
-                    '"+dataset_items['dna_region']+"',\
-                    '"+dataset_items['amp_operator']+"',\
-                    '"+dataset_items['seq_operator']+"',\
-                    '"+dataset_items['barcode_index']+"',\
-                    '"+dataset_items['overlap']+"',\
-                    '"+dataset_items['insert_size']+"',\
-                    '"+dataset_items['file_prefix']+"',\
-                    '"+dataset_items['read_length']+"',\
-                    '"+dataset_items['primer_suite']+"',\
-                    '"+datetime+"')"
-            
-            cursor.execute(insert_string % (tubes_table_vamps))
-            
-            cursor_env454.execute(insert_string % (metadata_table_env454))
+# def send_metadata_to_database(data, data_object):
+#     cursor = data_object['cursor']
+#     cursor_env454 = data_object['cursor_env454']
+#     sub_table = data_object['submission_tbl']
+#     tubes_table_vamps = data_object['tubes_tbl']
+#     seqs_table_env454 = data_object['seqs_454']
+#     metadata_table_env454 = data_object['metadata_454']
+#     vamps_user = data_object['vamps_user']
+#     upload_code = data_object['upload_code']
+#     datetime = data_object['datetime']
+#     submit_code = upload_code+'_'+vamps_user
+#     env_source = '100'  # 100 is unknown
+#     platform = 'illumina' # this is ONLY for illumina data - right?
+#     # get contact
+#     cursor.execute("select last_name,first_name,email,institution from vamps_auth where user='"+vamps_user+"'")
+#     (last_name,first_name,email,institution) = cursor.fetchone()
+#     for project in data:
+#         
+#         insert_string = "insert ignore into %s (\
+#             upload_code,\
+#             temp_project,\
+#             user,\
+#             last_name,\
+#             first_name,\
+#             email,\
+#             institution,\
+#             env_source_id,\
+#             num_of_tubes,\
+#             date_initial\
+#             ) \
+#             values('"+upload_code+"',\
+#                 '"+project+"',\
+#                 '"+vamps_user+"',\
+#                 '"+last_name+"',\
+#                 '"+first_name+"',\
+#                 '"+email+"',\
+#                 '"+institution+"',\
+#                 '"+env_source+"',\
+#                 '"+str(data[project]['ds_count'])+"',\
+#                 '"+datetime+"'\
+#                 )"
+#         print insert_string
+#         cursor.execute(insert_string % (sub_table))
+#         ds_num = 0
+#         #known_header_list = ["run_key","run","lane","dataset","project",
+#         #"tubelabel","barcode","adaptor","dna_region","amp_operator",
+#         #"seq_operator","barcode_index","overlap","insert_size",
+#         #"file_prefix","read_length","primer_suite"]
+#         for dataset_items in data[project]['datasets']:
+#             ds_num += 1
+#             insert_string = "insert into %s (\
+#                 upload_code,\
+#                 runkey,\
+#                 run,\
+#                 lane,\
+#                 project,\
+#                 dataset,\
+#                 tubelabel,\
+#                 barcode,\
+#                 adaptor,\
+#                 dna_region,\
+#                 amp_operator,\
+#                 seq_operator,\
+#                 barcode_index,\
+#                 overlap,\
+#                 insert_size,\
+#                 file_prefix,\
+#                 read_length,\
+#                 primer_suite,\
+#                 date_initial\
+#                 ) \
+#                 values('"+upload_code+"',\
+#                     '"+dataset_items['run_key']+"',\
+#                     '"+dataset_items['run']+"',\
+#                     '"+dataset_items['lane']+"',\
+#                     '"+project+"',\
+#                     '"+dataset_items['dataset']+"',\
+#                     '"+dataset_items['tubelabel']+"',\
+#                     '"+dataset_items['barcode']+"',\
+#                     '"+dataset_items['adaptor']+"',\
+#                     '"+dataset_items['dna_region']+"',\
+#                     '"+dataset_items['amp_operator']+"',\
+#                     '"+dataset_items['seq_operator']+"',\
+#                     '"+dataset_items['barcode_index']+"',\
+#                     '"+dataset_items['overlap']+"',\
+#                     '"+dataset_items['insert_size']+"',\
+#                     '"+dataset_items['file_prefix']+"',\
+#                     '"+dataset_items['read_length']+"',\
+#                     '"+dataset_items['primer_suite']+"',\
+#                     '"+datetime+"')"
+#             
+#             cursor.execute(insert_string % (tubes_table_vamps))
+#             
+#             cursor_env454.execute(insert_string % (metadata_table_env454))
     # ls /xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/*fa.unique
     #barcode_index = 'idx': 'AAGCTA',
     #barcode = run_key = 'inline_barcode': 'NNNNACGCA
     
-def read_sequence_files(data, data_object):
-    # sample directory
-    seqs_table_env454 = data_object['seqs_454']
-    cursor_env454 = data_object['cursor_env454']
-    fasta_dir = "/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-    file_suffix = "fa.unique"
-    file_count = 0
-    for filename in os.listdir(fasta_dir): 
-        
-        if filename[-len(file_suffix):] == file_suffix:
-            size = os.path.getsize(fasta_dir +filename)
-            
-            #cat 'filename' | grep ">" | wc -l
-            #print "result",x
-            print os.path.split(filename)[-1]
-            p = subprocess.Popen(["cat "+ fasta_dir +filename+ " | grep '>' | wc -l"], shell=True, stdout=subprocess.PIPE)
-            #p = subprocess.Popen(["cat", fasta_dir +filename, "|", "grep", '>',"|","wc","-l"], shell=True, stdout=subprocess.PIPE)
-            print "  seq_count:",p.communicate()[0].strip()
-            file_count += 1
-            
-            dataset = '_'.join(filename.split('-')[0].split('_')[:-1])
-            project = ''
-            for p in data:
-                #print type(data[p]),data[p]['datasets'],"\n\n"
-                data[p]['datasets'][0]['dataset']
-                for n in range(0,len(data[p]['datasets'])):
-                    if data[p]['datasets'][n]['dataset'] == dataset:
-                        project = p
-                        #domain = data[p]['datasets'][n]['domain']
-                        dna_region = data[p]['datasets'][n]['dna_region']
-                        break
-            f = FastaReader(fasta_dir +filename)
-            while f.next():
-                id = f.id.split('|')[0]
-                #print id
-                cursor_env454.execute("insert ignore into "+seqs_table_env454+" (read_id,sequence,length,project,dataset,source) \
-                    VALUES('"+id+"','"+f.seq+"','"+str(len(f.seq))+"','"+project+"','"+dataset+"','"+dna_region+"')")
-    print "File Count",file_count
+# def read_sequence_files(data, data_object):
+#     # sample directory
+#     seqs_table_env454 = data_object['seqs_454']
+#     cursor_env454 = data_object['cursor_env454']
+#     fasta_dir = "/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
+#     file_suffix = "fa.unique"
+#     file_count = 0
+#     for filename in os.listdir(fasta_dir): 
+#         
+#         if filename[-len(file_suffix):] == file_suffix:
+#             size = os.path.getsize(fasta_dir +filename)
+#             
+#             #cat 'filename' | grep ">" | wc -l
+#             #print "result",x
+#             print os.path.split(filename)[-1]
+#             p = subprocess.Popen(["cat "+ fasta_dir +filename+ " | grep '>' | wc -l"], shell=True, stdout=subprocess.PIPE)
+#             #p = subprocess.Popen(["cat", fasta_dir +filename, "|", "grep", '>',"|","wc","-l"], shell=True, stdout=subprocess.PIPE)
+#             print "  seq_count:",p.communicate()[0].strip()
+#             file_count += 1
+#             
+#             dataset = '_'.join(filename.split('-')[0].split('_')[:-1])
+#             project = ''
+#             for p in data:
+#                 #print type(data[p]),data[p]['datasets'],"\n\n"
+#                 data[p]['datasets'][0]['dataset']
+#                 for n in range(0,len(data[p]['datasets'])):
+#                     if data[p]['datasets'][n]['dataset'] == dataset:
+#                         project = p
+#                         #domain = data[p]['datasets'][n]['domain']
+#                         dna_region = data[p]['datasets'][n]['dna_region']
+#                         break
+#             f = FastaReader(fasta_dir +filename)
+#             while f.next():
+#                 id = f.id.split('|')[0]
+#                 #print id
+#                 cursor_env454.execute("insert ignore into "+seqs_table_env454+" (read_id,sequence,length,project,dataset,source) \
+#                     VALUES('"+id+"','"+f.seq+"','"+str(len(f.seq))+"','"+project+"','"+dataset+"','"+dna_region+"')")
+#     print "File Count",file_count
         
 if __name__ == '__main__':
-    import argparse
-    
-    # DEFAULTS
-    user = ''  
-    #project = 'p'+str(random.randrange(100000,999999))
-   
-    unique = str(random.randrange(1000000, 9999999))
-    data_object = {}
-    
 
+    m =  Metadata_utils
     
-    myusage = """usage: illumina_input.py -m metadatafile -d seqdir [options]
-         
-         
-         
-         where
-            -m, --metadatafile The name of the text file.  [required]
-            
-            -d, --directory    The name of the directory where the sequence files are located.   [required]
-            
-              
-            -site            vamps or vampsdev.
-                                [default: vampsdev]
-            -r,  --run
-            -u, --vamps_user       Needed for database
-                                vamps_user is to keep a record of who uploaded
-            
-    
-    
-    """
-    parser = argparse.ArgumentParser(description="Read Illumina directory, scan/validate metadata file and import sequences and metadata" ,usage=myusage)
-    
-    parser.add_argument("-u", "--vamps_user",         required=True,  action="store",   dest = "vamps_user", 
-                                                    help="user name")  
-                                         
-    parser.add_argument("-m", "--metadatafile",  required=True,  action="store",   dest = "metadata_file", 
-                                                    help="Metadata File ") 
-    parser.add_argument("-d", "--directory",     required=False,  action="store",   dest = "seqsdir", 
-                                                    help="Taxonomy File ")
-    parser.add_argument("-s", "--site",     required=False,  action="store",   dest = "site", default='vampsdev',
-                                                    help="Taxonomy File ")                                      
-    parser.add_argument("-r", "--run",     required=False,  action="store",   dest = "runcode",
-                                                    help="Taxonomy File ")
-    print "Starting illumina_imput.py"
-    
-    args = parser.parse_args()
-    
-    data_object['metadata_file'] = args.metadata_file
-    data_object['seqsdir'] = args.seqsdir
-    #data_object['basedir'] = args.basedir
-    data_object['datetime'] = str(datetime.date.today())
-    data_object['vamps_user'] = args.vamps_user
-    if args.runcode:
-        data_object['upload_code'] = args.vamps_user+'_'+args.runcode
-    else:
-        data_object['upload_code'] = args.vamps_user+'_'+unique
-    
-    
-    data_object['submission_tbl'] = 'vamps_submissions_illumina'
-    data_object['tubes_tbl'] = 'vamps_submissions_tubes_illumina'
-    data_object['metadata_454'] = 'illumina_metadata_av'    
-    data_object['seqs_454'] = 'illumina_seqs_av'
-    
-    if args.site:
-        site = args.site
-    
-    if site == 'vamps':
-        db_host = 'vampsdb'
-        db_name = 'vamps'
-        db_home = '/xraid2-2/vampsweb/vamps/'
-    else:
-        db_host = 'vampsdev'
-        db_name = 'vamps'
-        db_home = '/xraid2-2/vampsweb/vampsdev/'
-    
-    db_host_env454 = 'newbpcdb2'
-    db_name_env454 = 'env454'
-    db_home_env454 = os.getenv("HOME")
-    print db_home_env454
-    obj_env454=ConMySQL.New(db_host_env454, db_name_env454, db_home_env454)
-    data_object['cursor_env454'] = obj_env454.get_cursor()
-    obj=ConMySQL.New(db_host, db_name, db_home)
-    data_object['cursor'] = obj.get_cursor()
-    
-    dbuser = obj.get_db_user()
-    data_object['db_user'] = dbuser
-    
-    data = validate_metadata_file(data_object)
-    send_metadata_to_database(data, data_object)
-    read_sequence_files(data, data_object)
-    
-    data_object['cursor'].close()
+    # import argparse
+#     
+#     # DEFAULTS
+#     user = ''  
+#     #project = 'p'+str(random.randrange(100000,999999))
+#    
+#     unique = str(random.randrange(1000000, 9999999))
+#     data_object = {}
+#     
+# 
+#     
+#     myusage = """usage: illumina_input.py -m metadatafile -d seqdir [options]
+#          
+#          
+#          
+#          where
+#             -m, --metadatafile The name of the text file.  [required]
+#             
+#             -d, --directory    The name of the directory where the sequence files are located.   [required]
+#             
+#               
+#             -site            vamps or vampsdev.
+#                                 [default: vampsdev]
+#             -r,  --run
+#             -u, --vamps_user       Needed for database
+#                                 vamps_user is to keep a record of who uploaded
+#             
+#     
+#     
+#     """
+#     parser = argparse.ArgumentParser(description="Read Illumina directory, scan/validate metadata file and import sequences and metadata" ,usage=myusage)
+#     
+#     parser.add_argument("-u", "--vamps_user",         required=True,  action="store",   dest = "vamps_user", 
+#                                                     help="user name")  
+#                                          
+#     parser.add_argument("-m", "--metadatafile",  required=True,  action="store",   dest = "metadata_file", 
+#                                                     help="Metadata File ") 
+#     parser.add_argument("-d", "--directory",     required=False,  action="store",   dest = "seqsdir", 
+#                                                     help="Taxonomy File ")
+#     parser.add_argument("-s", "--site",     required=False,  action="store",   dest = "site", default='vampsdev',
+#                                                     help="Taxonomy File ")                                      
+#     parser.add_argument("-r", "--run",     required=False,  action="store",   dest = "runcode",
+#                                                     help="Taxonomy File ")
+#     print "Starting illumina_imput.py"
+#     
+#     args = parser.parse_args()
+#     
+#     data_object['metadata_file'] = args.metadata_file
+#     data_object['seqsdir'] = args.seqsdir
+#     #data_object['basedir'] = args.basedir
+#     data_object['datetime'] = str(datetime.date.today())
+#     data_object['vamps_user'] = args.vamps_user
+#     if args.runcode:
+#         data_object['upload_code'] = args.vamps_user+'_'+args.runcode
+#     else:
+#         data_object['upload_code'] = args.vamps_user+'_'+unique
+#     
+#     
+#     data_object['submission_tbl'] = 'vamps_submissions_illumina'
+#     data_object['tubes_tbl'] = 'vamps_submissions_tubes_illumina'
+#     data_object['metadata_454'] = 'illumina_metadata_av'    
+#     data_object['seqs_454'] = 'illumina_seqs_av'
+#     
+#     if args.site:
+#         site = args.site
+#     
+#     if site == 'vamps':
+#         db_host = 'vampsdb'
+#         db_name = 'vamps'
+#         db_home = '/xraid2-2/vampsweb/vamps/'
+#     else:
+#         db_host = 'vampsdev'
+#         db_name = 'vamps'
+#         db_home = '/xraid2-2/vampsweb/vampsdev/'
+#     
+#     db_host_env454 = 'newbpcdb2'
+#     db_name_env454 = 'env454'
+#     db_home_env454 = os.getenv("HOME")
+#     print db_home_env454
+#     obj_env454=ConMySQL.New(db_host_env454, db_name_env454, db_home_env454)
+#     data_object['cursor_env454'] = obj_env454.get_cursor()
+#     obj=ConMySQL.New(db_host, db_name, db_home)
+#     data_object['cursor'] = obj.get_cursor()
+#     
+#     dbuser = obj.get_db_user()
+#     data_object['db_user'] = dbuser
+#     
+#     data = validate_metadata_file(data_object)
+#     send_metadata_to_database(data, data_object)
+#     read_sequence_files(data, data_object)
+#     
+#     data_object['cursor'].close()
     
 
