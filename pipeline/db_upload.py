@@ -121,7 +121,13 @@ class dbUpload:
 
 #        if res:
 #            return res
-    
+    def get_id(self, table_name, value):
+        id_name = table_name + '_id'
+        my_sql  = """SELECT %s FROM %s WHERE %s = '%s'""" % (id_name, table_name, table_name, value)
+        res     = self.my_conn.execute_fetch_select(my_sql)
+        if res:
+            return int(res[0][0])         
+            
     def get_sequence_id(self, seq):
         my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (seq)
         res    = self.my_conn.execute_fetch_select(my_sql)
@@ -147,31 +153,31 @@ class dbUpload:
     def insert_taxonomy(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-#        print "taxonomy = %s\n" % my_sql
         tax_id = self.my_conn.execute_no_fetch(my_sql)
-#        self.tax_id_dict[taxonomy] = tax_id
-        
-    def get_id(self, table_name, value):
-        id_name = table_name + '_id'
-        my_sql  = """SELECT %s FROM %s WHERE %s = '%s'""" % (id_name, table_name, table_name, value)
-        res     = self.my_conn.execute_fetch_select(my_sql)
-        if res:
-            return int(res[0][0])         
+#        collect taxonomy and id info into dict, to use later in insert
+        if taxonomy in self.tax_id_dict:
+            next
+        else:
+            self.tax_id_dict[taxonomy] = tax_id
+#        self.tax_id_dict[taxonomy] = tax_id or self.get_id('taxonomy', taxonomy)
         
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         sequence_ill_id = self.seq_id_dict[fasta.seq]
-           
+        taxonomy_id     = self.tax_id_dict[taxonomy] 
+
+#                        (SELECT taxonomy_id FROM taxonomy WHERE taxonomy = '%s'),
+
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
                 %s,
-                (SELECT taxonomy_id FROM taxonomy WHERE taxonomy = '%s'),
+                %s,
                 '%s',
                 '%s',
                 (SELECT rank_id FROM rank WHERE rank = '%s'),
                 '%s'                
                )
-               """ % (sequence_ill_id, taxonomy, distance, refssu_count, rank, refhvr_ids.rstrip())
+               """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
         self.my_conn.execute_no_fetch(my_sql)
     
     def put_run_info(self):
