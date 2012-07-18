@@ -118,17 +118,20 @@ class MetadataUtils:
                 section_dict[option] = user_config.get(section,option)
     
         return configDict 
+
         
     def validate_454_csv(self, args, my_csv):
         print "TODO: write validate_454_csv def"
         data_object = self.populate_data_object_454(args, my_csv)
         
     def validate_454_ini(self, args, my_csv):
-        print "TODO - Validating ini type Config File ()"
+        print "Validating ini type Config File"
+        print "TODO - write validation def"
         # must be a general section
         # Should all the ini files validate the same: 454, illumina and ion_torrent?
         #  
-        # are we going to continue developing ini style config files if no one uses them?  
+        # Are we going to continue developing ini style config files if we don't use them?
+        #
         
         
         
@@ -198,9 +201,6 @@ class MetadataUtils:
 
         return configDict   
         
-    def populate_data_object_454(self, args, my_csv):
-        print "TODO: write populate_data_object_454 def"
-        pass
         
     def populate_data_object_454(self, args, my_csv):
         data = {}
@@ -342,7 +342,7 @@ class MetadataUtils:
         files_list = []
         imports_list = []
         lanes_list = []
-
+        print data_object['general']['input_dir']
         fasta_dir = os.path.join(data_object['general']['input_dir'],"fasta")
         if os.path.isdir(fasta_dir):
             p = data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']

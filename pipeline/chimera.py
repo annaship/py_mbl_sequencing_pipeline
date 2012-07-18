@@ -54,7 +54,6 @@ class Chimera:
             
             out_fileName = self.prefix[lane_key] + ".chimeras.txt"        
             #clusterize uchime454 -replace -r self.rundate -t chimeras_denovo
-
             
             uchime_cmd = ["clusterize"]
             uchime_cmd.append(self.usearch_cmd)
@@ -66,7 +65,7 @@ class Chimera:
             uchime_cmd.append(self.abskew)
             
             try:
-                print "chimera denovo command: " + str(uchime_cmd)
+                logger.info("chimera denovo command: " + str(uchime_cmd))
                 output[lane_key] = subprocess.check_output(uchime_cmd)
                 #print output[lane_key]
                 #print output[lane_key].split()[2]
@@ -128,7 +127,7 @@ class Chimera:
             
             
             try:
-                print "chimera referenc command: " + str(uchime_cmd)
+                logger.info("chimera referenc command: " + str(uchime_cmd))
                 output[lane_key] = subprocess.check_output(uchime_cmd)
                 #print 'outsplit',output[lane_key].split()[2]
                 cluster_id_list.append(output[lane_key].split()[2])
