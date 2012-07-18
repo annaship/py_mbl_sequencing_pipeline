@@ -10,11 +10,12 @@
 
 from pipeline.sample import Sample
 from pipeline.configurationexception import ConfigurationException
-from pipeline.validate import Validate
+from pipeline.validate import MetadataUtils
 import sys,os
 import glob
 import constants as C
 import ast
+from pipeline.get_ini import readCSV
 
 # read a config file and convert to a dictionary
 def configDictionaryFromFile_ini(config_file_path):
@@ -31,122 +32,119 @@ def configDictionaryFromFile_ini(config_file_path):
 
     return configDict
 
-def configDictionaryFromFile_csv(config_file_path, args):
-    
-    known_header_list = ["run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
-                                "amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length","primer_suite" ]
-    primer_suites = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
-    dna_regions = ["v1","v3","v4","v5","v6","v9"]
-    data = {}
-    projects = {}
-    megadata = {}
-    megadata['general'] = {}
-    megadata['general']['input_dir'] = args.input_dir
-    megadata['general']['configFile'] = config_file_path
-    #megadata['general']['output_dir'] = self.args.output_dir
-    megadata['general']['platform'] = args.platform
-    megadata['general']['run'] = args.run
-    megadata['general']['run_date'] = args.run
-    #megadata['general']['run'] = self.args.run
-    megadata['general']["input_file_format"] = args.input_file_format
-    #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-    megadata['general']["input_file_suffix"] = args.input_file_suffix
-    
-    # HERE make list of input_file_names
-    # open dir
-    # and list of types and lanes
-    if 'input_file_suffix' not in megadata['general']:
-            megadata['general']['input_file_suffix'] = ''
-    file_count = 0
-    files_list = []
-    if os.path.isdir(megadata['general']['input_dir']):
-        p = megadata['general']['input_dir'], '*'+megadata['general']['input_file_suffix']
-        print p
-        for infile in glob.glob( os.path.join(megadata['general']['input_dir'], '*'+megadata['general']['input_file_suffix']) ):
-            files_list.append(os.path.basename(infile))
-            file_count += 1
-    else:
-        sys.exit("ERROR:no input directory or directory permissions problem")
-        
-    if not file_count:
-        sys.exit("ERROR:No files were found in '"+megadata['general']['input_dir']+"' with a suffix of '"+megadata['general']['input_file_suffix']+"'")
-        
-    megadata['general']['input_file_names'] = ','.join(files_list)
-    megadata['general']['input_file_formats'] = ','.join([megadata['general']['input_file_format'] for i in files_list])
-    # assign 1 to lanes -- kludge
-    megadata['general']['input_file_lanes'] = ','.join(['1']*file_count)
-        
-        
-    test_datasets = {}
-    dataset_counter = {}
-    headers = ''
-    # must be comma sep
-    
-    f_in_md = open(config_file_path, 'r')
-    # must be comma sep
-    lines = f_in_md.readlines()
-    for line in lines:
-        
-        line = line.strip()
-            
-        if not line:
-            continue
-        lst = [i.strip('"').replace(" ", "_") for i in line.strip().split(',')]
-        
-        
-        if not lst[0]:
-            continue
-        temp = {}   
-        if not headers:
-            headers = [i.strip('"').lower().replace(" ", "_") for i in line.split(',')]
-
-            if sorted(known_header_list) != sorted(headers):
-                sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(known_header_list)))
-        else:
-            for n in range(0,len(headers)):
-                #print headers[n], lst[n]
-                try:
-                    temp[headers[n]] = lst[n]
-                except:
-                    sys.exit("ERROR:It looks like the header count and the data column count are different.")
-        
-            temp['file_prefix'] = temp['dataset']+'_'+temp['barcode'].upper().replace('N','')
-        
-            #data[lst[0]] = temp
-            
-            
-            unique_identifier = temp['barcode_index']+'_'+temp['run_key']+'_'+temp['lane']
-            megadata[unique_identifier]={}
-            if unique_identifier in test_datasets:
-                sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
-            else:                     
-                test_datasets[unique_identifier] = 1
-                
-            megadata[unique_identifier]['dataset'] = temp['dataset']
-            megadata[unique_identifier]['project'] = temp['project']
-            
-            if temp['project'] in dataset_counter:
-                dataset_counter[temp['project']] += 1
-            else:
-                dataset_counter[temp['project']] = 1
-            
-            #megadata[unique_identifier]['ds_count'] = 1
-            megadata[unique_identifier]['project']      = temp['project']
-            megadata[unique_identifier]['run_key']      = temp['run_key']
-            megadata[unique_identifier]['lane']         = temp['lane']
-            megadata[unique_identifier]['tubelabel']    = temp['tubelabel']
-            megadata[unique_identifier]['barcode']      = temp['barcode']
-            megadata[unique_identifier]['adaptor']      = temp['adaptor']
-            megadata[unique_identifier]['dna_region']   = temp['dna_region']
-            megadata[unique_identifier]['amp_operator'] = temp['amp_operator']
-            megadata[unique_identifier]['seq_operator'] = temp['seq_operator']
-            megadata[unique_identifier]['barcode_index']= temp['barcode_index']
-            megadata[unique_identifier]['overlap']      = temp['overlap']
-            megadata[unique_identifier]['insert_size']  = temp['insert_size']
-            megadata[unique_identifier]['file_prefix']  = temp['file_prefix']
-            megadata[unique_identifier]['read_length']  = temp['read_length']
-            megadata[unique_identifier]['primer_suite'] = temp['primer_suite']
-    return megadata
+# def configDictionaryFromFile_csv(config_file_path, args):
+#     
+#     
+#     data = {}
+#     projects = {}
+#     megadata = {}
+#     megadata['general'] = {}
+#     megadata['general']['input_dir'] = args.input_dir
+#     megadata['general']['configFile'] = config_file_path
+#     #megadata['general']['output_dir'] = self.args.output_dir
+#     megadata['general']['platform'] = args.platform
+#     megadata['general']['run'] = args.run
+#     megadata['general']['run_date'] = args.run
+#     #megadata['general']['run'] = self.args.run
+#     megadata['general']["input_file_format"] = args.input_file_format
+#     #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
+#     megadata['general']["input_file_suffix"] = args.input_file_suffix
+#     
+#     # HERE make list of input_file_names
+#     # open dir
+#     # and list of types and lanes
+#     if 'input_file_suffix' not in megadata['general']:
+#             megadata['general']['input_file_suffix'] = ''
+#     file_count = 0
+#     files_list = []
+#     if os.path.isdir(megadata['general']['input_dir']):
+#         p = megadata['general']['input_dir'], '*'+megadata['general']['input_file_suffix']
+#         print p
+#         for infile in glob.glob( os.path.join(megadata['general']['input_dir'], '*'+megadata['general']['input_file_suffix']) ):
+#             files_list.append(os.path.basename(infile))
+#             file_count += 1
+#     else:
+#         sys.exit("ERROR:no input directory or directory permissions problem")
+#         
+#     if not file_count:
+#         sys.exit("ERROR:No files were found in '"+megadata['general']['input_dir']+"' with a suffix of '"+megadata['general']['input_file_suffix']+"'")
+#         
+#     megadata['general']['input_file_names'] = ','.join(files_list)
+#     megadata['general']['input_file_formats'] = ','.join([megadata['general']['input_file_format'] for i in files_list])
+#     # assign 1 to lanes -- kludge
+#     megadata['general']['input_file_lanes'] = ','.join(['1']*file_count)
+#         
+#         
+#     test_datasets = {}
+#     dataset_counter = {}
+#     headers = ''
+#     # must be comma sep
+#     
+#     f_in_md = open(config_file_path, 'r')
+#     # must be comma sep
+#     lines = f_in_md.readlines()
+#     for line in lines:
+#         
+#         line = line.strip()
+#             
+#         if not line:
+#             continue
+#         lst = [i.strip('"').replace(" ", "_") for i in line.strip().split(',')]
+#         
+#         
+#         if not lst[0]:
+#             continue
+#         temp = {}   
+#         if not headers:
+#             headers = [i.strip('"').lower().replace(" ", "_") for i in line.split(',')]
+# 
+#             if sorted(known_header_list) != sorted(headers):
+#                 sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(known_header_list)))
+#         else:
+#             for n in range(0,len(headers)):
+#                 #print headers[n], lst[n]
+#                 try:
+#                     temp[headers[n]] = lst[n]
+#                 except:
+#                     sys.exit("ERROR:It looks like the header count and the data column count are different.")
+#         
+#             temp['file_prefix'] = temp['dataset']+'_'+temp['barcode'].upper().replace('N','')
+#         
+#             #data[lst[0]] = temp
+#             
+#             
+#             unique_identifier = temp['barcode_index']+'_'+temp['run_key']+'_'+temp['lane']
+#             megadata[unique_identifier]={}
+#             if unique_identifier in test_datasets:
+#                 sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
+#             else:                     
+#                 test_datasets[unique_identifier] = 1
+#                 
+#             megadata[unique_identifier]['dataset'] = temp['dataset']
+#             megadata[unique_identifier]['project'] = temp['project']
+#             
+#             if temp['project'] in dataset_counter:
+#                 dataset_counter[temp['project']] += 1
+#             else:
+#                 dataset_counter[temp['project']] = 1
+#             
+#             #megadata[unique_identifier]['ds_count'] = 1
+#             megadata[unique_identifier]['project']      = temp['project']
+#             megadata[unique_identifier]['run_key']      = temp['run_key']
+#             megadata[unique_identifier]['lane']         = temp['lane']
+#             megadata[unique_identifier]['tubelabel']    = temp['tubelabel']
+#             megadata[unique_identifier]['barcode']      = temp['barcode']
+#             megadata[unique_identifier]['adaptor']      = temp['adaptor']
+#             megadata[unique_identifier]['dna_region']   = temp['dna_region']
+#             megadata[unique_identifier]['amp_operator'] = temp['amp_operator']
+#             megadata[unique_identifier]['seq_operator'] = temp['seq_operator']
+#             megadata[unique_identifier]['barcode_index']= temp['barcode_index']
+#             megadata[unique_identifier]['overlap']      = temp['overlap']
+#             megadata[unique_identifier]['insert_size']  = temp['insert_size']
+#             megadata[unique_identifier]['file_prefix']  = temp['file_prefix']
+#             megadata[unique_identifier]['read_length']  = temp['read_length']
+#             megadata[unique_identifier]['primer_suite'] = temp['primer_suite']
+#     return megadata
 
 class RunConfig:
     """Doc string here."""
@@ -161,17 +159,45 @@ class RunConfig:
         self.run_key_lane_dict = {}
         self.samples = {}
         self.base_python_dir = os.path.normpath(basepythondir)
-
-
-        # if the config_info was a file path to an .csv file then convert to a dictionary
-        # we'll take the info as an ini file or dictionary so we can be called by an api
-        # ie vamps user uploads: the config info is a dictionary
+        
+        #
+        # IMPORTANT to get a dictionary here from whatever the input is:
+        #     platform and configFile type
+        # if the config_info was a file path to an .csv or .ini file then convert to a dictionary
+        # 
+        # for vamps user uploads: the config info is a dictionary
     	if type(config_info)==dict:
             config_dict = config_info
+            
     	elif args.platform == 'illumina' and args.config_file_type == 'csv':
-            config_dict = configDictionaryFromFile_csv(config_info, args)
+            #config_dict = configDictionaryFromFile_csv(config_info, args)
+            v = MetadataUtils()
+            # read the csv config file
+            my_csv = readCSV(file_path = args.configPath)
+            config_dict = v.create_dictionary_from_illumina_csv(args, my_csv)
+            
+        elif args.platform == 'illumina' and args.config_file_type == 'ini':
+            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            
+        elif args.platform == '454' and args.config_file_type == 'csv':
+            v = MetadataUtils()
+            # read the csv config file
+            my_csv = readCSV(file_path = args.configPath)
+            config_dict = v.create_dictionary_from_454_csv(args, my_csv)
+            
+        elif args.platform == '454' and args.config_file_type == 'ini':
+            v = MetadataUtils()
+            config_dict = v.create_dictionary_from_454_ini(args.configPath)
+            
+        elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
+            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            
+        elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
+            sys.exit("ConfigFile conversion to dictionary not written yet for platform ("+args.platform+") and configFileType ("+args.config_file_type+")")
+            
         else:
             sys.exit("Unknown platform and configFile type for dictionary conversion")
+            
 #         
 #         Validate here and return the dict for both ini and csv
 #             
@@ -251,31 +277,55 @@ class RunConfig:
         
         #print general_config
         # parse out the input file info
-        input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
-        input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
+        if 'files_list' in general_config:
+            input_file_names = general_config['files_list']
+        else:
+            input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
         
-        if len(input_file_names) != len(input_file_types):
-            raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
         
-        lane_info = general_config['input_file_lanes'].strip()
-        input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
-
-        # no lane info? better by our custom fasta-mbl format then
-        if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:
-            raise Exception("Only fasta-mbl formatted sequence files are allowed to not provide a value for input_file_lanes")
-
-        # if they give any lane information it then needs to either be 1 value (for all files) or match them exactly
-        if len(input_file_lanes) > 1 and (len(input_file_names) != len(input_file_lanes)):
-            raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and lanes(" + str(len(input_file_lanes)) + ") in configuration information")
+        
+        if self.platform == '454':
+            if 'file_formats_list' in general_config:    
+                input_file_types = general_config['file_formats_list']
+            else:
+                input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
+            
+            if len(input_file_names) != len(input_file_types):
+                raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
+            
+            if 'lanes_list' in general_config: 
+                input_file_lanes = general_config['lanes_list']
+            else:        
+                lane_info = general_config['input_file_lanes'].strip()
+                input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
+    
+            # no lane info? better by our custom fasta-mbl format then
+            if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:
+                raise Exception("Only fasta-mbl formatted sequence files are allowed to not provide a value for input_file_lanes")
+    
+            # if they give any lane information it then needs to either be 1 value (for all files) or match them exactly
+            if len(input_file_lanes) > 1 and (len(input_file_names) != len(input_file_lanes)):
+                raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and lanes(" + str(len(input_file_lanes)) + ") in configuration information")
+        else:
+            input_file_types = []   
+            input_file_lanes = []
+        
+        
+        
         
         self.input_file_info = {}
         for idx,input_file in enumerate(input_file_names):
-            input_file_format = input_file_types[idx]
-            if input_file_format not in ['sff', 'fasta', 'fasta-mbl', 'fastq', 'fastq-illumina', 'fastq-sanger']:
+            if idx in input_file_types:
+                input_file_format = input_file_types[idx]
+            else:
+                input_file_format = general_config['input_file_format']
+                
+            
+            if input_file_format not in C.input_file_formats:
                 raise Exception("Invalid sequence input file format: " + self.input_file_format)
             # make up a hash...they are allowed to not put in any input_file_lanes...could be 3 mbl fasta files which would all have lane
             # info encoded on each id/description line of the sequence record
-            self.input_file_info[input_file] = {"name" : input_file, "format" : input_file_types[idx], "lane" : input_file_lanes[idx] if idx < len(input_file_lanes) else ""}
+            self.input_file_info[input_file] = {"name" : input_file, "format" : input_file_format, "lane" : input_file_lanes[idx] if idx < len(input_file_lanes) else ""}
         
         # now deal with each lane_runkey combo (Sample) that is misnamed though
         # populate sample information for every run_key

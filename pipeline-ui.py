@@ -26,7 +26,7 @@ from pipeline.runconfig import RunConfig
 from pipeline.run import Run
 from pipeline.chimera import Chimera
 from pipeline.gast import Gast
-from pipeline.validate import Validate
+from pipeline.validate import MetadataUtils
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
@@ -58,12 +58,12 @@ if __name__ == '__main__':
                                                     help="unique run number ")
     parser.add_argument("-ft", "--seq_file_type",     required=True,  action="store",   dest = "input_file_format",
                                                     help="Sequence file type: fasta, fatsq or sff ")
-    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='',
+    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='fa.unique',
                                                     help="Sequence file suffix [optional] ")                                                
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdir", 
                                                 help="default: ./")
     parser.add_argument("-s", "--steps",     required=True,  action="store",   dest = "steps", 
-                                                help="Comma seperated list of steps.  Choices are: trim,chimera,status,upload_env454,gast,upload_vamps")
+                                                help="Comma seperated list of steps.  Choices are: test,trim,chimera,status,upload_env454,gast,upload_vamps")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
     
@@ -82,14 +82,29 @@ if __name__ == '__main__':
     TODO: read the config file here, depending on its type
     """
     if args.platform == 'illumina' and args.config_file_type == 'csv':
-        v = Validate()
+        v = MetadataUtils()
         # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
-        v.validate_csv(args, my_csv)
+        v.validate_illumina_csv(args, my_csv)
+    elif args.platform == 'illumina' and args.config_file_type == 'ini':
+        pass
+    elif args.platform == '454' and args.config_file_type == 'csv':
+        v = MetadataUtils()
+        # read the csv config file
+        my_csv = readCSV(file_path = args.configPath)
+        v.validate_454_csv(args, my_csv)
     elif args.platform == '454' and args.config_file_type == 'ini':
+        v = MetadataUtils()
+        my_csv = readCSV(file_path = args.configPath)
+        v.validate_454_ini(args, my_csv)
+        
+    elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
+        pass
+    elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
         pass
     else:
         sys.exit("Unknown platform and configFile type for validation")
+    
     run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
     
     cfg = None

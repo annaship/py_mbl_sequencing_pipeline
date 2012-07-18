@@ -1,11 +1,6 @@
 import sys
 import MySQLdb
-#from os import walk, system, remove,
 import os
-#from os.path import join
-#import csv
-
-#from pipeline.pipelinelogging import logger
 
 class MyConnection:
     """
@@ -73,7 +68,7 @@ class dbUpload:
     """
     def __init__(self, run = None, cfg = None):
 
-        self.run 	= run
+        self.run     = run
         self.outdir = run.output_dir
         try:
             self.basedir = run.basedir
