@@ -342,11 +342,14 @@ class MetadataUtils:
         files_list = []
         imports_list = []
         lanes_list = []
-        fasta_dir = os.path.join(data_object['general']['input_dir'],"fasta")
+
+        fasta_dir = data_object['general']['input_dir'] + "fasta"
+        print fasta_dir
         if os.path.isdir(fasta_dir):
-            p = data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']
+            p = fasta_dir, '*'+data_object['general']['input_file_suffix']
+
             
-            for infile in glob.glob( os.path.join(data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']) ):
+            for infile in glob.glob( os.path.join(fasta_dir, '*'+data_object['general']['input_file_suffix']) ):
                 files_list.append(os.path.basename(infile))
                 for x in data_object:
                     if 'file_prefix' in data_object[x]:
@@ -358,11 +361,13 @@ class MetadataUtils:
                         
                 file_count += 1
         else:
-            #sys.exit("ERROR: no input directory or directory permissions problem: "+fasta_dir)
-            logger.info("No input directory or directory permissions problem: "+fasta_dir)
+
+            sys.exit("ERROR: no input directory or directory permissions problem: "+fasta_dir)
+            
         if not file_count:
-            #sys.exit("ERROR: No files were found in '"+data_object['general']['input_dir']+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
-            logger.info("No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
+            sys.exit("ERROR: No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
+        
+
         data_object['general']['files_list'] = files_list
         
         data_object['general']['file_count'] = file_count
