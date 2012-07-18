@@ -74,11 +74,12 @@ def process(run, steps, cfg = None):
             # call the method in here
             step_method = globals()[step]
             step_method(run, cfg)
+    logger.info("Finished all requested steps.")
 
 def test(run, cfg=None):
-    logger.debug("Testing and Exiting")
-    print 'Testing and Exiting'
-    write_status(run,"Testing and Exiting")
+    logger.debug("Testing")
+    print 'Testing'
+    write_status_update_update(run,"Testing","")
  # perform trim step
  # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
 
@@ -91,8 +92,8 @@ def test(run, cfg=None):
 # when complete...write out the datafiles for the most part on a lane/runkey basis
 #
 def trim(run, cfg=None):
-    write_status(run,"Starting Trim","")
-    
+    write_status_update_update(run,"Starting Trim","")
+    logger.info("Starting Trimming")
     # (re) create the trim status file
     run.trim_status_file_h = open(run.trim_status_file_name, "w")
     
@@ -125,7 +126,7 @@ def trim(run, cfg=None):
         run.trim_status_file_h.write(json.dumps(trim_results_dict))
         run.trim_status_file_h.close()
         
-        write_status(run, "Trimming Success", "" )
+        write_status_update(run, "Trimming Success", "" )
         
         
     else:
@@ -135,7 +136,7 @@ def trim(run, cfg=None):
         trim_results_dict['code2'] = trim_codes[2]
         run.trim_status_file_h.write(json.dumps(trim_results_dict))
         run.trim_status_file_h.close()
-        write_status(run, "Trimming Failure", trim_codes[2] )
+        write_status_update(run, "Trimming Failure", trim_codes[2] )
         
         
         sys.exit("Trim Error")
@@ -145,9 +146,9 @@ def trim(run, cfg=None):
 # it also expectes there to be a trim_status.txt file around
 # which should have a json format with status and the run keys listed        
 def chimera(run, cfg=None):
-    write_status(run,"Starting Chimera Check","")
+    write_status_update(run,"Starting Chimera Check","")
     chimera_cluster_ids = [] 
-    logger.debug("Starting Chimera Checker")
+    logger.info("Starting Chimera Checker")
     # lets read the trim status file out here and keep those details out of the Chimera code
     new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
     
@@ -186,32 +187,32 @@ def chimera(run, cfg=None):
             logger.info("Chimera checking finished successfully")
             run.chimera_status_file_h.write("CHIMERA SUCCESS\n")
             
-            write_status(run, "CHIMERA SUCCESS", "" )
+            write_status_update(run, "CHIMERA SUCCESS", "" )
             
         else:
             logger.info("3-Chimera checking Failed")
             run.chimera_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
             
-            write_status(run, "3-Chimera checking Failed", chimera_cluster_code[2] )
+            write_status_update(run, "3-Chimera checking Failed", chimera_cluster_code[2] )
             sys.exit("3-Chimera checking Failed")
             
     elif chimera_code == 'NOREGION':
         logger.info("No regions found that need chimera checking")
         run.chimera_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")
         
-        write_status(run, "CHIMERA CHECK NOT NEEDED", "NO REGION" )
+        write_status_update(run, "CHIMERA CHECK NOT NEEDED", "NO REGION" )
         
     elif chimera_code == 'FAIL':
         logger.info("1-Chimera checking Failed")
         run.chimera_status_file_h.write("1-CHIMERA ERROR: \n")
         
-        write_status(run, "1-Chimera checking Failed", "" )
+        write_status_update(run, "1-Chimera checking Failed", "" )
         sys.exit("1-Chimera Failed")
     else:
         logger.info("2-Chimera checking Failed")
         run.chimera_status_file_h.write("2-CHIMERA ERROR: \n")
         
-        write_status(run, "2-Chimera checking Failed", "" )
+        write_status_update(run, "2-Chimera checking Failed", "" )
         sys.exit("2-Chimera checking Failed")
     sleep(2)   
     if  chimera_code == 'PASS' and  chimera_cluster_code[0] == 'SUCCESS':
@@ -231,12 +232,12 @@ def chimera(run, cfg=None):
         # lane_key.abund.fa     -- this file is for the uclust chimera script
         # lane_key.deleted.txt  -- no change in this file
         # THE ORDER IS IMPORTANT HERE:
-        write_status(run, "Chimera", "Writing files" )
+        write_status_update(run, "Chimera", "Writing files" )
         mymblutils.write_clean_fasta_file()
         mymblutils.write_clean_names_file()
         mymblutils.write_clean_uniques_file()
         mymblutils.write_clean_abundance_file()
-        write_status(run, "Chimera", "Done writing files" )
+        write_status_update(run, "Chimera", "Done writing files" )
         # write keys file for each lane_key - same fields as db table? for easy writing
         # write primers file for each lane_key
  
@@ -252,10 +253,10 @@ def chimera(run, cfg=None):
 def env454run_info_upload(run, cfg):
 #    print cfg
 #    pass
-    write_status(run, "Starting env454 Info Upload", "" )
+    write_status_update(run, "Starting env454 Info Upload", "" )
     my_read_csv = dbUpload(run, cfg)
     my_read_csv.put_run_info()
-    write_status(run, "Finishing env454 Info Upload", "" )
+    write_status_update(run, "Finishing env454 Info Upload", "" )
 #    my_read_csv.put_run_info()  
 #    my_read_csv.read_csv()
     
@@ -269,7 +270,8 @@ def env454upload(run, cfg):
 
 #    my_read_csv = readCSV(run)
 #    my_read_csv.read_csv()
-    write_status(run, "Starting env454 Upload", "" )
+    write_status_update(run, "Starting env454 Upload", "" )
+    logger.info("Starting ENV Upload")
     my_env454upload = dbUpload(run)
     filenames   = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
     seq_in_file = 0
@@ -345,7 +347,7 @@ def env454upload(run, cfg):
             raise                       # re-throw caught exception   
 #    print "total_seq = %s" % total_seq
     logger.debug("total_seq = %s" % total_seq)
-    write_status(run, "Finishing env454 Upload", "" )
+    write_status_update(run, "Finishing env454 Upload", "" )
     
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file
@@ -370,7 +372,8 @@ def env454upload(run, cfg):
 
 def gast(run, cfg=None):  
 
-    write_status(run, "Starting GAST", "" )
+    write_status_update(run, "Starting GAST", "" )
+    logger.info("Starting GAST")
     mygast = Gast(run)
     
     # for vamps 'new_lane_keys' will be prefix 
@@ -402,30 +405,30 @@ def gast(run, cfg=None):
                 pass
       
     result_code = mygast.clustergast(idx_keys)
-    run.run_status_file_h.write(json.dumps(result_code))
+    run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("clutergast failed")
-        write_status(run, "GAST ERROR", "clustergast failed" )
+        write_status_update(run, "GAST ERROR", "clustergast failed" )
         sys.exit("clutergast failed")
     sleep(5)
     result_code = mygast.gast_cleanup(idx_keys)
-    run.run_status_file_h.write(json.dumps(result_code))
+    run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("gast_cleanup failed")
-        write_status(run, "GAST ERROR", "gast_cleanup failed" )
+        write_status_update(run, "GAST ERROR", "gast_cleanup failed" )
         sys.exit("gast_cleanup failed")
     sleep(5)
     result_code = mygast.gast2tax(idx_keys)
-    run.run_status_file_h.write(json.dumps(result_code))
+    run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("gast2tax failed")
-        write_status(run, "GAST ERROR", "gast2tax failed" )
+        write_status_update(run, "GAST ERROR", "gast2tax failed" )
         sys.exit("gast2tax failed")
         
-    write_status(run, "Finished GAST", "" )
+    write_status_update(run, "Finished GAST", "" )
         
 def upload_vamps(run, cfg=None):
-    write_status(run, "Starting VAMPS Upload", "" )
+    write_status_update(run, "Starting VAMPS Upload", "" )
     myvamps = Vamps(run)
     
     if(run.vamps_user_upload):
@@ -438,7 +441,7 @@ def upload_vamps(run, cfg=None):
     #myvamps.exports(idx_keys)
     #myvamps.projects(idx_keys)
     #myvamps.info(idx_keys)
-    write_status(run, "Finished VAMPS Upload", "" )
+    write_status_update(run, "Finished VAMPS Upload", "" )
     
 def status(run, cfg=None):
     f = open(run.run_status_file_name)
@@ -450,7 +453,7 @@ def status(run, cfg=None):
         print line
     print "END STATUS File\n===================================="
     
-def write_status(run, msg1, msg2):
+def write_status_update(run, msg1, msg2):
     currenttime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     run.run_status_file_h.write(currenttime+" "+msg1+msg2+"\n")
     

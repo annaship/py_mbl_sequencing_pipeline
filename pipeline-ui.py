@@ -60,7 +60,7 @@ if __name__ == '__main__':
                                                     help="Sequence file type: fasta, fastq or sff ")
     parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='fa.unique',
                                                     help="Sequence file suffix [optional] ") 
-    # see note for base_output_dir in runconfig.py  about line:                                                
+    # see note for base_output_dir in runconfig.py  about line: 130                                               
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=None, dest = "baseoutputdir", 
                                                 help="default: ./")
     parser.add_argument("-s", "--steps",     required=False,  action="store",   dest = "steps", default = 'status',

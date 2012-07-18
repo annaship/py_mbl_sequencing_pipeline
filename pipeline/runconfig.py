@@ -126,10 +126,11 @@ class RunConfig:
             self.anchors = ast.literal_eval(anchor_json_text)
     
         
-        #
+        # NOTE
         # the base ouput directory is best gotten from the command line (no default)
         # second best is from the metadata file: ini or csv
         # if neither of these are set then output to current directory
+        # and always attach the rundate dir to it
         if args.baseoutputdir:
             self.base_output_dir = os.path.normpath(args.baseoutputdir) #user supplied or default 
         elif config_dict['general']['output_dir']:
