@@ -343,10 +343,9 @@ class MetadataUtils:
         imports_list = []
         lanes_list = []
 
-        fasta_dir = data_object['general']['input_dir'] + "fasta"
-        print fasta_dir
+        fasta_dir = os.path.join(data_object['general']['input_dir'],"fasta")
         if os.path.isdir(fasta_dir):
-            p = fasta_dir, '*'+data_object['general']['input_file_suffix']
+            p = data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']
 
             
             for infile in glob.glob( os.path.join(fasta_dir, '*'+data_object['general']['input_file_suffix']) ):
@@ -362,11 +361,11 @@ class MetadataUtils:
                 file_count += 1
         else:
 
-            sys.exit("ERROR: no input directory or directory permissions problem: "+fasta_dir)
+            logger.info("No input directory or directory permissions problem: "+fasta_dir)
             
         if not file_count:
-            sys.exit("ERROR: No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
-        
+            #sys.exit("ERROR: No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
+            logger.info("ERROR: No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
 
         data_object['general']['files_list'] = files_list
         
