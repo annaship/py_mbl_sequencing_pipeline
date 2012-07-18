@@ -246,9 +246,11 @@ def env454upload(run, cfg):
     filenames   = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
     seq_in_file = 0
     total_seq   = 0
+    my_env454upload.check_seq_upload()
     
     for filename in filenames:
         try:
+            logger.debug("\n----------------\nfilename = %s" % filename)
             fasta_file_path = my_env454upload.fasta_dir + filename
             filename_base   = "-".join(filename.split("-")[:-1])
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
@@ -299,9 +301,9 @@ def env454upload(run, cfg):
 #            print "insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish"
 #            print "insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish"
             logger.debug("seq_in_file = %s" % seq_in_file)
-            logger.debug("insert_pdr_info() took ", insert_pdr_info_time, " time to finish")
-            logger.debug("insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish")
-            logger.debug("insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish")
+            logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
+            logger.debug("insert_taxonomy_time() took %s time to finish" % insert_taxonomy_time)
+            logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
 
             
         except Exception, e:          # catch all deriving from Exception (instance e)

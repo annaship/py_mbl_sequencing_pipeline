@@ -1,20 +1,17 @@
 import sys
-import fastalib as u
 import MySQLdb
-from os import listdir, walk
-from os.path import isfile, join
-import csv
-from pipeline.validate import Validate
+#from os import walk, system, remove,
+import os
+#from os.path import join
+#import csv
 
-from pipeline.pipelinelogging import logger
-#import logging
-import constants as C
+#from pipeline.pipelinelogging import logger
 
 class MyConnection:
     """
     Connection to env454
     Takes parameters from ~/.my.cnf, default host = "newbpcdb2", db="illumina_reads"
-    if different: use my_conn = MyConnection(host, db)
+    if different use my_conn = MyConnection(host, db)
     """
     def __init__(self, host="newbpcdb2", db="illumina_reads"):
         self.conn   = None
@@ -45,7 +42,7 @@ class MyConnection:
             res = self.cursor.fetchall ()
             return res
 
-    def execute_insert(self, sql):
+    def execute_no_fetch(self, sql):
         if self.cursor:
             self.cursor.execute(sql)
             self.conn.commit()
@@ -92,11 +89,11 @@ class dbUpload:
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = cfg 
-
+        self.unique_file_counts = "unique_file_counts"
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
     def get_fasta_file_names(self, fasta_dir):
-        for (dirpath, dirname, files) in walk(fasta_dir):
+        for (dirpath, dirname, files) in os.walk(fasta_dir):
             return files
         
     def get_run_info_ill_id(self, filename_base):
@@ -109,7 +106,7 @@ class dbUpload:
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
     
     def get_sequence_id(self, seq):
         my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (seq)
@@ -123,7 +120,7 @@ class dbUpload:
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
 #        print "sequence_pdr_info_ill = %s\n" % my_sql
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
  
     def get_gasta_result(self, filename):
         gast_file_name = self.gast_dir + filename + '.gast'
@@ -136,7 +133,7 @@ class dbUpload:
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
 #        print "taxonomy = %s\n" % my_sql
-        tax_id = self.my_conn.execute_insert(my_sql)
+        tax_id = self.my_conn.execute_no_fetch(my_sql)
 
         return tax_id
 #        print "tax_id = %s" % tax_id
@@ -161,7 +158,7 @@ class dbUpload:
                 '%s'                
                )
                """ % (sequence_ill_id, taxonomy, distance, refssu_count, rank, refhvr_ids.rstrip())
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
     
     def put_run_info(self):
         content = self.my_csv.read_csv()
@@ -192,7 +189,7 @@ class dbUpload:
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
     
     def get_contact_v_info(self):
         """
@@ -214,7 +211,7 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO project (project, rev_project_name, env_sample_source_id, contact_id) VALUES
         ('%s', reverse('%s'), 0, %s)
         """ % (content_row['project'], content_row['project'], contact_id)
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
         """
@@ -223,7 +220,7 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
         ('%s', '')
         """ % (content_row['dataset'])
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
     
     def insert_run_info(self, content_row):
         run_key_id      = self.get_id('run_key',      content_row['run_key'])
@@ -244,7 +241,7 @@ class dbUpload:
         """ % (run_key_id, run_id, content_row['lane'], dataset_id, project_id, content_row['tubelabel'], content_row['barcode'], 
                content_row['adaptor'], dna_region_id, content_row['amp_operator'], content_row['seq_operator'], content_row['barcode_index'], overlap, content_row['insert_size'],
                                                     content_row['file_prefix'], content_row['read_length'], primer_suite_id)
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
 
     def insert_primer(self):
         pass
@@ -257,23 +254,49 @@ class dbUpload:
                     JOIN run_info_ill USING (run_info_ill_id) 
                     JOIN run USING(run_id) WHERE run = "%s"
                 """ % run_date
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequences(self, run_date):
         my_sql = """DELETE FROM sequence_ill
                     USING sequence_ill JOIN sequence_pdr_info_ill USING(sequence_ill_id)
                     JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
                 """ % run_date
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequence_pdr_info(self, run_date):
         my_sql = """DELETE FROM sequence_pdr_info_ill
                     USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
                 """ % run_date
-        self.my_conn.execute_insert(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
 
     #That order is important!
     def del_all_seq_info(self, run_date):
         self.del_sequence_uniq_info(run_date)
         self.del_sequences(run_date)
         self.del_sequence_pdr_info(run_date)
+
+    def check_seq_upload(self):
+        count_file_name = self.unique_file_counts
+        my_list = self.get_fasta_file_names(self.fasta_dir)
+        if count_file_name in my_list:
+            my_list.remove(count_file_name)
+        file_full = self.fasta_dir + count_file_name
+
+        if os.path.exists(file_full):
+            os.remove(file_full)        
+        for i in my_list:
+            print i
+#            comm = "cd " + self.fasta_dir + "; wc -l " + i
+            comm = "cd " + self.fasta_dir + "; wc -l " + i + " >> " + file_full
+            print comm
+            os.system(comm)
+            
+#            print res
+            
+#        import os 
+#for i in files:
+#    os.system("wc -l " + i)
+#        /xraid2-2/sequencing/Illumina/20120613/JulieR/analysis$ for file in *.fa.unique
+#> do
+#>   wc -l $file >> unique_file_counts
+#> done
