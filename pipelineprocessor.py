@@ -36,14 +36,15 @@ import json
 import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
-TEST_STEP           = "test"
-TRIM_STEP           = "trim"
-CHIMERA_STEP        = "chimera"
-GAST_STEP           = "gast"
-VAMPSUPLOAD         = "vampsupload"
-ENV454UPLOAD        = "env454upload"
-ENV454RUN_INFO_UPLOAD = "env454run_info_upload"
-STATUS_STEP         = 'status'
+
+TEST_STEP               = "test"
+TRIM_STEP               = "trim"
+CHIMERA_STEP            = "chimera"
+GAST_STEP               = "gast"
+VAMPSUPLOAD             = "vampsupload"
+ENV454UPLOAD            = "env454upload"
+ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
+STATUS_STEP             = 'status'
 
 existing_steps = [TEST_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
 
@@ -68,14 +69,16 @@ def process(run, steps, cfg = None):
     for step in requested_steps:
         if step not in existing_steps:
             print "Invalid processing step: " + step
-            sys.exit()
+            sys.exit("Invalid processing step: " + step)
         else:
             # call the method in here
             step_method = globals()[step]
             step_method(run, cfg)
             
 def test(run, cfg=None):
+    logger.debug("Testing and Exiting")
     print 'Testing and Exiting'
+    
 # perform trim step
 # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
 # all the stats are kept in the trimrun object
@@ -388,4 +391,11 @@ def upload_vamps(run, cfg=None):
     #myvamps.projects(idx_keys)
     #myvamps.info(idx_keys)
 def status(run, cfg=None):
-    print "TODO status(run)"
+    f = open(run.run_status_file_name)
+    lines = f.readlines()
+    f.close()
+    print "STATUS: ",lines
+    
+    
+    
+    

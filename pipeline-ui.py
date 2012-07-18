@@ -56,20 +56,20 @@ if __name__ == '__main__':
                                                     help="Directory where sequence files can be found. ")
     parser.add_argument("-r", "--run",     required=True,  action="store",   dest = "run", 
                                                     help="unique run number ")
-    parser.add_argument("-ft", "--seq_file_type",     required=True,  action="store",   dest = "input_file_format",
-                                                    help="Sequence file type: fasta, fatsq or sff ")
+    parser.add_argument("-ft", "--seq_file_type",     required=False,  action="store",   dest = "input_file_format", default='fasta',
+                                                    help="Sequence file type: fasta, fastq or sff ")
     parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='fa.unique',
                                                     help="Sequence file suffix [optional] ")                                                
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  default=THE_DEFAULT_BASE_OUTPUT, dest = "baseoutputdir", 
                                                 help="default: ./")
-    parser.add_argument("-s", "--steps",     required=True,  action="store",   dest = "steps", 
+    parser.add_argument("-s", "--steps",     required=False,  action="store",   dest = "steps", default = 'status',
                                                 help="Comma seperated list of steps.  Choices are: test,trim,chimera,status,upload_env454,gast,upload_vamps")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
     
                                                  
     args = parser.parse_args() 
-    print "Log Level set to:",args.loglevel.upper()
+    print "\nLog Level set to:",args.loglevel.upper()
     # deal with logging level
     loggerlevel = logging.ERROR
     if args.loglevel.upper() == 'DEBUG':
@@ -86,6 +86,7 @@ if __name__ == '__main__':
         # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
         v.validate_illumina_csv(args, my_csv)
+        
     elif args.platform == 'illumina' and args.config_file_type == 'ini':
         pass
     elif args.platform == '454' and args.config_file_type == 'csv':
@@ -93,6 +94,7 @@ if __name__ == '__main__':
         # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
         v.validate_454_csv(args, my_csv)
+        
     elif args.platform == '454' and args.config_file_type == 'ini':
         v = MetadataUtils()
         my_csv = readCSV(file_path = args.configPath)

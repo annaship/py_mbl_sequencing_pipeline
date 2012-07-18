@@ -239,7 +239,10 @@ class RunConfig:
     
         # this is our default output dir -- Always rundate?
         self.base_output_dir = os.path.normpath(args.baseoutputdir) #user supplied or default
-        self.output_dir = os.path.join(self.base_output_dir, self.run_date)
+        
+        
+        #self.output_dir = os.path.join(self.base_output_dir, self.run_date)
+        self.output_dir = os.path.join(config_dict['general']['output_dir'])
         self.run_status_file_name = os.path.join(self.output_dir,"STATUS.txt")
         self.run_status_file_h = None #handle to file
             

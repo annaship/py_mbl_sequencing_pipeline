@@ -121,7 +121,7 @@ class MetadataUtils:
         
     def validate_454_csv(self, args, my_csv):
         print "TODO: write validate_454_csv def"
-        
+        data_object = self.populate_data_object_454(args, my_csv)
         
     def validate_454_ini(self, args, my_csv):
         print "TODO - Validating ini type Config File ()"
@@ -202,7 +202,26 @@ class MetadataUtils:
         print "TODO: write populate_data_object_454 def"
         pass
         
-        
+    def populate_data_object_454(self, args, my_csv):
+        data = {}
+        data['general'] = {}
+        test_datasets = {}
+        dataset_counter = {}
+        headers = ''
+        if self.run:
+            infile = self.run.configPath
+        else:            
+            infile = args.configPath
+            data['general']['input_dir'] = args.input_dir
+            data['general']['output_dir'] = os.path.join(args.baseoutputdir,args.run)
+            data['general']['platform'] = args.platform
+            data['general']['run'] = args.run
+            data['general']['run_date'] = args.run
+            data['general']["input_file_format"] = args.input_file_format
+            data['general']["input_file_suffix"] = args.input_file_suffix
+    
+    
+    
     def populate_data_object_illumina(self, args, my_csv):
         data = {}
         data['general'] = {}
@@ -210,7 +229,7 @@ class MetadataUtils:
         dataset_counter = {}
         headers = ''
         if self.run:
-            infile = self.configPath
+            infile = self.run.configPath
             data['general']['input_dir'] = self.run.input_dir
             #megadata['general']['output_dir'] = self.args.output_dir
             data['general']['platform'] = self.run.platform
@@ -223,7 +242,7 @@ class MetadataUtils:
         else:            
             infile = args.configPath
             data['general']['input_dir'] = args.input_dir
-            #megadata['general']['output_dir'] = self.args.output_dir
+            data['general']['output_dir'] = os.path.join(args.baseoutputdir,args.run)
             data['general']['platform'] = args.platform
             data['general']['run'] = args.run
             data['general']['run_date'] = args.run
@@ -323,7 +342,8 @@ class MetadataUtils:
         files_list = []
         imports_list = []
         lanes_list = []
-        if os.path.isdir(data_object['general']['input_dir']):
+        fasta_dir = os.path.join(data_object['general']['input_dir'],"fasta")
+        if os.path.isdir(fasta_dir):
             p = data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']
             
             for infile in glob.glob( os.path.join(data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']) ):
@@ -338,11 +358,11 @@ class MetadataUtils:
                         
                 file_count += 1
         else:
-            sys.exit("ERROR: no input directory or directory permissions problem: "+data_object['general']['input_dir'])
-            
+            #sys.exit("ERROR: no input directory or directory permissions problem: "+fasta_dir)
+            logger.info("No input directory or directory permissions problem: "+fasta_dir)
         if not file_count:
-            sys.exit("ERROR: No files were found in '"+data_object['general']['input_dir']+"' with a suffix of '"+data_object['general']['file_suffix']+"'")
-        
+            #sys.exit("ERROR: No files were found in '"+data_object['general']['input_dir']+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
+            logger.info("No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
         data_object['general']['files_list'] = files_list
         
         data_object['general']['file_count'] = file_count
@@ -449,7 +469,7 @@ class MetadataUtils:
                         logger.info("\tdataset '"+d+"' already exists in the database - is this a problem?")
                     else:
                         logger.debug("\tdataset '"+d+"' is new")
-            logger.debug("\tDataset Count:",len(datasets))
+            logger.debug("\tDataset Count: "+str(len(datasets)))
         
         
 

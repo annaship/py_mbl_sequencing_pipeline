@@ -6,11 +6,32 @@
 #
 #
 ############ VALIDATION ############################################################################
-csv_header_list_illumina = ["run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region",
-                            "amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length",
-                            "primer_suite","first_name","last_name","email","institution","project_title","project_description",
-                            "funding","env_sample_source","dataset_description" ]
-csv_header_list_454 = []                        
+csv_header_list_illumina = ["run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",      
+                            "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator", "seq_operator",     
+                            "barcode_index","overlap",          "insert_size",  "file_prefix",  "read_length",  "primer_suite", 
+                            "first_name",   "last_name",        "email",        "institution",  "project_title","project_description",
+                            "funding",      "env_sample_source","dataset_description" ]
+                            
+csv_header_list_454     = [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
+                            "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
+                            
+                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",               
+                            "primer_suite",   "pool",                            
+                            
+                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
+                            "funding",          "env_sample_source","dataset_description" ]
+
+csv_header_list_ion_torrent= [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
+                            "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
+                            
+                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",               
+                            "primer_suite",   "pool",                            
+                            
+                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
+                            "funding",          "env_sample_source","dataset_description" ]
+
+
+
 primer_suites    = ["bacterialv6suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
 dna_regions      = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", 
                     "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6"]
