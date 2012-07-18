@@ -247,6 +247,9 @@ def env454upload(run, cfg):
     TODO: 
         2) Upload env454 data into raw, trim, gast etc tables from files
     """
+    
+    whole_start = time()
+
 
 #    my_read_csv = readCSV(run)
 #    my_read_csv.read_csv()
@@ -283,16 +286,15 @@ def env454upload(run, cfg):
             logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
 #            print "insert_seq() took ", elapsed, " time to finish"
             start = time()
-            all_seq = my_env454upload.get_seq_id_dict(sequences)
-#            print "all_seq = %s" % all_seq
+            my_env454upload.get_seq_id_dict(sequences)
             elapsed = (time() - start)
             get_seq_id_dict_time = elapsed
             logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
             
             while fasta.next():
-                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
+#                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
                 start = time()
-                my_env454upload.insert_pdr_info(fasta, run_info_ill_id, sequence_ill_id)
+                my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
                 elapsed = (time() - start)
                 insert_pdr_info_time += elapsed
 #                print "insert_pdr_info() took ", elapsed, " time to finish"                
@@ -307,7 +309,7 @@ def env454upload(run, cfg):
 #                print "tax_id = ", tax_id            
 
                 start = time()
-                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict, sequence_ill_id)
+                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
                 elapsed = (time() - start)
                 insert_sequence_uniq_info_ill_time += elapsed
 
@@ -336,7 +338,8 @@ def env454upload(run, cfg):
             raise                       # re-throw caught exception   
 #    print "total_seq = %s" % total_seq
     logger.debug("total_seq = %s" % total_seq)
-
+    whole_elapsed = (time() - whole_start)
+    print "The whole_upload took %s s" % whole_elapsed
     
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file

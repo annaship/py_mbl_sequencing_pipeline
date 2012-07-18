@@ -85,6 +85,7 @@ class dbUpload:
         self.my_csv      = cfg 
         self.unique_file_counts = "unique_file_counts"
         self.seq_id_dict = {}
+        self.tax_id_dict = {}
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
     def get_fasta_file_names(self, fasta_dir):
@@ -109,10 +110,17 @@ class dbUpload:
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
 #        print "my_sql = %s" % my_sql
-        res    = self.my_conn.execute_fetch_select(my_sql)
-        print "res[0] = %s, str(res[0][0]) = %s, res[0][1] = %s" % (res[0], str(res[0][0]), res[0][1])
-        if res:
-            return res
+        res        = self.my_conn.execute_fetch_select(my_sql)
+#        print "res[0] = %s, str(res[0][0]) = %s, res[0][1] = %s" % (res[:2], str(res[0][0]), res[0][1])
+#        print type(res)
+#        ((44799L, 'AAAGCTGGCAACCAGATCCGAAGTCGGCCCCTTTGGCCTCCGGGTAGGTC'), (44815L, 'GGAAGCGACAGCAGAGTGAAGGCCAGATTGAAGATCTTGCCAGACGAGCTGAG'))
+        self.seq_id_dict = dict((y, int(x)) for x, y in res)
+#        print "SSS: %s" % self.seq_id_dict['AAAGCTGGCAACCAGATCCGAAGTCGGCCCCTTTGGCCTCCGGGTAGGTC']
+#        [self.seq_id_dict[x] = y for (x, y) in res] 
+#        [print x, y for (x, y) in res] 
+
+#        if res:
+#            return res
     
     def get_sequence_id(self, seq):
         my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (seq)
@@ -120,8 +128,9 @@ class dbUpload:
         if res:
             return int(res[0][0])     
     
-    def insert_pdr_info(self, fasta, run_info_ill_id, sequence_ill_id):
+    def insert_pdr_info(self, fasta, run_info_ill_id):
         # ------- insert sequence info per run/project/dataset --------
+        sequence_ill_id = self.seq_id_dict[fasta.seq]
         seq_count       = int(fasta.id.split('|')[1].split(':')[1])
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
@@ -140,9 +149,7 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
 #        print "taxonomy = %s\n" % my_sql
         tax_id = self.my_conn.execute_no_fetch(my_sql)
-
-        return tax_id
-#        print "tax_id = %s" % tax_id
+#        self.tax_id_dict[taxonomy] = tax_id
         
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
@@ -151,9 +158,10 @@ class dbUpload:
         if res:
             return int(res[0][0])         
         
-    def insert_sequence_uniq_info_ill(self, fasta, gast_dict, sequence_ill_id):
+    def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-            
+        sequence_ill_id = self.seq_id_dict[fasta.seq]
+           
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
                 %s,
