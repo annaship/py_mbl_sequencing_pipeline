@@ -131,10 +131,6 @@ class MetadataUtils:
     def validate_illumina_csv(self, args, my_csv):
     
         data_object = self.populate_data_object_illumina(args, my_csv)
-                      
-       
-
-#        print 'general:', megadata['general']
         
         
         
