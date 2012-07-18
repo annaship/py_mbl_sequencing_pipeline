@@ -159,32 +159,42 @@ class RunConfig:
         self.run_key_lane_dict = {}
         self.samples = {}
         self.base_python_dir = os.path.normpath(basepythondir)
-
-
-        # if the config_info was a file path to an .csv file then convert to a dictionary
-        # we'll take the info as an ini file or dictionary so we can be called by an api
-        # ie vamps user uploads: the config info is a dictionary
+        
+        #
+        # IMPORTANT to get a dictionary here from whatever the input is:
+        #     platform and configFile type
+        # if the config_info was a file path to an .csv or .ini file then convert to a dictionary
+        # 
+        # for vamps user uploads: the config info is a dictionary
     	if type(config_info)==dict:
             config_dict = config_info
+            
     	elif args.platform == 'illumina' and args.config_file_type == 'csv':
             #config_dict = configDictionaryFromFile_csv(config_info, args)
             v = MetadataUtils()
             # read the csv config file
             my_csv = readCSV(file_path = args.configPath)
             config_dict = v.create_dictionary_from_illumina_csv(args, my_csv)
+            
         elif args.platform == 'illumina' and args.config_file_type == 'ini':
-            pass
+            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            
         elif args.platform == '454' and args.config_file_type == 'csv':
             v = MetadataUtils()
             # read the csv config file
             my_csv = readCSV(file_path = args.configPath)
             config_dict = v.create_dictionary_from_454_csv(args, my_csv)
+            
         elif args.platform == '454' and args.config_file_type == 'ini':
-            pass
+            v = MetadataUtils()
+            config_dict = v.create_dictionary_from_454_ini(args.configPath)
+            
         elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
-            pass
+            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            
         elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
-            pass
+            sys.exit("ConfigFile conversion to dictionary not written yet for platform ("+args.platform+") and configFileType ("+args.config_file_type+")")
+            
         else:
             sys.exit("Unknown platform and configFile type for dictionary conversion")
             

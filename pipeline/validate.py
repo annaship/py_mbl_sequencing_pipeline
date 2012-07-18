@@ -68,34 +68,9 @@ class FastaReader:
             return True    
 
 # read a config file and convert to a dictionary
-def configDictionaryFromFile_ini(config_file_path):
-    import ConfigParser
-    
-    configDict = {}
-    user_config = ConfigParser.ConfigParser()
-    user_config.read(config_file_path)
-    
-    for section in user_config.sections():
-        section_dict = configDict[section] = {}
-        for option in user_config.options(section):
-            section_dict[option] = user_config.get(section,option)
 
-    return configDict
 
-def validate_dict():
-    """
-    This is only used for data that comes in as a dictionary rather than a file
-    such as with vamps user uploads
-    """
-    print "Validating input dictionary -TODO"
-    # must be a general section
-    # should I create a dict here??? -That would render much code in
-    #    runconfig useless.
-    # are we going to continue developing ini style config files if
-    #   no one uses them?  
-    configDict = config_info
-    print "Finished Validating"
-    return configDict
+
     
     
 class MetadataUtils:
@@ -103,10 +78,11 @@ class MetadataUtils:
     Class to read metadata files (csv and ini style)
     validate and create a dictionary from them
     """
-    Name = "Metadata_utils"
+    Name = "MetadataUtils"
     def __init__(self, run=None):
         self.run = run
-        self.known_header_list = C.csv_header_list
+        self.known_header_list_illumina = C.csv_header_list_illumina
+        self.known_header_list_454 = C.csv_header_list_454
         self.primer_suites     = C.primer_suites 
         self.dna_regions       = C.dna_regions
         
@@ -118,16 +94,41 @@ class MetadataUtils:
         data_object = self.check_for_input_files(data_object)
         
         return data_object
-    def create_dictionary_from_454_csv(args, my_csv):
+    def create_dictionary_from_454_csv(self, args, my_csv):
         data_object = self.populate_data_object_454(args, my_csv)
         
         data_object = self.check_for_input_files(data_object)
         
         return data_object
+        
+    def create_dictionary_from_454_ini(self, config_file_path):
     
-    def validate_454_csv(args, my_csv):
+        import ConfigParser
+        
+        configDict = {}
+        user_config = ConfigParser.ConfigParser()
+        user_config.read(config_file_path)
+        
+        for section in user_config.sections():
+            section_dict = configDict[section] = {}
+            for option in user_config.options(section):
+                section_dict[option] = user_config.get(section,option)
+    
+        return configDict 
+        
+    def validate_454_csv(self, args, my_csv):
         print "TODO: write validate_454_csv def"
         pass
+        
+    def validate_454_ini(self, args, my_csv):
+        print "TODO - Validating ini type Config File ()"
+        # must be a general section
+        # Should all the ini files validate the same: 454, illumina and ion_torrent?
+        #  
+        # are we going to continue developing ini style config files if   no one uses them?  
+        
+        
+        
     def validate_illumina_csv(self, args, my_csv):
     
         data_object = self.populate_data_object_illumina(args, my_csv)
@@ -153,7 +154,7 @@ class MetadataUtils:
         
         """
         TODO:
-            1) split into methods
+            1) split into methods - DONE
             2) we can use "content" variable instead of megadata here
         """       
         #print dataset_counter
@@ -165,13 +166,10 @@ class MetadataUtils:
                 self.check_project_name(data_object[item])
 
 
-
-
-
         """
             TODO:
                  other checks to put in:
-                 check for duplicate dataset name:  NO
+                 check for duplicate project names in env454 (or vamps?)
                  that data == file prefix
                      if we have an input directory that each dataset has a coresponding file - for illumina
                  Missing data is ok for barcode and adaptor (illumina only - for env454 also - A.)
@@ -179,8 +177,24 @@ class MetadataUtils:
             
         """
                 #print item,megadata[item],"\n\n"
-        print "SUCCESS: Finished Validating"        
+        print "SUCCESS: Finished validating csv file."    
+        
 
+    def validate_dictionary(self, config_info):
+        """
+        This is only used for data that comes in as a dictionary rather than a file
+        such as with vamps user uploads
+        """
+        print "TODO - Validating input dictionary"
+        # must be a general section
+        # should I create a dict here??? -That would render much code in
+        #    runconfig useless.
+        # are we going to continue developing ini style config files if
+        #   no one uses them?  
+        configDict = config_info
+
+        return configDict   
+        
     def populate_data_object_454(self, args, my_csv):
         print "TODO: write populate_data_object_454 def"
         pass
@@ -392,34 +406,14 @@ class MetadataUtils:
             
             
     def check_headers(self, headers):
-        if sorted(self.known_header_list) != sorted(headers):
-            sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(self.known_header_list)))
+        if sorted(self.known_header_list_illumina) != sorted(headers):
+            sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(self.known_header_list_illumina)))
         else:
             return True
             
-    def validate_454_ini():
-        print "Validating ini type Config File -TODO"
-        # must be a general section
-        # should I create a dict here??? -That would render much code in
-        #    runconfig useless.
-        # are we going to continue developing ini style config files if
-        #   no one uses them?
+
         
-        import ConfigParser
-    
-        configDict = {}
-        user_config = ConfigParser.ConfigParser()
-        try:
-            user_config.read(config_info)
-        except:
-            sys.exit("Failed to read Config file: Are you sure it is in the correct .ini format?")
-        for section in user_config.sections():
-    
-            section_dict = configDict[section] = {}
-            for option in user_config.options(section):
-                section_dict[option] = user_config.get(section,option)
-        print "Finished Validating"
-        return configDict
+        
         
         
 #     def validate_csv2(self):
@@ -782,9 +776,9 @@ class MetadataUtils:
 #                     VALUES('"+id+"','"+f.seq+"','"+str(len(f.seq))+"','"+project+"','"+dataset+"','"+dna_region+"')")
 #     print "File Count",file_count
         
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
-    m =  Metadata_utils
+#    m =  Metadata_utils
     
     # import argparse
 #     

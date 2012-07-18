@@ -94,7 +94,10 @@ if __name__ == '__main__':
         my_csv = readCSV(file_path = args.configPath)
         v.validate_454_csv(args, my_csv)
     elif args.platform == '454' and args.config_file_type == 'ini':
-        pass
+        v = MetadataUtils()
+        my_csv = readCSV(file_path = args.configPath)
+        v.validate_454_ini(args, my_csv)
+        
     elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
         pass
     elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
