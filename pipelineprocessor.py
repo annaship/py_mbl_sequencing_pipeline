@@ -37,17 +37,16 @@ import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
 
+TEST_STEP               = "test"
+TRIM_STEP               = "trim"
+CHIMERA_STEP            = "chimera"
+GAST_STEP               = "gast"
+VAMPSUPLOAD             = "vampsupload"
+ENV454UPLOAD            = "env454upload"
+ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
+STATUS_STEP             = 'status'
 
-TRIM_STEP           = "trim"
-CHIMERA_STEP        = "chimera"
-GAST_STEP           = "gast"
-VAMPSUPLOAD         = "vampsupload"
-ENV454UPLOAD        = "env454upload"
-ENV454RUN_INFO_UPLOAD = "env454run_info_upload"
-STATUS_STEP         = 'status'
-
-
-existing_steps = [TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
+existing_steps = [TEST_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps, cfg = None):
@@ -400,7 +399,7 @@ def gast(run, cfg=None):
         logger.error("gast2tax failed")
         sys.exit("gast2tax failed")
         
-def upload_env454(run):
+def upload_env454(run, cfg=None):
     print "TODO upload_env454(run)"
     run.run_status_file_h.write("starting to load env454")
     # where are files?
@@ -421,7 +420,7 @@ def upload_env454(run):
     # will have a 'fa.unique' suffix (Meren's code will do this)
     
     
-def upload_vamps(run):
+def upload_vamps(run, cfg=None):
     
     myvamps = Vamps(run)
     
@@ -435,7 +434,13 @@ def upload_vamps(run):
     #myvamps.exports(idx_keys)
     #myvamps.projects(idx_keys)
     #myvamps.info(idx_keys)
-
-def status(run):
-    print "TODO status(run)"
-
+    
+def status(run, cfg=None):
+    f = open(run.run_status_file_name)
+    lines = f.readlines()
+    f.close()
+    print "STATUS: ",lines
+    
+    
+    
+    
