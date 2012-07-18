@@ -174,6 +174,7 @@ class RunConfig:
             config_dict = v.create_dictionary_from_csv(args, my_csv)
         else:
             sys.exit("Unknown platform and configFile type for dictionary conversion")
+            
 #         
 #         Validate here and return the dict for both ini and csv
 #             
