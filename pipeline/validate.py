@@ -89,12 +89,13 @@ class MetadataUtils:
         
 
     def create_dictionary_from_illumina_csv(self, args, my_csv):
-    
+        
         data_object = self.populate_data_object_illumina(args, my_csv)
         
         data_object = self.check_for_input_files(data_object)
         
         return data_object
+        
     def create_dictionary_from_454_csv(self, args, my_csv):
         data_object = self.populate_data_object_454(args, my_csv)
         
@@ -102,9 +103,9 @@ class MetadataUtils:
         
         return data_object
         
-    def create_dictionary_from_454_ini(self, config_file_path):
+    def create_dictionary_from_ini(self, config_file_path):
         """
-        # read a config file and convert to a dictionary
+        # read an ini config file and convert to a dictionary
         """
         import ConfigParser
         
@@ -124,7 +125,7 @@ class MetadataUtils:
         print "TODO: write validate def for 454/csv"
         data_object = self.populate_data_object_454(args, my_csv)
         
-    def validate_454_ini(self, args, my_csv):
+    def validate_454_ini(self, args):
         print "Validating ini type Config File"
         print "TODO - write validation def for 454/ini"
         # must be a general section
@@ -133,7 +134,9 @@ class MetadataUtils:
         # Are we going to continue developing ini style config files if we don't use them?
         #
         
-        
+    def validate_illumina_ini(self, args):
+        print "Validating ini type Config File"
+        print "TODO - write validation def for illumina/ini"     
         
     def validate_illumina_csv(self, args, my_csv):
     

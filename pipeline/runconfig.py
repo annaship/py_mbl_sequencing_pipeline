@@ -47,7 +47,7 @@ class RunConfig:
         self.run_key_lane_dict = {}
         self.samples = {}
         self.base_python_dir = os.path.normpath(basepythondir)
-        
+        self.configFile = config_info
         #
         # IMPORTANT to get a dictionary here from whatever the input is:
         #     platform and configFile type
@@ -65,7 +65,8 @@ class RunConfig:
             config_dict = v.create_dictionary_from_illumina_csv(args, my_csv)
             
         elif args.platform == 'illumina' and args.config_file_type == 'ini':
-            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            v = MetadataUtils()
+            config_dict = v.create_dictionary_from_ini(args.configPath)
             
         elif args.platform == '454' and args.config_file_type == 'csv':
             v = MetadataUtils()
@@ -75,13 +76,13 @@ class RunConfig:
             
         elif args.platform == '454' and args.config_file_type == 'ini':
             v = MetadataUtils()
-            config_dict = v.create_dictionary_from_454_ini(args.configPath)
+            config_dict = v.create_dictionary_from_ini(args.configPath)
             
         elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
-            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            sys.exit("2-ConfigFile conversion to dictionary not written yet.")
             
         elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
-            sys.exit("ConfigFile conversion to dictionary not written yet for platform ("+args.platform+") and configFileType ("+args.config_file_type+")")
+            sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+args.platform+") and configFileType ("+args.config_file_type+")")
             
         else:
             sys.exit("Unknown platform and configFile type for dictionary conversion")
@@ -143,7 +144,7 @@ class RunConfig:
         #self.output_dir = os.path.join(config_dict['general']['output_dir'])
         self.run_status_file_name = os.path.join(self.output_dir,"STATUS.txt")
         self.run_status_file_h = None #handle to file
-                    
+                  
         # not sure if this setup should be here or in trim?  here for now
         self.trim_status_file_name = os.path.join(self.output_dir, 'trim_status.txt')
         self.trim_status_file_h = None #handle to file

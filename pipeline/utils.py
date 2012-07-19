@@ -224,6 +224,67 @@ def mysort(uniques,names):
     
     return sorted_uniques     
 
+def convert_csv_to_ini(args):
+    from pipeline.get_ini import readCSV
+    ini_file = os.path.join(args.baseoutputdir,args.run,args.run + '.ini')
+    fh = open(ini_file,'w')
+    my_csv = readCSV(file_path = args.configPath)
+    
+    content     = my_csv.read_csv()
+    headers     = content[1].keys()
+    headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
+    projects = {}
+    # general section
+    fh.write("[general]\n")    
+    fh.write("config_file_orig = "+args.configPath+"\n")
+    fh.write("config_format_orig = "+args.config_file_type+"\n")
+    fh.write("config_file = "+os.path.join(args.baseoutputdir,args.run,args.run + '.ini')+"\n")
+    fh.write("config_format = ini\n")
+    fh.write("platform = "+args.platform+"\n")
+    fh.write("input_dir = "+args.input_dir+"\n")
+    fh.write("run = "+args.run+"\n")
+    fh.write("run_date = "+args.run+"\n")
+    #fh.write("seq_file_type = "+args.input_file_format+"\n")
+    
+    fh.write("output_dir = "+os.path.join(args.baseoutputdir,args.run)+"\n")
+    fh.write("input_file_names = "   + getattr(args,'input_file_names', "")+"\n")
+    fh.write("input_file_suffix = "  + getattr(args,'input_file_suffix', "")+"\n")
+    fh.write("input_file_formats = " + getattr(args,'input_file_format', "")+"\n")
+    fh.write("input_file_lanes = "   + getattr(args,'input_file_lanes', "")+"\n")
+    fh.write("anchor_file = "        + getattr(args,'anchor_file', "")+"\n")
+    fh.write("primer_file = "        + getattr(args,'primer_file', "")+"\n")
+    fh.write("require_distal = "     + getattr(args,'require_distal', "1")+"\n")
+    
+    #fh.write(getattr(args,'force_runkey', ""))
+    
+    if check_headers(headers_clean, args.platform):
+    
+        for k,values in content.iteritems():
+            fh.write("\n")
+            if args.platform == 'illumina':
+                fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
+            elif args.platform == '454':
+                fh.write("["+values['lane']+"_"+values['run_key']+"]\n")
+                
+            for v in values:
+                fh.write(v+" = "+values[v]+"\n")
+            
+    fh.close()
+    
+    return ini_file
+        
+def check_headers(headers, platform):
+    if platform=='illumina':
+        known_header_list= C.csv_header_list_illumina
+    elif platform == '454':
+        known_header_list = C.csv_header_list_454
+    else:
+        logger.error("in utils: check_headers - unknown platform")
+    if sorted(known_header_list) != sorted(headers):
+        sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(known_header_list)))
+    else:
+        return True
+
 class PipelneUtils:
     def __init__(self):
         pass
@@ -231,6 +292,8 @@ class PipelneUtils:
     def write_seq_frequencies_in_file(self, out_file, fa_file_name, seq_in_file):
         with open(out_file, "a") as myfile:
             myfile.write(str(fa_file_name) + ": " + str(seq_in_file) + "\n")
+    
+
 
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"

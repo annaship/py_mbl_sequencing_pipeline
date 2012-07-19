@@ -42,6 +42,8 @@ TRIM_STEP               = "trim"
 CHIMERA_STEP            = "chimera"
 GAST_STEP               = "gast"
 VAMPSUPLOAD             = "vampsupload"
+CLUSTER_STEP            = "cluster"
+DELETE_RUN              = "delete"
 ENV454UPLOAD            = "env454upload"
 ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
 STATUS_STEP             = 'status'
@@ -50,13 +52,16 @@ existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_I
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps, cfg = None):
-#    print "cfg = %s" % cfg
+    #    print "cfg = %s" % cfg
     # create output directory:
     requested_steps = steps.split(",")            
     
+    # this should have been created in pipeline-ui.py. but just in case....
     if not os.path.exists(run.output_dir):
         logger.debug("Creating output directory: "+run.output_dir)
         os.makedirs(run.output_dir)  
+
+
     
     # Open run STATUS File here.
     # open in append mode because we may start the run in the middle
