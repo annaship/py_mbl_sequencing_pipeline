@@ -121,12 +121,12 @@ class MetadataUtils:
 
         
     def validate_454_csv(self, args, my_csv):
-        print "TODO: write validate_454_csv def"
+        print "TODO: write validate def for 454/csv"
         data_object = self.populate_data_object_454(args, my_csv)
         
     def validate_454_ini(self, args, my_csv):
         print "Validating ini type Config File"
-        print "TODO - write validation def"
+        print "TODO - write validation def for 454/ini"
         # must be a general section
         # Should all the ini files validate the same: 454, illumina and ion_torrent?
         #  
@@ -342,7 +342,7 @@ class MetadataUtils:
         files_list = []
         imports_list = []
         lanes_list = []
-        print data_object['general']['input_dir']
+        #print data_object['general']['input_dir']
         fasta_dir = os.path.join(data_object['general']['input_dir'],"fasta")
         if os.path.isdir(fasta_dir):
             p = data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']

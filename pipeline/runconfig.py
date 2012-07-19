@@ -103,9 +103,10 @@ class RunConfig:
         # we'll take the info as an ini file or dictionary so we can be called by an api
         # ie vamps user uploads: the config info is a dictionary
 
-#        config_dict = config_info if (type(config_info)==dict) else configDictionaryFromFile_ini(config_info)
+
         # now extract it all from the dictionary form
         self.initializeFromDictionary(config_dict)
+         
         if type(config_info)==dict and 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
             self.vamps_user_upload = True            
         else:
@@ -137,7 +138,6 @@ class RunConfig:
             self.base_output_dir = os.path.normpath(config_dict['general']['output_dir'])
         else:
             self.base_output_dir = '.'
-        print self.base_output_dir
         # this is our default output dir -- Always rundate?
         self.output_dir = os.path.join(self.base_output_dir, self.run_date)
         #self.output_dir = os.path.join(config_dict['general']['output_dir'])
@@ -214,12 +214,18 @@ class RunConfig:
         
         
         self.input_file_info = {}
-        print general_config
+        #print general_config
         for idx,input_file in enumerate(input_file_names):
+            
             if idx in input_file_types:
                 input_file_format = input_file_types[idx]
-            else:
+            elif "input_file_formats" in general_config:
+                input_file_format = general_config['input_file_formats']
+            elif "input_file_format" in general_config:
                 input_file_format = general_config['input_file_format']
+            else:
+                # default
+                input_file_format = 'fasta'
                 
             
             if input_file_format not in C.input_file_formats:
