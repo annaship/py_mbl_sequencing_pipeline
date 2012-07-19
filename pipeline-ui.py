@@ -42,9 +42,47 @@ import cogent
 import pipeline.constants as C
 
 if __name__ == '__main__':
+    usage = """
+        usage: ./pipeline-ui.py [options]
+        
+            options:
+                -c/--configuration      configuration file with path  [required]
+                
+                -f/--config_format      configuration file format: csv or ini [optional (default:csv)]
+                
+                -p/--platform           Platform: illumina, 454 or ion_torrent [required]
+                
+                -d/--input_directory    Directory where sequence files can be found [optional (default: ./)]
+                
+                -r/--run                Run - number or date  [required]
+                
+                -ft/--seq_file_type     File type for sequences: fasta, fastq or sff 
+                                            [optional (default: fasta)]
+                                            
+                -fs/--seq_file_suffix   File suffix - useful when there are additional files
+                                            in the input directory that you don't want to include. [optional (default: fa.unique)]
+                                            
+                -b/--baseouputdir       Base output directory where the run directory will be found.
+                                            The run directory will be created if it is not found.  [optional (default: ./)]
+                                            
+                -s/--steps              Steps to be performed by this pipeline (comma separated list)
+                                            Choices:    validate        - validates your metadata file
+                                                        status          - prints out status messages if any
+                                                        trim            - trims your sequences
+                                                        chimera         - performs chimera check on trimmed sequences
+                                                        upload_env454   - 
+                                                        gast            - assign taxonomy to the trimmed sequences using GAST 
+                                                        upload_vamps    - load sequences and taxonomy to VAMPS
+                                                        
+                -l/--loglevel
+             
+        """
+    if  len(sys.argv) == 1:
+        print usage
+        sys.exit()
     THE_DEFAULT_BASE_OUTPUT = '.'
 
-    usage = "usage: %prog [options] arg1 arg2"
+    
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
     parser.add_argument('-c', '--configuration', required=True, dest = "configPath",
                                                  help = 'Configuration parameters of the run. See README File')
@@ -64,13 +102,14 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  dest = "baseoutputdir", default='./',
                                                 help="default: ./")
     parser.add_argument("-s", "--steps",     required=False,  action="store",   dest = "steps", default = 'status',
-                                                help="Comma seperated list of steps.  Choices are: test,trim,chimera,status,upload_env454,gast,upload_vamps")
+                                                help="Comma seperated list of steps.  Choices are: validate,trim,chimera,status,upload_env454,gast,upload_vamps")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
 
     
-                                                 
+    
     args = parser.parse_args() 
+    
     print "\nLog Level set to:",args.loglevel.upper()
     # deal with logging level
     loggerlevel = logging.ERROR
