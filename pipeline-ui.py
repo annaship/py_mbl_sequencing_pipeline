@@ -141,8 +141,7 @@ if __name__ == '__main__':
     #       input_dir and you only are using some (default will read all files)
     # 4) 
     #
-
-    
+   
     ##############
     #
     # CREATE or FIND OUTPUT DIRECTORY
