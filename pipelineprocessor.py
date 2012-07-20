@@ -82,7 +82,7 @@ def process(run, steps, cfg = None):
 def validate(run, cfg=None):
     logger.debug("Validating")
     print 'Validates:  Configfile and Run Object'
-    run.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tValidated\n")
+    run.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tConfigFile Validated\n")
 
  # perform trim step
  # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file

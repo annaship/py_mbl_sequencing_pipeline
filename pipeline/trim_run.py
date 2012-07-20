@@ -43,7 +43,7 @@ class TrimRun( object ):
     
         self.run       = run
         self.outdir    = run.output_dir
-        self.indir     = run.base_output_dir
+        self.indir     = run.input_dir
         # do something with 'run'.
         self.rundate = self.run.run_date
         logger.debug("Rundate:" + str(self.rundate))
@@ -159,10 +159,11 @@ class TrimRun( object ):
                 parsing_format = "fasta"
             else:
                 parsing_format = file_format
+            file_path = os.path.join(self.indir,file_info["name"])
             logger.debug(file_info["name"]+' '+parsing_format)
             # sff and fasta (non-mbl) get their lane info from this .ini field
             lane = file_info["lane"]   
-            for record in SeqIO.parse(file_info["name"], parsing_format):            
+            for record in SeqIO.parse(file_path, parsing_format):            
                 self.number_of_raw_sequences += 1
                 
                 # get ids

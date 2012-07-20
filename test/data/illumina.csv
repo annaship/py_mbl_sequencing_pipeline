@@ -1,16 +1,3 @@
-"run",20120601,,,,,,,,,,,,,,
-"vamps_user","avoorhis",,,,,,,,,,,,,,
-"platform","illumina",,,,,,,,,,,,,,
-"input_file_format","fasta"
-input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-"file_suffix","fa.unique"
-output_dir,"2134"
-"x"
-,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,,,
-
-
-"##DATA##",,,,,,,,,,,,,,,
 "run_key","lane","project","dataset","tubelabel","barcode","adaptor","dna_region","amp_operator","seq_operator","barcode_index","overlap","Insert_size","file_prefix","read_length","primer_suite"
 "CGCTC",3,"SLM_GCB_Bv6","6_FP1BermC_6_14_10",83,"NNNNCGCTC","AAAAAAAAAA","v6","aav","xke","GCCTAA",34,230,,76,"BacterialV6Suite"
 "CGCTC",3,"SLM_GCB_Bv6","8_FP2SubB_6_14_10",85,"NNNNCGCTC","AAAAAAAAAA","v6","aav","xke","TGGTCA",34,230,,76,"BacterialV6Suite"

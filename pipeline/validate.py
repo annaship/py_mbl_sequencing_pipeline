@@ -41,7 +41,7 @@ class MetadataUtils:
         self.primer_suites     = C.primer_suites 
         self.dna_regions       = C.dna_regions
         self.data_object = {}
-        
+        self.data_object['general'] = {}
         ##############
         #
         # CONVERT CSV to INI AND
@@ -61,42 +61,16 @@ class MetadataUtils:
                 sys.exit("Unknown config file type: "+config_file_type)
           
     def validate_config_file(self):
-        
-        #if args.platform == 'illumina' and args.config_file_type == 'csv':
-            # read the csv config file
-        #    my_csv = readCSV(file_path = args.configPath)
-        #    general_data = v.validate_illumina_csv(args, my_csv)
             
-        if self.args.platform == 'illumina' and self.args.config_file_type == 'ini':
-            self.validate_illumina_ini()
-            
-        #elif args.platform == '454' and args.config_file_type == 'csv':
-            # read the csv config file
-        #    my_csv = readCSV(file_path = args.configPath)
-        #    general_data = v.validate_454_csv(args, my_csv)
-            
-        elif self.args.platform == '454' and self.args.config_file_type == 'ini':
-            self.validate_454_ini()
-        elif self.args.platform == 'ion_torrent' and self.args.config_file_type == 'ini':
+        if self.args.platform == 'illumina':
+            data = self.validate_illumina_ini()
+        elif self.args.platform == '454':
+            data = self.validate_454_ini()
+        elif self.args.platform == 'ion_torrent':
             pass
         else:
             sys.exit("Unknown platform and configFile type for validation")
-    
-#     def create_dictionary_from_illumina_csv(self, args, my_csv):
-#         
-#         data_object = self.populate_data_object_illumina(args, my_csv)
-#         
-#         data_object = self.check_for_input_files(data_object)
-#         
-#         return data_object
-        
-#     def create_dictionary_from_454_csv(self, args, my_csv):
-#         data_object = self.populate_data_object_454(args, my_csv)
-#         
-#         data_object = self.check_for_input_files(data_object)
-#         
-#         return data_object
-        
+        return data
 
     def create_dictionary_from_ini(self):
         """
@@ -140,7 +114,7 @@ class MetadataUtils:
             elif 'run_date' in general_data:
                 general_data['run'] = general_data['run_date']
             else:
-                sys.exit("Cannot find the run or run_date from command line or in config file - Exiting")
+                sys.exit("Cannot find the run or run_date on command line or in config file - Exiting")
         # make sure RUN is before OUTPUT_DIR        
         try:
             general_data['output_dir'] = os.path.join(self.args.baseoutputdir,self.args.run)
@@ -178,14 +152,15 @@ class MetadataUtils:
     def validate_454_ini(self):
         print "Validating ini type Config File"
         print "TODO - write validation def for 454/ini"
-        self.data_object = self.create_dictionary_from_ini()        
+        return self.create_dictionary_from_ini() 
+        # 454 ini file requirements:
         
         
         
     def validate_illumina_ini(self):
         print "Validating ini type Config File"
         print "TODO - write validation def for illumina/ini"     
-        
+        return self.create_dictionary_from_ini()
 #     def validate_illumina_csv(self, args, my_csv):
 #     
 #         data_object = self.populate_data_object_illumina(args, my_csv)
@@ -415,13 +390,12 @@ class MetadataUtils:
         else:
 
             logger.info("No input directory or directory permissions problem: "+input_dir)
-            
+            print "No input directory or directory permissions problem: "+input_dir
         if not file_count:
             #sys.exit("ERROR: No files were found in '"+input_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
             logger.info("ERROR: No files were found in '"+input_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
 
         data_object['general']['files_list'] = files_list
-        
         data_object['general']['file_count'] = file_count
         # all the files in an illumina directory should be the same type
         #data_object['general']['file_formats_list'] = [data_object['general']["input_file_format"]] * file_count
@@ -529,11 +503,11 @@ class MetadataUtils:
             logger.debug("\tDataset Count: "+str(len(datasets)))
         
         
-    def get_confirmation(self):
+    def get_confirmation(self, data):
         print "\n"
-        for item,value in self.data_object['general'].iteritems():
-            print "%20s =\t%20s" % (item,value)
-        return raw_input("\nDoes this look okay? (CTL-C to exit) ")
+        for item,value in data['general'].iteritems():
+            print "%20s = %-20s" % (item,value)
+        return raw_input("\nDoes this look okay? (q to quit, v to view configFile) ")
         
     def convert_csv_to_ini(self):
         print self.args
@@ -554,9 +528,8 @@ class MetadataUtils:
         fh.write("config_format = ini\n")
         fh.write("config_file_orig = "+self.args.configPath+"\n")
         fh.write("config_format_orig = "+self.args.config_file_type+"\n")
-        
         fh.write("platform = "+self.args.platform+"\n")
-        fh.write("input_dir = "+self.args.input_dir+"\n")    
+        fh.write("input_dir = "+getattr(self.args,'input_dir', ".")+"\n") 
         fh.write("output_dir = "+os.path.join(self.args.baseoutputdir,self.args.run)+"\n")
         fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
         fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")

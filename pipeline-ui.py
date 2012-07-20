@@ -162,10 +162,20 @@ if __name__ == '__main__':
     # pass True to convert,validate and write ini file
     v = MetadataUtils(args, True)
     
-    v.validate_config_file()     
+    data = v.validate_config_file()     
     
-    answer = v.get_confirmation()
-    
+    answer = v.get_confirmation(data)
+    if answer == 'q':
+        sys.exit()
+    elif answer == 'v':
+        fh = open(os.path.join(args.baseoutputdir,args.run,args.run+'.ini'))
+        lines = fh.readlines()
+        print "\n=== START ===\n"
+        for line in lines:
+            line = line.strip()
+            print line
+        print "==== END ====\n"
+        sys.exit()
     ##############
     #
     # CREATE THE RUN OBJECT (see runconfig.py for details)

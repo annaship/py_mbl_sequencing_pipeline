@@ -198,29 +198,36 @@ class RunConfig:
 #         
 #         
 #         
-#         self.input_file_info = {}
-#         #print general_config
-#         for idx,input_file in enumerate(input_file_names):
-#             
-#             if idx in input_file_types:
-#                 input_file_format = input_file_types[idx]
-#             elif "input_file_formats" in general_config:
-#                 input_file_format = general_config['input_file_formats']
-#             elif "input_file_format" in general_config:
-#                 input_file_format = general_config['input_file_format']
-#             else:
-#                 # default
-#                 input_file_format = 'fasta'
-#                 
-#             
-#             if input_file_format not in C.input_file_formats:
-#                 raise Exception("Invalid sequence input file format: " + self.input_file_format)
-#             # make up a hash...they are allowed to not put in any input_file_lanes...could be 3 mbl fasta files which would all have lane
-#             # info encoded on each id/description line of the sequence record
-#             self.input_file_info[input_file] = {  "name" : input_file, 
-#                                                    "format" : input_file_format, 
-#                                                    "lane" : input_file_lanes[idx] if idx < len(input_file_lanes) else ""}
-#         
+        
+        self.input_file_info = {}
+        #print general_config
+        for idx,input_file in enumerate(input_file_names):
+            
+            if "input_file_format" in general_config:
+                file_format = general_config['input_file_format']
+            else:
+                # default
+                file_format = 'fasta'
+            
+            
+            if file_format not in C.input_file_formats:
+                raise Exception("Invalid sequence input file format: " + self.args.input_file_format)
+                
+            if "input_file_lane" in general_config:
+                file_lane = general_config['input_file_lane']
+            else:
+                # default
+                file_lane = ''    
+                
+            # make up a hash...they are allowed to not put in any input_file_lanes...could be 3 mbl fasta files which would all have lane
+            # info encoded on each id/description line of the sequence record
+            
+            self.input_file_info[input_file] =  {  "name" : input_file, 
+                                                   "format" : file_format, 
+                                                   "lane" : file_lane
+                                                }
+        
+        
         # now deal with each lane_runkey combo (Sample) that is misnamed though
         # populate sample information for every run_key
         for lane_run_key in [s for s in configDict.keys() if s != 'general']:
