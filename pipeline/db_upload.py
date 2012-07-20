@@ -76,15 +76,17 @@ class dbUpload:
             self.basedir = self.outdir
         self.rundate     = self.run.run_date
         self.use_cluster = 1
-        self.fasta_dir   = self.run.input_dir + "fasta/" 
-        self.gast_dir    = self.run.input_dir + "gast/"
+        self.fasta_dir   = os.path.join(self.run.input_dir, "fasta/")
+        self.gast_dir    = os.path.join(self.run.input_dir, "gast/")
+#        self.fasta_dir   = self.run.input_dir + "fasta/" 
+#        self.gast_dir    = self.run.input_dir + "gast/"
         self.filenames   = []
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
         self.my_conn     = MyConnection(host = 'newbpcdb2')    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = cfg 
-        self.unique_file_counts = self.outdir + "/unique_file_counts"
+        self.unique_file_counts = os.path.join(self.outdir , "unique_file_counts")
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         
@@ -298,7 +300,6 @@ class dbUpload:
             file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
         file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
         return file_seq_orig_count
-    
 
     def check_seq_upload(self):
         """
