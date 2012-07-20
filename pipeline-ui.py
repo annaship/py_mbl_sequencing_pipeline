@@ -82,28 +82,35 @@ if __name__ == '__main__':
         sys.exit()
     #THE_DEFAULT_BASE_OUTPUT = '.'
 
-    
+    # required items: configuration file, run and config_file_type only
+    # DO Not give items defaults here as the script needs to look in the ini file as well
+    # except steps (status) and loglevel (error) and baseoutputdir (./)(for ouptput_dir creation)
+    # see validate.py:  get_command_line_items()
+    # BUT general section of ini file must have important things not supplied on command line
+    # which means that csv file will require more commandline parameters.
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
-    parser.add_argument('-c', '--configuration', required=True, dest = "configPath",
+    parser.add_argument('-c', '--configuration', required=True,                         dest = "configPath",
                                                  help = 'Configuration parameters of the run. See README File')
-    parser.add_argument('-f', '--config_format',  required=False,   action="store",   default='csv', dest = "config_file_type",        
+    parser.add_argument("-r", "--run",     required=True,  action="store",              dest = "run", 
+                                                    help="unique run number ") 
+    parser.add_argument("-p", "--platform",     required=True,  action="store",         dest = "platform", 
+                                                    help="Platform ")                                                  
+    parser.add_argument('-f', '--config_format',  required=True,   action="store",     dest = "config_file_type",  
                                                  help = 'ini or csv') 
-    parser.add_argument("-p", "--platform",     required=True,  action="store",   dest = "platform", 
-                                                    help="Platform ")  
-    parser.add_argument("-i", "--input_directory",     required=False,  action="store",   dest = "input_dir", default='./',
+    
+    parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   default='',
                                                     help="Directory where sequence files can be found. ")
-    parser.add_argument("-r", "--run",     required=True,  action="store",   dest = "run", 
-                                                    help="unique run number ")
-    parser.add_argument("-ft", "--seq_file_type",     required=False,  action="store",   dest = "input_file_format", default='fasta',
+    
+    parser.add_argument("-ft", "--seq_file_type",     required=False,  action="store",  dest = "input_file_format", default='',
                                                     help="Sequence file type: fasta, fastq or sff ")
-    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",   dest = "input_file_suffix", default='fa.unique',
+    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",dest = "input_file_suffix", default='',
                                                     help="Sequence file suffix [optional] ") 
     # see note for base_output_dir in runconfig.py  about line: 130                                               
-    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  dest = "baseoutputdir", default='./',
+    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", default='.',
                                                 help="default: ./")
-    parser.add_argument("-s", "--steps",     required=False,  action="store",   dest = "steps", default = 'status',
+    parser.add_argument("-s", "--steps",     required=False,  action="store",           dest = "steps",             default = 'status',
                                                 help="Comma seperated list of steps.  Choices are: validate,trim,chimera,status,upload_env454,gast,upload_vamps")
-    parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
+    parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
 
     
@@ -121,56 +128,47 @@ if __name__ == '__main__':
     
     ##############
     #
-    #
+    #  Test cl parameters
     #
     ############## 
+    # CL RULES:
+    # for ini file:  (no plurals)
+    # 1) CL: input_dir ONLY shal be supplied on CL - no input filenames
+    #   
+    # 2) All input files should be in the same directory AND of the same format
+    #       
+    # 3) Supply a input_file_suffix on the CL if there are varying file types in the
+    #       input_dir and you only are using some (default will read all files)
+    # 4) 
+    #
+
     
+    ##############
+    #
+    # CREATE or FIND OUTPUT DIRECTORY
     # need to look for or create output_dir here
     # base output directory and run are required so need to create output_dir here
     # to write ini file and status file
+    ##############
     if not os.path.exists(os.path.join(args.baseoutputdir,args.run)):
         logger.debug("Creating output directory: "+os.path.join(args.baseoutputdir,args.run))
         os.makedirs(os.path.join(args.baseoutputdir,args.run))    
-        
-    if args.config_file_type == 'csv':
-        ini_file = convert_csv_to_ini(args)
-        args.configPath  = ini_file
-        args.config_file_type ='ini'
-    elif args.config_file_type == 'ini':
-        pass
-    else:
-        sys.exit("Unknown config file type: "+config_file_type)
+           
     ##############
     #
-    #
+    #  VALIDATE THE INI FILE
     #
     ##############  
-    v = MetadataUtils()
-    if args.platform == 'illumina' and args.config_file_type == 'csv':
-        # read the csv config file
-        my_csv = readCSV(file_path = args.configPath)
-        v.validate_illumina_csv(args, my_csv)
-        
-    elif args.platform == 'illumina' and args.config_file_type == 'ini':
-        v.validate_illumina_ini(args)
-        
-    elif args.platform == '454' and args.config_file_type == 'csv':
-        # read the csv config file
-        my_csv = readCSV(file_path = args.configPath)
-        v.validate_454_csv(args, my_csv)
-        
-    elif args.platform == '454' and args.config_file_type == 'ini':
-        v.validate_454_ini(args)
-        
-    elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
-        pass
-    elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
-        pass
-    else:
-        sys.exit("Unknown platform and configFile type for validation")
+    # pass True to convert,validate and write ini file
+    v = MetadataUtils(args, True)
+    
+    v.validate_config_file()     
+    
+    answer = v.get_confirmation()
+    
     ##############
     #
-    #
+    # CREATE THE RUN OBJECT (see runconfig.py for details)
     #
     ##############     
     run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
@@ -178,11 +176,11 @@ if __name__ == '__main__':
     cfg = None
     if 'my_csv' in locals():
         cfg = my_csv
+        
     ##############
     #
-    #
+    # now do all the work
     #
     ##############         
-    # now do all the work
     process(run, args.steps, cfg)
 
