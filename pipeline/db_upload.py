@@ -2,14 +2,15 @@ import sys
 import MySQLdb
 import os
 from pipeline.utils import PipelneUtils
+from pipeline.get_ini import readCSV
 
 class MyConnection:
     """
     Connection to env454
-    Takes parameters from ~/.my.cnf, default host = "newbpcdb2", db="illumina_reads"
+    Takes parameters from ~/.my.cnf, default host = "vampsdev", db="test"
     if different use my_conn = MyConnection(host, db)
     """
-    def __init__(self, host="newbpcdb2", db="illumina_reads"):
+    def __init__(self, host="vampsdev", db="test"):
         self.conn   = None
         self.cursor = None
         self.rows   = 0
@@ -69,9 +70,10 @@ class dbUpload:
     """
     def __init__(self, run = None, cfg = None):
         self.run     = run
-        self.outdir = run.output_dir
+        print dir(run)
+        self.outdir = run.base_output_dir
         try:
-            self.basedir = run.basedir
+            self.basedir = run.base_python_dir
         except:
             self.basedir = self.outdir
         self.rundate     = self.run.run_date
@@ -82,10 +84,13 @@ class dbUpload:
 #        self.gast_dir    = self.run.input_dir + "gast/"
         self.filenames   = []
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-        self.my_conn     = MyConnection(host = 'newbpcdb2')    
+        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
-        self.my_csv      = cfg 
+        csv_file_path = os.path.join(run.base_python_dir, "csv/metadata_ok3.csv")
+        self.my_csv      = cfg or readCSV(file_path = csv_file_path)
+#        ['__doc__', '__init__', '__module__', 'anchors', 'args', 'base_output_dir', 'base_python_dir', 'chimera_status_file_h', 'chimera_status_file_name', 'configFile', 'config_file_type', 'force_runkey', 'gast_input_source', 'initializeFromDictionary', 'input_dir', 'input_file_info', 'maximumLength', 'minAvgQual', 'minimumLength', 'output_dir', 'platform', 'primer_suites', 'require_distal', 'run_date', 'run_key_lane_dict', 'run_keys', 'run_status_file_h', 'run_status_file_name', 'samples', 'sff_files', 'trim_status_file_h', 'trim_status_file_name', 'vamps_user_upload']
+
         self.unique_file_counts = os.path.join(self.outdir , "unique_file_counts")
         self.seq_id_dict = {}
         self.tax_id_dict = {}
@@ -170,7 +175,7 @@ class dbUpload:
                """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
         self.my_conn.execute_no_fetch(my_sql)
     
-    def put_run_info(self):
+    def put_run_info(self, content = None):
         content = self.my_csv.read_csv()
 #        182 H38 {'platform': 'Illumina', 'run_key': 'NNNNGCTAC', 'lane': '4', 'run': '20120613', 'IDX': 'GGCTAC', 'dna_region': 'v6', 'vamps_user': 'jreveillaud', 'adaptor': '', 'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H38', 'project': 'JCR_SPO_Bv6', 'read_length': '101', 'file_prefix': 'H38', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H38', 'amp_operator': 'JR', 'insert_size': '230'}
         
