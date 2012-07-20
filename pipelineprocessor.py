@@ -20,7 +20,7 @@ from stat import * # ST_SIZE etc
 import sys
 import shutil
 import types
-from time import sleep, time
+from time import sleep, time, gmtime, strftime
 from pipeline.utils import *
 from pipeline.sample import Sample
 from pipeline.runconfig import RunConfig
@@ -61,7 +61,6 @@ def process(run, steps, cfg = None):
         logger.debug("Creating output directory: "+run.output_dir)
         os.makedirs(run.output_dir)  
 
-
     
     # Open run STATUS File here.
     # open in append mode because we may start the run in the middle
@@ -83,6 +82,7 @@ def process(run, steps, cfg = None):
 def validate(run, cfg=None):
     logger.debug("Validating")
     print 'Validates:  Configfile and Run Object'
+    run.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tValidated\n")
 
  # perform trim step
  # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
@@ -320,7 +320,7 @@ def env454upload(run, cfg):
 #                print "insert_sequence_uniq_info_ill() took ", elapsed, " time to finish"
 
             seq_in_file = fasta.total_seq
-            my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
+            my_env454upload.seq_statistics(filename, fasta.total_seq)
             total_seq += seq_in_file
 #            print "seq_in_file = %s" % seq_in_file
 #            
@@ -459,8 +459,13 @@ def status(run, cfg=None):
     f = open(run.run_status_file_name)
     lines = f.readlines()
     f.close()
-    print "STATUS: ",lines
     
+    print "="*40
+    print "STATUS LOG: "
+    for line in lines:
+        line =line.strip()
+        print line
+    print "="*40+"\n"
     
     
     
