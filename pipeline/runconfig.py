@@ -198,7 +198,8 @@ class RunConfig:
 #         
 #         
 #         
-        
+ 
+ 
         self.input_file_info = {}
         #print general_config
         for idx,input_file in enumerate(input_file_names):
