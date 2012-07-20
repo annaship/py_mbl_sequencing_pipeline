@@ -42,9 +42,47 @@ import cogent
 import pipeline.constants as C
 
 if __name__ == '__main__':
-    THE_DEFAULT_BASE_OUTPUT = '.'
+    usage = """
+        usage: ./pipeline-ui.py [options]
+        
+            options:
+                -c/--configuration      configuration file with path  [required]
+                
+                -f/--config_format      configuration file format: csv or ini [optional (default:csv)]
+                
+                -p/--platform           Platform: illumina, 454 or ion_torrent [required]
+                
+                -i/--input_directory    Directory where sequence files can be found [optional (default: ./)]
+                
+                -r/--run                Run - number or date  [required]
+                
+                -ft/--seq_file_type     File type for sequences: fasta, fastq or sff 
+                                            [optional (default: fasta)]
+                                            
+                -fs/--seq_file_suffix   File suffix - useful when there are additional files
+                                            in the input directory that you don't want to include. [optional (default: fa.unique)]
+                                            
+                -b/--baseouputdir       Base output directory where the run directory will be found.
+                                            The run directory will be created if it is not found.  [optional (default: ./)]
+                                            
+                -s/--steps              Steps to be performed by this pipeline (comma separated list)
+                                            Choices:    validate        - validates your metadata file
+                                                        status          - prints out status messages if any
+                                                        trim            - trims your sequences
+                                                        chimera         - performs chimera check on trimmed sequences
+                                                        upload_env454   - Load data into the env454 database
+                                                        gast            - assign taxonomy to the trimmed sequences using GAST 
+                                                        upload_vamps    - load sequences and taxonomy to VAMPS
+                                                        
+                -l/--loglevel           Change the level of logging: info, debug, error   [optional (default: error)]
+             
+        """
+    if  len(sys.argv) == 1:
+        print usage
+        sys.exit()
+    #THE_DEFAULT_BASE_OUTPUT = '.'
 
-    usage = "usage: %prog [options] arg1 arg2"
+    
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
     parser.add_argument('-c', '--configuration', required=True, dest = "configPath",
                                                  help = 'Configuration parameters of the run. See README File')
@@ -52,7 +90,7 @@ if __name__ == '__main__':
                                                  help = 'ini or csv') 
     parser.add_argument("-p", "--platform",     required=True,  action="store",   dest = "platform", 
                                                     help="Platform ")  
-    parser.add_argument("-d", "--input_directory",     required=False,  action="store",   dest = "input_dir", default='./',
+    parser.add_argument("-i", "--input_directory",     required=False,  action="store",   dest = "input_dir", default='./',
                                                     help="Directory where sequence files can be found. ")
     parser.add_argument("-r", "--run",     required=True,  action="store",   dest = "run", 
                                                     help="unique run number ")
@@ -64,13 +102,14 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",  dest = "baseoutputdir", default='./',
                                                 help="default: ./")
     parser.add_argument("-s", "--steps",     required=False,  action="store",   dest = "steps", default = 'status',
-                                                help="Comma seperated list of steps.  Choices are: test,trim,chimera,status,upload_env454,gast,upload_vamps")
+                                                help="Comma seperated list of steps.  Choices are: validate,trim,chimera,status,upload_env454,gast,upload_vamps")
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",   default='ERROR', dest = "loglevel",        
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
 
     
-                                                 
+    
     args = parser.parse_args() 
+    
     print "\nLog Level set to:",args.loglevel.upper()
     # deal with logging level
     loggerlevel = logging.ERROR
@@ -80,27 +119,48 @@ if __name__ == '__main__':
         loggerlevel = logging.INFO
     logger.setLevel(loggerlevel)
     
-    """
-    TODO: read the config file here, depending on its type
-    """
+    ##############
+    #
+    #
+    #
+    ############## 
+    
+    # need to look for or create output_dir here
+    # base output directory and run are required so need to create output_dir here
+    # to write ini file and status file
+    if not os.path.exists(os.path.join(args.baseoutputdir,args.run)):
+        logger.debug("Creating output directory: "+os.path.join(args.baseoutputdir,args.run))
+        os.makedirs(os.path.join(args.baseoutputdir,args.run))    
+        
+    if args.config_file_type == 'csv':
+        ini_file = convert_csv_to_ini(args)
+        args.configPath  = ini_file
+        args.config_file_type ='ini'
+    elif args.config_file_type == 'ini':
+        pass
+    else:
+        sys.exit("Unknown config file type: "+config_file_type)
+    ##############
+    #
+    #
+    #
+    ##############  
+    v = MetadataUtils()
     if args.platform == 'illumina' and args.config_file_type == 'csv':
-        v = MetadataUtils()
         # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
         v.validate_illumina_csv(args, my_csv)
         
     elif args.platform == 'illumina' and args.config_file_type == 'ini':
-        pass
+        v.validate_illumina_ini(args)
+        
     elif args.platform == '454' and args.config_file_type == 'csv':
-        v = MetadataUtils()
         # read the csv config file
         my_csv = readCSV(file_path = args.configPath)
         v.validate_454_csv(args, my_csv)
         
     elif args.platform == '454' and args.config_file_type == 'ini':
-        v = MetadataUtils()
-        my_csv = readCSV(file_path = args.configPath)
-        v.validate_454_ini(args, my_csv)
+        v.validate_454_ini(args)
         
     elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
         pass
@@ -108,12 +168,21 @@ if __name__ == '__main__':
         pass
     else:
         sys.exit("Unknown platform and configFile type for validation")
-    
+    ##############
+    #
+    #
+    #
+    ##############     
     run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
     
     cfg = None
-    if my_csv:
+    if 'my_csv' in locals():
         cfg = my_csv
+    ##############
+    #
+    #
+    #
+    ##############         
     # now do all the work
     process(run, args.steps, cfg)
 

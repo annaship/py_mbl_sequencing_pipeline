@@ -37,26 +37,31 @@ import pipeline.fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
 
-TEST_STEP               = "test"
+VALIDATE_STEP           = "validate"
 TRIM_STEP               = "trim"
 CHIMERA_STEP            = "chimera"
 GAST_STEP               = "gast"
 VAMPSUPLOAD             = "vampsupload"
+CLUSTER_STEP            = "cluster"
+DELETE_RUN              = "delete"
 ENV454UPLOAD            = "env454upload"
 ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
 STATUS_STEP             = 'status'
 
-existing_steps = [TEST_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
+existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps, cfg = None):
-#    print "cfg = %s" % cfg
+    #    print "cfg = %s" % cfg
     # create output directory:
     requested_steps = steps.split(",")            
     
+    # this should have been created in pipeline-ui.py. but just in case....
     if not os.path.exists(run.output_dir):
         logger.debug("Creating output directory: "+run.output_dir)
         os.makedirs(run.output_dir)  
+
+
     
     # Open run STATUS File here.
     # open in append mode because we may start the run in the middle
@@ -75,9 +80,9 @@ def process(run, steps, cfg = None):
             step_method = globals()[step]
             step_method(run, cfg)
 
-def test(run, cfg=None):
-    logger.debug("Testing and Exiting")
-    print 'Testing and Exiting'
+def validate(run, cfg=None):
+    logger.debug("Validating")
+    print 'Validates:  Configfile and Run Object'
 
  # perform trim step
  # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file

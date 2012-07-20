@@ -15,24 +15,26 @@ class MBLPipelineFastaUtils:
     or a single fasta file
     
     """
-    def __init__(self, lane_keys,outputdir):
+    def __init__(self, lane_keys, outputdir):
         self.inputFileName = {}
         self.orphans = {}
         self.lane_keys = lane_keys
         self.outputdir = outputdir
+        self.deleted_ids = {}
         for lane_key in lane_keys:
             self.inputFileName[lane_key] = os.path.join(self.outputdir, lane_key + ".trimmed.fa")
             self.orphans[lane_key] = {}
             deleted_file            = os.path.join(self.outputdir, lane_key + ".deleted.txt" )
-            deleted_id_list = self.deleted_ids[lane_key] = []
+            self.deleted_ids[lane_key] = []
             if not (os.path.exists(deleted_file) and os.path.getsize(deleted_file) > 0):
                 logger("No deleted sequences for lane: " + lane_key)
                 continue
             del_fh = open(deleted_file,"r")
-            deleted_id_list = self.deleted_ids[lane_key] = []
+            #deleted_id_list = self.deleted_ids[lane_key] = []
             for line in del_fh.readlines():
                 lst = line.strip().split()                
-                deleted_id_list.append(lst[0])
+                #deleted_id_list.append(lst[0])
+                self.deleted_ids[lane_key].append(lst[0])
 
         
     def write_clean_fasta_file(self):

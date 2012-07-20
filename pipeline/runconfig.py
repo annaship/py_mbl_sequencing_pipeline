@@ -47,7 +47,7 @@ class RunConfig:
         self.run_key_lane_dict = {}
         self.samples = {}
         self.base_python_dir = os.path.normpath(basepythondir)
-        
+        self.configFile = config_info
         #
         # IMPORTANT to get a dictionary here from whatever the input is:
         #     platform and configFile type
@@ -65,7 +65,8 @@ class RunConfig:
             config_dict = v.create_dictionary_from_illumina_csv(args, my_csv)
             
         elif args.platform == 'illumina' and args.config_file_type == 'ini':
-            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            v = MetadataUtils()
+            config_dict = v.create_dictionary_from_ini(args.configPath)
             
         elif args.platform == '454' and args.config_file_type == 'csv':
             v = MetadataUtils()
@@ -75,13 +76,13 @@ class RunConfig:
             
         elif args.platform == '454' and args.config_file_type == 'ini':
             v = MetadataUtils()
-            config_dict = v.create_dictionary_from_454_ini(args.configPath)
+            config_dict = v.create_dictionary_from_ini(args.configPath)
             
         elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
-            sys.exit("ConfigFile conversion to dictionary not written yet.")
+            sys.exit("2-ConfigFile conversion to dictionary not written yet.")
             
         elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
-            sys.exit("ConfigFile conversion to dictionary not written yet for platform ("+args.platform+") and configFileType ("+args.config_file_type+")")
+            sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+args.platform+") and configFileType ("+args.config_file_type+")")
             
         else:
             sys.exit("Unknown platform and configFile type for dictionary conversion")
@@ -103,9 +104,10 @@ class RunConfig:
         # we'll take the info as an ini file or dictionary so we can be called by an api
         # ie vamps user uploads: the config info is a dictionary
 
-#        config_dict = config_info if (type(config_info)==dict) else configDictionaryFromFile_ini(config_info)
+
         # now extract it all from the dictionary form
         self.initializeFromDictionary(config_dict)
+         
         if type(config_info)==dict and 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
             self.vamps_user_upload = True            
         else:
@@ -137,13 +139,12 @@ class RunConfig:
             self.base_output_dir = os.path.normpath(config_dict['general']['output_dir'])
         else:
             self.base_output_dir = '.'
-        print self.base_output_dir
         # this is our default output dir -- Always rundate?
         self.output_dir = os.path.join(self.base_output_dir, self.run_date)
         #self.output_dir = os.path.join(config_dict['general']['output_dir'])
         self.run_status_file_name = os.path.join(self.output_dir,"STATUS.txt")
         self.run_status_file_h = None #handle to file
-                    
+                  
         # not sure if this setup should be here or in trim?  here for now
         self.trim_status_file_name = os.path.join(self.output_dir, 'trim_status.txt')
         self.trim_status_file_h = None #handle to file
@@ -214,12 +215,18 @@ class RunConfig:
         
         
         self.input_file_info = {}
-        print general_config
+        #print general_config
         for idx,input_file in enumerate(input_file_names):
+            
             if idx in input_file_types:
                 input_file_format = input_file_types[idx]
-            else:
+            elif "input_file_formats" in general_config:
+                input_file_format = general_config['input_file_formats']
+            elif "input_file_format" in general_config:
                 input_file_format = general_config['input_file_format']
+            else:
+                # default
+                input_file_format = 'fasta'
                 
             
             if input_file_format not in C.input_file_formats:
