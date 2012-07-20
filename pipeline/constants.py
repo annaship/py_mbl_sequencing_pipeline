@@ -38,6 +38,7 @@ dna_regions      = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", 
 
 
 
+
 ########### RUN CONFIG #############################################################################
 input_file_formats = ['sff', 'fasta', 'fasta-mbl', 'fastq', 'fastq-illumina', 'fastq-sanger']
 
