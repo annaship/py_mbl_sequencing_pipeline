@@ -50,6 +50,7 @@ STATUS_STEP             = 'status'
 
 existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
 
+
 # the main loop for performing each of the user's supplied steps
 def process(run, steps, cfg = None):
     #    print "cfg = %s" % cfg
