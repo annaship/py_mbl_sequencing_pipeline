@@ -133,12 +133,10 @@ class dbUpload:
         seq_count       = int(fasta.id.split('|')[1].split(':')[1])
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-#        print "sequence_pdr_info_ill = %s\n" % my_sql
         self.my_conn.execute_no_fetch(my_sql)
  
     def get_gasta_result(self, filename):
         gast_file_name = self.gast_dir + filename + '.gast'
-#        print "gast_file_name = %s" % gast_file_name
         with open(gast_file_name) as fd:
             gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
         return gast_dict
@@ -152,14 +150,11 @@ class dbUpload:
             tax_id = self.my_conn.execute_no_fetch(my_sql)
     #        collect taxonomy and id info into dict, to use later in insert
             self.tax_id_dict[taxonomy] = tax_id
-#        self.tax_id_dict[taxonomy] = tax_id or self.get_id('taxonomy', taxonomy)
         
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         sequence_ill_id = self.seq_id_dict[fasta.seq]
         taxonomy_id     = self.tax_id_dict[taxonomy] 
-
-#                        (SELECT taxonomy_id FROM taxonomy WHERE taxonomy = '%s'),
 
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
