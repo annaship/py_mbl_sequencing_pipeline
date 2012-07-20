@@ -37,6 +37,7 @@ def configDictionaryFromFile_ini(config_file_path):
 class RunConfig:
     """Doc string here."""
     def __init__(self, config_info, args, basepythondir):
+        self.args       = args
         self.run_date   = None
         self.platform   = None # enum('454','illumina','ion_torrent','')
         self.input_dir  = None
@@ -54,51 +55,23 @@ class RunConfig:
         # if the config_info was a file path to an .csv or .ini file then convert to a dictionary
         # 
         # for vamps user uploads: the config info is a dictionary
+        v = MetadataUtils(args)
     	if type(config_info)==dict:
             config_dict = config_info
+                 
+        elif self.args.platform == 'illumina':
             
-    	elif args.platform == 'illumina' and args.config_file_type == 'csv':
-            #config_dict = configDictionaryFromFile_csv(config_info, args)
-            v = MetadataUtils()
-            # read the csv config file
-            my_csv = readCSV(file_path = args.configPath)
-            config_dict = v.create_dictionary_from_illumina_csv(args, my_csv)
+            config_dict = v.create_dictionary_from_ini()
+                 
+        elif self.args.platform == '454':
+            config_dict = v.create_dictionary_from_ini()
             
-        elif args.platform == 'illumina' and args.config_file_type == 'ini':
-            v = MetadataUtils()
-            config_dict = v.create_dictionary_from_ini(args.configPath)
-            
-        elif args.platform == '454' and args.config_file_type == 'csv':
-            v = MetadataUtils()
-            # read the csv config file
-            my_csv = readCSV(file_path = args.configPath)
-            config_dict = v.create_dictionary_from_454_csv(args, my_csv)
-            
-        elif args.platform == '454' and args.config_file_type == 'ini':
-            v = MetadataUtils()
-            config_dict = v.create_dictionary_from_ini(args.configPath)
-            
-        elif args.platform == 'ion_torrent' and args.config_file_type == 'csv':
-            sys.exit("2-ConfigFile conversion to dictionary not written yet.")
-            
-        elif args.platform == 'ion_torrent' and args.config_file_type == 'ini':
-            sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+args.platform+") and configFileType ("+args.config_file_type+")")
+        elif args.platform == 'ion_torrent':
+            sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+self.args.platform+") ")
             
         else:
-            sys.exit("Unknown platform and configFile type for dictionary conversion")
+            sys.exit("Unknown platform for dictionary conversion")
             
-#         
-#         Validate here and return the dict for both ini and csv
-#             
-#     	v = Validate(config_info) # either a file path or dict
-#     	if self.config_file_type == 'csv':
-#         	config_dict = v.validate_csv()        
-#         elif self.config_file_type == 'ini':
-#         	config_dict = v.validate_ini()
-#         elif self.config_file_type == 'dict':
-#         	config_dict = v.validate_dict()
-#         else:
-#              sys.exit("could not determine config type: "+self.config_file_type)
         
         # if the config_info was a file path to an .ini file then convert to a dictionary
         # we'll take the info as an ini file or dictionary so we can be called by an api
@@ -178,63 +151,76 @@ class RunConfig:
         
         #print general_config
         # parse out the input file info
+        print general_config
         if 'files_list' in general_config:
             input_file_names = general_config['files_list']
         else:
             input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
         
-        
-        
-        if self.platform == '454':
-            if 'file_formats_list' in general_config:    
-                input_file_types = general_config['file_formats_list']
-            else:
-                input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
-            
-            if len(input_file_names) != len(input_file_types):
-                raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
-            
-            if 'lanes_list' in general_config: 
-                input_file_lanes = general_config['lanes_list']
-            else:        
-                lane_info = general_config['input_file_lanes'].strip()
-                input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
-    
-            # no lane info? better by our custom fasta-mbl format then
-            if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:
-                raise Exception("Only fasta-mbl formatted sequence files are allowed to not provide a value for input_file_lanes")
-    
-            # if they give any lane information it then needs to either be 1 value (for all files) or match them exactly
-            if len(input_file_lanes) > 1 and (len(input_file_names) != len(input_file_lanes)):
-                raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and lanes(" + str(len(input_file_lanes)) + ") in configuration information")
-        else:
-            input_file_types = []   
-            input_file_lanes = []
-        
-        
-        
-        
-        self.input_file_info = {}
-        #print general_config
-        for idx,input_file in enumerate(input_file_names):
-            
-            if idx in input_file_types:
-                input_file_format = input_file_types[idx]
-            elif "input_file_formats" in general_config:
-                input_file_format = general_config['input_file_formats']
-            elif "input_file_format" in general_config:
-                input_file_format = general_config['input_file_format']
-            else:
-                # default
-                input_file_format = 'fasta'
-                
-            
-            if input_file_format not in C.input_file_formats:
-                raise Exception("Invalid sequence input file format: " + self.input_file_format)
-            # make up a hash...they are allowed to not put in any input_file_lanes...could be 3 mbl fasta files which would all have lane
-            # info encoded on each id/description line of the sequence record
-            self.input_file_info[input_file] = {"name" : input_file, "format" : input_file_format, "lane" : input_file_lanes[idx] if idx < len(input_file_lanes) else ""}
-        
+#         
+#         # for ini file:  (no plurals)
+#         # 1) if input_file_format is a comma sep list then it should match the count of input_file_name
+#         #       The same with input_file_lane
+#         # 2) if input_file_format is supplied and is a single item it will apply to all the input files
+#         #       either in input_dir or the list (or single) of input_file_name
+#         # 3) EITHER input_dir OR input_file_name will be supplied (but not both)
+#         #
+#         if self.platform == '454':
+#             
+#             if 'input_file_format' in general_config and general_config['input_file_format'] != '':
+#                 input_file_types = general_config['input_file_format']
+#             elif 'file_formats_list' in general_config:    
+#                 input_file_types = general_config['file_formats_list']
+#             else:
+#                 input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
+#             
+#             print 'input_file_types= ',input_file_types
+#             if len(input_file_names) != len(input_file_types):
+#                 raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
+#             
+#             if 'lanes_list' in general_config: 
+#                 input_file_lanes = general_config['lanes_list']
+#             else:        
+#                 lane_info = general_config['input_file_lanes'].strip()
+#                 input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
+#     
+#             # no lane info? better by our custom fasta-mbl format then
+#             if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:
+#                 raise Exception("Only fasta-mbl formatted sequence files are allowed to not provide a value for input_file_lanes")
+#     
+#             # if they give any lane information it then needs to either be 1 value (for all files) or match them exactly
+#             if len(input_file_lanes) > 1 and (len(input_file_names) != len(input_file_lanes)):
+#                 raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and lanes(" + str(len(input_file_lanes)) + ") in configuration information")
+#         else:
+#             input_file_types = []   
+#             input_file_lanes = []
+#         
+#         
+#         
+#         
+#         self.input_file_info = {}
+#         #print general_config
+#         for idx,input_file in enumerate(input_file_names):
+#             
+#             if idx in input_file_types:
+#                 input_file_format = input_file_types[idx]
+#             elif "input_file_formats" in general_config:
+#                 input_file_format = general_config['input_file_formats']
+#             elif "input_file_format" in general_config:
+#                 input_file_format = general_config['input_file_format']
+#             else:
+#                 # default
+#                 input_file_format = 'fasta'
+#                 
+#             
+#             if input_file_format not in C.input_file_formats:
+#                 raise Exception("Invalid sequence input file format: " + self.input_file_format)
+#             # make up a hash...they are allowed to not put in any input_file_lanes...could be 3 mbl fasta files which would all have lane
+#             # info encoded on each id/description line of the sequence record
+#             self.input_file_info[input_file] = {  "name" : input_file, 
+#                                                    "format" : input_file_format, 
+#                                                    "lane" : input_file_lanes[idx] if idx < len(input_file_lanes) else ""}
+#         
         # now deal with each lane_runkey combo (Sample) that is misnamed though
         # populate sample information for every run_key
         for lane_run_key in [s for s in configDict.keys() if s != 'general']:
@@ -312,7 +298,7 @@ class RunConfig:
             elif self.platform == '454':
                 # required for 454
                 sample.direction = lane_run_dict['direction'] 
-                sample.taxonomic_domain = lane_run_dict['taxonomic_domain']
+                sample.taxonomic_domain = lane_run_dict['domain']
                 # a list of run_keys
                 # convert: change ':' to '_'
                 key = lane_run_key[:1]+'_'+lane_run_key[2:]
