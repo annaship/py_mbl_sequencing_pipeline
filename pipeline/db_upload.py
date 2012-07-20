@@ -111,18 +111,9 @@ class dbUpload:
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
-#        print "my_sql = %s" % my_sql
         res        = self.my_conn.execute_fetch_select(my_sql)
-#        print "res[0] = %s, str(res[0][0]) = %s, res[0][1] = %s" % (res[:2], str(res[0][0]), res[0][1])
-#        print type(res)
-#        ((44799L, 'AAAGCTGGCAACCAGATCCGAAGTCGGCCCCTTTGGCCTCCGGGTAGGTC'), (44815L, 'GGAAGCGACAGCAGAGTGAAGGCCAGATTGAAGATCTTGCCAGACGAGCTGAG'))
         self.seq_id_dict = dict((y, int(x)) for x, y in res)
-#        print "SSS: %s" % self.seq_id_dict['AAAGCTGGCAACCAGATCCGAAGTCGGCCCCTTTGGCCTCCGGGTAGGTC']
-#        [self.seq_id_dict[x] = y for (x, y) in res] 
-#        [print x, y for (x, y) in res] 
 
-#        if res:
-#            return res
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
         my_sql  = """SELECT %s FROM %s WHERE %s = '%s'""" % (id_name, table_name, table_name, value)
