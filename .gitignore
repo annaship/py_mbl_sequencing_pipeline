@@ -12,8 +12,8 @@ results/*
 .project
 db_conn.conf
 db_conn_ok.conf
-fasta/*
-gast/*
+*.fa.*
+*.gast
 csv/*
 unique_file_counts
 
