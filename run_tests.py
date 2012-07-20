@@ -16,6 +16,7 @@ import unittest
 
 from test.test_pipeline import TestPipeline
 
-testSuite = TestPipeline.setUpForward()
+testSuite = TestPipeline.test_all()
+ 
 
 #text_runner = unittest.TextTestRunner().run(testSuite)
