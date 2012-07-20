@@ -96,7 +96,8 @@ class TrimRun( object ):
             self.names[lane_key]            = {}
             self.fa[lane_key]       = FastaOutput(os.path.join(self.outdir,lane_key) + ".trimmed.fa")
             
-            
+  
+  
             #####################
             #
             #  PrimerSuite Class
