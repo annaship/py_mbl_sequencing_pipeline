@@ -25,52 +25,6 @@ from pipeline.db_upload import MyConnection
 #import pipeline.fastalib
 
 
-class FastaReader:
-    def __init__(self,file_name=None):
-        self.file_name = file_name
-        self.h = open(self.file_name)
-        self.seq = ''
-        self.id = None
-        self.revcomp_seq = None
-        self.base_counts = None
-        
-    def next(self): 
-        def read_id():
-            return self.h.readline().strip()[1:]
-
-        def read_seq():
-            ret = ''
-            while True:
-                line = self.h.readline()
-                
-                while len(line) and not len(line.strip()):
-                    # found empty line(s)
-                    line = self.h.readline()
-                
-                if not len(line):
-                    # EOF
-                    break
-                
-                if line.startswith('>'):
-                    # found new defline: move back to the start
-                    self.h.seek(-len(line), os.SEEK_CUR)
-                    break
-                    
-                else:
-                    ret += line.strip()
-                    
-            return ret
-        
-        self.id = read_id()
-        self.seq = read_seq()
-        
-        
-        if self.id:
-            return True    
-
-
-
-
 
     
     
@@ -80,113 +34,207 @@ class MetadataUtils:
     validate and create a dictionary from them
     """
     Name = "MetadataUtils"
-    def __init__(self, run=None):
-        self.run = run
+    def __init__(self, args, validate=None):
+        self.args = args
         self.known_header_list_illumina = C.csv_header_list_illumina
         self.known_header_list_454 = C.csv_header_list_454
         self.primer_suites     = C.primer_suites 
         self.dna_regions       = C.dna_regions
+        self.data_object = {}
+        
+        ##############
+        #
+        # CONVERT CSV to INI AND
+        # WRITE INI FILE TO OUTPUT DIRECTORY
+        #
+        ##############
+        if validate:
+            if self.args.config_file_type == 'csv':
+                ini_file = self.convert_csv_to_ini()
+                self.args.configPath  = ini_file
+                self.args.config_file_type ='ini'
+            elif self.args.config_file_type == 'ini':
+                ini_file = self.save_ini_file()
+                self.args.configPath  = ini_file
+                self.args.config_file_type ='ini'
+            else:
+                sys.exit("Unknown config file type: "+config_file_type)
+          
+    def validate_config_file(self):
+        
+        #if args.platform == 'illumina' and args.config_file_type == 'csv':
+            # read the csv config file
+        #    my_csv = readCSV(file_path = args.configPath)
+        #    general_data = v.validate_illumina_csv(args, my_csv)
+            
+        if self.args.platform == 'illumina' and self.args.config_file_type == 'ini':
+            self.validate_illumina_ini()
+            
+        #elif args.platform == '454' and args.config_file_type == 'csv':
+            # read the csv config file
+        #    my_csv = readCSV(file_path = args.configPath)
+        #    general_data = v.validate_454_csv(args, my_csv)
+            
+        elif self.args.platform == '454' and self.args.config_file_type == 'ini':
+            self.validate_454_ini()
+        elif self.args.platform == 'ion_torrent' and self.args.config_file_type == 'ini':
+            pass
+        else:
+            sys.exit("Unknown platform and configFile type for validation")
+    
+#     def create_dictionary_from_illumina_csv(self, args, my_csv):
+#         
+#         data_object = self.populate_data_object_illumina(args, my_csv)
+#         
+#         data_object = self.check_for_input_files(data_object)
+#         
+#         return data_object
+        
+#     def create_dictionary_from_454_csv(self, args, my_csv):
+#         data_object = self.populate_data_object_454(args, my_csv)
+#         
+#         data_object = self.check_for_input_files(data_object)
+#         
+#         return data_object
         
 
-    def create_dictionary_from_illumina_csv(self, args, my_csv):
-        
-        data_object = self.populate_data_object_illumina(args, my_csv)
-        
-        data_object = self.check_for_input_files(data_object)
-        
-        return data_object
-        
-    def create_dictionary_from_454_csv(self, args, my_csv):
-        data_object = self.populate_data_object_454(args, my_csv)
-        
-        data_object = self.check_for_input_files(data_object)
-        
-        return data_object
-        
-    def create_dictionary_from_ini(self, config_file_path):
+    def create_dictionary_from_ini(self):
         """
         # read an ini config file and convert to a dictionary
         """
         import ConfigParser
         
-        configDict = {}
+        data_object = {}
         user_config = ConfigParser.ConfigParser()
-        user_config.read(config_file_path)
+        user_config.read(self.args.configPath)
         
         for section in user_config.sections():
-            section_dict = configDict[section] = {}
+            section_dict = data_object[section] = {}
             for option in user_config.options(section):
                 section_dict[option] = user_config.get(section,option)
-    
-        return configDict 
+        
+        data_object['general'] = self.get_command_line_items(data_object['general'])
+        data_object['general']['config_file'] = os.path.join(data_object['general']['output_dir'], data_object['general']['run']+'.ini')
+        data_object['general']['status_file'] = os.path.join(data_object['general']['output_dir'], 'STATUS.txt')
+        data_object = self.check_for_input_files(data_object)     
+        
+        
+        return data_object 
 
+    def get_command_line_items(self, general_data):
+    
+        # command line items take precedence over ini file items of the same name
+        # defaults should be here and NOT in argparse/commandline
+        if self.args.input_dir:       
+            general_data['input_dir'] = self.args.input_dir
+        else:
+            if not general_data['input_dir']:
+                general_data['input_dir'] = './'
         
-    def validate_454_csv(self, args, my_csv):
-        print "TODO: write validate def for 454/csv"
-        data_object = self.populate_data_object_454(args, my_csv)
+        if self.args.run:
+            general_data['run'] = self.args.run
+            general_data['run_date'] = self.args.run
+        else:
+            if 'run' in general_data:                
+                general_data['run_date'] = general_data['run']
+            elif 'run_date' in general_data:
+                general_data['run'] = general_data['run_date']
+            else:
+                sys.exit("Cannot find the run or run_date from command line or in config file - Exiting")
+        # make sure RUN is before OUTPUT_DIR        
+        try:
+            general_data['output_dir'] = os.path.join(self.args.baseoutputdir,self.args.run)
+        except:
+            if 'output_dir' not in general_data:
+                general_data['output_dir'] = os.path.join('.',self.args.run)       
+        #getattr(args,'force_runkey', "")
         
-    def validate_454_ini(self, args):
+        
+        if self.args.platform:
+            general_data['platform'] = self.args.platform
+        else:
+            if 'platform' not in general_data:
+                sys.exit("Cannot find the platform from command line or in config file - Exiting")
+                
+        
+        if self.args.input_file_format:
+            general_data['input_file_format'] = self.args.input_file_format
+        else:
+            if 'input_file_format' not in general_data:
+                general_data['input_file_format'] = ''
+        if self.args.input_file_suffix:
+            general_data['input_file_suffix'] = self.args.input_file_suffix
+        else:
+            if 'input_file_suffix' not in general_data:
+                general_data['input_file_suffix'] = ''
+        
+        return general_data
+        
+#     def validate_454_csv(self, args, my_csv):
+#         print "TODO: write validate def for 454/csv"
+#         data_object = self.populate_data_object_454(args, my_csv)
+        
+        
+    def validate_454_ini(self):
         print "Validating ini type Config File"
         print "TODO - write validation def for 454/ini"
-        # must be a general section
-        # Should all the ini files validate the same: 454, illumina and ion_torrent?
-        #  
-        # Are we going to continue developing ini style config files if we don't use them?
-        #
+        self.data_object = self.create_dictionary_from_ini()        
         
-    def validate_illumina_ini(self, args):
+        
+        
+    def validate_illumina_ini(self):
         print "Validating ini type Config File"
         print "TODO - write validation def for illumina/ini"     
         
-    def validate_illumina_csv(self, args, my_csv):
-    
-        data_object = self.populate_data_object_illumina(args, my_csv)
-        
-        
-        
-        # start error checking here
-        # MUST be in list: "Domain","Primer Suite","DNA Region"
-        # MUST MATCH: "Domain","Primer Suite","DNA Region"
-        #
-        #
-        # VAMPS project name format:  SLM_GCB_Bv6
-        #
-        #
-        data_object = self.check_for_input_files(data_object)
-        self.check_projects_and_datasets(data_object) 
-        
-        
-        for x in data_object['general']:
-            logger.debug("%s = %s" % (x, data_object['general'][x]))
-        
-        
-        
-        """
-        TODO:
-            1) split into methods - DONE
-            2) we can use "content" variable instead of megadata here
-        """       
-        #print dataset_counter
-        for item in data_object:
-            if item != 'general':            
-                self.check_for_datasets(data_object[item])
-                self.check_for_missing_values(data_object[item])
-                self.check_domain_suite_region(data_object[item])
-                self.check_project_name(data_object[item])
-
-
-        """
-            TODO:
-                 other checks to put in:
-                 check for duplicate project names in env454 (or vamps?)
-                 that data == file prefix
-                     if we have an input directory that each dataset has a coresponding file - for illumina
-                 Missing data is ok for barcode and adaptor (illumina only - for env454 also - A.)
-                 
-            
-        """
-                #print item,megadata[item],"\n\n"
-        print "SUCCESS: Finished validating csv file."    
+#     def validate_illumina_csv(self, args, my_csv):
+#     
+#         data_object = self.populate_data_object_illumina(args, my_csv)
+#         
+#         
+#         
+#         # start error checking here
+#         # MUST be in list: "Domain","Primer Suite","DNA Region"
+#         # MUST MATCH: "Domain","Primer Suite","DNA Region"
+#         #
+#         #
+#         # VAMPS project name format:  SLM_GCB_Bv6
+#         #
+#         #
+#         data_object = self.check_for_input_files(data_object)
+#         self.check_projects_and_datasets(data_object) 
+#         
+#         
+#         for x in data_object['general']:
+#             logger.debug("%s = %s" % (x, data_object['general'][x]))
+#         
+#         
+#         
+#         """
+#         TODO:
+#             1) split into methods - DONE
+#             2) we can use "content" variable instead of megadata here
+#         """       
+#         #print dataset_counter
+#         for item in data_object:
+#             if item != 'general':            
+#                 self.check_for_datasets(data_object[item])
+#                 self.check_for_missing_values(data_object[item])
+#                 self.check_domain_suite_region(data_object[item])
+#                 self.check_project_name(data_object[item])
+# 
+# 
+#         """
+#             TODO:
+#                  other checks to put in:
+#                  check for duplicate project names in env454 (or vamps?)
+#                  that data == file prefix
+#                      if we have an input directory that each dataset has a coresponding file - for illumina
+#                  Missing data is ok for barcode and adaptor (illumina only - for env454 also - A.)
+#                  
+#             
+#         """
+#                 #print item,megadata[item],"\n\n"
+#         print "SUCCESS: Finished validating csv file."    
         
 
     def validate_dictionary(self, config_info):
@@ -205,7 +253,7 @@ class MetadataUtils:
         return configDict   
         
         
-    def populate_data_object_454(self, args, my_csv):
+    def populate_data_object_454(self, args):
         data = {}
         data['general'] = {}
         test_datasets = {}
@@ -223,7 +271,7 @@ class MetadataUtils:
             data['general']["input_file_format"] = args.input_file_format
             data['general']["input_file_suffix"] = args.input_file_suffix
     
-    
+        return data['general']
     
     def populate_data_object_illumina(self, args, my_csv):
         data = {}
@@ -345,13 +393,15 @@ class MetadataUtils:
         files_list = []
         imports_list = []
         lanes_list = []
-        #print data_object['general']['input_dir']
-        fasta_dir = os.path.join(data_object['general']['input_dir'],"fasta")
-        if os.path.isdir(fasta_dir):
+
+
+        #input_dir = os.path.join(data_object['general']['input_dir'],"fasta")
+        input_dir = data_object['general']['input_dir']
+        if os.path.isdir(input_dir):
             p = data_object['general']['input_dir'], '*'+data_object['general']['input_file_suffix']
 
             
-            for infile in glob.glob( os.path.join(fasta_dir, '*'+data_object['general']['input_file_suffix']) ):
+            for infile in glob.glob( os.path.join(input_dir, '*'+data_object['general']['input_file_suffix']) ):
                 files_list.append(os.path.basename(infile))
                 for x in data_object:
                     if 'file_prefix' in data_object[x]:
@@ -364,11 +414,11 @@ class MetadataUtils:
                 file_count += 1
         else:
 
-            logger.info("No input directory or directory permissions problem: "+fasta_dir)
+            logger.info("No input directory or directory permissions problem: "+input_dir)
             
         if not file_count:
-            #sys.exit("ERROR: No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
-            logger.info("ERROR: No files were found in '"+fasta_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
+            #sys.exit("ERROR: No files were found in '"+input_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
+            logger.info("ERROR: No files were found in '"+input_dir+"' with a suffix of '"+data_object['general']['input_file_suffix']+"'")
 
         data_object['general']['files_list'] = files_list
         
@@ -376,7 +426,7 @@ class MetadataUtils:
         # all the files in an illumina directory should be the same type
         #data_object['general']['file_formats_list'] = [data_object['general']["input_file_format"]] * file_count
         #data_object['general']['lanes_list'] = lanes_list
-        
+        #print "Files LIST",data_object['general']['files_list']
         
         
         return data_object
@@ -479,7 +529,85 @@ class MetadataUtils:
             logger.debug("\tDataset Count: "+str(len(datasets)))
         
         
-
+    def get_confirmation(self):
+        print "\n"
+        for item,value in self.data_object['general'].iteritems():
+            print "%20s =\t%20s" % (item,value)
+        return raw_input("\nDoes this look okay? (CTL-C to exit) ")
+        
+    def convert_csv_to_ini(self):
+        print self.args
+        from pipeline.get_ini import readCSV
+        ini_file = os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')
+        fh = open(ini_file,'w')
+        my_csv = readCSV(file_path = self.args.configPath)
+        
+        content     = my_csv.read_csv()
+        headers     = content[1].keys()
+        headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
+        projects = {}
+        # general section
+        fh.write("[general]\n") 
+        fh.write("run = "+self.args.run+"\n")
+        fh.write("run_date = "+self.args.run+"\n")
+        fh.write("config_file = "+os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')+"\n")
+        fh.write("config_format = ini\n")
+        fh.write("config_file_orig = "+self.args.configPath+"\n")
+        fh.write("config_format_orig = "+self.args.config_file_type+"\n")
+        
+        fh.write("platform = "+self.args.platform+"\n")
+        fh.write("input_dir = "+self.args.input_dir+"\n")    
+        fh.write("output_dir = "+os.path.join(self.args.baseoutputdir,self.args.run)+"\n")
+        fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
+        fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")
+        fh.write("anchor_file = "        + getattr(self.args,'anchor_file', "")+"\n")
+        fh.write("primer_file = "        + getattr(self.args,'primer_file', "")+"\n")
+        fh.write("require_distal = "     + getattr(self.args,'require_distal', "1")+"\n")
+        
+        #fh.write(getattr(args,'force_runkey', ""))
+        
+        if self.check_headers(headers_clean):
+        
+            for k,values in content.iteritems():
+                fh.write("\n")
+                if self.args.platform == 'illumina':
+                    fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
+                elif self.args.platform == '454':
+                    fh.write("["+values['lane']+"_"+values['run_key']+"]\n")
+                    
+                for v in values:
+                    fh.write(v+" = "+values[v]+"\n")
+                
+        fh.close()
+        
+        return ini_file 
+        
+    def save_ini_file(self):
+        # give it a new name
+        ini_file = os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')
+        fh_to = open(ini_file,'w')
+        fh_from = open(self.args.configPath,'r')
+        
+        lines = fh_from.readlines()
+        for line in lines:
+            fh_to.write(line)
+                
+        fh_to.close()
+        fh_from.close()
+        
+        return ini_file
+            
+    def check_headers(self,headers):
+        if self.args.platform=='illumina':
+            known_header_list= C.csv_header_list_illumina
+        elif self.args.platform == '454':
+            known_header_list = C.csv_header_list_454
+        else:
+            logger.error("in utils: check_headers - unknown platform")
+        if sorted(known_header_list) != sorted(headers):
+            sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(known_header_list)))
+        else:
+            return True
 # def send_metadata_to_database(data, data_object):
 #     cursor = data_object['cursor']
 #     cursor_env454 = data_object['cursor_env454']
