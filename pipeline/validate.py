@@ -507,6 +507,7 @@ class MetadataUtils:
         for item,value in data['general'].iteritems():
             print "%20s = %-20s" % (item,value)
         return raw_input("\nDoes this look okay? (q to quit, v to view configFile) ")
+#        pass # AAA
         
     def convert_csv_to_ini(self):
         print self.args
