@@ -502,15 +502,16 @@ class MetadataUtils:
             logger.debug("\tDataset Count: "+str(len(datasets)))
         
         
-    def get_confirmation(self, data):
+    def get_confirmation(self, steps, data):
         print "\n"
         for item,value in data['general'].iteritems():
             print "%20s = %-20s" % (item,value)
+        print "\nStep(s) to be performed: ",steps
         return raw_input("\nDoes this look okay? (q to quit, v to view configFile) ")
 #        pass # AAA
         
     def convert_csv_to_ini(self):
-        print self.args
+        #print self.args
         from pipeline.get_ini import readCSV
         ini_file = os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')
         fh = open(ini_file,'w')

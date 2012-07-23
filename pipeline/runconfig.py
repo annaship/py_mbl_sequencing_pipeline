@@ -149,9 +149,6 @@ class RunConfig:
         if 'gast_input_source' in general_config: 
             self.gast_input_source = general_config['gast_input_source']
         
-        #print general_config
-        # parse out the input file info
-        print general_config
         if 'files_list' in general_config:
             input_file_names = general_config['files_list']
         else:
@@ -201,7 +198,7 @@ class RunConfig:
  
  
         self.input_file_info = {}
-        #print general_config
+#        print general_config
         for idx,input_file in enumerate(input_file_names):
             
             if "input_file_format" in general_config:

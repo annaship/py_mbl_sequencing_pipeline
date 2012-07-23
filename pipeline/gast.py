@@ -9,17 +9,33 @@ import constants as C
 class Gast:
     """Doc string here.."""
     Name = "GAST"
-    def __init__(self, run = None):
+    def __init__(self, run = None, keys = None, use_cluster = True):
 
-        self.run     = run
-        self.outdir  = run.output_dir
+        self.run    = run
+        self.keys   = keys
+        self.outdir = run.output_dir
         try:
             self.basedir = run.basedir
         except:
             self.basedir = self.outdir
         self.rundate = self.run.run_date
-        self.use_cluster = 1
+        self.use_cluster = use_cluster
         self.vamps_user_upload = run.vamps_user_upload
+        
+        # check for existance of files
+        self.error = ''
+        for idx_key in self.keys:
+            
+            unique_file = os.path.join(self.basedir, idx_key+'.unique.fa')
+            if not os.path.exists(unique_file):
+                logger.error("GAST: Could not find the unique.fa file")
+                self.error = "Could not find the unique.fa file: "+unique_file
+                break
+            names_file = os.path.join(self.basedir, idx_key+'.names')
+            if not os.path.exists(names_file):
+                logger.error("GAST: Could not find the names file")                
+                self.error = "Could not find the names file: "+names_file
+                break
         
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
@@ -37,7 +53,7 @@ class Gast:
             self.refdb_dir = os.path.dirname('/xraid2-2/g454/blastdbs/')
         
         
-    def clustergast(self, keys):
+    def clustergast(self):
         """
         clustergast - runs the GAST pipeline on the cluster.
                GAST uses UClust to identify the best matches of a read sequence
@@ -76,7 +92,7 @@ class Gast:
         #######################################
         qsub_prefix = 'clustergast_sub_'
         gast_prefix = 'gast_'
-        for idx_key in keys:
+        for idx_key in self.keys:
             nodes = 100
             if idx_key in self.run.samples:
                 dna_region = self.run.samples[idx_key].dna_region
@@ -210,6 +226,7 @@ class Gast:
             sleeptime   = C.sleeptime    # seconds
             counter = 0
             while wait_test == False:
+                logger.info( "waiting: qsub" )
                 counter += 1
                 if counter >= maxwaittime / sleeptime:
                     return ["ERROR","Max wait time exceeded for clustergast scripts to fininsh"]
@@ -221,8 +238,8 @@ class Gast:
                         temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
                 
                 if temp_file_list:
-                    print "waiting for clustergast files to fill..."
-                    print "    time:",counter * sleeptime,"| files left:",len(temp_file_list)
+                    logger.debug( "waiting for clustergast files to fill...")
+                    logger.debug( "    time: "+str(counter * sleeptime) + "| files left: "+str(len(temp_file_list)))
                     time.sleep(sleeptime)
                 else:
                     wait_test = True
@@ -239,7 +256,7 @@ class Gast:
                     shutil.copyfileobj(open(file,'rb'), clustergast_fh)
                 else:
                     print "Could not find file:",os.path.basename(file)," Skipping"
-            print "Finished clustergast concatenation"
+            logger.info("Finished clustergast concatenation")
             clustergast_fh.flush()
             clustergast_fh.close()
             
@@ -256,11 +273,11 @@ class Gast:
         logger.info("Finished clustergast")
         return ["SUCCESS","Finished clustergast"]
      
-    def gast_cleanup(self, keys):
+    def gast_cleanup(self):
         """
         gast_cleanup - follows clustergast, explodes the data and copies to gast_concat and gast files
         """
-        for idx_key in keys:
+        for idx_key in self.keys:
             if idx_key in self.run.samples:
                 dna_region = self.run.samples[idx_key].dna_region
             else:            
@@ -318,7 +335,8 @@ class Gast:
             if(os.path.exists(clustergast_filename)):
                 in_gast_fh  = open(clustergast_filename,'r')
             else:
-                print "No clustergast file found:",clustergast_filename,"\nExiting"
+                # do not exit here directly wait intil gets back to pipelineprocessor
+                logger.error( "No clustergast file found:",clustergast_filename,"\nExiting")
                 return ["ERROR","No clustergast file found: "+clustergast_filename]
             for line in in_gast_fh:
                 #print line.strip()
@@ -382,13 +400,13 @@ class Gast:
         
         return ["SUCCESS","Finished gast_cleanup"]
         
-    def gast2tax(self, keys):
+    def gast2tax(self):
         """
         gast2tax : Follows gast_cleanup; assign taxonomy to read_ids in a gast table or file
         """
         from pipeline.taxonomy import Taxonomy,consensus
         
-        for idx_key in keys:
+        for idx_key in self.keys:
             if idx_key in self.run.samples:
                 dna_region = self.run.samples[idx_key].dna_region
             else:            

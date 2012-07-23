@@ -73,6 +73,7 @@ if __name__ == '__main__':
                                                         upload_env454   - Load data into the env454 database
                                                         gast            - assign taxonomy to the trimmed sequences using GAST 
                                                         upload_vamps    - load sequences and taxonomy to VAMPS
+                                                        clean           - removes run from database and filesystem
                                                         
                 -l/--loglevel           Change the level of logging: info, debug, error   [optional (default: error)]
              
@@ -109,23 +110,20 @@ if __name__ == '__main__':
     parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", default='.',
                                                 help="default: ./")
     parser.add_argument("-s", "--steps",     required=False,  action="store",           dest = "steps",             default = 'status',
-                                                help="Comma seperated list of steps.  Choices are: validate,trim,chimera,status,upload_env454,gast,upload_vamps")
+                                                help="""
+                                                Comma seperated list of steps.  
+                                                Choices are: validate,trim,chimera,status,upload_env454,gast,otu,upload_vamps,clean
+                                                """)
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
                                                  help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
 
     
-    
     args = parser.parse_args() 
+
     
-    print "\nLog Level set to:",args.loglevel.upper()
-    # deal with logging level
-    loggerlevel = logging.ERROR
-    if args.loglevel.upper() == 'DEBUG':
-        loggerlevel = logging.DEBUG
-    elif  args.loglevel.upper() == 'INFO':     
-        loggerlevel = logging.INFO
+    loggerlevel = args.loglevel.upper()
+    print "\nLog Level set to:",loggerlevel    
     logger.setLevel(loggerlevel)
-    
     ##############
     #
     #  Test cl parameters
@@ -133,7 +131,7 @@ if __name__ == '__main__':
     ############## 
     # CL RULES:
     # for ini file:  (no plurals)
-    # 1) CL: input_dir ONLY shal be supplied on CL - no input filenames
+    # 1) CL: input_dir ONLY shall be supplied on CL - no input filenames
     #   
     # 2) All input files should be in the same directory AND of the same format
     #       
@@ -163,10 +161,11 @@ if __name__ == '__main__':
     
     data = v.validate_config_file()     
     
-    answer = v.get_confirmation(data)
+    answer = v.get_confirmation(args.steps, data)
     if answer == 'q':
         sys.exit()
     elif answer == 'v':
+        # view CONFIG file contents
         fh = open(os.path.join(args.baseoutputdir,args.run,args.run+'.ini'))
         lines = fh.readlines()
         print "\n=== START ===\n"

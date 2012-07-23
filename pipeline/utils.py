@@ -2,7 +2,11 @@ import os, sys
 from subprocess import check_output
 import constants as C
 from time import sleep
+import datetime
 from pipeline.pipelinelogging import logger
+from contextlib import closing
+import zipfile
+import zlib
 from string import maketrans
 import collections
 
@@ -224,7 +228,53 @@ def mysort(uniques,names):
     
     return sorted_uniques     
 
+def extract_zipped_file(run_date, outdir, filename):
+    """
+    
+    """
+    # check if zipped
+    assert os.path.isdir(outdir)
+    archivename = os.path.join(outdir,run_date+'.zip')
+    if zipfile.is_zipfile(archivename):
+        zf = zipfile.ZipFile(archivename, 'r')
+        
+        try:
+            data = zf.read(filename)
+        except KeyError:
+            print 'ERROR: Did not find %s in zip file' % filename
+        else:
+            print filename, ':'
+            print repr(data)
+        print
+        zf.close()
+    else:
+        print "No zipfile archive found:",archivename
+                
+def zip_up_directory(run_date, dirPath, mode='a'):
+    """
+    This should be run at the end of each process to zip the files in each directory
+    """
+    files_to_compress = ['fa','db','names','sff','fasta','fastq']
+    assert os.path.isdir(dirPath)
+    zipFilePath = os.path.join(dirPath,run_date+'.zip')
+    
+    zf = zipfile.ZipFile(zipFilePath, mode)
+    
+    for (archiveDirPath, dirNames, fileNames) in os.walk(dirPath):
+        for file in fileNames: 
+            if file.split('.')[-1] in files_to_compress:
+                filePath = os.path.join(dirPath, file)
+                zf.write(filePath, compress_type=zipfile.ZIP_DEFLATED)
+                
+    zipInfo = zipfile.ZipInfo(zipFilePath)
+    
+    for i in zf.infolist():
+        dt = datetime.datetime(*(i.date_time))
+        print "%s\tSize: %sb\tCompressed: %sb\t\tModified: %s" % (i.filename, i.file_size, i.compress_size, dt.ctime())    
+        os.remove(i.filename)
 
+    zf.close()
+    
 class PipelneUtils:
     def __init__(self):
         pass

@@ -47,16 +47,20 @@ DELETE_RUN              = "delete"
 ENV454UPLOAD            = "env454upload"
 ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
 STATUS_STEP             = 'status'
+CLEAN_STEP              = 'clean'
 
-existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP]
+existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
 
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps, cfg = None):
     #    print "cfg = %s" % cfg
-    # create output directory:
-    requested_steps = steps.split(",")            
     
+    requested_steps = steps.split(",")            
+    if 'clean' in requested_steps and len(requested_steps) > 1:
+        sys.exit("The clean step cannot be combined with other steps - Exiting")
+    
+    # create output directory:
     # this should have been created in pipeline-ui.py. but just in case....
     if not os.path.exists(run.output_dir):
         logger.debug("Creating output directory: "+run.output_dir)
@@ -81,15 +85,14 @@ def process(run, steps, cfg = None):
             step_method(run, cfg)
 
 def validate(run, cfg=None):
+    #open_zipped_directory(run.run_date, run.output_dir)
     logger.debug("Validating")
     print 'Validates:  Configfile and Run Object'
     run.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tConfigFile Validated\n")
 
- # perform trim step
- # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
+    
 
-
-
+##########################################################################################
 # perform trim step
 # TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
 # all the stats are kept in the trimrun object
@@ -97,6 +100,8 @@ def validate(run, cfg=None):
 # when complete...write out the datafiles for the most part on a lane/runkey basis
 #
 def trim(run, cfg=None):
+    # def is in utils.py
+    #open_zipped_directory(run.run_date, run.output_dir)
     # (re) create the trim status file
     run.trim_status_file_h = open(run.trim_status_file_name, "w")
     
@@ -125,7 +130,7 @@ def trim(run, cfg=None):
         mytrim.write_data_files(new_lane_keys)
         run.trim_status_file_h.write(json.dumps(trim_results_dict))
         run.trim_status_file_h.close()
-        run.run_status_file_h.write(json.dumps(trim_results_dict))
+        run.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
         run.run_status_file_h.close()
     else:
         logger.debug("Trimming finished ERROR")
@@ -134,9 +139,13 @@ def trim(run, cfg=None):
         trim_results_dict['code2'] = trim_codes[2]
         run.trim_status_file_h.write(json.dumps(trim_results_dict))
         run.trim_status_file_h.close()
-        run.run_status_file_h.write(json.dumps(trim_results_dict))
+        run.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
         run.run_status_file_h.close()
         sys.exit("Trim Error")
+        
+        
+    # def is in utils.py: truncates and rewrites
+    #zip_up_directory(run.run_date, run.output_dir, 'w')
 
 # chimera assumes that a trim has been run and that there are files
 # sitting around that describe the results of each lane:runkey sequences
@@ -237,6 +246,9 @@ def chimera(run, cfg=None):
         # primers
         # run primers
         mymblutils.write_clean_files_to_database()
+        
+    # def is in utils.py: appends
+    #zip_up_directory(run.run_date, run.output_dir, 'a')
 
 def env454run_info_upload(run, cfg):
 #    print cfg
@@ -372,7 +384,6 @@ def env454upload(run, cfg):
 
 def gast(run, cfg=None):  
     
-    mygast = Gast(run)
     
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file
@@ -394,61 +405,101 @@ def gast(run, cfg=None):
                 idx_keys = run.run_keys
                 ct = 0
                 for h in run.samples:
-                    print h,run.samples[h]
+                    logger.debug(h,run.samples[h])
                     ct +=1
                 print ct
             elif run.platform == '454':
-                pass
+                idx_keys = run.run_keys
             elif run.platform == 'ion_torrent':
-                pass
-      
+                idx_keys = run.run_keys
+            else:
+                logger.debug("GAST: No keys found - Exiting")
+                run.run_status_file_h.write("GAST: No keys found - Exiting\n")
+                sys.exit()
+    
+    # get GAST object
+    mygast = Gast(run, idx_keys)
+    if mygast.error:
+        run.run_status_file_h.write("GAST Error: "+mygast.error+"\n")
+        sys.exit()
+        
+    # CLUSTERGAST
     result_code = mygast.clustergast(idx_keys)
-    run.run_status_file_h.write(json.dumps(result_code))
+    run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("clutergast failed")
         sys.exit("clutergast failed")
     sleep(5)
+    
+    # GAST_CLEANUP
     result_code = mygast.gast_cleanup(idx_keys)
-    run.run_status_file_h.write(json.dumps(result_code))
+    run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
-        logger.error("gast_cleanup failed")
+        logger.error("gast_cleanup failed")        
         sys.exit("gast_cleanup failed")
     sleep(5)
+    
+    # GAST2TAX
     result_code = mygast.gast2tax(idx_keys)
-    run.run_status_file_h.write(json.dumps(result_code))
+    run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
-        logger.error("gast2tax failed")
+        logger.error("gast2tax failed") 
         sys.exit("gast2tax failed")
         
-def upload_env454(run, cfg=None):
-    print "TODO upload_env454(run)"
-    run.run_status_file_h.write("starting to load env454")
-    # where are files?
-    input_dir = run.input_dir
-    print run.input_dir
-    # config file has been validated and we know the data is there
+def cluster(run, cfg=None):
+    """
+    TO be developed eventually:
+        Select otu creation method
+        using original trimmed sequences
+    """
+    pass
     
-    # is upload appropriate? that is, are the sequences trimmed?
-    # how can I tell?
-    # maybe there should be a status file
-    # in the output_dir that receives updates during the entire run
-    # or should that be in the db or both?
-    # for a 454 run the data is in 20100917
-    # the seqs are in 1_GATGA.trimmed.fa
-    # and the trim data is in the run variable
-    
-    # presumably when illumina gets going the input_dir
-    # will have a 'fa.unique' suffix (Meren's code will do this)
     
     
 def upload_vamps(run, cfg=None):
-    
-    myvamps = Vamps(run)
-    
+    """
+    Upload data files to VAMPS database
+    """
+    # for vamps 'new_lane_keys' will be prefix 
+    # of the uniques and names file
+    # that was just created in vamps_gast.py
+    # or we can get the 'lane_keys' directly from the config_file
+    # for illumina:
+    # a unique idx_key is a concatenation of barcode_index and run_key
     if(run.vamps_user_upload):
         idx_keys = [run.user+run.runcode]        
     else:
-        idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+        try:
+            idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+            # {"status": "success", "new_lane_keys": ["1_GATGA"]}
+        except:
+            # here we have no idx_keys - must create them from run
+            # if illumina they are index_runkey_lane concatenation
+            # if 454 the are lane_key
+            if run.platform == 'illumina':  
+                idx_keys = run.run_keys
+                ct = 0
+                for h in run.samples:
+                    logger.debug(h,run.samples[h])
+                    ct +=1
+                print ct
+            elif run.platform == '454':
+                idx_keys = run.run_keys
+            elif run.platform == 'ion_torrent':
+                idx_keys = run.run_keys
+            else:
+                logger.debug("UPLOAD_VAMPS: No keys found - Exiting")
+                run.run_status_file_h.write("UPLOAD_VAMPS: No keys found - Exiting\n")
+                sys.exit()
+
+#     if(run.vamps_user_upload):
+#         idx_keys = [run.user+run.runcode]        
+#     else:
+#         idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+                
+    myvamps = Vamps(run)
+    
+
         
     myvamps.taxonomy(idx_keys)
     #myvamps.sequences(idx_keys)        
@@ -468,5 +519,22 @@ def status(run, cfg=None):
         print line
     print "="*40+"\n"
     
+def clean(run, cfg=None):
+    """
+    Removes a run from the database and output directory
+    """
     
+    answer = raw_input("\npress 'y' to delete the run '"+run.run_date+"': ")
+    if answer == 'y' or answer == 'Y':
+        
+        for (archiveDirPath, dirNames, fileNames) in os.walk(run.output_dir):
+            print "Removing run:",run.run_date
+            for file in fileNames:
+                filePath = os.path.join(run.output_dir,file)
+                print filePath
+                os.remove(os.path.join(run.output_dir,file))
+                # should we also remove STATUS.txt and *.ini and start again?
+                # the directory will remain with an empty STATUS.txt file
+                #os.removedirs(run.output_dir)
+
     
