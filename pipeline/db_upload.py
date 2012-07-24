@@ -196,15 +196,19 @@ class dbUpload:
         
 #        --------- indiv_inserts --------- 
 
-        for k, v in content.items():
+#        for k, v in content.items():
 #            print k, v['dataset'], v
+        for key in self.run.samples:
+            value = self.run.samples[key]
+#            print dict(self.run.samples[key])
+            print key, value.dataset
             self.get_contact_v_info()
             self.insert_contact()
-            contact_id = self.get_contact_id(v['data_owner'])
-            self.insert_project(v, contact_id)
-            self.insert_dataset(v) 
+            contact_id = self.get_contact_id(value.data_owner)
+            self.insert_project(value, contact_id)
+            self.insert_dataset(value) 
 
-            self.insert_run_info(v)
+            self.insert_run_info(value)
 #            self.insert_primer()
 #        return content[1].keys()
 
