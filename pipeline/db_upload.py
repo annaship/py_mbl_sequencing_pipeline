@@ -187,27 +187,12 @@ class dbUpload:
 #                print a
 #        print self.run
 
-#        --------- bulk_inserts --------- 
-#        bulk_data = ['run_key', 'run', 'dna_region']
-#        for datum in bulk_data:
-            
-#            
-#            values = list(set([self.run.samples[key].datum for key in self.run.samples]))
-#            print "values = "
-#            print values
-
-#        values = list[self.rundate]
-#        print values
-        self.insert_bulk_data('run', self.rundate)
         values = list(set([run_key.split('_')[1] for run_key in self.run.run_keys]))
         self.insert_bulk_data('run_key', values)
         values = list(set([self.run.samples[key].dna_region for key in self.run.samples]))
 #        print "dna_region = %s" % values
         self.insert_bulk_data('dna_region', values)
-#        print "VVV = %s" %values
-#        for run_key in self.run.run_keys:
-#            a = run_key.split('_')[1]
-#            print a
+        self.insert_rundate()
         
 #        --------- indiv_inserts --------- 
 
@@ -227,7 +212,6 @@ class dbUpload:
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
-        print "my_sql = %s" % my_sql
         self.my_conn.execute_no_fetch(my_sql)
     
     def get_contact_v_info(self):
@@ -243,6 +227,13 @@ class dbUpload:
         if res:
             return int(res[0][0])        
 
+    def insert_rundate(self):
+        my_sql = """INSERT IGNORE INTO run (run) VALUES
+            ('%s')""" % (self.rundate)
+        print "my_sql = %s" % my_sql
+        self.my_conn.execute_no_fetch(my_sql)
+      
+        
     def insert_project(self, content_row, contact_id):
         """
         TODO: get title, project_description, funding, env_sample_source_id
