@@ -461,13 +461,6 @@ class MetadataUtils:
         if c[1:] not in self.dna_regions:
             sys.exit("ERROR : Project suffix has incorrect DNA region: "+c)
             
-            
-    def check_headers(self, headers):
-        if sorted(self.known_header_list_illumina) != sorted(headers):
-            sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(self.known_header_list_illumina)))
-        else:
-            return True
-            
     def check_projects_and_datasets(self,data):
         self.my_conn     = MyConnection(db="env454")  
         project_dataset = {}
