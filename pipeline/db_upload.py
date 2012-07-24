@@ -68,7 +68,7 @@ class dbUpload:
         # insert_sequence_uniq_info_ill()
 
     """
-    def __init__(self, run = None, cfg = None):
+    def __init__(self, run = None):
         self.run     = run
         print dir(run)
         self.outdir = run.base_output_dir
@@ -87,8 +87,9 @@ class dbUpload:
         self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
-        csv_file_path = os.path.join(run.base_python_dir, "csv/metadata_ok3.csv")
-        self.my_csv      = cfg or readCSV(file_path = csv_file_path)
+#        csv_file_path = os.path.join(run.base_python_dir, "csv/metadata_ok3.csv")
+        self.my_csv      = None
+#        cfg or readCSV(file_path = csv_file_path)
 #        ['__doc__', '__init__', '__module__', 'anchors', 'args', 'base_output_dir', 'base_python_dir', 'chimera_status_file_h', 'chimera_status_file_name', 'configFile', 'config_file_type', 'force_runkey', 'gast_input_source', 'initializeFromDictionary', 'input_dir', 'input_file_info', 'maximumLength', 'minAvgQual', 'minimumLength', 'output_dir', 'platform', 'primer_suites', 'require_distal', 'run_date', 'run_key_lane_dict', 'run_keys', 'run_status_file_h', 'run_status_file_name', 'samples', 'sff_files', 'trim_status_file_h', 'trim_status_file_name', 'vamps_user_upload']
 
         self.unique_file_counts = os.path.join(self.outdir , "unique_file_counts")
@@ -176,16 +177,38 @@ class dbUpload:
         self.my_conn.execute_no_fetch(my_sql)
     
     def put_run_info(self, content = None):
-        content = self.my_csv.read_csv()
-#        182 H38 {'platform': 'Illumina', 'run_key': 'NNNNGCTAC', 'lane': '4', 'run': '20120613', 'IDX': 'GGCTAC', 'dna_region': 'v6', 'vamps_user': 'jreveillaud', 'adaptor': '', 'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H38', 'project': 'JCR_SPO_Bv6', 'read_length': '101', 'file_prefix': 'H38', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H38', 'amp_operator': 'JR', 'insert_size': '230'}
-        
+
+        print self.run
+#        print self.run.run_key_lane_dict
+#        print self.run.dna_region 
+#        for key in self.run.samples:
+#            print key, self.run.samples[key].dataset
+#            for a in self.run.samples[key]:
+#                print a
+#        print self.run
+
 #        --------- bulk_inserts --------- 
-        
-        bulk_data = ['run_key', 'run', 'dna_region']
-        for datum in bulk_data:
-            values = list(set([content[entry][datum] for entry in content]))
-            self.insert_bulk_data(datum, values)
+#        bulk_data = ['run_key', 'run', 'dna_region']
+#        for datum in bulk_data:
             
+#            
+#            values = list(set([self.run.samples[key].datum for key in self.run.samples]))
+#            print "values = "
+#            print values
+
+#        values = list[self.rundate]
+#        print values
+        self.insert_bulk_data('run', self.rundate)
+        values = list(set([run_key.split('_')[1] for run_key in self.run.run_keys]))
+        self.insert_bulk_data('run_key', values)
+        values = list(set([self.run.samples[key].dna_region for key in self.run.samples]))
+#        print "dna_region = %s" % values
+        self.insert_bulk_data('dna_region', values)
+#        print "VVV = %s" %values
+#        for run_key in self.run.run_keys:
+#            a = run_key.split('_')[1]
+#            print a
+        
 #        --------- indiv_inserts --------- 
 
         for k, v in content.items():
@@ -204,6 +227,7 @@ class dbUpload:
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
+        print "my_sql = %s" % my_sql
         self.my_conn.execute_no_fetch(my_sql)
     
     def get_contact_v_info(self):
