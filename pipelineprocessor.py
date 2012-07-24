@@ -83,9 +83,9 @@ def process(run, steps, cfg = None):
         else:
             # call the method in here
             step_method = globals()[step]
-            step_method(run, cfg)
+            step_method(run)
 
-def validate(run, cfg=None):
+def validate(run):
     #open_zipped_directory(run.run_date, run.output_dir)
     logger.debug("Validating")
     print 'Validates:  Configfile and Run Object'
@@ -251,12 +251,12 @@ def chimera(run, cfg=None):
     # def is in utils.py: appends
     #zip_up_directory(run.run_date, run.output_dir, 'a')
 
-def env454run_info_upload(run, cfg=None):
-     my_read_csv = readCSV(run)
-     cfg = my_read_csv.read_csv()
+def env454run_info_upload(run):
+#    my_read_csv = readCSV(run)
+#    cfg = my_read_csv.read_csv()
 
-    my_read_csv = dbUpload(run, cfg)
-    my_read_csv.put_run_info()
+    my_read_cfg = dbUpload(run)
+    my_read_cfg.put_run_info()
 
     
 def env454upload(run, cfg=None):  
