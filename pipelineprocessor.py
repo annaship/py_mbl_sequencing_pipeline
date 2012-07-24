@@ -30,6 +30,7 @@ from pipeline.gast import Gast
 from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
+from pipeline.get_ini import readCSV
 
 import logging
 import json    
@@ -250,15 +251,15 @@ def chimera(run, cfg=None):
     # def is in utils.py: appends
     #zip_up_directory(run.run_date, run.output_dir, 'a')
 
-def env454run_info_upload(run, cfg):
-#    print cfg
-#    pass
+def env454run_info_upload(run, cfg=None):
+     my_read_csv = readCSV(run)
+     cfg = my_read_csv.read_csv()
+
     my_read_csv = dbUpload(run, cfg)
     my_read_csv.put_run_info()
-#    my_read_csv.put_run_info()  
-#    my_read_csv.read_csv()
+
     
-def env454upload(run, cfg):  
+def env454upload(run, cfg=None):  
     """
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 

@@ -76,21 +76,19 @@ class MetadataUtils:
         # read an ini config file and convert to a dictionary
         """
         import ConfigParser
-        
-        data_object = {}
-        user_config = ConfigParser.ConfigParser()
-        user_config.read(self.args.configPath)
-        
-        for section in user_config.sections():
-            section_dict = data_object[section] = {}
-            for option in user_config.options(section):
-                section_dict[option] = user_config.get(section,option)
-        
-        data_object['general'] = self.get_command_line_items(data_object['general'])
-        data_object['general']['config_file'] = os.path.join(data_object['general']['output_dir'], data_object['general']['run']+'.ini')
-        data_object['general']['status_file'] = os.path.join(data_object['general']['output_dir'], 'STATUS.txt')
-        data_object = self.check_for_input_files(data_object)     
-        
+        if os.path.exists(self.args.configPath):
+            data_object = {}
+            user_config = ConfigParser.ConfigParser()
+            user_config.read(self.args.configPath)
+            
+            for section in user_config.sections():
+                
+                section_dict = data_object[section] = {}
+                for option in user_config.options(section):
+                    section_dict[option] = user_config.get(section,option)
+                    
+        else:
+            print "error could not open config file: ",self.args.configPath
         
         return data_object 
 

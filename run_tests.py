@@ -16,7 +16,11 @@ import unittest
 
 from test.test_pipeline import TestPipeline
 
-testSuite = TestPipeline.test_all()
- 
+
+
+if __name__ == '__main__':
+
+    testSuite = TestPipeline()
+    testSuite.test_all()
 
 #text_runner = unittest.TextTestRunner().run(testSuite)

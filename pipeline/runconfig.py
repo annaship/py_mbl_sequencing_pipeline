@@ -62,13 +62,23 @@ class RunConfig:
         elif self.args.platform == 'illumina':
             
             config_dict = v.create_dictionary_from_ini()
-                 
+            config_dict['general'] = v.get_command_line_items(config_dict['general'])
+            config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
+            config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
+            config_dict = v.check_for_input_files(config_dict) 
+            
         elif self.args.platform == '454':
+        
             config_dict = v.create_dictionary_from_ini()
+            config_dict['general'] = v.get_command_line_items(config_dict['general'])
+            config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
+            config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
+            config_dict = v.check_for_input_files(config_dict)
             
         elif args.platform == 'ion_torrent':
             sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+self.args.platform+") ")
-            
+        
+        
         else:
             sys.exit("Unknown platform for dictionary conversion")
             
@@ -77,9 +87,13 @@ class RunConfig:
         # we'll take the info as an ini file or dictionary so we can be called by an api
         # ie vamps user uploads: the config info is a dictionary
 
-
+        #
         # now extract it all from the dictionary form
+        #
+        #
+        
         self.initializeFromDictionary(config_dict)
+         
          
         if type(config_info)==dict and 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
             self.vamps_user_upload = True            

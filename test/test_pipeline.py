@@ -1,7 +1,8 @@
 import unittest
 from  pipelineprocessor import process
 from pipeline.run import Run
-from pipeline.runconfig import configDictionaryFromFile
+#from pipeline.runconfig import configDictionaryFromFile
+from pipeline.validate import MetadataUtils
 from pipeline.utils import convert_unicode_dictionary_to_str
 import os
 from pipeline.pipelinelogging import logger
@@ -11,16 +12,26 @@ from Bio import SeqIO
 
 
 class TestPipeline(unittest.TestCase):
-    BASE_OUTPUT = 'pipeline_output/' 
+    #BASE_OUTPUT = 'pipeline_output/' 
+    def __init__(self):
+        self.baseoutputdir = 'pipeline_output/' 
+        self.platform = 'illumina'
+        self.config_file_type = 'ini'
+        
     def setUpForward(self):
-        config_dict = configDictionaryFromFile("test/data/trim_test_forward.ini")
-        self.run = Run(config_dict, self.BASE_OUTPUT)
+        self.configPath = "test/data/trim_test_forward.ini"
+        m=MetadataUtils(self)
+        config_dict = m.create_dictionary_from_ini()
+        print 'configDict',config_dict
+        self.run = Run(config_dict, self, self.baseoutputdir)
         process(self.run,"trim")
         self.expected = self.get_expected_results('test/data/test_trim_forward.results')
 
     def setUpReverse(self):
-        config_dict = configDictionaryFromFile("test/data/trim_test_reverse.ini")
-        self.run = Run(config_dict, self.BASE_OUTPUT)
+        self.configPath = "test/data/trim_test_reverse.ini"
+        m=MetadataUtils(self)
+        config_dict = m.create_dictionary_from_ini()
+        self.run = Run(config_dict, self, self.baseoutputdir)
         process(self.run,"trim")
         self.expected = self.get_expected_results('test/data/test_trim_reverse.results')
 
