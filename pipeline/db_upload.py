@@ -95,6 +95,7 @@ class dbUpload:
         self.unique_file_counts = os.path.join(self.outdir , "unique_file_counts")
         self.seq_id_dict = {}
         self.tax_id_dict = {}
+        self.run_id      = None
         
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
@@ -125,6 +126,7 @@ class dbUpload:
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
         my_sql  = """SELECT %s FROM %s WHERE %s = '%s'""" % (id_name, table_name, table_name, value)
+        print "get_id sql = %s" % my_sql
         res     = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])         
@@ -178,7 +180,7 @@ class dbUpload:
     
     def put_run_info(self, content = None):
 
-        print self.run
+#        print self.run
 #        print self.run.run_key_lane_dict
 #        print self.run.dna_region 
 #        for key in self.run.samples:
@@ -201,7 +203,7 @@ class dbUpload:
         for key in self.run.samples:
             value = self.run.samples[key]
 #            print dict(self.run.samples[key])
-            print key, value.dataset
+#            print key, value.dataset
             self.get_contact_v_info()
             self.insert_contact()
             contact_id = self.get_contact_id(value.data_owner)
@@ -234,17 +236,27 @@ class dbUpload:
     def insert_rundate(self):
         my_sql = """INSERT IGNORE INTO run (run) VALUES
             ('%s')""" % (self.rundate)
-        print "my_sql = %s" % my_sql
-        self.my_conn.execute_no_fetch(my_sql)
+        self.run_id = self.my_conn.execute_no_fetch(my_sql)
+        print "self.run_id = %s" % self.run_id
+        return self.run_id
       
         
     def insert_project(self, content_row, contact_id):
         """
         TODO: get title, project_description, funding, env_sample_source_id
         """
-        my_sql = """INSERT IGNORE INTO project (project, rev_project_name, env_sample_source_id, contact_id) VALUES
-        ('%s', reverse('%s'), 0, %s)
-        """ % (content_row['project'], content_row['project'], contact_id)
+        print "PPP %s" % content_row.env_sample_source
+#        env_sample_source_id = self.get_id('env_sample_source', content_row.env_sample_source)
+#        get_id sql = SELECT env_sample_source_id FROM env_sample_source WHERE env_sample_source = 'water-marine'
+#env_source_name
+        
+        my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
+        ('%s', '%s', '%s', reverse('%s'), '%s', 
+        (SELECT env_sample_source_id FROM env_sample_source WHERE env_source_name = '%s'), 
+        %s)
+        """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source, contact_id)
+        print "my_sql = %s" % my_sql
+
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
@@ -253,17 +265,22 @@ class dbUpload:
         """        
         my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
         ('%s', '')
-        """ % (content_row['dataset'])
+        """ % (content_row.dataset)
         self.my_conn.execute_no_fetch(my_sql)
     
     def insert_run_info(self, content_row):
-        run_key_id      = self.get_id('run_key',      content_row['run_key'])
-        run_id          = self.get_id('run',          content_row['run'])
-        dataset_id      = self.get_id('dataset',      content_row['dataset'])
-        project_id      = self.get_id('project',      content_row['project'])
-        dna_region_id   = self.get_id('dna_region',   content_row['dna_region'])
-        primer_suite_id = self.get_id('primer_suite', content_row['primer_suite'])
-        if (content_row['overlap'] == 'complete'):
+        run_key_id      = self.get_id('run_key',      content_row.run_key)
+        if (self.run_id):
+            print "run_id before = %s" % self.run_id
+            next
+        else: 
+            self.run_id          = self.get_id('run',          self.rundate)
+            print "run_id after = %s" % self.run_id
+        dataset_id      = self.get_id('dataset',      content_row.dataset)
+        project_id      = self.get_id('project',      content_row.project)
+        dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
+        primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
+        if (content_row.overlap == 'complete'):
             overlap = 0
         
         my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode, 
@@ -272,9 +289,9 @@ class dbUpload:
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',  
                                                     '%s', %s, '%s', '%s', '%s', %s, %s, 
                                                     '%s', %s, %s)
-        """ % (run_key_id, run_id, content_row['lane'], dataset_id, project_id, content_row['tubelabel'], content_row['barcode'], 
-               content_row['adaptor'], dna_region_id, content_row['amp_operator'], content_row['seq_operator'], content_row['barcode_index'], overlap, content_row['insert_size'],
-                                                    content_row['file_prefix'], content_row['read_length'], primer_suite_id)
+        """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
+               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, overlap, content_row.insert_size,
+                                                    content_row.file_prefix, content_row.read_length, primer_suite_id)
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_primer(self):
