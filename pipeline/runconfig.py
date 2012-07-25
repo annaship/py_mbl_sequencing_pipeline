@@ -65,7 +65,8 @@ class RunConfig:
             config_dict['general'] = v.get_command_line_items(config_dict['general'])
             config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
             config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
-            config_dict = v.check_for_input_files(config_dict) 
+            config_dict['general']['files_list'] = config_dict['general']['input_files'].split(',')
+            #config_dict = v.check_for_input_files(config_dict) 
             
         elif self.args.platform == '454':
         
@@ -73,7 +74,7 @@ class RunConfig:
             config_dict['general'] = v.get_command_line_items(config_dict['general'])
             config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
             config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
-            config_dict = v.check_for_input_files(config_dict)
+            #config_dict = v.check_for_input_files(config_dict)
             
         elif args.platform == 'ion_torrent':
             sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+self.args.platform+") ")

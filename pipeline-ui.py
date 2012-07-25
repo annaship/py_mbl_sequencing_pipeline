@@ -174,6 +174,7 @@ if __name__ == '__main__':
     general_data = v.get_general_data()
     
     answer = v.get_confirmation(args.steps, general_data)
+    
     if answer == 'q':
         sys.exit()
     elif answer == 'v':
@@ -185,6 +186,8 @@ if __name__ == '__main__':
             line = line.strip()
             print line
         print "==== END ====\n"
+        sys.exit()
+    elif answer != 'c':
         sys.exit()
     ##############
     #
