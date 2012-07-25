@@ -325,6 +325,7 @@ class RunConfig:
                 sample.insert_size = lane_run_dict['insert_size']
                 # concatenate: barcode_index and run_key and lane
                 key = lane_run_dict['barcode_index'] +'_'+ lane_run_dict['run_key'] +'_'+ lane_run_dict['lane'] 
+                #sample.key = key
                 self.run_keys.append(key)  
                 
             elif self.platform == '454':
@@ -334,6 +335,7 @@ class RunConfig:
                 # a list of run_keys
                 # convert: change ':' to '_'
                 key = lane_run_key[:1]+'_'+lane_run_key[2:]
+                #sample.key = key
                 self.run_keys.append(key)
                 
             sample.project = lane_run_dict['project']

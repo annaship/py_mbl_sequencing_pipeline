@@ -33,7 +33,7 @@ class MetadataUtils:
     validate and create a dictionary from them
     """
     Name = "MetadataUtils"
-    def __init__(self, args, validate=None):
+    def __init__(self, args):
         self.args = args
         self.known_header_list_illumina = C.csv_header_list_illumina
         self.known_header_list_454 = C.csv_header_list_454
@@ -41,38 +41,31 @@ class MetadataUtils:
         self.dna_regions       = C.dna_regions
         self.data_object = {}
         self.data_object['general'] = {}
-        ##############
-        #
-        # CONVERT CSV to INI AND
-        # WRITE INI FILE TO OUTPUT DIRECTORY
-        #
-        ##############
-        if validate:
-            #
-            if self.args.config_file_type == 'csv':
-                ini_file = self.convert_csv_to_ini()
-                self.args.configPath  = ini_file
-                self.args.config_file_type ='ini'
-            elif self.args.config_file_type == 'ini':
-                ini_file = self.save_ini_file()
-                self.args.configPath  = ini_file
-                self.args.config_file_type ='ini'
-            else:
-                sys.exit("Unknown config file type: "+config_file_type) 
-            
-            #
-            if self.args.platform == 'illumina':
-                data = self.validate_illumina_ini()
-            elif self.args.platform == '454':
-                data = self.validate_454_ini()
-            elif self.args.platform == 'ion_torrent':
-                pass
-            else:
-                sys.exit("Unknown platform and configFile type for validation")
-            
-            
-          
 
+            
+            
+    def validate(self):  
+        if self.args.platform == 'illumina':
+            data = self.validate_illumina_ini()
+        elif self.args.platform == '454':
+            data = self.validate_454_ini()
+        elif self.args.platform == 'ion_torrent':
+            pass
+        else:
+            sys.exit("Unknown platform and configFile type for validation")
+            
+    def convert_and_save_ini(self):
+        # converts csv to ini and saves to output_dir
+        if self.args.config_file_type == 'csv':
+            ini_file = self.convert_csv_to_ini()
+            self.args.configPath  = ini_file
+            self.args.config_file_type ='ini'
+        elif self.args.config_file_type == 'ini':
+            ini_file = self.save_ini_file()
+            self.args.configPath  = ini_file
+            self.args.config_file_type ='ini'
+        else:
+            sys.exit("Unknown config file type: "+config_file_type) 
     
     def get_general_data(self):
         """
@@ -167,36 +160,38 @@ class MetadataUtils:
         The csv headers are checked earlier
         """
         
-        print "Validating ini type Config File"
-        print "TODO - write validation def for illumina/ini"   
-        
+        print "Validating ini type Config File (may have been converted fron csv)"
+        return_code = False
+        error_code  = False
+        warn_code   = False
+        error=False
+        warn=False
         self.data_object = self.create_dictionary_from_ini()
-        for item in self.data_object:
-            
-            if item == 'general':
-                print
-                print item
-                
-                # validate general items here
-                self.check_for_missing_values(self.data_object['general'])
-            
-        for item in self.data_object:
-            self.check_for_missing_values(self.data_object[item])
-                
         
-        for item in self.data_object:
-            
-            if item == 'general':
-                pass
-            else:
-                print
-                print item
-                self.check_for_datasets(self.data_object[item])
-                self.check_domain_suite_region(self.data_object[item])
-                self.check_project_name(self.data_object[item])
-                self.check_projects_and_datasets(self.data_object[item])
-                
-                
+        
+        (error_code,warn_code) = self.check_for_missing_values(self.data_object)  
+        if error_code: error=True
+        if warn_code: warn=True
+        (error_code,warn_code) = self.check_for_datasets(self.data_object)
+        if error_code: error=True
+        if warn_code: warn=True
+        (error_code,warn_code) = self.check_domain_suite_region(self.data_object)
+        if error_code: error=True
+        if warn_code: warn=True
+        (error_code,warn_code) = self.check_project_name(self.data_object)
+        if error_code: error=True
+        if warn_code: warn=True
+        (error_code,warn_code) = self.check_projects_and_datasets(self.data_object)
+        if error_code: error=True
+        if warn_code: warn=True
+        
+        if error:
+            sys.exit( """\n\tTHERE WERE SEVERE PROBLEMS WITH THE CONFIG FILE - EXITING 
+            PLEASE CORRECT THEM AND START OVER.\n
+            To view the errors add ' -l info' to the command line.\n""")
+        elif warn: 
+            print """\n\tTHERE WERE NON-FATAL PROBLEMS WITH THE CONFIG FILE THAT MAY OR MAY NOT CAUSE PROBLEMS.\n
+                To view the errors add ' -l warning' to the command line.\n"""
         
 
     def validate_dictionary(self, config_info):
@@ -410,72 +405,101 @@ class MetadataUtils:
         
         return data_object
         
-        
-        
-    def check_for_datasets(self,item):
-        if not item['dataset']:
-            sys.exit("ERROR:Current dataset name is missing or corrupt - Exiting")
-        return True    
-    def check_for_missing_values(self,item):
+           
+    def check_for_missing_values(self, data):
         missing_key   = ''
-        missing_value = ''
-        for k,v in item.iteritems():
-            if not k:
-                #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
-                logger.info("key for: '"+v+"' is missing or corrupt - Continuing")
-                missing_key = v
-            if not v:
-                if (k != 'barcode' and k != 'adaptor'): #these could be empty
-                    logger.info("value of: '"+k+"' is missing or corrupt - Continuing")
-                    missing_value = k
+        error = False
+        warn = False
+        for item in data:
+            if item == 'general':
+                for k,v in data[item].iteritems():
+                    if not k:
+                        #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
+                        logger.warning("key for: '"+v+"' is missing or corrupt - Continuing (key: "+item+")")
+                        warn=True
+                    if not v:
+                        if (k != 'barcode' and k != 'adaptor'): #these could be empty
+                            logger.warning("value of: '"+k+"' is missing or corrupt - Continuing (key: "+item+")")
+                            warn=True
+                            
+        for item in data:
+            if item != 'general':
+                for k,v in data[item].iteritems():
+                    if not k:
+                        #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
+                        logger.warning("key for: '"+v+"' is missing or corrupt - Continuing (key: "+item+")")
+                        warn=True
+                    if not v:
+                        if (k != 'barcode' and k != 'adaptor'): #these could be empty
+                            logger.warning("value of: '"+k+"' is missing or corrupt - Continuing (key: "+item+")")
+                            warn=True
         
-        if missing_key:
-            #sys.exit("ERROR: value of: "+missing_key+" is missing or corrupt - Exiting")
-            pass
-        if missing_value:
-            #sys.exit("ERROR: value of: "+missing_value+" is missing or corrupt - Exiting")
-            pass
+        return (error,warn)
+
+    def check_for_datasets(self,data):
+        error = False
+        warn=False
+        for item in data:
+            if item != 'general':
+                #print 'ds',data[item]['dataset']
+                if not data[item]['dataset']:
+                #if 'dataset' not in data[item]:
+                    logger.error("Current dataset name is missing or corrupt - Exiting (key: "+item+")")
+                    error=True
+        return (error,warn) 
         
-    def check_domain_suite_region(self,item):       
+    def check_domain_suite_region(self,data):
+        error = False
+        warn=False
+        for item in data:
+            if item != 'general':
+                # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
+                if data[item]['primer_suite'] not in self.primer_suites:
+                    logger.error("Primer Suite not found: "+data[item]['primer_suite']+" - Exiting (key: "+data[item]+")")
+                    error=True
+                #if dataset_items['domain'] not in domains:
+                #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
+                if data[item]['dna_region'] not in self.dna_regions:
+                    logger.error("DNA Region not found: "+data[item]['dna_region']+" - Exiting (key: "+data[item]+")")
+                    error=True
+                # "Bacterial v6","BacterialV6Suite","v6"
+                #if dataset_items['domain'][:6] != dataset_items['primer_suite'][:6]:
+                #    sys.exit("ERROR: Domain ("+dataset_items['domain']+") -- Primer Suite ("+dataset_items['primer_suite']+") mismatch.")
+                #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
+                #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
+                if data[item]['dna_region'] not in data[item]['primer_suite']:
+                    logger.error("DNA Region ("+data[item]['dna_region']+") not found in Primer Suite ("+data[item]['primer_suite']+") - Exiting (key: "+data[item]+")")
+                    error=True
+        return (error,warn)
         
-        # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
-        if item['primer_suite'] not in self.primer_suites:
-            sys.exit("ERROR: Primer Suite not found: "+item['primer_suite'])
-        #if dataset_items['domain'] not in domains:
-        #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
-        if item['dna_region'] not in self.dna_regions:
-            sys.exit("ERROR: DNA Region not found: "+item['dna_region'])
-        # "Bacterial v6","BacterialV6Suite","v6"
-        #if dataset_items['domain'][:6] != dataset_items['primer_suite'][:6]:
-        #    sys.exit("ERROR: Domain ("+dataset_items['domain']+") -- Primer Suite ("+dataset_items['primer_suite']+") mismatch.")
-        #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
-        #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
-        if item['dna_region'] not in item['primer_suite']:
-            sys.exit("ERROR: DNA Region ("+item['dna_region']+") not found in Primer Suite ("+item['primer_suite']+")")
-                
-        return True
-        
-    def check_project_name(self,item):
+    def check_project_name(self,data):
         """
         # CHECK: project name format: 3 parts; end with Bv6,Ev9,Av6 or something similar
         """
-        try:
-            (a,b,c) = item['project'].split('_')
-        except:
-            sys.exit("ERROR: project not in correct format: "+item['project'])
-        (a,b,c) = item['project'].split('_')
-        #if c[0] not in [i[0].upper() for i in domains]:
-        #    sys.exit("ERROR : Project suffix has incorrect/non-existant domain: "+c)
-        if c[1:] not in self.dna_regions:
-            sys.exit("ERROR : Project suffix has incorrect DNA region: "+c)
-            
-        return True
+        error   =False
+        warn    =False
+        for item in data:
+            if item != 'general':
+                try:
+                    (a,b,c) = data[item]['project'].split('_')
+                except:
+                    logger.error("project not in correct format: "+data[item]['project']+" - Exiting (key: "+data[item]+")")
+                    error=True
+                (a,b,c) = data[item]['project'].split('_')
+                #if c[0] not in [i[0].upper() for i in domains]:
+                #    sys.exit("ERROR : Project suffix has incorrect/non-existant domain: "+c)
+                if c[1:] not in self.dna_regions:
+                    logger.error("Project suffix has incorrect DNA region: "+c+" - Exiting (key: "+data[item]+")")
+                    error = True
+        return (error,warn)
             
     def check_projects_and_datasets(self,data):
         self.my_conn     = MyConnection(host='newbpcdb2', db="env454")  
         project_dataset = {}
         projects = {}
         datasets = {}
+        error   =False
+        warn    =False
         for item in data:
             if item != 'general':
                 #project_dataset[data[item]['project']+'--'+data[item]['dataset']] = 1
@@ -486,7 +510,8 @@ class MetadataUtils:
             my_sql = """SELECT project FROM project WHERE project = '%s'""" % (p)
             res    = self.my_conn.execute_fetch_select(my_sql)
             if res:
-                logger.info("project '"+p+"' already exists in the database - is this a okay?")
+                logger.warning("project '"+p+"' already exists in the database - is this okay?")
+                warn = True
             else:
                 logger.debug("project '"+p+"' is new")
                 
@@ -497,11 +522,12 @@ class MetadataUtils:
                     my_sql = """SELECT dataset FROM dataset WHERE dataset = '%s'""" % (d)
                     res    = self.my_conn.execute_fetch_select(my_sql)
                     if res:
-                        logger.info("\tdataset '"+d+"' already exists in the database - is this a okay?")
+                        logger.warning("\tdataset '"+d+"' already exists in the database - is this okay?")
+                        warn=True
                     else:
                         logger.debug("\tdataset '"+d+"' is new")
             logger.debug("\tDataset Count: "+str(len(datasets)))
-        return True       
+        return (error,warn)      
         
     def get_confirmation(self, steps, general_data):
         print "\n"

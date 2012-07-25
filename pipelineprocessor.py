@@ -31,6 +31,7 @@ from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
+from pipeline.validate import MetadataUtils
 
 import logging
 import json    
@@ -85,9 +86,12 @@ def process(run, steps):
 
 def validate(run):
     #open_zipped_directory(run.run_date, run.output_dir)
-    logger.debug("Validating")
-    print 'Validates:  Configfile and Run Object'
-    run.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tConfigFile Validated\n")
+    #logger.debug("Validating")
+    pass
+    #v = MetadataUtils(run, validate=True)
+    
+    #print 'Validates:  Configfile and Run Object'
+    #run.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tConfigFile Validated\n")
 
     
 

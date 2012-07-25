@@ -113,7 +113,7 @@ if __name__ == '__main__':
                                                 Comma seperated list of steps.  
                                                 Choices are: validate,trim,chimera,status,upload_env454,gast,otu,upload_vamps,clean
                                                 """)
-    parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='INFO',       
+    parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
                                                  help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL') 
 
     #DEBUG	Detailed information, typically of interest only when diagnosing problems.
@@ -164,8 +164,13 @@ if __name__ == '__main__':
     #
     ##############  
     # pass True to validate, convert (csv => ini if needed) and write out ini file
-    v = MetadataUtils(args, True)
-     
+    #print 'steps',args.steps
+    #if args.steps == 'validate':
+    #    v = MetadataUtils(args, validate=True)
+    #else:
+    v = MetadataUtils(args)
+    v.convert_and_save_ini()
+    v.validate()
     general_data = v.get_general_data()
     
     answer = v.get_confirmation(args.steps, general_data)
