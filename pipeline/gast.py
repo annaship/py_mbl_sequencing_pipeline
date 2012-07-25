@@ -28,12 +28,13 @@ class Gast:
             
             unique_file = os.path.join(self.basedir, idx_key+'.unique.fa')
             if not os.path.exists(unique_file):
-                logger.error("GAST: Could not find the unique.fa file")
+                logger.error("GAST: Could not find the unique.fa file here: "+run.output_dir)
+                #answer = raw_input("Do you want to create the names and uniques files now from the input files? ")
                 self.error = "Could not find the unique.fa file: "+unique_file
                 break
             names_file = os.path.join(self.basedir, idx_key+'.names')
             if not os.path.exists(names_file):
-                logger.error("GAST: Could not find the names file")                
+                logger.error("GAST: Could not find the names file here: "+run.output_dir)            
                 self.error = "Could not find the names file: "+names_file
                 break
         

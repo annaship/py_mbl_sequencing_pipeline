@@ -403,16 +403,16 @@ def gast(run):
             # if illumina they are index_runkey_lane concatenation
             # if 454 the are lane_key
             if run.platform == 'illumina':  
-                idx_keys = run.run_keys
+                idx_keys = run.idx_keys
                 ct = 0
                 for h in run.samples:
                     logger.debug(h,run.samples[h])
                     ct +=1
                 print ct
             elif run.platform == '454':
-                idx_keys = run.run_keys
+                idx_keys = run.idx_keys
             elif run.platform == 'ion_torrent':
-                idx_keys = run.run_keys
+                idx_keys = run.idx_keys
             else:
                 logger.debug("GAST: No keys found - Exiting")
                 run.run_status_file_h.write("GAST: No keys found - Exiting\n")
@@ -478,16 +478,16 @@ def upload_vamps(run):
             # if illumina they are index_runkey_lane concatenation
             # if 454 the are lane_key
             if run.platform == 'illumina':  
-                idx_keys = run.run_keys
+                idx_keys = run.idx_keys
                 ct = 0
                 for h in run.samples:
                     logger.debug(h,run.samples[h])
                     ct +=1
                 print ct
             elif run.platform == '454':
-                idx_keys = run.run_keys
+                idx_keys = run.idx_keys
             elif run.platform == 'ion_torrent':
-                idx_keys = run.run_keys
+                idx_keys = run.idx_keys
             else:
                 logger.debug("UPLOAD_VAMPS: No keys found - Exiting")
                 run.run_status_file_h.write("UPLOAD_VAMPS: No keys found - Exiting\n")

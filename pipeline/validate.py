@@ -41,12 +41,13 @@ class MetadataUtils:
         self.dna_regions       = C.dna_regions
         self.data_object = {}
         self.data_object['general'] = {}
-
+        self.warn_msg = """\n\tThe config File () seems to be okay. If the items above look correct
+        then press 'c' to continue the pipeline\n"""
             
             
     def validate(self):  
         if self.args.platform == 'illumina':
-            data = self.validate_illumina_ini()
+            self.warn_msg = self.validate_illumina_ini()
         elif self.args.platform == '454':
             data = self.validate_454_ini()
         elif self.args.platform == 'ion_torrent':
@@ -164,6 +165,7 @@ class MetadataUtils:
         return_code = False
         error_code  = False
         warn_code   = False
+        msg = ''
         error=False
         warn=False
         self.data_object = self.create_dictionary_from_ini()
@@ -184,16 +186,25 @@ class MetadataUtils:
         (error_code,warn_code) = self.check_projects_and_datasets(self.data_object)
         if error_code: error=True
         if warn_code: warn=True
+        #print self.data_object['input_dir']
+        #print self.data_object['input_files']
+        if 'input_dir' in self.data_object['general'] and self.data_object['general']['input_dir'] and ('input_files' not in self.data_object['general'] or not self.data_object['general']['input_files']):
+            logger.error("There are no files found in the input directory: "+self.data_object['general']['input_dir'])
+            error=True
+        elif 'input_dir' not in self.data_object['general'] and 'input_files' not in self.data_object['general']:
+            logger.warning("No input directory and no input files")        
+            warn=True
         
         if error:
             sys.exit( """\n\tTHERE WERE SEVERE PROBLEMS WITH THE CONFIG FILE - EXITING 
             PLEASE CORRECT THEM AND START OVER.\n
-            To view the errors add ' -l info' to the command line.\n""")
+            To view the errors add ' --loglevel info' to the command line.\n""")
         elif warn: 
-            print """\n\tTHERE WERE NON-FATAL PROBLEMS WITH THE CONFIG FILE THAT MAY OR MAY NOT CAUSE PROBLEMS.\n
-                To view the errors add ' -l warning' to the command line.\n"""
+            msg = """\n\tTHERE WERE NON-FATAL PROBLEMS WITH THE CONFIG FILE THAT MAY OR MAY NOT CAUSE PROBLEMS.\n
+                To view the warnings add ' --loglevel warning' to the command line.\n"""
         
-
+        return msg
+        
     def validate_dictionary(self, config_info):
         """
         This is only used for data that comes in as a dictionary rather than a file
@@ -361,6 +372,22 @@ class MetadataUtils:
         
              
         return data
+    
+        
+    def get_input_files(self,file_suffix):
+    
+        files_list = []
+        if os.path.isdir(self.args.input_dir):
+            
+            for infile in glob.glob( os.path.join(self.args.input_dir, '*'+file_suffix) ):
+                if os.path.isdir(infile) == True:
+                    pass
+                else:
+                    files_list.append(os.path.basename(infile))
+        else:
+            logger.warning("No input directory or directory permissions problem: "+self.args.input_dir)
+            
+        return files_list
         
     def check_for_input_files(self,data_object):
     
@@ -415,25 +442,25 @@ class MetadataUtils:
                 for k,v in data[item].iteritems():
                     if not k:
                         #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
-                        logger.warning("key for: '"+v+"' is missing or corrupt - Continuing (key: "+item+")")
+                        logger.warning("(key: "+item+") key for: '"+v+"' is missing or corrupt - Continuing")
                         warn=True
-                    if not v:
-                        if (k != 'barcode' and k != 'adaptor'): #these could be empty
-                            logger.warning("value of: '"+k+"' is missing or corrupt - Continuing (key: "+item+")")
-                            warn=True
+                    if not v:                        
+                        logger.warning("(key: "+item+") value of: '"+k+"' is missing or corrupt - Continuing")
+                        warn=True
                             
         for item in data:
             if item != 'general':
                 for k,v in data[item].iteritems():
                     if not k:
                         #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
-                        logger.warning("key for: '"+v+"' is missing or corrupt - Continuing (key: "+item+")")
+                        logger.warning("(key: "+item+") key for: '"+v+"' is missing or corrupt - Continuing")
                         warn=True
                     if not v:
-                        if (k != 'barcode' and k != 'adaptor'): #these could be empty
-                            logger.warning("value of: '"+k+"' is missing or corrupt - Continuing (key: "+item+")")
-                            warn=True
-        
+                        if (k == 'barcode' or k == 'adaptor'): #these could be empty
+                            logger.warning("(key: "+item+") value of: '"+k+"' is missing or corrupt - Continuing")
+                        else:
+                            logger.error("(key: "+item+") value of: '"+k+"' is missing or corrupt - Continuing")
+                            error=True
         return (error,warn)
 
     def check_for_datasets(self,data):
@@ -451,16 +478,18 @@ class MetadataUtils:
     def check_domain_suite_region(self,data):
         error = False
         warn=False
+        
         for item in data:
+            
             if item != 'general':
                 # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
                 if data[item]['primer_suite'] not in self.primer_suites:
-                    logger.error("Primer Suite not found: "+data[item]['primer_suite']+" - Exiting (key: "+data[item]+")")
+                    logger.error("Primer Suite not found: "+data[item]['primer_suite']+" - Exiting (key: "+item+")")
                     error=True
                 #if dataset_items['domain'] not in domains:
                 #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
                 if data[item]['dna_region'] not in self.dna_regions:
-                    logger.error("DNA Region not found: "+data[item]['dna_region']+" - Exiting (key: "+data[item]+")")
+                    logger.error("DNA Region not found: "+data[item]['dna_region']+" - Exiting (key: "+item+")")
                     error=True
                 # "Bacterial v6","BacterialV6Suite","v6"
                 #if dataset_items['domain'][:6] != dataset_items['primer_suite'][:6]:
@@ -468,7 +497,7 @@ class MetadataUtils:
                 #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
                 #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
                 if data[item]['dna_region'] not in data[item]['primer_suite']:
-                    logger.error("DNA Region ("+data[item]['dna_region']+") not found in Primer Suite ("+data[item]['primer_suite']+") - Exiting (key: "+data[item]+")")
+                    logger.error("DNA Region ("+data[item]['dna_region']+") not found in Primer Suite ("+data[item]['primer_suite']+") - Exiting (key: "+item+")")
                     error=True
         return (error,warn)
         
@@ -515,13 +544,18 @@ class MetadataUtils:
             else:
                 logger.debug("project '"+p+"' is new")
                 
-                
+            ds_found_count = 0   
             for d in datasets:
                 if datasets[d] == p:
+                    
                     #print "\t%s" % (d)
                     my_sql = """SELECT dataset FROM dataset WHERE dataset = '%s'""" % (d)
                     res    = self.my_conn.execute_fetch_select(my_sql)
                     if res:
+                        ds_found_count += 1
+                        if ds_found_count >3:
+                            logger.warning("\t\tPossibly more .... - Exiting after just three")
+                            break
                         logger.warning("\tdataset '"+d+"' already exists in the database - is this okay?")
                         warn=True
                     else:
@@ -534,8 +568,11 @@ class MetadataUtils:
         for item,value in general_data.iteritems():
             print "%20s = %-20s" % (item,value)
         print "\nStep(s) to be performed: ",steps
-        return raw_input("\nDoes this look okay? (q to quit, v to view configFile) ")
-#        pass # AAA
+        print "\n"+self.warn_msg+"\n"
+        if 'validate' in steps.split(','):
+            # print we are done
+            sys.exit()
+        return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
         
     def convert_csv_to_ini(self):
         #print self.args
@@ -548,6 +585,14 @@ class MetadataUtils:
         headers     = content[1].keys()
         headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
         projects = {}
+        
+        # get list of keys
+        keys_list = []
+        if self.check_headers(headers_clean):
+        
+            for k,values in content.iteritems():
+                keys_list.append(values['barcode_index']+"_"+values['run_key']+"_"+values['lane'])
+        
         # general section
         fh.write("[general]\n") 
         fh.write("run = "+self.args.run+"\n")
@@ -557,27 +602,31 @@ class MetadataUtils:
         fh.write("config_file_orig = "+self.args.configPath+"\n")
         fh.write("config_format_orig = "+self.args.config_file_type+"\n")
         fh.write("platform = "+self.args.platform+"\n")
-        fh.write("input_dir = "+getattr(self.args,'input_dir', ".")+"\n") 
+        
         fh.write("output_dir = "+os.path.join(self.args.baseoutputdir,self.args.run)+"\n")
         fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
         fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")
         fh.write("anchor_file = "        + getattr(self.args,'anchor_file', "")+"\n")
         fh.write("primer_file = "        + getattr(self.args,'primer_file', "")+"\n")
         fh.write("require_distal = "     + getattr(self.args,'require_distal', "1")+"\n")
+        fh.write("idx_keys = "           +','.join(keys_list)+"\n")
+        fh.write("input_dir = "+getattr(self.args,'input_dir', ".")+"\n") 
+        if self.args.input_dir:
+            file_list = self.get_input_files(self.args.input_file_suffix)
+            fh.write("input_files = "     + ','.join(file_list)+"\n") 
+        else:
+            fh.write("input_files = \n") 
+        #fh.write(getattr(args,'force_runkey', ""))        
         
-        #fh.write(getattr(args,'force_runkey', ""))
-        
-        if self.check_headers(headers_clean):
-        
-            for k,values in content.iteritems():
-                fh.write("\n")
-                if self.args.platform == 'illumina':
-                    fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
-                elif self.args.platform == '454':
-                    fh.write("["+values['lane']+"_"+values['run_key']+"]\n")
-                    
-                for v in values:
-                    fh.write(v+" = "+values[v]+"\n")
+        for k,values in content.iteritems():
+            fh.write("\n")
+            if self.args.platform == 'illumina':
+                fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
+            elif self.args.platform == '454':
+                fh.write("["+values['lane']+"_"+values['run_key']+"]\n")
+                
+            for v in values:
+                fh.write(v+" = "+values[v]+"\n")
                 
         fh.close()
         
