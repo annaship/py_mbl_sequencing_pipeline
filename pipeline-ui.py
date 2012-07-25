@@ -31,7 +31,6 @@ from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
 
-
 import logging
 import argparse
 from pipelineprocessor import process    
@@ -114,9 +113,15 @@ if __name__ == '__main__':
                                                 Comma seperated list of steps.  
                                                 Choices are: validate,trim,chimera,status,upload_env454,gast,otu,upload_vamps,clean
                                                 """)
-    parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
-                                                 help = 'Sets logging level...INFO, DEBUG, [ERROR]') 
+    parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='INFO',       
+                                                 help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL') 
 
+    #DEBUG	Detailed information, typically of interest only when diagnosing problems.
+    #INFO	Confirmation that things are working as expected.
+    #WARNING	An indication that something unexpected happened, or indicative of some problem in the near future (e.g. 'disk space low'). 
+    #           The software is still working as expected.
+    #ERROR	Due to a more serious problem, the software has not been able to perform some function.
+    #CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
     
     args = parser.parse_args() 
 
@@ -150,23 +155,25 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.join(args.baseoutputdir,args.run)):
         logger.debug("Creating output directory: "+os.path.join(args.baseoutputdir,args.run))
         os.makedirs(os.path.join(args.baseoutputdir,args.run))    
-           
+    
+   
+    
     ##############
     #
     #  VALIDATE THE INI FILE
     #
     ##############  
-    # pass True to convert,validate and write ini file
+    # pass True to validate, convert (csv => ini if needed) and write out ini file
     v = MetadataUtils(args, True)
+     
+    general_data = v.get_general_data()
     
-    data = v.validate_config_file()     
-    
-    answer = v.get_confirmation(args.steps, data)
+    answer = v.get_confirmation(args.steps, general_data)
     if answer == 'q':
         sys.exit()
     elif answer == 'v':
         # view CONFIG file contents
-        fh = open(os.path.join(args.baseoutputdir,args.run,args.run+'.ini'))
+        fh = open(os.path.join(args.baseoutputdir, args.run, args.run+'.ini'))
         lines = fh.readlines()
         print "\n=== START ===\n"
         for line in lines:
@@ -181,14 +188,14 @@ if __name__ == '__main__':
     ##############     
     run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
     
-    cfg = None
-    if 'my_csv' in locals():
-        cfg = my_csv
-        
+
+#    for key in run.samples:
+#        print key,run.samples[key].dataset
+#    sys.exit()
     ##############
     #
     # now do all the work
     #
     ##############         
-    process(run, args.steps, cfg)
+    process(run, args.steps)
 
