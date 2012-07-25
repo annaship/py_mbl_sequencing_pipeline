@@ -32,6 +32,7 @@ from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
 from pipeline.validate import MetadataUtils
+from inspect import currentframe, getframeinfo
 
 import logging
 import json    
@@ -256,8 +257,10 @@ def chimera(run):
 def env454run_info_upload(run):
 
     my_read_csv = dbUpload(run)
+    start = time()
     my_read_csv.put_run_info()
-
+    elapsed = (time() - start)
+    print "put_run_info time = %s" % str(elapsed)
     
 def env454upload(run):  
     """
@@ -268,7 +271,6 @@ def env454upload(run):
     """
     
     whole_start = time()
-
 
 #    my_read_csv = readCSV(run)
 #    my_read_csv.read_csv()
@@ -331,26 +333,20 @@ def env454upload(run):
                 elapsed = (time() - start)
                 insert_sequence_uniq_info_ill_time += elapsed
 
-#                print "insert_sequence_uniq_info_ill() took ", elapsed, " time to finish"
-
             seq_in_file = fasta.total_seq
-            my_env454upload.seq_statistics(filename, fasta.total_seq)
+            my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
             total_seq += seq_in_file
-#            print "seq_in_file = %s" % seq_in_file
-#            
-#            print "insert_pdr_info() took ", insert_pdr_info_time, " time to finish"
-#            print "insert_taxonomy_time() took ", insert_taxonomy_time, " time to finish"
-#            print "insert_sequence_uniq_info_ill() took ", insert_sequence_uniq_info_ill_time, " time to finish"
             logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
             logger.debug("insert_taxonomy_time() took %s time to finish" % insert_taxonomy_time)
             logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
 
             
-        except Exception, e:          # catch all deriving from Exception (instance e)
-#            sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
-
-            print "\r[pipelineprocessor] Exception: ", e.__str__()      # address the instance, print e.__str__()
-#            raise                       # re-throw caught exception   
+#        except Exception, e:          # catch all deriving from Exception (instance e)
+##            sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
+#            frameinfo = getframeinfo(currentframe())
+#            print frameinfo.filename, frameinfo.lineno
+#            print "\r[pipelineprocessor] Exception: ", e.__str__()      # address the instance, print e.__str__()
+##            raise                       # re-throw caught exception   
         except:                       # catch everything
             print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
