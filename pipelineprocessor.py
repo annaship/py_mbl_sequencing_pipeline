@@ -52,10 +52,8 @@ CLEAN_STEP              = 'clean'
 
 existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
 
-
 # the main loop for performing each of the user's supplied steps
-def process(run, steps, cfg = None):
-    #    print "cfg = %s" % cfg
+def process(run, steps):
     
     requested_steps = steps.split(",")            
     if 'clean' in requested_steps and len(requested_steps) > 1:
@@ -100,7 +98,7 @@ def validate(run):
 #
 # when complete...write out the datafiles for the most part on a lane/runkey basis
 #
-def trim(run, cfg=None):
+def trim(run):
     # def is in utils.py
     #open_zipped_directory(run.run_date, run.output_dir)
     # (re) create the trim status file
@@ -152,7 +150,7 @@ def trim(run, cfg=None):
 # sitting around that describe the results of each lane:runkey sequences
 # it also expectes there to be a trim_status.txt file around
 # which should have a json format with status and the run keys listed        
-def chimera(run, cfg=None):
+def chimera(run):
     chimera_cluster_ids = [] 
     logger.debug("Starting Chimera Checker")
     # lets read the trim status file out here and keep those details out of the Chimera code
@@ -252,14 +250,12 @@ def chimera(run, cfg=None):
     #zip_up_directory(run.run_date, run.output_dir, 'a')
 
 def env454run_info_upload(run):
-#    my_read_csv = readCSV(run)
-#    cfg = my_read_csv.read_csv()
 
-    my_read_cfg = dbUpload(run)
-    my_read_cfg.put_run_info()
+    my_read_csv = dbUpload(run)
+    my_read_csv.put_run_info()
 
     
-def env454upload(run, cfg=None):  
+def env454upload(run):  
     """
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
@@ -383,7 +379,7 @@ def env454upload(run, cfg=None):
 #    my_env454upload.select_run(lane_keys)
 
 
-def gast(run, cfg=None):  
+def gast(run):  
     
     
     # for vamps 'new_lane_keys' will be prefix 
@@ -447,7 +443,7 @@ def gast(run, cfg=None):
         logger.error("gast2tax failed") 
         sys.exit("gast2tax failed")
         
-def cluster(run, cfg=None):
+def cluster(run):
     """
     TO be developed eventually:
         Select otu creation method
@@ -457,7 +453,7 @@ def cluster(run, cfg=None):
     
     
     
-def upload_vamps(run, cfg=None):
+def upload_vamps(run):
     """
     Upload data files to VAMPS database
     """
@@ -508,7 +504,7 @@ def upload_vamps(run, cfg=None):
     #myvamps.projects(idx_keys)
     #myvamps.info(idx_keys)
     
-def status(run, cfg=None):
+def status(run):
     f = open(run.run_status_file_name)
     lines = f.readlines()
     f.close()
@@ -520,7 +516,7 @@ def status(run, cfg=None):
         print line
     print "="*40+"\n"
     
-def clean(run, cfg=None):
+def clean(run):
     """
     Removes a run from the database and output directory
     """
