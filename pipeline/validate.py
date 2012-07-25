@@ -25,7 +25,7 @@ from pipeline.db_upload import MyConnection
 #import pipeline.fastalib
 
 
-    
+  
     
 class MetadataUtils:
     """
@@ -48,6 +48,7 @@ class MetadataUtils:
         #
         ##############
         if validate:
+            #
             if self.args.config_file_type == 'csv':
                 ini_file = self.convert_csv_to_ini()
                 self.args.configPath  = ini_file
@@ -57,20 +58,27 @@ class MetadataUtils:
                 self.args.configPath  = ini_file
                 self.args.config_file_type ='ini'
             else:
-                sys.exit("Unknown config file type: "+config_file_type)
-          
-    def validate_config_file(self):
+                sys.exit("Unknown config file type: "+config_file_type) 
             
-        if self.args.platform == 'illumina':
-            data = self.validate_illumina_ini()
-        elif self.args.platform == '454':
-            data = self.validate_454_ini()
-        elif self.args.platform == 'ion_torrent':
-            pass
-        else:
-            sys.exit("Unknown platform and configFile type for validation")
-        return data
+            #
+            if self.args.platform == 'illumina':
+                data = self.validate_illumina_ini()
+            elif self.args.platform == '454':
+                data = self.validate_454_ini()
+            elif self.args.platform == 'ion_torrent':
+                pass
+            else:
+                sys.exit("Unknown platform and configFile type for validation")
+            
+            
+          
 
+    
+    def get_general_data(self):
+        """
+        """
+        return self.data_object['general']
+        
     def create_dictionary_from_ini(self):
         """
         # read an ini config file and convert to a dictionary
@@ -149,64 +157,46 @@ class MetadataUtils:
     def validate_454_ini(self):
         print "Validating ini type Config File"
         print "TODO - write validation def for 454/ini"
-        return self.create_dictionary_from_ini() 
+        self.data_object = self.create_dictionary_from_ini() 
         # 454 ini file requirements:
         
         
         
     def validate_illumina_ini(self):
+        """
+        The csv headers are checked earlier
+        """
+        
         print "Validating ini type Config File"
-        print "TODO - write validation def for illumina/ini"     
-        return self.create_dictionary_from_ini()
-#     def validate_illumina_csv(self, args, my_csv):
-#     
-#         data_object = self.populate_data_object_illumina(args, my_csv)
-#         
-#         
-#         
-#         # start error checking here
-#         # MUST be in list: "Domain","Primer Suite","DNA Region"
-#         # MUST MATCH: "Domain","Primer Suite","DNA Region"
-#         #
-#         #
-#         # VAMPS project name format:  SLM_GCB_Bv6
-#         #
-#         #
-#         data_object = self.check_for_input_files(data_object)
-#         self.check_projects_and_datasets(data_object) 
-#         
-#         
-#         for x in data_object['general']:
-#             logger.debug("%s = %s" % (x, data_object['general'][x]))
-#         
-#         
-#         
-#         """
-#         TODO:
-#             1) split into methods - DONE
-#             2) we can use "content" variable instead of megadata here
-#         """       
-#         #print dataset_counter
-#         for item in data_object:
-#             if item != 'general':            
-#                 self.check_for_datasets(data_object[item])
-#                 self.check_for_missing_values(data_object[item])
-#                 self.check_domain_suite_region(data_object[item])
-#                 self.check_project_name(data_object[item])
-# 
-# 
-#         """
-#             TODO:
-#                  other checks to put in:
-#                  check for duplicate project names in env454 (or vamps?)
-#                  that data == file prefix
-#                      if we have an input directory that each dataset has a coresponding file - for illumina
-#                  Missing data is ok for barcode and adaptor (illumina only - for env454 also - A.)
-#                  
-#             
-#         """
-#                 #print item,megadata[item],"\n\n"
-#         print "SUCCESS: Finished validating csv file."    
+        print "TODO - write validation def for illumina/ini"   
+        
+        self.data_object = self.create_dictionary_from_ini()
+        for item in self.data_object:
+            
+            if item == 'general':
+                print
+                print item
+                
+                # validate general items here
+                self.check_for_missing_values(self.data_object['general'])
+            
+        for item in self.data_object:
+            self.check_for_missing_values(self.data_object[item])
+                
+        
+        for item in self.data_object:
+            
+            if item == 'general':
+                pass
+            else:
+                print
+                print item
+                self.check_for_datasets(self.data_object[item])
+                self.check_domain_suite_region(self.data_object[item])
+                self.check_project_name(self.data_object[item])
+                self.check_projects_and_datasets(self.data_object[item])
+                
+                
         
 
     def validate_dictionary(self, config_info):
@@ -224,6 +214,23 @@ class MetadataUtils:
 
         return configDict   
         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         
     def populate_data_object_454(self, args):
         data = {}
@@ -244,6 +251,7 @@ class MetadataUtils:
             data['general']["input_file_suffix"] = args.input_file_suffix
     
         return data['general']
+
     
     def populate_data_object_illumina(self, args, my_csv):
         data = {}
@@ -407,18 +415,18 @@ class MetadataUtils:
     def check_for_datasets(self,item):
         if not item['dataset']:
             sys.exit("ERROR:Current dataset name is missing or corrupt - Exiting")
-            
+        return True    
     def check_for_missing_values(self,item):
         missing_key   = ''
         missing_value = ''
         for k,v in item.iteritems():
             if not k:
                 #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
-                logger.warn("ERROR: key for: '"+v+"' is missing or corrupt - Continuing")
+                logger.info("key for: '"+v+"' is missing or corrupt - Continuing")
                 missing_key = v
             if not v:
                 if (k != 'barcode' and k != 'adaptor'): #these could be empty
-                    logger.warn("ERROR: value of: '"+k+"' is missing or corrupt - Continuing")
+                    logger.info("value of: '"+k+"' is missing or corrupt - Continuing")
                     missing_value = k
         
         if missing_key:
@@ -445,7 +453,7 @@ class MetadataUtils:
         if item['dna_region'] not in item['primer_suite']:
             sys.exit("ERROR: DNA Region ("+item['dna_region']+") not found in Primer Suite ("+item['primer_suite']+")")
                 
-        
+        return True
         
     def check_project_name(self,item):
         """
@@ -461,8 +469,10 @@ class MetadataUtils:
         if c[1:] not in self.dna_regions:
             sys.exit("ERROR : Project suffix has incorrect DNA region: "+c)
             
+        return True
+            
     def check_projects_and_datasets(self,data):
-        self.my_conn     = MyConnection(db="env454")  
+        self.my_conn     = MyConnection(host='newbpcdb2', db="env454")  
         project_dataset = {}
         projects = {}
         datasets = {}
@@ -476,7 +486,7 @@ class MetadataUtils:
             my_sql = """SELECT project FROM project WHERE project = '%s'""" % (p)
             res    = self.my_conn.execute_fetch_select(my_sql)
             if res:
-                logger.info("project '"+p+"' already exists in the database - is this a problem?")
+                logger.info("project '"+p+"' already exists in the database - is this a okay?")
             else:
                 logger.debug("project '"+p+"' is new")
                 
@@ -487,15 +497,15 @@ class MetadataUtils:
                     my_sql = """SELECT dataset FROM dataset WHERE dataset = '%s'""" % (d)
                     res    = self.my_conn.execute_fetch_select(my_sql)
                     if res:
-                        logger.info("\tdataset '"+d+"' already exists in the database - is this a problem?")
+                        logger.info("\tdataset '"+d+"' already exists in the database - is this a okay?")
                     else:
                         logger.debug("\tdataset '"+d+"' is new")
             logger.debug("\tDataset Count: "+str(len(datasets)))
+        return True       
         
-        
-    def get_confirmation(self, steps, data):
+    def get_confirmation(self, steps, general_data):
         print "\n"
-        for item,value in data['general'].iteritems():
+        for item,value in general_data.iteritems():
             print "%20s = %-20s" % (item,value)
         print "\nStep(s) to be performed: ",steps
         return raw_input("\nDoes this look okay? (q to quit, v to view configFile) ")
@@ -549,16 +559,15 @@ class MetadataUtils:
         
     def save_ini_file(self):
         # give it a new name
-        ini_file = os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')
-        fh_to = open(ini_file,'w')
-        fh_from = open(self.args.configPath,'r')
         
-        lines = fh_from.readlines()
-        for line in lines:
-            fh_to.write(line)
-                
-        fh_to.close()
+        with open(os.path.abspath(self.args.configPath),"r") as fh_from:
+            lines = fh_from.readlines()
         fh_from.close()
+        ini_file = os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')
+        with open(ini_file,'w') as fh_to:
+            for line in lines:
+                fh_to.write(line)              
+        fh_to.close()
         
         return ini_file
             
