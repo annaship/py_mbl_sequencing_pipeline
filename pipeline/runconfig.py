@@ -33,10 +33,10 @@ def configDictionaryFromFile_ini(config_file_path):
     return configDict
 
 
-
 class RunConfig:
     """Doc string here."""
     def __init__(self, config_info, args, basepythondir):
+        self.configPath = config_info
         self.args       = args
         self.run_date   = None
         self.platform   = None # enum('454','illumina','ion_torrent','')
@@ -300,9 +300,22 @@ class RunConfig:
                 sample.tubelabel = lane_run_dict['tubelabel']
             except:
                 sample.tubelabel = ''
-            
-            
-            
+            try:    
+                sample.dna_region = lane_run_dict['dna_region'] 
+            except:
+                sample.dna_region = ''
+                
+            sample.data_owner           = lane_run_dict['data_owner']
+            sample.first_name           = lane_run_dict['first_name']
+            sample.last_name            = lane_run_dict['last_name']
+            sample.email                = lane_run_dict['email']
+            sample.institution          = lane_run_dict['institution']
+            sample.project_title        = lane_run_dict['project_title']
+            sample.project_description  = lane_run_dict['project_description']
+            sample.funding              = lane_run_dict['funding']
+            sample.env_sample_source    = lane_run_dict['env_sample_source']
+            sample.dataset_description  = lane_run_dict['dataset_description']
+                
             if self.platform == 'illumina':
                 # req specifically for illumina
                 sample.barcode_index = lane_run_dict['barcode_index'] 
@@ -325,7 +338,7 @@ class RunConfig:
                 
             sample.project = lane_run_dict['project']
             sample.dataset = lane_run_dict['dataset']
-            sample.dna_region = lane_run_dict['dna_region']           
+                      
 
             
             # a dictionary of samples
