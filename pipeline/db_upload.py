@@ -69,30 +69,21 @@ class dbUpload:
 
     """
     def __init__(self, run = None):
-        self.run     = run
+        self.run         = run
         print dir(run)
-        self.outdir = run.base_output_dir
-        try:
-            self.basedir = run.base_python_dir
-        except:
-            self.basedir = self.outdir
         self.rundate     = self.run.run_date
         self.use_cluster = 1
-        self.fasta_dir   = os.path.join(self.run.input_dir, "fasta/")
-        self.gast_dir    = os.path.join(self.run.input_dir, "gast/")
-#        self.fasta_dir   = self.run.input_dir + "fasta/" 
-#        self.gast_dir    = self.run.input_dir + "gast/"
+        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
+        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
         self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
-#        csv_file_path = os.path.join(run.base_python_dir, "csv/metadata_ok3.csv")
         self.my_csv      = None
-#        cfg or readCSV(file_path = csv_file_path)
 #        ['__doc__', '__init__', '__module__', 'anchors', 'args', 'base_output_dir', 'base_python_dir', 'chimera_status_file_h', 'chimera_status_file_name', 'configFile', 'config_file_type', 'force_runkey', 'gast_input_source', 'initializeFromDictionary', 'input_dir', 'input_file_info', 'maximumLength', 'minAvgQual', 'minimumLength', 'output_dir', 'platform', 'primer_suites', 'require_distal', 'run_date', 'run_key_lane_dict', 'run_keys', 'run_status_file_h', 'run_status_file_name', 'samples', 'sff_files', 'trim_status_file_h', 'trim_status_file_name', 'vamps_user_upload']
 
-        self.unique_file_counts = os.path.join(self.outdir , "unique_file_counts")
+        self.unique_file_counts = os.path.join(run.output_dir, "unique_file_counts")
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         self.run_id      = None
@@ -126,7 +117,6 @@ class dbUpload:
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
         my_sql  = """SELECT %s FROM %s WHERE %s = '%s'""" % (id_name, table_name, table_name, value)
-        print "get_id sql = %s" % my_sql
         res     = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])         
@@ -180,19 +170,9 @@ class dbUpload:
     
     def put_run_info(self, content = None):
 
-#        print self.run
-#        print self.run.run_key_lane_dict
-#        print self.run.dna_region 
-#        for key in self.run.samples:
-#            print key, self.run.samples[key].dataset
-#            for a in self.run.samples[key]:
-#                print a
-#        print self.run
-
         values = list(set([run_key.split('_')[1] for run_key in self.run.run_keys]))
         self.insert_bulk_data('run_key', values)
         values = list(set([self.run.samples[key].dna_region for key in self.run.samples]))
-#        print "dna_region = %s" % values
         self.insert_bulk_data('dna_region', values)
         self.insert_rundate()
         
@@ -202,7 +182,7 @@ class dbUpload:
 #            print k, v['dataset'], v
         for key in self.run.samples:
             value = self.run.samples[key]
-#            print dict(self.run.samples[key])
+#            print dict(run.samples[key])
 #            print key, value.dataset
             self.get_contact_v_info()
             self.insert_contact()
@@ -237,25 +217,13 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO run (run) VALUES
             ('%s')""" % (self.rundate)
         self.run_id = self.my_conn.execute_no_fetch(my_sql)
-        print "self.run_id = %s" % self.run_id
-        return self.run_id
-      
         
     def insert_project(self, content_row, contact_id):
-        """
-        TODO: get title, project_description, funding, env_sample_source_id
-        """
-        print "PPP %s" % content_row.env_sample_source
-#        env_sample_source_id = self.get_id('env_sample_source', content_row.env_sample_source)
-#        get_id sql = SELECT env_sample_source_id FROM env_sample_source WHERE env_sample_source = 'water-marine'
-#env_source_name
-        
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
         ('%s', '%s', '%s', reverse('%s'), '%s', 
         (SELECT env_sample_source_id FROM env_sample_source WHERE env_source_name = '%s'), 
         %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source, contact_id)
-        print "my_sql = %s" % my_sql
 
         self.my_conn.execute_no_fetch(my_sql)
 
@@ -270,12 +238,8 @@ class dbUpload:
     
     def insert_run_info(self, content_row):
         run_key_id      = self.get_id('run_key',      content_row.run_key)
-        if (self.run_id):
-            print "run_id before = %s" % self.run_id
-            next
-        else: 
-            self.run_id          = self.get_id('run',          self.rundate)
-            print "run_id after = %s" % self.run_id
+        if not (self.run_id):
+            self.run_id = self.get_id('run',          self.rundate)
         dataset_id      = self.get_id('dataset',      content_row.dataset)
         project_id      = self.get_id('project',      content_row.project)
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
