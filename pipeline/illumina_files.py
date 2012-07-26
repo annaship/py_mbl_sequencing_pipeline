@@ -4,7 +4,7 @@ import os
 from pipeline.utils import PipelneUtils
 sys.path.append("/bioware/pythonmodules/fastqlib")
 import fastqlib as fq
-
+from collections import defaultdict
 
 class IlluminaFiles:
     """
@@ -17,9 +17,34 @@ class IlluminaFiles:
     
     """
     def __init__(self, run):
-       self.fastq_dir   = os.path.join(run.input_dir, "fastq/")
-       self.run = run
-       
+       self.fastq_dir        = os.path.join(run.input_dir, "fastq/")
+       self.run              = run
+       self.out_file_names   = {} 
+       self.datasets         = list(set([self.run.samples[key].dataset for key in self.run.samples]))
+       self.output_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/analysis"
+       self.open_dataset_files()
+
+
+    def open_dataset_files(self):
+        for dataset in self.datasets + ["unknown"]:
+            output_file = os.path.join(self.output_file_path, dataset + ".fastq")
+            self.out_file_names[dataset] = fq.FastQOutput(output_file)
+
+    def close_dataset_files(self):
+        for dataset in self.datasets + ["unknown"]:
+#            output_file = os.path.join(self.output_file_path, dataset + ".fastq")
+            self.out_file_names[dataset].close
+
+    
+#    """
+#        while input.next():
+#            self.out_file_names.store(input)
+#            
+#        for dataset in datasets + ["unknown"]:
+#            self.out_file_names[dataset].close
+#    """
+    
+    
     def split_files(self, input_file_path, output_file_path, compressed = False):
 #        input_file_path = self.fastq_dir
         """
@@ -27,7 +52,7 @@ class IlluminaFiles:
               2) loop through directories, until got files recursively
         """
         input_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/Project_Julie_v6_30" 
-        output_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/analysis"
+        output_file_path = self.output_file_path
         print "input_file_path = %s, output_file_path = %s, compressed = %s\n" % (input_file_path, output_file_path, compressed)
 #        a = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/Project_Julie_v6_30/Sample_v6_Amplicon_IDX1"
         (dirpath1, dirname1, files1) = self.get_fastq_file_names(input_file_path)
@@ -41,7 +66,8 @@ class IlluminaFiles:
 
                 for file in files:
                     input  = fq.FastQSource(os.path.join(dirpath, file), compressed)
-                    output = fq.FileOutput(os.path.join(output_file_path, file), compressed)
+
+#                    output = fq.FileOutput(os.path.join(output_file_path, file), compressed)
                 
 #                    oo = open(os.path.join(dirpath, file))
 #                    print oo.readline()
@@ -54,13 +80,17 @@ class IlluminaFiles:
                     while input.next():
                         e = input.entry
 #                        values = list(set([run_key.split('_')[1] for run_key in self.run.run_keys]))
-                        real_index   = e.index_sequence
-                        real_run_key = e.sequence[4:9]
-                        ini_run_key  = real_index + "_" + "NNNN" + real_run_key + "_" + e.lane_number
-                        sample       = self.run.samples[ini_run_key] 
-                        dataset_name = sample.dataset
-                        print "real_run_key = %s" % real_run_key
-                        print "e.x_coord = %s, e.pair_no = %s, e.lane_number = %s, e.index_sequence = %s\nself.header_line=%s\ne.sequence = %s" % (e.x_coord, e.pair_no, e.lane_number, e.index_sequence, e.header_line, e.sequence)
+                        ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number
+                        if ini_run_key in self.run.samples.keys():
+                            sample       = self.run.samples[ini_run_key] 
+                            dataset_name = sample.dataset
+                            self.out_file_names[dataset_name].store_entry(e)
+    
+    #                        print "real_run_key = %s" % real_run_key
+                            print "e.x_coord = %s, e.pair_no = %s, e.lane_number = %s, e.index_sequence = %s\nself.header_line=%s\ne.sequence = %s" % (e.x_coord, e.pair_no, e.lane_number, e.index_sequence, e.header_line, e.sequence)
+                        else:
+                            self.out_file_names["unknown"].store_entry(e)
+
 #        #            output.write('>%s\n%s\n' % ('.'.join([e.machine_name,
 #        #                                                  e.run_id,
 #        #                                                  e.x_coord,
@@ -77,5 +107,5 @@ class IlluminaFiles:
  
     def get_fastq_file_names(self, fastq_dir):
         for (dirpath, dirname, files) in os.walk(fastq_dir):
-            print (dirpath, dirname, files)
             return (dirpath, dirname, files)
+    

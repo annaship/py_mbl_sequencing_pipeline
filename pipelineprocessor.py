@@ -258,6 +258,7 @@ def chimera(run):
 def illumina_files(run):  
     illumina_files = IlluminaFiles(run)
     illumina_files.split_files("", "")
+    illumina_files.close_dataset_files()
     
 def env454run_info_upload(run):
 
