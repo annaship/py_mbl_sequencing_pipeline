@@ -32,6 +32,7 @@ from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
 from pipeline.validate import MetadataUtils
+from pipeline.illumina_files import IlluminaFiles
 from inspect import currentframe, getframeinfo
 
 import logging
@@ -51,8 +52,9 @@ ENV454UPLOAD            = "env454upload"
 ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
 STATUS_STEP             = 'status'
 CLEAN_STEP              = 'clean'
+ILLUMINA_FILES_STEP     = 'illumina_files'
 
-existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
+existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ILLUMINA_FILES_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -253,7 +255,10 @@ def chimera(run):
         
     # def is in utils.py: appends
     #zip_up_directory(run.run_date, run.output_dir, 'a')
-
+def illumina_files(run):  
+    illumina_files = IlluminaFiles(run)
+    illumina_files.split_files("", "")
+    
 def env454run_info_upload(run):
 
     my_read_csv = dbUpload(run)
@@ -274,7 +279,7 @@ def env454upload(run):
 
 #    my_read_csv = readCSV(run)
 #    my_read_csv.read_csv()
-
+    
     my_env454upload = dbUpload(run)
     filenames   = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
     seq_in_file = 0

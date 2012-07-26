@@ -16,6 +16,8 @@ db_conn_ok.conf
 *.gast
 csv/*
 unique_file_counts
+illumina_files_test
+fastqlib.py
 
 # Result files #
 ################
