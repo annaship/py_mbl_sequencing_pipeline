@@ -573,6 +573,7 @@ class MetadataUtils:
             # print we are done
             sys.exit()
         return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
+#        return "c"
         
     def convert_csv_to_ini(self):
         #print self.args
