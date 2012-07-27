@@ -15,49 +15,79 @@ class IlluminaFiles:
     
     """
     def __init__(self, run):
-        self.fastq_dir        = os.path.join(run.input_dir, "fastq/")
-        self.run              = run
-        self.out_file_names   = {} 
-        self.id_dataset       = {}
-        self.datasets         = list(set([self.run.samples[key].dataset for key in self.run.samples]))
-        self.output_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/analysis"
+        self.fastq_dir     = os.path.join(run.input_dir, "fastq/")
+        self.run           = run
+        self.out_files     = {} 
+        self.id_dataset    = {}
+        self.datasets      = list(set([self.run.samples[key].dataset for key in self.run.samples]))
+        self.dataset_emails = dict((self.run.samples[key].dataset, self.run.samples[key].email) for key in self.run.samples)
+#        aDict = dict((x, x+1) for x in a if x % 2 ==0)
+
+        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/analysis"
         self.open_dataset_files()
         self.total_seq = 0
 
 
     def open_dataset_files(self):
         for dataset in self.datasets + ["unknown"]:
-            output_file = os.path.join(self.output_file_path, dataset + ".fastq")
-            self.out_file_names[dataset] = fq.FastQOutput(output_file)
+            output_file = os.path.join(self.out_file_path, dataset + ".fastq")
+            self.out_files[dataset] = fq.FastQOutput(output_file)
 
     def close_dataset_files(self):
         for dataset in self.datasets + ["unknown"]:
-            self.out_file_names[dataset].close
+            self.out_files[dataset].close
             pass
 
     
 #    """
 #        while f_input.next():
-#            self.out_file_names.store(f_input)
+#            self.out_files.store(f_input)
 #            
 #        for dataset in datasets + ["unknown"]:
-#            self.out_file_names[dataset].close
+#            self.out_files[dataset].close
 #    """
     
     
-    def split_files(self, f_input_file_path, output_file_path, compressed = False):
+    def split_files(self, f_in_dir_path, f_out_dir_path, compressed = False):
 #        f_input_file_path = self.fastq_dir
         """
         TODO: 1) path should be argument, not hard-coded!
               2) loop through directories, until got files recursively
         """
-        f_input_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/" 
+        f_in_dir_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/" 
         "TODO: fastq_file_names method to collect all file_names with full path or directories_names"
-        (in_files_r1, in_files_r2) = self.get_fastq_file_names(f_input_file_path)
+        (in_files_r1, in_files_r2) = self.get_fastq_file_names(f_in_dir_path)
         self.read1(in_files_r1, compressed)
         self.read2(in_files_r2, compressed)
         print "TTT: total_seq = %s" % self.total_seq
+        self.create_inis(f_in_dir_path, self.out_file_path)
 #        return
+
+    def create_inis(self, f_in_dir_path, f_out_dir_path):
+        """
+        [general]
+        project_name = x4 ???ASK Meren why project, not dataset???
+        researcher_email = meren@mbl.edu
+        input_directory = /xraid2-2/sequencing/Illumina/20120613/JulieR
+        output_directory = /xraid2-2/sequencing/Illumina/20120613/JulieR/analysis
+        
+        [files]
+        lane_1 = x4.fastq
+         """
+        for dataset in self.datasets + ["unknown"]:
+            text = """
+[general]
+project_name = %s
+researcher_email = meren@mbl.edu
+input_directory = %s
+output_directory = %s
+
+[files]
+lane_1 = %s
+            """ % (dataset, f_in_dir_path, f_out_dir_path, self.out_files[dataset].file_path)
+            print "SSS = %s" % self.out_files[dataset].file_path
+        
+#        self.datasets      = list(set([self.run.samples[key].dataset for key in self.run.samples]))
 
  
     def get_fastq_file_names(self, f_input_file_path):
@@ -87,7 +117,7 @@ class IlluminaFiles:
                 if ini_run_key in self.run.samples.keys() and int(e.pair_no) == 1:
                     sample       = self.run.samples[ini_run_key] 
                     dataset_name = sample.dataset
-                    self.out_file_names[dataset_name].store_entry(e)
+                    self.out_files[dataset_name].store_entry(e)
                     self.collect_dataset_id()
                     "TODO: make a method:"
                     short_id1 = e.header_line.split()[0]
@@ -96,7 +126,7 @@ class IlluminaFiles:
                     self.id_dataset[id2] = dataset_name
                     self.total_seq +=1           
                 else:
-                    self.out_file_names["unknown"].store_entry(e)
+                    self.out_files["unknown"].store_entry(e)
                     
     def read2(self, files_r2, compressed):
         "3) e.pair_no = 2, find id from 2), assign dataset_name"
@@ -109,9 +139,9 @@ class IlluminaFiles:
                 
                 if int(e.pair_no) == 2:
                     dataset_name = self.id_dataset[e.header_line]
-                    self.out_file_names[dataset_name].store_entry(e)        
+                    self.out_files[dataset_name].store_entry(e)        
                 else:
-                    self.out_file_names["unknown"].store_entry(e)
+                    self.out_files["unknown"].store_entry(e)
 
     def collect_dataset_id(self):
         pass
