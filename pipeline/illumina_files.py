@@ -26,24 +26,24 @@ class IlluminaFiles:
 
 
     def open_dataset_files(self):
-        for dataset in self.dataset_emails.keys() + ["unknown"]:
-            output_file = os.path.join(self.out_file_path, dataset + ".fastq")
-            self.out_files[dataset] = fq.FastQOutput(output_file)
+        n = 0
+        for dataset in self.dataset_emails.keys():
+            for read_n in ["_R1", "_R2"]:
+                n += 1
+                key_d = dataset + read_n
+                output_file = os.path.join(self.out_file_path, key_d + ".fastq")
+                print "%s: OOO: output_file = %s" % (n, output_file)
+                self.out_files[key_d] = fq.FastQOutput(output_file)
+        self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))
+        
 
     def close_dataset_files(self):
-        for dataset in self.dataset_emails.keys() + ["unknown"]:
-            self.out_files[dataset].close
-            pass
-
-    
-#    """
-#        while f_input.next():
-#            self.out_files.store(f_input)
-#            
-#        for dataset in datasets + ["unknown"]:
-#            self.out_files[dataset].close
-#    """
-    
+        for dataset in self.dataset_emails.keys():
+            for read_n in ["_R1", "_R2"]:
+                key_d = dataset + read_n
+                self.out_files[key_d].close
+        self.out_files["unknown"].close
+   
     
     def split_files(self, f_in_dir_path, f_out_dir_path, compressed = False):
 #        f_input_file_path = self.fastq_dir
@@ -61,15 +61,6 @@ class IlluminaFiles:
 #        return
 
     def create_inis(self, f_in_dir_path, f_out_dir_path):
-        """[general]
-        project_name = x4 ???ASK Meren why project, not dataset???
-        researcher_email = meren@mbl.edu
-        input_directory = /xraid2-2/sequencing/Illumina/20120613/JulieR
-        output_directory = /xraid2-2/sequencing/Illumina/20120613/JulieR/analysis
-        
-        [files]
-        lane_1 = x4.fastq
-         """
         for dataset in self.dataset_emails.keys():
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
             "TODO: dataset+\".fastq\" should be a real name, take from creation, not create here"
@@ -116,15 +107,15 @@ lane_1 = %s
                 e = f_input.entry
                 ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number
                 if ini_run_key in self.run.samples.keys() and int(e.pair_no) == 1:
-                    sample       = self.run.samples[ini_run_key] 
-                    dataset_name = sample.dataset
-                    self.out_files[dataset_name].store_entry(e)
+                    sample = self.run.samples[ini_run_key] 
+                    dataset_file_name = sample.dataset + "_R1"
+                    self.out_files[dataset_file_name].store_entry(e)
                     self.collect_dataset_id()
                     "TODO: make a method:"
                     short_id1 = e.header_line.split()[0]
                     short_id2 = ":".join(e.header_line.split()[1].split(":")[1:])
                     id2 = short_id1 + " 2:" + short_id2
-                    self.id_dataset[id2] = dataset_name
+                    self.id_dataset[id2] = sample.dataset
                     self.total_seq +=1           
                 else:
                     self.out_files["unknown"].store_entry(e)
@@ -139,8 +130,8 @@ lane_1 = %s
                 self.total_seq +=1                
                 
                 if int(e.pair_no) == 2:
-                    dataset_name = self.id_dataset[e.header_line]
-                    self.out_files[dataset_name].store_entry(e)        
+                    file_name = self.id_dataset[e.header_line] + "_R2"
+                    self.out_files[file_name].store_entry(e)        
                 else:
                     self.out_files["unknown"].store_entry(e)
 
