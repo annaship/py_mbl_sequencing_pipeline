@@ -74,18 +74,20 @@ class IlluminaFiles:
         [files]
         lane_1 = x4.fastq
          """
-        for dataset in self.datasets + ["unknown"]:
+        for dataset in self.dataset_emails.keys() + ["unknown"]:
+#            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
             text = """
 [general]
 project_name = %s
-researcher_email = meren@mbl.edu
+researcher_email = %s
 input_directory = %s
 output_directory = %s
 
 [files]
 lane_1 = %s
-            """ % (dataset, f_in_dir_path, f_out_dir_path, self.out_files[dataset].file_path)
-            print "SSS = %s" % self.out_files[dataset].file_path
+            """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, dataset+".fastq")
+#            """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, self.out_files[dataset].file_path)
+            print "SSS = %s" % text
         
 #        self.datasets      = list(set([self.run.samples[key].dataset for key in self.run.samples]))
 
