@@ -256,10 +256,14 @@ def chimera(run):
     # def is in utils.py: appends
     #zip_up_directory(run.run_date, run.output_dir, 'a')
 def illumina_files(run):  
+    start = time()
+
     illumina_files = IlluminaFiles(run)
     illumina_files.split_files("", "")
     illumina_files.close_dataset_files()
-    
+    elapsed = (time() - start)
+    print "illumina_files time = %s" % str(elapsed)
+        
 def env454run_info_upload(run):
 
     my_read_csv = dbUpload(run)
