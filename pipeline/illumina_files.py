@@ -19,22 +19,19 @@ class IlluminaFiles:
         self.run           = run
         self.out_files     = {} 
         self.id_dataset    = {}
-        self.datasets      = list(set([self.run.samples[key].dataset for key in self.run.samples]))
         self.dataset_emails = dict((self.run.samples[key].dataset, self.run.samples[key].email) for key in self.run.samples)
-#        aDict = dict((x, x+1) for x in a if x % 2 ==0)
-
         self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/analysis"
         self.open_dataset_files()
         self.total_seq = 0
 
 
     def open_dataset_files(self):
-        for dataset in self.datasets + ["unknown"]:
+        for dataset in self.dataset_emails.keys() + ["unknown"]:
             output_file = os.path.join(self.out_file_path, dataset + ".fastq")
             self.out_files[dataset] = fq.FastQOutput(output_file)
 
     def close_dataset_files(self):
-        for dataset in self.datasets + ["unknown"]:
+        for dataset in self.dataset_emails.keys() + ["unknown"]:
             self.out_files[dataset].close
             pass
 
@@ -75,9 +72,8 @@ class IlluminaFiles:
          """
         for dataset in self.dataset_emails.keys():
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
-            "TODO: dataset+\".fastq\" should real name, take from creation, not create here"
-            text = """
-[general]
+            "TODO: dataset+\".fastq\" should be a real name, take from creation, not create here"
+            text = """[general]
 project_name = %s
 researcher_email = %s
 input_directory = %s
@@ -87,14 +83,13 @@ output_directory = %s
 lane_1 = %s
             """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, dataset+".fastq")
 #            """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, self.out_files[dataset].file_path)
-            print "SSS = %s" % text
             ini_file_name = os.path.join(f_out_dir_path,  dataset+".ini")
-            ini_file = open(ini_file_name, "w")
-            ini_file.write(text)
-            ini_file.close()
-        
-#        self.datasets      = list(set([self.run.samples[key].dataset for key in self.run.samples]))
+            self.open_write_close(ini_file_name, text)
 
+    def open_write_close(self, ini_file_name, text):
+        ini_file = open(ini_file_name, "w")
+        ini_file.write(text)
+        ini_file.close()
  
     def get_fastq_file_names(self, f_input_file_path):
         in_files_r1 = []
