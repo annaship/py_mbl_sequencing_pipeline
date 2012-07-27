@@ -47,16 +47,17 @@ class IlluminaFiles:
     def split_files(self, f_in_dir_path, f_out_dir_path, compressed = False):
 #        f_input_file_path = self.fastq_dir
         """
-        TODO: 1) path should be argument, not hard-coded!
-              2) loop through directories, until got files recursively
+        TODO: *) path should be argument, not hard-coded!
+              *) make f_in_dir_path list
         """
-        f_in_dir_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/illumina_files_test" 
+        f_in_dir_path  = ["/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/illumina_files_test/Project_Julie_v6_30", "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/illumina_files_test/Project_Julie_v6_50"]
         "TODO: fastq_file_names method to collect all file_names with full path or directories_names"
-        (in_files_r1, in_files_r2) = self.get_fastq_file_names(f_in_dir_path)
-        self.read1(in_files_r1, compressed)
-        self.read2(in_files_r2, compressed)
-        print "TTT: total_seq = %s" % self.total_seq
-        self.create_inis(f_in_dir_path, self.out_file_path)
+        for f_dir in f_in_dir_path:
+            (in_files_r1, in_files_r2) = self.get_fastq_file_names(f_dir)
+            self.read1(in_files_r1, compressed)
+            self.read2(in_files_r2, compressed)
+            print "TTT: total_seq = %s" % self.total_seq
+            self.create_inis(f_in_dir_path, self.out_file_path)
 #        return
 
     def create_inis(self, f_in_dir_path, f_out_dir_path):
@@ -102,6 +103,7 @@ pair_2 = %s
             2) collect the relevant part of id
         """
         for file_r1 in files_r1:
+            print "FFF1: file %s" % file_r1
             f_input  = fq.FastQSource(file_r1, compressed)
             while f_input.next():
                 e = f_input.entry
@@ -124,6 +126,7 @@ pair_2 = %s
     def read2(self, files_r2, compressed):
         "3) e.pair_no = 2, find id from 2), assign dataset_name"
         for file_r2 in files_r2:
+            print "FFF2: file %s" % file_r2
             f_input  = fq.FastQSource(file_r2, compressed)
             while f_input.next():
                 e = f_input.entry
