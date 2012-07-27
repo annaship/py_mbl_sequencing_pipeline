@@ -64,8 +64,7 @@ class IlluminaFiles:
 #        return
 
     def create_inis(self, f_in_dir_path, f_out_dir_path):
-        """
-        [general]
+        """[general]
         project_name = x4 ???ASK Meren why project, not dataset???
         researcher_email = meren@mbl.edu
         input_directory = /xraid2-2/sequencing/Illumina/20120613/JulieR
@@ -74,8 +73,9 @@ class IlluminaFiles:
         [files]
         lane_1 = x4.fastq
          """
-        for dataset in self.dataset_emails.keys() + ["unknown"]:
+        for dataset in self.dataset_emails.keys():
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
+            "TODO: dataset+\".fastq\" should real name, take from creation, not create here"
             text = """
 [general]
 project_name = %s
@@ -88,6 +88,10 @@ lane_1 = %s
             """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, dataset+".fastq")
 #            """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, self.out_files[dataset].file_path)
             print "SSS = %s" % text
+            ini_file_name = os.path.join(f_out_dir_path,  dataset+".ini")
+            ini_file = open(ini_file_name, "w")
+            ini_file.write(text)
+            ini_file.close()
         
 #        self.datasets      = list(set([self.run.samples[key].dataset for key in self.run.samples]))
 
