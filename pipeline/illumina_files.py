@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append("/bioware/pythonmodules/fastqlib")
+sys.path.append("/bioware/pythonmodules/illumina-utils/fastqlib")
 import fastqlib as fq
 #from collections import defaultdict
 
