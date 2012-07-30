@@ -28,10 +28,26 @@ class IlluminaFiles:
         self.out_files      = {} 
         self.id_dataset     = {}
         self.dataset_emails = dict((self.run.samples[key].dataset, self.run.samples[key].email) for key in self.run.samples)
-        self.in_file_path   = self.run.input_dir
-        self.out_file_path  = self.create_out_dir()
+#        self.in_file_path   = self.run.input_dir
+#        self.out_file_path  = self.create_out_dir()
+        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
+        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
         self.open_dataset_files()
-    
+        
+    def split_files(self, compressed = False):
+        """
+        TODO: *) path should be argument, not hard-coded!
+              *) compressed should be argument, not hard-coded!
+              *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
+        """         
+        compressed = ast.literal_eval(compressed)     
+        (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
+        self.read1(in_files_r1, compressed)
+        self.read2(in_files_r2, compressed)
+#        self.create_inis(self.out_file_path, self.out_file_path)
+#        self.perfect_reads()
+#        self.uniq_fa()
+            
     def create_out_dir(self):
         dirname = os.path.join(self.run.args.output_dir, "analysis")
         try:
@@ -63,20 +79,6 @@ class IlluminaFiles:
                 self.out_files[key_d].close
         self.out_files["unknown"].close
    
-    
-    def split_files(self, compressed = False):
-        """
-        TODO: *) path should be argument, not hard-coded!
-              *) compressed should be argument, not hard-coded!
-              *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
-        """         
-        compressed = ast.literal_eval(compressed)     
-        (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
-        self.read1(in_files_r1, compressed)
-        self.read2(in_files_r2, compressed)
-        self.create_inis(self.out_file_path, self.out_file_path)
-        self.perfect_reads()
-        self.uniq_fa()
 
     def get_all_files(self):
         files = {}
