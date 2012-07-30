@@ -588,8 +588,10 @@ class MetadataUtils:
         if 'validate' in steps.split(','):
             # print we are done
             sys.exit()
-        return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
-#        return "c"
+        if os.uname()[1] == 'ashipunova.mbl.edu':
+            return "c"
+        else:
+            return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
         
     def convert_csv_to_ini(self):
         #print self.args

@@ -117,6 +117,8 @@ if __name__ == '__main__':
                                                  help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL') 
     parser.add_argument('-cp', '--compressed',  required=False,   action="store",       dest = "compressed",        default='True',       
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
+    parser.add_argument('-o', '--output_directory',  required=False,   action="store",  dest = "output_dir",        default='.',       
+                                                 help = 'Output directory') 
     
 
     #DEBUG	Detailed information, typically of interest only when diagnosing problems.

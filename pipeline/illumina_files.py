@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.append("/bioware/pythonmodules/illumina-utils/")
+sys.path.append("/Users/ashipunova/bin/illumina-utils")
 import fastqlib as fq
 import fastalib as fa
 from subprocess import call
@@ -19,6 +20,13 @@ class IlluminaFiles:
     
     """
     def __init__(self, run):
+        if os.uname()[1] == 'ashipunova.mbl.edu':
+            self.LOCAL = True
+            import shutil 
+            shutil.rmtree('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis/')
+
+        else:
+            self.LOCAL = False
         self.run            = run
         self.out_files      = {} 
         self.id_dataset     = {}
@@ -26,9 +34,9 @@ class IlluminaFiles:
         self.in_file_path   = self.run.input_dir
         self.out_file_path  = self.create_out_dir()
         self.open_dataset_files()
-
+    
     def create_out_dir(self):
-        dirname = os.path.join(self.run.output_dir, "analysis")
+        dirname = os.path.join(self.run.args.output_dir, "analysis")
         try:
             os.makedirs(dirname)
         except OSError:
@@ -87,13 +95,14 @@ class IlluminaFiles:
     def perfect_reads(self):
         n = 0
         print "Extract perfect V6 reads:"
-        files = self.get_all_files()
-        for full_name in files.keys():            
-            if files[full_name][1] == ".ini":
-                n +=1
-                print "%s ini file: %s" % (n, full_name)
-                program_name = "analyze-illumina-v6-overlaps"
-                call([program_name, full_name])
+        for dataset in self.dataset_emails.keys():
+            file_name = dataset + ".ini"
+            n +=1
+            print "%s ini file: %s" % (n, file_name)
+            program_name = "analyze-illumina-v6-overlaps"
+            if self.LOCAL:
+                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"
+            call([program_name, file_name])
 #                analyze-illumina-v6-overlaps  W5_4.ini
 #                pass 
     
@@ -107,6 +116,8 @@ class IlluminaFiles:
                 n +=1   
                 print "%s fasta file: %s" % (n, full_name)
                 program_name = "fastaunique"
+                if self.LOCAL:
+                    program_name = "/Users/ashipunova/bin/illumina-utils/fastaunique"                
                 call([program_name, full_name])
 #                pass
 
@@ -122,7 +133,7 @@ class IlluminaFiles:
     def create_inis(self, f_in_dir_path, f_out_dir_path):
         for dataset in self.dataset_emails.keys():
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
-            "TODO: dataset+\".fastq\" should be a real name, take from creation, not create here"
+            "TODO: one argument"
             text = """[general]
 project_name = %s
 researcher_email = %s
