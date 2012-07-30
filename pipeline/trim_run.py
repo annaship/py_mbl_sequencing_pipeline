@@ -14,12 +14,15 @@
 #
 import os
 import shutil
+import sys
 #import hashlib
+sys.path.append("/bioware/pythonmodules/illumina-utils/")
+sys.path.append("/Users/ashipunova/bin/illumina-utils")
 
 from suites.primer import PrimerSuite 
 from pipeline.primer_utils import *
 from pipeline.utils import *
-from pipeline.fastalib import *
+#from fastalib import *
 from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
 from pipeline.pipelinelogging import logger

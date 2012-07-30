@@ -18,6 +18,9 @@
 import os
 from stat import * # ST_SIZE etc
 import sys
+sys.path.append("/bioware/pythonmodules/illumina-utils/")
+sys.path.append("/Users/ashipunova/bin/illumina-utils")
+
 import shutil
 import types
 from time import sleep, time, gmtime, strftime
@@ -37,7 +40,7 @@ from inspect import currentframe, getframeinfo
 
 import logging
 import json    
-import pipeline.fastalib as u
+import fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
 

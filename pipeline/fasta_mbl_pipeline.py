@@ -1,5 +1,8 @@
 import sys,os
-from pipeline.fastalib import *
+
+sys.path.append("/bioware/pythonmodules/illumina-utils/")
+sys.path.append("/Users/ashipunova/bin/illumina-utils")
+from fastalib import *
 from pipeline.Fasta import sfasta
 from pipeline.utils import *
 from time import sleep
