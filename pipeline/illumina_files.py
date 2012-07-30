@@ -75,6 +75,7 @@ class IlluminaFiles:
             files[full_name] = (file_base, file_extension)
         return files
     
+    "TODO: made one method out of the next two"
     def perfect_reads(self):
         files = self.get_all_files()
         for full_name in files.keys():            
@@ -83,16 +84,20 @@ class IlluminaFiles:
 #                analyze-illumina-v6-overlaps  W5_4.ini 
     
     def uniq_fa(self):
-        "TODO: use /bioware/bin/fastaunique"
+        "use /bioware/bin/fastaunique"
         files = self.get_all_files()
-        for full_name in files.keys():            
-            fasta = fa.SequenceSource(full_name, unique = True) 
-            while fasta.next():
-                e = fasta.entry
-                """TODO: open all files with name -PERFECT_reads.fa.unique
-                files[full_name][0] + '.fa.unique'
-                """
-                self.out_files["W5_4-PERFECT_reads.fa.unique"].store_entry(e)
+        for full_name in files.keys():    
+            if files[full_name][1] == ".fa":
+                call(["fastaunique", full_name])
+
+#                    
+#            fasta = fa.SequenceSource(full_name, unique = True) 
+#            while fasta.next():
+#                e = fasta.entry
+#                """TODO: open all files with name -PERFECT_reads.fa.unique
+#                files[full_name][0] + '.fa.unique'
+#                """
+#                self.out_files["W5_4-PERFECT_reads.fa.unique"].store_entry(e)
 
     def create_inis(self, f_in_dir_path, f_out_dir_path):
         for dataset in self.dataset_emails.keys():
@@ -146,7 +151,6 @@ pair_2 = %s
                     sample = self.run.samples[ini_run_key] 
                     dataset_file_name = sample.dataset + "_R1"
                     self.out_files[dataset_file_name].store_entry(e)
-                    self.collect_dataset_id()
                     "TODO: make a method:"
                     short_id1 = e.header_line.split()[0]
                     short_id2 = ":".join(e.header_line.split()[1].split(":")[1:])
@@ -172,5 +176,3 @@ pair_2 = %s
                 else:
                     self.out_files["unknown"].store_entry(e)
 
-    def collect_dataset_id(self):
-        pass
