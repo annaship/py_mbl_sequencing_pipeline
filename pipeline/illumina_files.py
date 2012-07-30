@@ -22,9 +22,6 @@ class IlluminaFiles:
     def __init__(self, run):
         if os.uname()[1] == 'ashipunova.mbl.edu':
             self.LOCAL = True
-            import shutil 
-            shutil.rmtree('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis/')
-
         else:
             self.LOCAL = False
         self.run            = run
@@ -96,7 +93,7 @@ class IlluminaFiles:
         n = 0
         print "Extract perfect V6 reads:"
         for dataset in self.dataset_emails.keys():
-            file_name = dataset + ".ini"
+            file_name = os.path.join(self.out_file_path, dataset + ".ini")
             n +=1
             print "%s ini file: %s" % (n, file_name)
             program_name = "analyze-illumina-v6-overlaps"
@@ -174,7 +171,6 @@ pair_2 = %s
         """
         for file_r1 in files_r1:
             print "FFF1: file %s" % file_r1
-            a = False
             f_input  = fq.FastQSource(file_r1, compressed)
             while f_input.next():
                 e = f_input.entry
@@ -183,6 +179,7 @@ pair_2 = %s
                     sample = self.run.samples[ini_run_key] 
                     dataset_file_name = sample.dataset + "_R1"
                     self.out_files[dataset_file_name].store_entry(e)
+#                    print "id = %s,\nseq = %s" % (e.id, e.sequence)
                     "TODO: make a method:"
                     short_id1 = e.header_line.split()[0]
                     short_id2 = ":".join(e.header_line.split()[1].split(":")[1:])
