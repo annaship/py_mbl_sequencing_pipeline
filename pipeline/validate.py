@@ -188,13 +188,29 @@ class MetadataUtils:
         if warn_code: warn=True
         #print self.data_object['input_dir']
         #print self.data_object['input_files']
-        if 'input_dir' in self.data_object['general'] and self.data_object['general']['input_dir'] and ('input_files' not in self.data_object['general'] or not self.data_object['general']['input_files']):
-            logger.error("There are no files found in the input directory: "+self.data_object['general']['input_dir'])
-            error=True
-        elif 'input_dir' not in self.data_object['general'] and 'input_files' not in self.data_object['general']:
+        
+        if 'input_dir' not in self.data_object['general'] and 'input_files' not in self.data_object['general']:
             logger.warning("No input directory and no input files")        
             warn=True
-        
+        elif not os.path.isdir(self.data_object['general']['input_dir']):
+            logger.error("That is not a directory: "+self.data_object['general']['input_dir'])
+            error=True
+        elif self.data_object['general']['input_file_format'] == 'fastq' and self.data_object['general']['platform'] == 'illumina':
+                file_exists = False
+    #            if 'input_dir' in self.data_object['general'] and self.data_object['general']['input_dir']:
+                for dirname, dirnames, filenames in os.walk(self.data_object['general']['input_dir']):
+    #                if not filenames:
+                    for file_name in filenames:
+                        if os.path.isfile(os.path.join(dirname, file_name)):
+                            file_exists = True
+                            break
+                if not file_exists:
+                    logger.error("There are no files found in the input directory: "+self.data_object['general']['input_dir'])
+                    error=True
+        elif 'input_dir' in self.data_object['general'] and self.data_object['general']['input_dir'] and ('input_files' not in self.data_object['general'] or not self.data_object['general']['input_files']):
+            logger.error("There are no files found in the input directory: "+self.data_object['general']['input_dir'])
+            error=True
+                        
         if error:
             sys.exit( """\n\tTHERE WERE SEVERE PROBLEMS WITH THE CONFIG FILE - EXITING 
             PLEASE CORRECT THEM AND START OVER.\n
