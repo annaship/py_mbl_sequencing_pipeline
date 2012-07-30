@@ -4,6 +4,7 @@ sys.path.append("/bioware/pythonmodules/illumina-utils/")
 import fastqlib as fq
 import fastalib as fa
 from subprocess import call
+import ast
 
 #from collections import defaultdict
 
@@ -64,7 +65,8 @@ class IlluminaFiles:
         TODO: *) path should be argument, not hard-coded!
               *) compressed should be argument, not hard-coded!
               *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
-        """              
+        """         
+        compressed = ast.literal_eval(compressed)     
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
         self.read1(in_files_r1, compressed)
         self.read2(in_files_r2, compressed)
@@ -154,6 +156,7 @@ pair_2 = %s
         """
         for file_r1 in files_r1:
             print "FFF1: file %s" % file_r1
+            a = False
             f_input  = fq.FastQSource(file_r1, compressed)
             while f_input.next():
                 e = f_input.entry
