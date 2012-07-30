@@ -79,7 +79,6 @@ class IlluminaFiles:
             for read_n in ["_R1", "_R2"]:
                 key_d = dataset + read_n
                 self.out_files[key_d].close()
-                print key_d
         self.out_files["unknown"].close()
         return
    

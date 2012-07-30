@@ -283,6 +283,15 @@ class PipelneUtils:
         with open(out_file, "a") as myfile:
             myfile.write(str(fa_file_name) + ": " + str(seq_in_file) + "\n")
     
+    def get_all_files(self, out_file_path):
+        files = {}
+        for dirname, dirnames, filenames in os.walk(out_file_path):
+            for file_name in filenames:
+                full_name = os.path.join(dirname, file_name)
+                (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
+                files[full_name] = (file_base, file_extension)
+        print "len(files) = %s" % len(files)
+        return files    
 
 
 if __name__=='__main__':

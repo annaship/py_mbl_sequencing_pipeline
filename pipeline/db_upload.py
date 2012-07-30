@@ -73,8 +73,10 @@ class dbUpload:
         print dir(run)
         self.rundate     = self.run.run_date
         self.use_cluster = 1
-        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
-        self.gast_dir    = os.path.join(run.input_dir, "gast/")
+        self.in_file_path   = self.run.input_dir
+#
+#        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
+#        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
         self.my_conn     = MyConnection()    
@@ -90,9 +92,15 @@ class dbUpload:
         
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
-    def get_fasta_file_names(self, fasta_dir):
-        for (dirpath, dirname, files) in os.walk(fasta_dir):
-            return files
+    def get_fasta_file_names(self):
+        fa_files = []
+        pipelne_utils   = PipelneUtils()
+        files = pipelne_utils.get_all_files(self.in_file_path)
+        for full_name in files.keys():    
+            if files[full_name][1] == ".fa":
+                print full_name
+                fa_files.append(full_name)
+        return fa_files
         
     def get_run_info_ill_id(self, filename_base):
         my_sql = """SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'""" % (filename_base)
@@ -136,10 +144,22 @@ class dbUpload:
         self.my_conn.execute_no_fetch(my_sql)
  
     def get_gasta_result(self, filename):
-        gast_file_name = self.gast_dir + filename + '.gast'
-        with open(gast_file_name) as fd:
-            gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
-        return gast_dict
+#        gast_file_name = self.gast_dir + filename + '.gast'
+        gast_file_name = self.in_file_path + filename + '.gast'
+        try:
+            with open(gast_file_name) as fd:
+                gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
+            return gast_dict
+        except IOError, e:
+            print dir(e)
+            if e.errno == 2:
+                print 
+                # suppress "No such file or directory" error
+                pass            
+        except OSError, e:
+                # reraise the exception, as it's an unexpected error
+                raise
+        
 
     def insert_taxonomy(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]

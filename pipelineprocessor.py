@@ -293,14 +293,14 @@ def env454upload(run):
 #    my_read_csv.read_csv()
     
     my_env454upload = dbUpload(run)
-    filenames   = my_env454upload.get_fasta_file_names(my_env454upload.fasta_dir)
+    filenames   = my_env454upload.get_fasta_file_names()
     seq_in_file = 0
     total_seq   = 0
     
     for filename in filenames:
         try:
             logger.debug("\n----------------\nfilename = %s" % filename)
-            fasta_file_path = my_env454upload.fasta_dir + filename
+            fasta_file_path = my_env454upload.in_file_path + filename
             filename_base   = "-".join(filename.split("-")[:-1])
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
             gast_dict       = my_env454upload.get_gasta_result(filename)
