@@ -1,7 +1,10 @@
 import sys
 import os
-sys.path.append("/bioware/pythonmodules/illumina-utils/fastqlib")
+sys.path.append("/bioware/pythonmodules/illumina-utils/")
 import fastqlib as fq
+import fastalib as fa
+from subprocess import call
+
 #from collections import defaultdict
 
 class IlluminaFiles:
@@ -57,8 +60,39 @@ class IlluminaFiles:
             self.read1(in_files_r1, compressed)
             self.read2(in_files_r2, compressed)
             print "TTT: total_seq = %s" % self.total_seq
-            self.create_inis(f_in_dir_path, self.out_file_path)
+            self.create_inis(self.out_file_path, self.out_file_path)
+            self.perfect_reads()
+            self.uniq_fa()
 #        return
+
+    def get_all_files(self):
+        files = {}
+        (dirname, dirnames, filenames) = os.walk(self.out_file_path)
+
+        for file_name in filenames:
+            full_name = os.path.join(dirname, file_name)
+            (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
+            files[full_name] = (file_base, file_extension)
+        return files
+    
+    def perfect_reads(self):
+        files = self.get_all_files()
+        for full_name in files.keys():            
+            if files[full_name][1] == ".ini":
+                call(["analyze-illumina-v6-overlaps", full_name])
+#                analyze-illumina-v6-overlaps  W5_4.ini 
+    
+    def uniq_fa(self):
+        "TODO: use /bioware/bin/fastaunique"
+        files = self.get_all_files()
+        for full_name in files.keys():            
+            fasta = fa.SequenceSource(full_name, unique = True) 
+            while fasta.next():
+                e = fasta.entry
+                """TODO: open all files with name -PERFECT_reads.fa.unique
+                files[full_name][0] + '.fa.unique'
+                """
+                self.out_files["W5_4-PERFECT_reads.fa.unique"].store_entry(e)
 
     def create_inis(self, f_in_dir_path, f_out_dir_path):
         for dataset in self.dataset_emails.keys():
