@@ -67,12 +67,11 @@ class IlluminaFiles:
 
     def get_all_files(self):
         files = {}
-        (dirname, dirnames, filenames) = os.walk(self.out_file_path)
-
-        for file_name in filenames:
-            full_name = os.path.join(dirname, file_name)
-            (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
-            files[full_name] = (file_base, file_extension)
+        for dirname, dirnames, filenames in os.walk(self.out_file_path):
+            for file_name in filenames:
+                full_name = os.path.join(dirname, file_name)
+                (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
+                files[full_name] = (file_base, file_extension)
         return files
     
     "TODO: made one method out of the next two"
@@ -80,7 +79,8 @@ class IlluminaFiles:
         files = self.get_all_files()
         for full_name in files.keys():            
             if files[full_name][1] == ".ini":
-                call(["analyze-illumina-v6-overlaps", full_name])
+                program_name = "analyze-illumina-v6-overlaps"
+                call([program_name, full_name])
 #                analyze-illumina-v6-overlaps  W5_4.ini 
     
     def uniq_fa(self):
@@ -88,7 +88,8 @@ class IlluminaFiles:
         files = self.get_all_files()
         for full_name in files.keys():    
             if files[full_name][1] == ".fa":
-                call(["fastaunique", full_name])
+                program_name = "fastaunique"
+                call([program_name, full_name])
 
 #                    
 #            fasta = fa.SequenceSource(full_name, unique = True) 
