@@ -80,15 +80,18 @@ class IlluminaFiles:
                 full_name = os.path.join(dirname, file_name)
                 (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
                 files[full_name] = (file_base, file_extension)
+        print "len(files) = %s" % len(files)
         return files
     
     "TODO: made one method out of the next two"
     def perfect_reads(self):
-        print "Extract perfect V6 reads"
+        n = 0
+        print "Extract perfect V6 reads:"
         files = self.get_all_files()
         for full_name in files.keys():            
             if files[full_name][1] == ".ini":
-                print "Ini file: %s" % full_name
+                n +=1
+                print "%s ini file: %s" % (n, full_name)
                 program_name = "analyze-illumina-v6-overlaps"
                 call([program_name, full_name])
 #                analyze-illumina-v6-overlaps  W5_4.ini
@@ -96,10 +99,13 @@ class IlluminaFiles:
     
     def uniq_fa(self):
         "TODO: use /bioware/bin/fastaunique"
+        n = 0        
         print "Uniqueing fasta files"      
         files = self.get_all_files()
         for full_name in files.keys():    
             if files[full_name][1] == ".fa":
+                n +=1   
+                print "%s fasta file: %s" % (n, full_name)
                 program_name = "fastaunique"
                 call([program_name, full_name])
 #                pass
