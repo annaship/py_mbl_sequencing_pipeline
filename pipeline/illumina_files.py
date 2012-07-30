@@ -18,15 +18,27 @@ class IlluminaFiles:
     
     """
     def __init__(self, run):
-        self.fastq_dir     = os.path.join(run.input_dir, "fastq/")
-        self.run           = run
-        self.out_files     = {} 
-        self.id_dataset    = {}
+        self.run            = run
+        self.out_files      = {} 
+        self.id_dataset     = {}
         self.dataset_emails = dict((self.run.samples[key].dataset, self.run.samples[key].email) for key in self.run.samples)
-        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/analysis"
+        self.in_file_path   = self.run.input_dir
+        self.out_file_path  = self.create_out_dir()
         self.open_dataset_files()
         self.total_seq = 0
 
+    def create_out_dir(self):
+        dirname = os.path.join(self.run.output_dir, "analysis")
+        try:
+            os.makedirs(dirname)
+        except OSError:
+            if os.path.isdir(dirname):
+                pass
+            else:
+                # There was an error on creation, so make sure we know about it
+                raise        
+        return dirname
+        
 
     def open_dataset_files(self):
         n = 0
@@ -47,23 +59,19 @@ class IlluminaFiles:
         self.out_files["unknown"].close
    
     
-    def split_files(self, f_in_dir_path, f_out_dir_path, compressed = False):
-#        f_input_file_path = self.fastq_dir
+    def split_files(self, compressed = False):
         """
         TODO: *) path should be argument, not hard-coded!
               *) compressed should be argument, not hard-coded!
-        """
-        f_in_dir_path  = ["/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/illumina_files_test/Project_Julie_v6_30", "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/illumina_files_test/Project_Julie_v6_50"]
-        "TODO: fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)"
-        for f_dir in f_in_dir_path:
-            (in_files_r1, in_files_r2) = self.get_fastq_file_names(f_dir)
-            self.read1(in_files_r1, compressed)
-            self.read2(in_files_r2, compressed)
-            print "TTT: total_seq = %s" % self.total_seq
-            self.create_inis(self.out_file_path, self.out_file_path)
-            self.perfect_reads()
-            self.uniq_fa()
-#        return
+              *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
+        """              
+        (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
+        self.read1(in_files_r1, compressed)
+        self.read2(in_files_r2, compressed)
+        print "TTT: total_seq = %s" % self.total_seq
+        self.create_inis(self.out_file_path, self.out_file_path)
+        self.perfect_reads()
+        self.uniq_fa()
 
     def get_all_files(self):
         files = {}
@@ -79,17 +87,19 @@ class IlluminaFiles:
         files = self.get_all_files()
         for full_name in files.keys():            
             if files[full_name][1] == ".ini":
-                program_name = "analyze-illumina-v6-overlaps"
-                call([program_name, full_name])
-#                analyze-illumina-v6-overlaps  W5_4.ini 
+#                program_name = "analyze-illumina-v6-overlaps"
+#                call([program_name, full_name])
+#                analyze-illumina-v6-overlaps  W5_4.ini
+                pass 
     
     def uniq_fa(self):
         "use /bioware/bin/fastaunique"
         files = self.get_all_files()
         for full_name in files.keys():    
             if files[full_name][1] == ".fa":
-                program_name = "fastaunique"
-                call([program_name, full_name])
+#                program_name = "fastaunique"
+#                call([program_name, full_name])
+                pass
 
 #                    
 #            fasta = fa.SequenceSource(full_name, unique = True) 

@@ -259,7 +259,7 @@ def illumina_files(run):
     start = time()
 
     illumina_files = IlluminaFiles(run)
-    illumina_files.split_files("", "")
+    illumina_files.split_files()
     illumina_files.close_dataset_files()
     elapsed = (time() - start)
     print "illumina_files time = %s" % str(elapsed)
