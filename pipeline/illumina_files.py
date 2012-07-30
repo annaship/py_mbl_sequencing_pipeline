@@ -51,10 +51,10 @@ class IlluminaFiles:
 #        f_input_file_path = self.fastq_dir
         """
         TODO: *) path should be argument, not hard-coded!
-              *) make f_in_dir_path list
+              *) compressed should be argument, not hard-coded!
         """
         f_in_dir_path  = ["/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/illumina_files_test/Project_Julie_v6_30", "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/illumina_files_test/Project_Julie_v6_50"]
-        "TODO: fastq_file_names method to collect all file_names with full path or directories_names"
+        "TODO: fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)"
         for f_dir in f_in_dir_path:
             (in_files_r1, in_files_r2) = self.get_fastq_file_names(f_dir)
             self.read1(in_files_r1, compressed)
