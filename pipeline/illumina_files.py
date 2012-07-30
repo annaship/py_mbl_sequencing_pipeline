@@ -89,8 +89,8 @@ class IlluminaFiles:
         files = self.get_all_files()
         for full_name in files.keys():            
             if files[full_name][1] == ".ini":
-#                program_name = "analyze-illumina-v6-overlaps"
-#                call([program_name, full_name])
+                program_name = "analyze-illumina-v6-overlaps"
+                call([program_name, full_name])
 #                analyze-illumina-v6-overlaps  W5_4.ini
                 pass 
     
@@ -99,9 +99,9 @@ class IlluminaFiles:
         files = self.get_all_files()
         for full_name in files.keys():    
             if files[full_name][1] == ".fa":
-#                program_name = "fastaunique"
-#                call([program_name, full_name])
-                pass
+                program_name = "fastaunique"
+                call([program_name, full_name])
+#                pass
 
 #                    
 #            fasta = fa.SequenceSource(full_name, unique = True) 
