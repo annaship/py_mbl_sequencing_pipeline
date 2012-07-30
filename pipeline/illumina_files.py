@@ -45,7 +45,9 @@ class IlluminaFiles:
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
         self.read1(in_files_r1, compressed)
         self.read2(in_files_r2, compressed)
-        self.create_inis(self.out_file_path, self.out_file_path)
+        self.create_inis()
+        self.close_dataset_files()
+
 #        self.perfect_reads()
 #        self.uniq_fa()
             
@@ -76,10 +78,11 @@ class IlluminaFiles:
         for dataset in self.dataset_emails.keys():
             for read_n in ["_R1", "_R2"]:
                 key_d = dataset + read_n
-                self.out_files[key_d].close
-        self.out_files["unknown"].close
+                self.out_files[key_d].close()
+                print key_d
+        self.out_files["unknown"].close()
+        return
    
-
     def get_all_files(self):
         files = {}
         for dirname, dirnames, filenames in os.walk(self.out_file_path):
@@ -129,7 +132,7 @@ class IlluminaFiles:
 #                """
 #                self.out_files["W5_4-PERFECT_reads.fa.unique"].store_entry(e)
 
-    def create_inis(self, f_in_dir_path, f_out_dir_path):
+    def create_inis(self):
         for dataset in self.dataset_emails.keys():
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
             "TODO: one argument"
@@ -142,9 +145,9 @@ output_directory = %s
 [files]
 pair_1 = %s
 pair_2 = %s
-            """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, dataset+"_R1.fastq", dataset+"_R2.fastq")
+            """ % (dataset, self.dataset_emails[dataset], self.out_file_path, self.results_path, dataset+"_R1.fastq", dataset+"_R2.fastq")
 #            """ % (dataset, self.dataset_emails[dataset], f_in_dir_path, f_out_dir_path, self.out_files[dataset].file_path)
-            ini_file_name = os.path.join(f_out_dir_path,  dataset+".ini")
+            ini_file_name = os.path.join(self.out_file_path,  dataset+".ini")
             self.open_write_close(ini_file_name, text)
 
     def open_write_close(self, ini_file_name, text):
