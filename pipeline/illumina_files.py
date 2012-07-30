@@ -26,7 +26,6 @@ class IlluminaFiles:
         self.in_file_path   = self.run.input_dir
         self.out_file_path  = self.create_out_dir()
         self.open_dataset_files()
-        self.total_seq = 0
 
     def create_out_dir(self):
         dirname = os.path.join(self.run.output_dir, "analysis")
@@ -70,7 +69,6 @@ class IlluminaFiles:
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
         self.read1(in_files_r1, compressed)
         self.read2(in_files_r2, compressed)
-        print "TTT: total_seq = %s" % self.total_seq
         self.create_inis(self.out_file_path, self.out_file_path)
         self.perfect_reads()
         self.uniq_fa()
@@ -86,16 +84,19 @@ class IlluminaFiles:
     
     "TODO: made one method out of the next two"
     def perfect_reads(self):
+        print "Extract perfect V6 reads"
         files = self.get_all_files()
         for full_name in files.keys():            
             if files[full_name][1] == ".ini":
+                print "Ini file: %s" % full_name
                 program_name = "analyze-illumina-v6-overlaps"
                 call([program_name, full_name])
 #                analyze-illumina-v6-overlaps  W5_4.ini
-                pass 
+#                pass 
     
     def uniq_fa(self):
-        "use /bioware/bin/fastaunique"
+        "TODO: use /bioware/bin/fastaunique"
+        print "Uniqueing fasta files"      
         files = self.get_all_files()
         for full_name in files.keys():    
             if files[full_name][1] == ".fa":
@@ -171,7 +172,6 @@ pair_2 = %s
                     id2 = short_id1 + " 2:" + short_id2
                     self.id_dataset[id2] = sample.dataset
 
-                    self.total_seq +=1           
                 else:
                     self.out_files["unknown"].store_entry(e)
                     
@@ -182,7 +182,6 @@ pair_2 = %s
             f_input  = fq.FastQSource(file_r2, compressed)
             while f_input.next():
                 e = f_input.entry
-                self.total_seq +=1                
                 
                 if (int(e.pair_no) == 2) and (e.header_line in self.id_dataset):
                     file_name = self.id_dataset[e.header_line] + "_R2"
