@@ -45,6 +45,7 @@ class MyConnection:
             self.cursor.execute(sql)
             self.conn.commit()
 #            if (self.conn.affected_rows()):
+#            print dir(self.cursor)
             return self.cursor.lastrowid
 #        logger.debug("rows = "  + str(self.rows))
  
@@ -71,7 +72,7 @@ class dbUpload:
     """
     def __init__(self, run = None):
         self.run         = run
-        print dir(run)
+#        print dir(run)
         self.rundate     = self.run.run_date
         self.use_cluster = 1
         self.in_file_path   = self.run.input_dir
@@ -158,7 +159,6 @@ class dbUpload:
 #            print "errno = %s" % e.errno
             logger.debug("errno = %s" % e.errno)
             if e.errno == 2:
-                print 
                 # suppress "No such file or directory" error
                 pass            
         except OSError, e:
@@ -168,19 +168,35 @@ class dbUpload:
 
     def insert_taxonomy(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+        "if we already had this taxonomy in this run, just skip it"
         if taxonomy in self.tax_id_dict:
             next
         else:
             my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
             tax_id = self.my_conn.execute_no_fetch(my_sql)
             print "insert_taxonomy: tax_id = %s, taxonomy = %s" % (tax_id, taxonomy)
-    #        collect taxonomy and id info into dict, to use later in insert
+            self.create_tax_id_dict(tax_id, taxonomy)
+
+    # collect taxonomy and id info into dict, to use later in insert
+    def create_tax_id_dict(self, tax_id, taxonomy):
+        print "create_tax_id_dict:  tax_id = %s, taxonomy = %s" % (tax_id, taxonomy)
+        if tax_id:
             self.tax_id_dict[taxonomy] = tax_id
-        
+        else:
+            taxonomy_id = self.get_id("taxonomy", taxonomy)
+            self.tax_id_dict[taxonomy] = taxonomy_id
+            
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         sequence_ill_id = self.seq_id_dict[fasta.seq]
-        taxonomy_id     = self.tax_id_dict[taxonomy] 
+        if taxonomy in self.tax_id_dict:
+            try:
+                taxonomy_id = self.tax_id_dict[taxonomy] 
+            except Exception, e:
+                logger.debug("Error = %s" % e)
+                raise
+
+            
         print "In insert_sequence_uniq_info_ill: sequence_ill_id = %s, taxonomy_id = %s\ntaxonomy = %s" % (sequence_ill_id, taxonomy_id, taxonomy)
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
