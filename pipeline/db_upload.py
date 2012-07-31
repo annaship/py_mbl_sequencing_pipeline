@@ -172,17 +172,21 @@ class dbUpload:
         if taxonomy in self.tax_id_dict:
             next
         else:
-            my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-            tax_id = self.my_conn.execute_no_fetch(my_sql)
-            self.create_tax_id_dict(tax_id, taxonomy)
+            tax_id = self.get_id("taxonomy", taxonomy)
+            if tax_id:
+                self.tax_id_dict[taxonomy] = tax_id
+            else:
+                my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
+                tax_id = self.my_conn.execute_no_fetch(my_sql)
+                self.tax_id_dict[taxonomy] = tax_id
 
     # collect taxonomy and id info into dict, to use later in insert
-    def create_tax_id_dict(self, tax_id, taxonomy):
-        if tax_id:
-            self.tax_id_dict[taxonomy] = tax_id
-        else:
-            taxonomy_id = self.get_id("taxonomy", taxonomy)
-            self.tax_id_dict[taxonomy] = taxonomy_id
+#    def create_tax_id_dict(self, tax_id, taxonomy):
+#        if tax_id:
+#            self.tax_id_dict[taxonomy] = tax_id
+#        else:
+#            taxonomy_id = self.get_id("taxonomy", taxonomy)
+#            self.tax_id_dict[taxonomy] = taxonomy_id
             
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
@@ -298,6 +302,7 @@ class dbUpload:
     def insert_primer(self):
         pass
         
+    "Do not do that! The sequence can be from an another run" 
     def del_sequence_uniq_info(self):
         my_sql = """DELETE FROM sequence_uniq_info_ill
                     USING sequence_uniq_info_ill 
@@ -308,6 +313,7 @@ class dbUpload:
                 """ % self.rundate
         self.my_conn.execute_no_fetch(my_sql)
 
+    "Do not do that! The sequence can be from an another run" 
     def del_sequences(self):
         my_sql = """DELETE FROM sequence_ill
                     USING sequence_ill JOIN sequence_pdr_info_ill USING(sequence_ill_id)
@@ -321,11 +327,17 @@ class dbUpload:
                 """ % self.rundate
         self.my_conn.execute_no_fetch(my_sql)
 
+    def del_run_info(self):
+        my_sql = """DELETE FROM run_info_ill
+                    USING run_info_ill JOIN run USING(run_id) WHERE run = "%s"
+                """ % self.rundate
+        self.my_conn.execute_no_fetch(my_sql)
+
     #That order is important!
-    def del_all_seq_info(self):
-        self.del_sequence_uniq_info(self.rundate)
-        self.del_sequences(self.rundate)
-        self.del_sequence_pdr_info(self.rundate)
+#    def del_all_seq_info(self):
+#        self.del_sequence_uniq_info(self.rundate)
+#        self.del_sequences(self.rundate)
+#        self.del_sequence_pdr_info(self.rundate)
 
     def count_sequence_pdr_info_ill(self):
         my_sql = """SELECT count(sequence_pdr_info_ill_id) 
@@ -351,9 +363,9 @@ class dbUpload:
 #        print "file_seq_db_count = %s" % file_seq_db_count
         file_seq_orig_count = self.count_seq_from_file()
         if (file_seq_orig_count == file_seq_db_count):
-            print "URA: %s == %s" % (file_seq_orig_count, file_seq_db_count)
+            print "All sequences from files made it to the db: %s == %s" % (file_seq_orig_count, file_seq_db_count)
         else:
-            print "UVY: %s != %s" % (file_seq_orig_count, file_seq_db_count)
+            print "Oops, not all sequences from files made it to the db.\nIn file: %s != in db: %s\n==============" % (file_seq_orig_count, file_seq_db_count)
             
     def put_seq_statistics_in_file(self, filename, seq_in_file):
         pipelne_utils   = PipelneUtils()

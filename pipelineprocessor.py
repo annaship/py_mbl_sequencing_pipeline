@@ -342,7 +342,7 @@ def env454upload(run):
 
                 start = time()
 #                print "Inserting taxonomy"
-                tax_id = my_env454upload.insert_taxonomy(fasta, gast_dict)
+                my_env454upload.insert_taxonomy(fasta, gast_dict)
 
                 elapsed = (time() - start)
                 insert_taxonomy_time += elapsed
