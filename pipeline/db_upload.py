@@ -81,8 +81,8 @@ class dbUpload:
 #        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
         "todo: put in args"
-        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#        self.my_conn     = MyConnection()    
+#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -251,8 +251,8 @@ class dbUpload:
             return int(res[0][0])        
 
     def insert_rundate(self):
-        my_sql = """INSERT IGNORE INTO run (run) VALUES
-            ('%s')""" % (self.rundate)
+        my_sql = """INSERT IGNORE INTO run (run, run_prefix) VALUES
+            ('%s', 'illumina')""" % (self.rundate)
         self.run_id = self.my_conn.execute_no_fetch(my_sql)
         
     def insert_project(self, content_row, contact_id):
