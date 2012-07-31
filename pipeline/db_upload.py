@@ -80,8 +80,8 @@ class dbUpload:
 #        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
         "todo: put in args"
-        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#        self.my_conn     = MyConnection()    
+#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -99,7 +99,7 @@ class dbUpload:
         pipelne_utils   = PipelneUtils()
         files = pipelne_utils.get_all_files(self.in_file_path)
         for full_name in files.keys():    
-            if files[full_name][1] == ".unique":
+            if (files[full_name][1] == ".unique") and (files[full_name][0].split(".")[-1].strip() == "fa"):
                 print full_name
                 fa_files.append(full_name)
         return fa_files
