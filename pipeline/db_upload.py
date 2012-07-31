@@ -181,7 +181,7 @@ class dbUpload:
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         sequence_ill_id = self.seq_id_dict[fasta.seq]
         taxonomy_id     = self.tax_id_dict[taxonomy] 
-        print "In insert_sequence_uniq_info_ill: sequence_ill_id = %s, taxonomy_id = %s\ntaxonomy = %s" (sequence_ill_id, taxonomy_id, taxonomy)
+        print "In insert_sequence_uniq_info_ill: sequence_ill_id = %s, taxonomy_id = %s\ntaxonomy = %s" % (sequence_ill_id, taxonomy_id, taxonomy)
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
                 %s,
