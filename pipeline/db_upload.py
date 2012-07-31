@@ -81,8 +81,8 @@ class dbUpload:
 #        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
         "todo: put in args"
-#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-        self.my_conn     = MyConnection()    
+        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+#        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -174,12 +174,10 @@ class dbUpload:
         else:
             my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
             tax_id = self.my_conn.execute_no_fetch(my_sql)
-            print "insert_taxonomy: tax_id = %s, taxonomy = %s" % (tax_id, taxonomy)
             self.create_tax_id_dict(tax_id, taxonomy)
 
     # collect taxonomy and id info into dict, to use later in insert
     def create_tax_id_dict(self, tax_id, taxonomy):
-        print "create_tax_id_dict:  tax_id = %s, taxonomy = %s" % (tax_id, taxonomy)
         if tax_id:
             self.tax_id_dict[taxonomy] = tax_id
         else:
@@ -195,9 +193,6 @@ class dbUpload:
             except Exception, e:
                 logger.debug("Error = %s" % e)
                 raise
-
-            
-        print "In insert_sequence_uniq_info_ill: sequence_ill_id = %s, taxonomy_id = %s\ntaxonomy = %s" % (sequence_ill_id, taxonomy_id, taxonomy)
         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                (
                 %s,
