@@ -300,12 +300,14 @@ def env454upload(run):
     for filename in filenames:
         try:
             logger.debug("\n----------------\nfilename = %s" % filename)
-            fasta_file_path = my_env454upload.in_file_path + filename
-            filename_base   = "-".join(filename.split("-")[:-1])
+            fasta_file_path = filename
+            filename_base   = "-".join(filename.split("/")[-1].split("-")[:-1])
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
             gast_dict       = my_env454upload.get_gasta_result(filename)
             read_fasta      = u.ReadFasta(fasta_file_path)
             sequences       = read_fasta.sequences
+            if not (len(sequences)):
+                continue            
             read_fasta.close()
             fasta           = u.SequenceSource(fasta_file_path, lazy_init = False) 
 
@@ -316,6 +318,7 @@ def env454upload(run):
             insert_sequence_uniq_info_ill_time = 0
             
             start = time()
+
             my_env454upload.insert_seq(sequences)
             elapsed = (time() - start)
             insert_seq_time = elapsed
