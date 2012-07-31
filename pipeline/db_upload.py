@@ -3,6 +3,7 @@ import MySQLdb
 import os
 from pipeline.utils import PipelneUtils
 from pipeline.get_ini import readCSV
+from pipeline.pipelinelogging import logger
 
 class MyConnection:
     """
@@ -78,8 +79,9 @@ class dbUpload:
 #        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
 #        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
-#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-        self.my_conn     = MyConnection()    
+        "todo: put in args"
+        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+#        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -97,7 +99,7 @@ class dbUpload:
         pipelne_utils   = PipelneUtils()
         files = pipelne_utils.get_all_files(self.in_file_path)
         for full_name in files.keys():    
-            if files[full_name][1] == ".fa":
+            if files[full_name][1] == ".unique":
                 print full_name
                 fa_files.append(full_name)
         return fa_files
@@ -145,13 +147,16 @@ class dbUpload:
  
     def get_gasta_result(self, filename):
 #        gast_file_name = self.gast_dir + filename + '.gast'
-        gast_file_name = self.in_file_path + filename + '.gast'
+        gast_file_name = filename + '.gast'
         try:
             with open(gast_file_name) as fd:
                 gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
             return gast_dict
         except IOError, e:
-            print dir(e)
+#            print dir(e)
+#['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__getslice__', '__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__', '__unicode__', 'args', 'errno', 'filename', 'message', 'strerror']
+#            print "errno = %s" % e.errno
+            logger.debug("errno = %s" % e.errno)
             if e.errno == 2:
                 print 
                 # suppress "No such file or directory" error
