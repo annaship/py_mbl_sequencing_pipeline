@@ -334,14 +334,14 @@ def env454upload(run):
             while fasta.next():
 #                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
                 start = time()
-                print "Inserting pdr info"
+#                print "Inserting pdr info"
                 my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
                 elapsed = (time() - start)
                 insert_pdr_info_time += elapsed
 #                print "insert_pdr_info() took ", elapsed, " time to finish"                
 
                 start = time()
-                print "Inserting taxonomy"
+#                print "Inserting taxonomy"
                 tax_id = my_env454upload.insert_taxonomy(fasta, gast_dict)
 
                 elapsed = (time() - start)
@@ -351,7 +351,7 @@ def env454upload(run):
 #                print "tax_id = ", tax_id            
 
                 start = time()
-                print "Inserting sequence_uniq_info_ill"
+#                print "Inserting sequence_uniq_info_ill"
                 my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
                 elapsed = (time() - start)
                 insert_sequence_uniq_info_ill_time += elapsed
