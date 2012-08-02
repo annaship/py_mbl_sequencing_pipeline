@@ -1,7 +1,5 @@
 private_config/
 private_config/*
-results/
-results/*
 .settings/
 *.pyc
 *.log
@@ -14,7 +12,6 @@ db_conn.conf
 db_conn_ok.conf
 *.fa.*
 *.gast
-csv/*
 unique_file_counts
 illumina_files_test
 analysis
