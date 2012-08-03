@@ -34,7 +34,7 @@ from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
-from pipeline.validate import MetadataUtils
+from pipeline.metadata import MetadataUtils
 from pipeline.illumina_files import IlluminaFiles
 from inspect import currentframe, getframeinfo
 

@@ -26,7 +26,7 @@ from pipeline.runconfig import RunConfig
 from pipeline.run import Run
 from pipeline.chimera import Chimera
 from pipeline.gast import Gast
-from pipeline.validate import MetadataUtils
+from pipeline.metadata import MetadataUtils
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
