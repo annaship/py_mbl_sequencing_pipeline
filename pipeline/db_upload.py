@@ -1,10 +1,20 @@
 import sys
-import MySQLdb
+
 import os
 from pipeline.utils import PipelneUtils
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
+try:
+    import MySQLdb
+except:
+    sys.exit("""
+    MySQLdb ERROR
+      To load the correct module, try running these commands before running the pipeline:
+      
+source /xraid/bioware/Modules/etc/profile.modules
+module load bioware
 
+    """)
 class MyConnection:
     """
     Connection to env454

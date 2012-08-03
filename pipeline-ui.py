@@ -39,6 +39,42 @@ from pipelineprocessor import process
 import cogent
 
 import pipeline.constants as C
+
+def get_values(is_vamps, args, config_dict={}):
+    collector={}
+#     requested_steps = args.steps.split(",") 
+#     for step in collector_steps:
+#         stepDict = 'pipeline_'+step+'_items'
+#         step_collection = globals()[stepDict]
+#         print stepDict, C.step_collection
+        
+    if is_vamps:
+        stanza='vamps_pipeline'
+        collector['vamps_user_upload'] = True
+        for item in C.list_of_vamps_items:
+            if item in args and getattr( args, item ) != None:
+                collector[item]  = getattr( args, item )
+            elif config_dict and item in config_dict[stanza] and config_dict[stanza][item] != '':
+                collector[item]  = config_dict[stanza][item]
+            elif config_dict and item in config_dict['general'] and config_dict['general'][item] != '':
+                collector[item]  = config_dict['general'][item]
+            else:
+                collector[item] = C.list_of_vamps_items[item]
+    else:
+        stanza='mbl_pipeline'
+        collector['vamps_user_upload'] = False
+        for item in C.list_of_mbl_items:
+            if item in args and getattr( args, item ) != None:
+                collector[item]  = getattr( args, item )
+            elif config_dict and item in config_dict[stanza] and config_dict[stanza][item] != '':
+                collector[item]  = config_dict[stanza][item]
+            elif config_dict and item in config_dict['general'] and config_dict['general'][item] != '':
+                collector[item]  = config_dict['general'][item]
+            else:
+                collector[item] = C.list_of_mbl_items[item]
+           
+    return collector
+    
 def validate_args(args):
     """
     # THOUGHTS
@@ -59,7 +95,48 @@ def validate_args(args):
             config_dict = configDictionaryFromFile_ini(args.configPath)           
             collector= get_values(False, args, config_dict)
     else:
-        pass
+        print "VAMPS User origin"
+        list_of_items = C.list_of_vamps_items
+        
+        if args.configPath:
+            config_dict = configDictionaryFromFile_ini(args.configPath)
+            # eg dna_region
+            # precidence: cl,ini file
+            
+            collector = get_values(True, args, config_dict)
+            
+        else:
+            # Should never get here because configPath is required
+            sys.exit("No config file")
+        collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
+        # these are all the bool items from the ini file
+        # they need to be converted fron str to bool here
+        if 'from_fasta' in collector and collector['from_fasta'] == 'True':
+            collector['from_fasta'] = True
+        else:
+            collector['from_fasta'] = False
+        if 'use_cluster' in collector and collector['use_cluster'] == 'True':
+            collector['use_cluster'] = True
+        else:
+            collector['use_cluster'] = False
+        if 'load_vamps_database' in collector and collector['load_vamps_database'] == 'True':
+            collector['load_vamps_database'] = True
+        else:
+            collector['load_vamps_database'] = False 
+            
+        collector['runcode'] = args.run
+        collector['run'] = args.run
+        collector['steps'] = args.steps
+#     if 'run' in collector and collector['run'] != '':
+#         collector['runcode'] = collector['run']
+#     elif 'runcode' in collector and collector['runcode'] != '':
+#         collector['run'] = collector['runcode']
+#     else:
+#         sys.exit("No run or runcode found")
+    
+    collector['loglevel'] = collector['loglevel'].upper()
+    collector['datetime'] = str(datetime.date.today())
+    return collector
         
         
 if __name__ == '__main__':
