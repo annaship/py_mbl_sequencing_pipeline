@@ -10,7 +10,7 @@
 
 from pipeline.sample import Sample
 from pipeline.configurationexception import ConfigurationException
-from pipeline.metadata import MetadataUtils
+from pipeline.validate import MetadataUtils
 import sys,os
 import glob
 import constants as C
@@ -35,49 +35,50 @@ def configDictionaryFromFile_ini(config_file_path):
 
 class RunConfig:
     """Doc string here."""
-    def __init__(self, config_info, args, basepythondir):
+    def __init__(self, config_info, basepythondir):
         self.configPath = config_info
-        self.args       = args
+        #self.args       = args
         self.run_date   = None
         self.platform   = None # enum('454','illumina','ion_torrent','')
         self.input_dir  = None
         self.output_dir = None
-        self.config_file_type = args.config_file_type  # ini, csv or dict
+        #self.config_file_type = config_info['config_file_type']  # ini, csv or dict
         self.sff_files  = []
         self.run_keys = []
         self.run_key_lane_dict = {}
         self.samples = {}
         self.base_python_dir = os.path.normpath(basepythondir)
-        self.configFile = config_info
+        #self.configFile = config_info
         #
         # IMPORTANT to get a dictionary here from whatever the input is:
         #     platform and configFile type
         # if the config_info was a file path to an .csv or .ini file then convert to a dictionary
         # 
         # for vamps user uploads: the config info is a dictionary
-        v = MetadataUtils(args)
+        #v = MetadataUtils(args)
+        
     	if type(config_info)==dict:
             config_dict = config_info
                  
-        elif self.args.platform == 'illumina':
-            
-            config_dict = v.create_dictionary_from_ini()
-            config_dict['general'] = v.get_command_line_items(config_dict['general'])
-            config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
-            config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
-            config_dict['general']['files_list'] = config_dict['general']['input_files'].split(',')
-            #config_dict = v.check_for_input_files(config_dict) 
-            
-        elif self.args.platform == '454':
-        
-            config_dict = v.create_dictionary_from_ini()
-            config_dict['general'] = v.get_command_line_items(config_dict['general'])
-            config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
-            config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
-            #config_dict = v.check_for_input_files(config_dict)
-            
-        elif args.platform == 'ion_torrent':
-            sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+self.args.platform+") ")
+ #        elif self.args.platform == 'illumina':
+#             
+#             config_dict = v.create_dictionary_from_ini()
+#             config_dict['general'] = v.get_command_line_items(config_dict['general'])
+#             config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
+#             config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
+#             config_dict['general']['files_list'] = config_dict['general']['input_files'].split(',')
+#             #config_dict = v.check_for_input_files(config_dict) 
+#             
+#         elif self.args.platform == '454':
+#         
+#             config_dict = v.create_dictionary_from_ini()
+#             config_dict['general'] = v.get_command_line_items(config_dict['general'])
+#             config_dict['general']['config_file'] = os.path.join(config_dict['general']['output_dir'], config_dict['general']['run']+'.ini')
+#             config_dict['general']['status_file'] = os.path.join(config_dict['general']['output_dir'], 'STATUS.txt')
+#             #config_dict = v.check_for_input_files(config_dict)
+#             
+#         elif args.platform == 'ion_torrent':
+#             sys.exit("3-ConfigFile conversion to dictionary not written yet for platform ("+self.args.platform+") ")
         
         
         else:
@@ -94,6 +95,7 @@ class RunConfig:
         #
         
         self.initializeFromDictionary(config_dict)
+
          
          
         if type(config_info)==dict and 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
@@ -121,8 +123,9 @@ class RunConfig:
         # second best is from the metadata file: ini or csv
         # if neither of these are set then output to current directory
         # and always attach the rundate dir to it
-        if args.baseoutputdir:
-            self.base_output_dir = os.path.normpath(args.baseoutputdir) #user supplied or default 
+        
+        if 'baseoutputdir' in config_dict['general']:
+            self.base_output_dir = os.path.normpath(config_dict['general']['baseoutputdir']) #user supplied or default 
         elif config_dict['general']['output_dir']:
             self.base_output_dir = os.path.normpath(config_dict['general']['output_dir'])
         else:
@@ -163,11 +166,10 @@ class RunConfig:
         self.gast_input_source = 'files' # for regular gast pipeline
         if 'gast_input_source' in general_config: 
             self.gast_input_source = general_config['gast_input_source']
-        
         if 'files_list' in general_config:
             input_file_names = general_config['files_list']
         else:
-            input_file_names  = [input_str.strip() for input_str in general_config['input_file_names'].split(',')]
+            input_file_names  = [input_str.strip() for input_str in general_config['input_files'].split(',')]
         
 #         
 #         # for ini file:  (no plurals)
@@ -224,7 +226,7 @@ class RunConfig:
             
             
             if file_format not in C.input_file_formats:
-                raise Exception("Invalid sequence input file format: " + self.args.input_file_format)
+                raise Exception("Invalid sequence input file format: " + config_dict['input_file_format'])
                 
             if "input_file_lane" in general_config:
                 file_lane = general_config['input_file_lane']
