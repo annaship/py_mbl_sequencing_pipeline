@@ -119,7 +119,7 @@ if __name__ == '__main__':
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
     parser.add_argument('-o', '--output_directory',  required=False,   action="store",  dest = "output_dir",        default='.',       
                                                  help = 'Output directory') 
-    parser.add_argument('-h', '--database_host',  required=False,   action="store",  dest = "database_host",        default='vampsdev',       
+    parser.add_argument('-ho', '--database_host',  required=False,   action="store",  dest = "database_host",        default='vampsdev',       
                                                  help = 'Database host') 
     parser.add_argument('-db', '--database_name',  required=False,   action="store", dest = "database_name",        default='test',       
                                                  help = 'Database name') 
