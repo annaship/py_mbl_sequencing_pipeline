@@ -6,13 +6,23 @@
 #
 #
 ############ VALIDATION ############################################################################
-csv_header_list_illumina = ["run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",      
+csv_header_list = {
+'illumina' :    ["run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",      
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator", "seq_operator",     
                             "barcode_index","overlap",          "insert_size",  "file_prefix",  "read_length",  "primer_suite", 
                             "first_name",   "last_name",        "email",        "institution",  "project_title","project_description",
-                            "funding",      "env_sample_source","dataset_description" ]
+                            "funding",      "env_sample_source","dataset_description" ],
                             
-csv_header_list_454     = [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
+'454' :         [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
+                            "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
+                            
+                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",               
+                            "primer_suite",   "pool",                            
+                            
+                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
+                            "funding",          "env_sample_source","dataset_description" ],
+
+'ion_torrent' : [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
                             
                             "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",               
@@ -20,16 +30,7 @@ csv_header_list_454     = [ "run",          "data_owner",       "run_key",      
                             
                             "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
                             "funding",          "env_sample_source","dataset_description" ]
-
-csv_header_list_ion_torrent= [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
-                            "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
-                            
-                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",               
-                            "primer_suite",   "pool",                            
-                            
-                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
-                            "funding",          "env_sample_source","dataset_description" ]
-
+}
 
 
 primer_suites    = ["bacterialv6suite","Bacterial v6 Suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
@@ -49,8 +50,56 @@ maximumLength   = ''
 minAvgQual      = 30
 maxN            = 0
 
+##### DEFAULT PIPELINE RUN ITEMS ##################################################################
+# these should contain all the items that are possible for each platform with defaults
+#general_run_items = ['baseoutputdir' , 'run' , 'platform','configPath']
+# VAMPS as a platform
 
-
+pipeline_run_items = {
+'vamps' : { 'dna_region':'v6',
+            'domain':'bacteria',
+            'project':'test_project',
+            'dataset':'ds1',
+            'from_fasta':False,
+            'fasta_file':'',
+            'load_vamps_database':True,
+            'envsource':'100',
+            'use_cluster':True,
+            'cluster_nodes':100,
+            'loglevel':'error',
+            'site':'vampsdev',
+            'user':'',
+            'require_distal':True,
+            'commandline':True,
+            'config_file_type':'ini',
+            'platform':'vamps'
+            },
+'illumina' : {'input_file_format':'fastq',
+                'input_file_suffix':'fa.unique',
+                'compressed':True,
+                'database_host':'vampsdev',
+                'database_name':'test',
+                'platform':'illumina',
+                'loglevel':'error',
+                'csvPath':'',
+                'anchor_file':'',
+                'input_dir':'.',
+                'primer_file':'',
+                'require_distal':True
+			},
+'454' : {   'input_file_format':'sff',
+			'input_file_suffix':'sff',
+			'platform':'454',
+			'csvPath':'',
+			'loglevel':'error',
+			'input_dir':'.'
+		},
+'ion_torrent' : {'platform':'ion_torrent',
+                'csvPath':'',
+                'loglevel':'error',
+                'input_dir':'.'
+                }
+}
 # this is the maximum distance from the end of the sequence where script
 # will accept a distal primer (if found)
 distal_from_end  = 12
