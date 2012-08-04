@@ -242,7 +242,7 @@ if __name__ == '__main__':
                                                         [default: vampsdev]""")     
     parser.add_argument("-u", "--user",             required=False,  action="store",   dest = "user", 
                                                         help="user name")         
-    parser.add_argument("-p", "--project",          required=False,  action='store', dest = "project", 
+    parser.add_argument("-pr", "--project",          required=False,  action='store', dest = "project", 
                                                         help="") 
     parser.add_argument('-d',"--dataset",           required=False,  action="store",   dest = "dataset", 
                                                         help = '')

@@ -10,7 +10,7 @@
 
 from pipeline.sample import Sample
 from pipeline.configurationexception import ConfigurationException
-from pipeline.validate import MetadataUtils
+from pipeline.metadata import MetadataUtils
 import sys,os
 import glob
 import constants as C
