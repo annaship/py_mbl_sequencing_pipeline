@@ -5,61 +5,55 @@ import shutil
 from pipeline.pipelinelogging import logger
 #import logging
 import constants as C
+import re
+from types import *
 
 class Gast:
     """Doc string here.."""
     Name = "GAST"
-    def __init__(self, run = None, keys = None, use_cluster = True):
+    def __init__(self, run = None):
 
-        self.run    = run
-        self.keys   = keys
-        self.outdir = run.output_dir
-        try:
-            self.basedir = run.basedir
-        except:
-            self.basedir = self.outdir
+        self.run     = run
+        
+        self.test = True
+       
+        self.basedir = self.run.baseoutputdir
+        
         self.rundate = self.run.run_date
-        self.use_cluster = use_cluster
-        self.vamps_user_upload = run.vamps_user_upload
-        
-        # check for existance of files
-        self.error = ''
-        for idx_key in self.keys:
-            
-            unique_file = os.path.join(self.basedir, idx_key+'.unique.fa')
-            if not os.path.exists(unique_file):
-                logger.error("GAST: Could not find the unique.fa file here: "+run.output_dir)
-                #answer = raw_input("Do you want to create the names and uniques files now from the input files? ")
-                self.error = "Could not find the unique.fa file: "+unique_file
-                break
-            names_file = os.path.join(self.basedir, idx_key+'.names')
-            if not os.path.exists(names_file):
-                logger.error("GAST: Could not find the names file here: "+run.output_dir)            
-                self.error = "Could not find the names file: "+names_file
-                break
-        
+        self.use_cluster = self.run.use_cluster
+        try:
+            self.vamps_user_upload = self.run.vamps_user_upload
+        except:
+            self.vamps_user_upload = False
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
         path = os.environ['PATH']
-        os.environ['PATH'] = path + ':/usr/local/sge/bin/lx24-amd64'
-        #First step is to check for (or create via mothur)
-        # a uniques fasta file and a names file 
-        # one for each dataset.
+        os.environ['PATH'] = '/usr/local/sge/bin/lx24-amd64:'+path
+        
+        
+       
         # If we are here from a vamps gast process
         # then there should be just one dataset to gast
         # but if MBL pipe then many datasets are prbably involved.
         if self.vamps_user_upload:
-            self.refdb_dir = os.path.dirname('/xraid2-2/vampsweb/blastdbs/')
+            self.refdb_dir = C.ref_database_dir_vamps
         else:
-            self.refdb_dir = os.path.dirname('/xraid2-2/g454/blastdbs/')
+            self.refdb_dir = C.ref_database_dir
+        
+        # 1) clustergast
+        # 2) gast cleanup
+        # 3) gast2tax
         
         
-    def clustergast(self):
+    def clustergast(self, lane_keys):
         """
         clustergast - runs the GAST pipeline on the cluster.
                GAST uses UClust to identify the best matches of a read sequence
                to references sequences in a reference database.
+               The uniques and names files have previously been created in trim_run.py.
         """
+        logger.info("Starting Clustergast")
+        self.run.run_status_file_h.write("Starting clustergast\n")
         # Step1: create empty gast table in database: gast_<rundate>
         # Step2: Count the number of sequences so the job can be split for nodes
         # $facount = `grep -c \">\" $fasta_uniqs_filename`;
@@ -72,17 +66,17 @@ class Gast:
         #   Submit the script
         #   /usr/local/sge/bin/lx24-amd64/qsub $qsub_priority $script_filename
  
-        usearch = C.usearch
-        fastasampler = C.fastasampler
-        calcnodes = C.calcnodes
-        sqlImportCommand = C.mysqlimport
+        
+        
+        calcnodes = C.calcnodes_cmd
+        sqlImportCommand = C.mysqlimport_cmd
         #qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
-        qsub = C.clusterize
+        clusterize = C.clusterize_cmd
+        
 
 
 
         ###################################################################
-        
         # use fasta.uniques file
         # split into smaller files
         # usearch --cluster each
@@ -93,199 +87,249 @@ class Gast:
         #######################################
         qsub_prefix = 'clustergast_sub_'
         gast_prefix = 'gast_'
-        for idx_key in self.keys:
-            nodes = 100
-            if idx_key in self.run.samples:
-                dna_region = self.run.samples[idx_key].dna_region
-            else:            
-                dna_region = self.run.dna_region
-            if not dna_region:
-                logger.error("clustergast: We have no DNA Region: Setting dna_region to 'unknown'")
-                dna_region = 'unknown'
-
-            # if no dna_region OR no refdb can be found then use
-            # refssu
-            refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region])
-            if not os.path.exists(refdb):
-                refdb = os.path.join(self.refdb_dir, 'refssu_all')
-                    
-                    
-            unique_file = os.path.join(self.basedir, idx_key+'.unique.fa')
+        if self.use_cluster:
+            logger.info("Using cluster for clustergast")
+        else:
+            logger.info("Not using cluster")
+        for lane_key in lane_keys:
+            cluster_nodes = C.cluster_nodes
+            logger.info("Cluster nodes set to: "+str(cluster_nodes))
+            output_dir = os.path.join(self.basedir,lane_key)
+            if not os.path.exists(output_dir):	
+                os.mkdir(output_dir)
             
-            gast_dir = os.path.join(self.outdir, idx_key+'_gast/')
+            print 'OUT',output_dir
+            # find gast_idr
+            gast_dir = os.path.join(output_dir,'gast')
+            print 'GAST',gast_dir
             if not os.path.exists(gast_dir):	
                 os.mkdir(gast_dir)
             else:
                 # empty then recreate directory
                 shutil.rmtree(gast_dir)
                 os.mkdir(gast_dir)
-
-
-            grep_cmd = ['grep','-c','>',unique_file]
-            logger.debug( ' '.join(grep_cmd) )
-            facount = subprocess.check_output(grep_cmd)
-            logger.debug( idx_key+' count '+facount)
-            calcnode_cmd = [calcnodes,'-t',str(facount),'-n',str(nodes),'-f','1']
+                
+                
+            if lane_key in self.run.samples:
+                dna_region = self.run.samples[lane_key].dna_region
+            else:            
+                dna_region = self.run.dna_region
+            if not dna_region:
+                logger.error("clustergast: We have no DNA Region: Setting dna_region to 'unknown'")
+                dna_region = 'unknown'
+                
+            (refdb,taxdb) = self.get_reference_databases(dna_region)
+            print 'DBs',refdb,taxdb
             
-            calcout = subprocess.check_output(calcnode_cmd)
-            logger.debug("calcout:\n"+calcout)
-            #calcout:
-            # node=1 start=1 end=1 rows=1
-            # node=2 start=2 end=2 rows=1
-            # node=3 start=3 end=3 rows=1           
-            lines = calcout.split("\n")
-            file_list = []
+            # if no dna_region OR no refdb can be found then use
+            # refssu
+            #if refdb contains refssu
+            #the add this to grep command
+            #and change usearch to usearch64
+            
+                
+            unique_file = os.path.join(output_dir, lane_key+'.unique.fa')
+            print 'UNIQUE FILE',unique_file
+            
+
+            #print gast_dir
+            #sys.exit("EXIT")
+            
+            
             i = 0
-            for line in lines:
-                i += 1
-                if i >= nodes:
-                    continue
-                script_filename         = os.path.join(gast_dir, qsub_prefix + str(i))
-                gast_filename           = os.path.join(gast_dir, gast_prefix + str(i))
-                fastasamp_filename      = os.path.join(gast_dir, 'samp_' + str(i))
-                clustergast_filename    = os.path.join(gast_dir, idx_key+".gast_" + str(i))
-                file_list.append(clustergast_filename)
-                usearch_filename= os.path.join(gast_dir, "uc_" + str(i))
-                log_file = os.path.join(gast_dir, 'clustergast.log_' + str(i))
+            if cluster_nodes:
+                grep_cmd = ['grep','-c','>',unique_file]
+                logger.debug( ' '.join(grep_cmd) )
+                facount = subprocess.check_output(grep_cmd).strip()
+                logger.debug( lane_key+' count '+facount)
+                calcnode_cmd = [calcnodes,'-t',str(facount),'-n',str(cluster_nodes),'-f','1']
                 
-                data = line.split()
-                
-                if len(data) < 2:
-                    continue
-                start = data[1].split('=')[1]
-                end  = data[2].split('=')[1]
-                
-                if self.use_cluster:
-                    fh = open(script_filename,'w')
-                    qstat_name = "gast" + idx_key + '_' + self.rundate + "_" + str(i)
-                    fh.write("#!/bin/csh\n")
-                    fh.write("#$ -j y\n" )
-                    fh.write("#$ -o " + log_file + "\n")
-                    fh.write("#$ -N " + qstat_name + "\n\n")
-                    #fh.write("source /xraid/bioware/Modules/etc/profile.modules\n");
-                    #fh.write("module load bioware\n\n");
-
-
-
-                fastasampler_cmd = fastasampler
-                fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
-                fastasampler_cmd += ' ' + unique_file
-                fastasampler_cmd += ' ' + fastasamp_filename
-                logger.debug("fastasampler command: "+fastasampler_cmd)
-                if self.use_cluster:
-                    fh.write(fastasampler_cmd + "\n")
-                else:
-                    subprocess.call(fastasampler_cmd,shell=True)
-
-                usearch_cmd = usearch
-                usearch_cmd += ' --global'
-                usearch_cmd += ' --query ' + fastasamp_filename
-                usearch_cmd += ' --iddef 3'
-                usearch_cmd += ' --gapopen 6I/1E'
-                usearch_cmd += ' --db ' + refdb                
-                usearch_cmd += ' --uc ' + usearch_filename 
-                usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
-                usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
-                usearch_cmd += ' --id ' + str(C.pctid_threshold)
-                logger.debug("usearch command: "+usearch_cmd)
-                if self.use_cluster:
-                    fh.write(usearch_cmd + "\n")
-                else:
-                    subprocess.call(usearch_cmd,shell=True)
-                
-                
-                grep_cmd = "grep"
-                grep_cmd += " -P \"^H\\t\" " + usearch_filename + " |"
-                grep_cmd += " sed -e 's/|.*\$//' |"
-                grep_cmd += " awk '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
-                grep_cmd += " sort -k1,1b -k2,2gr |"
-                # append to file:
-                grep_cmd += " clustergast_tophit >> " + clustergast_filename
-                logger.debug("grep command: "+grep_cmd)
-                if self.use_cluster:                
-                    fh.write(grep_cmd + "\n")
-                    fh.close()
+                calcout = subprocess.check_output(calcnode_cmd).strip()
+                logger.debug("calcout:\n"+calcout)
+                #calcout:
+                # node=1 start=1 end=1 rows=1
+                # node=2 start=2 end=2 rows=1
+                # node=3 start=3 end=3 rows=1           
+                lines = calcout.split("\n")
+                gast_file_list = []
+                for line in lines:
+                    i += 1
+                    if i >= cluster_nodes:
+                        continue
+                    script_filename = os.path.join(gast_dir,qsub_prefix + str(i))
+                    gast_filename   = os.path.join(gast_dir, gast_prefix + str(i))
+                    fastasamp_filename = os.path.join(gast_dir, 'samp_' + str(i))
+                    clustergast_filename   = os.path.join(gast_dir, lane_key+".gast_" + str(i))
+                    gast_file_list.append(clustergast_filename)
+                    usearch_filename= os.path.join(gast_dir, "uc_" + str(i))
+                    log_file = os.path.join(gast_dir, 'clustergast.log_' + str(i))
                     
-                    # make script executable and run it
-                    os.chmod(script_filename, stat.S_IRWXU)
-                    qsub_cmd = qsub + " " + script_filename
-                    logger.debug("qsub command: "+qsub_cmd)
-                    #subprocess.call(qsub_cmd, shell=True)
-                    proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    # proc.communicate will block - probably not what we want
-                    #(stdout, stderr) = proc.communicate() #block the last onehere
-                    #print stderr,stdout
-
-                else:
-                    subprocess.call(grep_cmd,shell=True)
-
-
-            # wait here for all the clustergast scripts to finish
-            temp_file_list = file_list
-            wait_test = False
-            maxwaittime = C.maxwaittime  # seconds
-            sleeptime   = C.sleeptime    # seconds
-            counter = 0
-            while wait_test == False:
-                logger.info( "waiting: qsub" )
-                counter += 1
-                if counter >= maxwaittime / sleeptime:
-                    return ["ERROR","Max wait time exceeded for clustergast scripts to fininsh"]
-                for index, file in enumerate(temp_file_list):
-                    #print temp_file_list
-                    if os.path.exists(file) and os.path.getsize(file) > 0:
-                        # remove from tmp list
-                        #logger.debug("Found file now removing from list: "+file)
-                        temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
-                
-                if temp_file_list:
-                    logger.debug( "waiting for clustergast files to fill...")
-                    logger.debug( "    time: "+str(counter * sleeptime) + "| files left: "+str(len(temp_file_list)))
-                    time.sleep(sleeptime)
-                else:
-                    wait_test = True
+                    data = line.split()
                     
-            # now concatenate all the clustergast_files into one file
-            clustergast_filename_single   = os.path.join(gast_dir, idx_key+".gast")
-            clustergast_fh = open(clustergast_filename_single,'w')
-            # have to turn off cluster above to be able to 'find' these files for concatenation
-            for n in range(1,i-1):
-                #cmd = "cat "+ gast_dir + lane_key+".gast_" + str(n) + " >> " + gast_dir + lane_key+".gast"
-                #file = gast_dir + idx_key+".gast_" + str(n)
-                file = os.path.join(gast_dir, idx_key+".gast_" + str(n))
-                if(os.path.exists(file)):                    
-                    shutil.copyfileobj(open(file,'rb'), clustergast_fh)
-                else:
-                    print "Could not find file:",os.path.basename(file)," Skipping"
-            logger.info("Finished clustergast concatenation")
-            clustergast_fh.flush()
-            clustergast_fh.close()
+                    if len(data) < 2:
+                        continue
+                    start = data[1].split('=')[1]
+                    end  = data[2].split('=')[1]
+                    
+                    if self.use_cluster:
+                        fh = open(script_filename,'w')
+                        qstat_name = "gast" + lane_key + '_' + self.rundate + "_" + str(i)
+                        fh.write("#!/bin/csh\n")
+                        fh.write("#$ -j y\n" )
+                        fh.write("#$ -o " + log_file + "\n")
+                        fh.write("#$ -N " + qstat_name + "\n\n")
+                        #fh.write("source /xraid/bioware/Modules/etc/profile.modules\n");
+                        #fh.write("module load bioware\n\n");
+    
+                        # setup environment
+                        fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
+                        fh.write("module load bioware\n\n")
+                    
+                    cmd1 = self.get_fastasampler_cmd(unique_file, fastasamp_filename,start,end)
+                    
+
+                    logger.debug("fastasampler command: "+cmd1)
+                    
+                    if self.use_cluster:
+                        fh.write(cmd1 + "\n")
+                    else:
+                        subprocess.call(cmd1,shell=True)
+                    
+                    cmd2 = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
+
+                    logger.debug("usearch command: "+cmd2)
+                    print 'usearch',cmd2
+                    if self.use_cluster:
+                        fh.write(cmd2 + "\n")
+                    else:
+                        subprocess.call(cmd2,shell=True)
+                    
+                    cmd3 = self.get_grep_cmd(usearch_filename, clustergast_filename)
+
+                    logger.debug("grep command: "+cmd3)
+                    if self.use_cluster:                
+                        fh.write(cmd3 + "\n")
+                        fh.close()
+                        
+                        # make script executable and run it
+                        os.chmod(script_filename, stat.S_IRWXU)
+                        qsub_cmd = clusterize + " " + script_filename
+                        
+                        # on vamps and vampsdev qsub cannot be run - unless you call it from the
+                        # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
+                        qsub_cmd = C.qsub_cmd + " " + script_filename
+                        logger.debug("qsub command: "+qsub_cmd)
+                        
+                        #subprocess.call(qsub_cmd, shell=True)
+                        proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        # proc.communicate will block - probably not what we want
+                        #(stdout, stderr) = proc.communicate() #block the last onehere
+                        #print stderr,stdout
+    
+                    else:
+                        subprocess.call(cmd3,shell=True)
+                        print cmd3
             
+            else:
+                #fastasamp_filename = os.path.join(gast_dir, 'samp')
+                usearch_filename= os.path.join(gast_dir, "uc")
+                clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
+                print usearch_filename,clustergast_filename_single
+                cmd1 = self.get_usearch_cmd(unique_file,refdb,usearch_filename)
+                print cmd1
+                subprocess.call(cmd1,shell=True)
+                cmd2 = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
+                print cmd2
+                subprocess.call(cmd2,shell=True)
+                
+            if self.use_cluster:
+                # wait here for all the clustergast scripts to finish
+                temp_file_list = gast_file_list
+            
+                c = False
+                maxwaittime = C.maxwaittime  # seconds
+                sleeptime   = C.sleeptime    # seconds
+                counter = 0
+                while c == False:
+                    counter += 1
+                    if counter >= maxwaittime / sleeptime:
+                        raise Exception("Max wait time exceeded in gast.py")
+                    for index, file in enumerate(temp_file_list):
+                        #print temp_file_list
+                        if os.path.exists(file) and os.path.getsize(file) > 0:
+                            # remove from tmp list
+                            logger.debug("Found file now removing from list: "+file)
+                            temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
+                    
+                    if temp_file_list:
+                        logger.info("waiting for clustergast files to fill...")
+                        logger.debug(' '.join(temp_file_list))
+                        logger.info("\ttime: "+str(counter * sleeptime)+" | files left: "+str(len(temp_file_list)))
+                        time.sleep(sleeptime)
+                    else:
+                        c = True
+                    
+            # now concatenate all the clustergast_files into one file (if they were split)
+            if cluster_nodes:
+                # gast file
+                clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
+                clustergast_fh = open(clustergast_filename_single,'w')
+                # have to turn off cluster above to be able to 'find' these files for concatenation
+                for n in range(1,i-1):
+                    #cmd = "cat "+ gast_dir + lane_key+".gast_" + str(n) + " >> " + gast_dir + lane_key+".gast"
+                    file = os.path.join(gast_dir, lane_key+".gast_" + str(n))
+                    if(os.path.exists(file)):                    
+                        shutil.copyfileobj(open(file,'rb'), clustergast_fh)
+                    else:
+                        logger.info( "Could not find file: "+os.path.basename(file)+" Skipping")
+
+                clustergast_fh.flush()
+                clustergast_fh.close()
+            
+        if not self.test:    
             # remove tmp files
-            for n in range(1,i-1):
-                if os.path.exists(os.path.join(gast_dir, "uc_"+str(n))):
+            for n in range(i+1):
+                #print "Trying to remove "+os.path.join(gast_dir,"uc_"+str(n))
+                if os.path.exists(os.path.join(gast_dir,"uc_"+str(n))):
                     os.remove(os.path.join(gast_dir,"uc_"+str(n)))
                     pass
-                if os.path.exists(os.path.join(gast_dir, "samp_"+str(n))):    
-                    os.remove(os.path.join(gast_dir, "samp_"+str(n)))
+                #print "Trying to remove "+os.path.join(gast_dir,"samp_"+str(n))
+                if os.path.exists(os.path.join(gast_dir,"samp_"+str(n))):    
+                    os.remove(os.path.join(gast_dir,"samp_"+str(n)))
                     pass
-
-
+                #print "Trying to remove "+os.path.join(self.gast_dir,lane_key+".gast_"+str(n))
+                if os.path.exists(os.path.join(gast_dir,lane_key+".gast_"+str(n))):    
+                    os.remove(os.path.join(gast_dir,lane_key+".gast_"+str(n)))
+                    pass
+                    
+                    
+        
+        print "Finished clustergast"
         logger.info("Finished clustergast")
-        return ["SUCCESS","Finished clustergast"]
-     
-    def gast_cleanup(self):
+        return ("SUCCESS","Clustergast")
+    
+        
+            
+    def gast_cleanup(self, lane_keys):
         """
         gast_cleanup - follows clustergast, explodes the data and copies to gast_concat and gast files
         """
-        for idx_key in self.keys:
-            if idx_key in self.run.samples:
-                dna_region = self.run.samples[idx_key].dna_region
+        logger.info("Starting GAST Cleanup")
+        self.run.run_status_file_h.write("Starting gast_cleanup\n")
+        for lane_key in lane_keys:
+            output_dir = os.path.join(self.basedir,lane_key)
+            gast_dir = os.path.join(output_dir,'gast')
+            if lane_key in self.run.samples:
+                dna_region = self.run.samples[lane_key].dna_region
             else:            
                 dna_region = self.run.dna_region
             if not dna_region:
                 logger.error("gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'")
+                self.run.run_status_file_h.write("gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'\n")
                 dna_region = 'unknown'
+            # find gast_dir
+            
+
             # for vamps user upload
             # basedir is like avoorhis_3453211
             # and outdir is like avoorhis_3453211/2012-06-25
@@ -293,37 +337,41 @@ class Gast:
             # basedir is like 1_AGTCG
             # and outdir is like 1_AGTCG/2012-06-25
             
-            unique_file = os.path.join(self.basedir, idx_key+'.unique.fa')
-            names_file = os.path.join(self.basedir, idx_key+'.names')
+            unique_file = os.path.join(output_dir,lane_key+'.unique.fa')
+            names_file = os.path.join(output_dir,lane_key+'.names')
             #print 'names file',names_file
-            gast_dir = os.path.join(self.outdir, idx_key+'_gast/')
+            
             if not os.path.exists(gast_dir):
                 logger.error("Could not find gast directory: "+gast_dir+" Exiting")
-                return ["ERROR","Could not find gast directory: "+gast_dir]
-            clustergast_filename   = os.path.join(gast_dir, idx_key+".gast")
-            logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename)))
+                sys.exit()
+            clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
             
-            gast_filename          = os.path.join(gast_dir, idx_key+".gast_table")
-            gastconcat_filename    = os.path.join(gast_dir, idx_key+".gast_concat_table")     
-
+            logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename_single)))
+            
+            gast_filename          = os.path.join(gast_dir, "gast")
+            gastconcat_filename    = os.path.join(gast_dir, "gast_concat")  
+            #dupes_filename    = os.path.join(gast_dir, "dupes") 
+            #nonhits_filename    = os.path.join(gast_dir, "nonhits")   
             copies = {}
             nonhits = {}
             # open and read names file
             names_fh = open(names_file,'r')
             for line in names_fh:
                 s = line.strip().split("\t")
-                if len(s) == 2:
-                    index_read = s[0]
-                    dupes = s[1]
+                
+                index_read = s[0]                
+                copies[index_read] = s[1].split(',')
                 
                 if index_read in nonhits:
                     nonhits[index_read] += 1
                 else:
                     nonhits[index_read] = 1
-                copies[index_read] = dupes.split(',')
+                    
+                
                 
             names_fh.close()            
-            
+            #print nonhits
+            #print copies
             
             #######################################
             # 
@@ -333,37 +381,39 @@ class Gast:
             # read the .gast file from clustergast            
             concat = {}
             gast_fh     = open(gast_filename,'w')
-            if(os.path.exists(clustergast_filename)):
-                in_gast_fh  = open(clustergast_filename,'r')
+            if(os.path.exists(clustergast_filename_single)):
+                in_gast_fh  = open(clustergast_filename_single,'r')
             else:
-                # do not exit here directly wait intil gets back to pipelineprocessor
-                logger.error( "No clustergast file found:",clustergast_filename,"\nExiting")
-                return ["ERROR","No clustergast file found: "+clustergast_filename]
+                print "No clustergast file found:",clustergast_filename_single,"\nExiting"
+                self.run.run_status_file_h.write("No clustergast file found:",clustergast_filename_single," Exiting\n")
+                sys.exit()
             for line in in_gast_fh:
-                #print line.strip()
+                
                 s = line.strip().split()
                 if len(s) == 4:
                     read_id     = s[0]
-                    refhvr_id   = s[1]
+                    refhvr_id   = s[1].split('|')[0]
                     distance    = s[2]
                     alignment   = s[3]
-               
+                #print read_id,refhvr_id
                 # if this was in the gast table zero it out because it had a valid hit
                 # so we don't insert them as non-hits later
                 if read_id in nonhits:
                     del nonhits[read_id]
-                if not read_id in copies:
+                    #print 'deleling',read_id
+                #print 'nonhits',nonhits
+                if read_id not in copies:
                     logger.info(read_id+' not in names file: Skipping')
                     continue
+                    
                 # give the same ref and dist for each duplicate
-                for id in copies[read_id]:                    
+                for id in copies[read_id]:
+                    
                     if id != read_id:
-                        if id not in concat:
-                            concat[id] = {}
-                            concat[id]['refhvrs'] = []
+                        #print id,read_id,distance,refhvr_id  
                         gast_fh.write( id + "\t" + refhvr_id + "\t" + distance + "\t" + alignment + "\n" )
-                        concat[id]['refhvrs'].append(refhvr_id)
-                        concat[id]['distance'] = distance                        
+                        
+                                               
             in_gast_fh.close()
              
             #######################################
@@ -374,14 +424,32 @@ class Gast:
             #######################################   
             for read in sorted(nonhits.iterkeys()):                
                 for d in copies[read]: 
-                    if d not in concat:
-                        concat[d] = {}
-                        concat[d]['refhvrs'] = []
                     gast_fh.write( d+"\t0\t1\t\n")
-                    concat[d]['refhvrs'].append('0')
-                    concat[d]['distance'] = '1'
+                    
                     
             gast_fh.close()
+            
+            # concatenate the two gast files
+            clustergast_fh = open(clustergast_filename_single,'a')            
+            shutil.copyfileobj(open(gast_filename,'rb'), clustergast_fh)
+            clustergast_fh.close()
+            #the open again and get data for gast concat
+            concat = {}
+            print clustergast_filename_single
+            for line in open(clustergast_filename_single,'r'):
+                data = line.strip().split("\t")
+                id = data[0]
+                refhvr_id = data[1].split('|')[0]
+                distance = data[2]
+                #print 'data',data
+                if id in concat:
+                    concat[id]['refhvrs'].append(refhvr_id)                        
+                else:
+                    concat[id] = {}
+                    concat[id]['refhvrs'] = [refhvr_id]
+                concat[id]['distance'] = distance     
+                
+            
             
             #######################################
             #
@@ -398,162 +466,225 @@ class Gast:
             
         print "Finished gast_cleanup"   
         logger.info("Finished gast_cleanup")
+        return ("SUCCESS","gast_cleanup")
+
+    def gast2tax(self, lane_keys): 
         
-        return ["SUCCESS","Finished gast_cleanup"]
-        
-    def gast2tax(self):
-        """
-        gast2tax : Follows gast_cleanup; assign taxonomy to read_ids in a gast table or file
-        """
-        from pipeline.taxonomy import Taxonomy,consensus
-        
-        for idx_key in self.keys:
-            if idx_key in self.run.samples:
-                dna_region = self.run.samples[idx_key].dna_region
+        for lane_key in lane_keys:
+            output_dir = os.path.join(self.basedir,lane_key)
+            gast_dir = os.path.join(output_dir,'gast')
+            if lane_key in self.run.samples:
+                dna_region = self.run.samples[lane_key].dna_region
             else:            
                 dna_region = self.run.dna_region
             if not dna_region:
                 logger.error("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
+                self.run.run_status_file_h.write("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 dna_region = 'unknown'
-                
             
-            # if no dna_region OR no refdb can be found then use
-            # refssu
-            refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region])
-            if not os.path.exists(refdb):
-                refdb = os.path.join(self.refdb_dir, 'refssu_all')
+            (refdb,taxdb) = self.get_reference_databases(dna_region)
             
+            
+            #print tax_file
             max_distance = C.max_distance['default']
             if dna_region in C.max_distance:
-                max_distance = C.max_distance[dna_region]
-            # for vamps user upload
-            # basedir is like avoorhis_3453211
-            # and outdir is like avoorhis_3453211/2012-06-25
-            # for MBL pipeline
-            # basedir is like 1_AGTCG
-            # and outdir is like 1_AGTCG/2012-06-25
+                max_distance = C.max_distance[dna_region]    
+            unique_file = os.path.join(output_dir, lane_key+'.unique.fa')
+            names_file  = os.path.join(output_dir, lane_key+'.names')
+            #usearch_filename= os.path.join(self.gast_dir, "uc")
+            #uc_results = self.parse_uclust(usearch_filename)
+            #print uc_results
             
-            unique_file = os.path.join(self.basedir, idx_key+'.unique.fa')
-            names_file  = os.path.join(self.basedir, idx_key+'.names')
-            gast_dir    = os.path.join(self.outdir, idx_key+'_gast/')
-            # 
-            if not os.path.exists(gast_dir):
-                logger.error("Could not find gast directory: "+gast_dir+" Exiting")
-                return ["ERROR","Could not find gast directory: "+gast_dir]
-            tagtax_filename     = os.path.join(gast_dir, idx_key+".tagtax_table")
-            gast_filename       = os.path.join(gast_dir, idx_key+".gast")
-            if not os.path.exists(gast_filename):
-                logger.error("Could not find gast file from gast_cleanup: "+os.path.basename(gast_filename)+" Exiting")
-                return ["ERROR","Could not find gast file from gast_cleanup: "+os.path.basename(gast_filename)]
-            gastconcat_filename = os.path.join(gast_dir, idx_key+".gast_concat_table") 
-            if not os.path.exists(gastconcat_filename):
-                logger.error("Could not find gast_concat file from gast_cleanup: "+os.path.basename(gastconcat_filename)+" Exiting")
-                return ["ERROR","Could not find gast_concat file from gast_cleanup: "+os.path.basename(gastconcat_filename)]
-            #######################################
-            #
-            # Load up the gast references
-            #
-            #######################################
-            # from gast  file
-            gast_fh = open(gast_filename,'r')
-            distances = {}
-            ref_hits = {}
-            for line in gast_fh:
-                items       = line.strip().split("\t")
-                id          = items[0]
-                refhvr_id   = items[1].split('|')[0]
-                distance    = items[2]
-                distances[id] = distance
-                if id in ref_hits:                
-                    ref_hits[id].append(refhvr_id)
-                else:
-                    ref_hits[id] = [refhvr_id]
-            gast_fh.close()
-            #for id in ref_hits:
-            #    print id,ref_hits[id]
-            #print "\n\nref_hits",ref_hits
-            #######################################
-            #
-            # Load up the ref database
-            #
-            #######################################
-            # now get stuff from ref table
-            # if this is from vamps we will look on the vamps or vampsdev db
-            # but normally we will look in the env454 db for the table
-            # could we do this from a ref file????
-            # SQL call to db (env454, vamps or vampsdev - depending....)
-            refhvr_taxa = {}
-            refdb_fh = open(refdb,'r')
-            for line in refdb_fh:
-                if line.startswith(">"):
-                    items = line.strip().split("|")
-                    refhvr_id = items[0][1:]
-                    tax       = items[-1]
-                    if refhvr_id in refhvr_taxa:
-                        refhvr_taxa[refhvr_id].append(tax)
+            ref_taxa = self.load_reftaxa(taxdb)
+            names_file  = os.path.join(output_dir, lane_key+'.names')
+            self.assign_taxonomy(gast_dir,dna_region,names_file, ref_taxa);
+            
+        return ("SUCCESS","gast2tax") 
+        
+    
+    def get_reference_databases(self,dna_region):
+        
+        #if dna region == v6v4(a) change it to v4v6
+        # other reverse regions? 
+        if dna_region == 'v6v4':
+            dna_region = 'v4v6'
+        if dna_region == 'v6v4a':
+            dna_region = 'v4v6a'
+        if C.use_full_length:
+            if os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
+                refdb = os.path.join(self.refdb_dir, 'refssu.udb')
+                taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+            elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.fa')):
+                refdb = os.path.join(self.refdb_dir, 'refssu.fa')
+                taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+        else:
+            if os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region])):
+                refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region])
+                taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+            elif os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')):
+                refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')
+                taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+            elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
+                refdb = os.path.join(self.refdb_dir, 'refssu.udb')
+                taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+            elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.fa')):
+                refdb = os.path.join(self.refdb_dir, 'refssu.fa')
+                taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+            else:
+                logger.error("Could not find reference database "+refdb+" Exiting")
+                sys.exit()  
+        
+        logger.info('tax_file '+taxdb)
+        logger.info('ref_file '+refdb)        
+        return (refdb,taxdb)   
+          
+    def get_fastasampler_cmd(self,unique_file, fastasamp_filename,start,end):
+        fastasampler = C.fastasampler_cmd
+        fastasampler_cmd = fastasampler
+        fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
+        fastasampler_cmd += ' ' + unique_file
+        fastasampler_cmd += ' ' + fastasamp_filename        
+        return fastasampler_cmd
+        
+    def get_usearch_cmd(self,fastasamp_filename, refdb,usearch_filename  ):    
+        
+        if C.use_full_length:            
+            usearch = C.usearch64
+        else:
+            usearch = C.usearch_cmd
+            
+        usearch_cmd = usearch
+        usearch_cmd += ' -usearch_global ' + fastasamp_filename
+        #usearch_cmd += ' --iddef 3'
+        usearch_cmd += ' -gapopen 6I/1E'
+        usearch_cmd += ' -db ' + refdb  
+        usearch_cmd += ' -strand plus'              
+        usearch_cmd += ' -uc ' + usearch_filename 
+        usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
+        usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
+        usearch_cmd += ' -id ' + str(C.pctid_threshold)
+        return usearch_cmd
+        
+    def get_grep_cmd(self,usearch_filename,  clustergast_filename ):
+        
+        use_full_length = ''
+        if C.use_full_length: 
+            use_full_length = "-use_full_length"
+            
+        grep_cmd = "grep"
+        grep_cmd += " -P \"^H\\t\" " + usearch_filename + " |"
+        grep_cmd += " sed -e 's/|.*\$//' |"
+        grep_cmd += " awk '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
+        grep_cmd += " sort -k1,1b -k2,2gr |"
+        # append to file:
+        grep_cmd += " clustergast_tophit "+use_full_length+" >> " + clustergast_filename
+        print grep_cmd
+        return grep_cmd  
+          
+    def load_reftaxa(self,tax_file):
+    
+        
+        taxa ={}
+        #open(TAX, "<$tax_file") || die ("Unable to open reference taxonomy file: $tax_file.  Exiting\n");
+        #while (my $line = <TAX>) 
+        n=1
+        for line in  open(tax_file,'r'):
+        
+            # 0=ref_id, 1 = taxa, 2 = count
+            data=line.strip().split("\t")
+    
+            copies = []
+    
+            # foreach instance of that taxa
+            for i in range(0,int(data[2])):
+            
+                # add that taxonomy to an array
+                copies.append(data[1])
+            
+            # add that array to the array of all taxa for that ref, stored in the taxa hash
+            if data[0] in taxa:
+                taxa[data[0]].append(copies)
+            elif copies:         
+                taxa[data[0]] =[copies]
+            else:
+                taxa[data[0]] =[]
+            n += 1
+        return taxa
+    
+    def assign_taxonomy(self, gast_dir, dna_region, names_file,  ref_taxa):
+        from pipeline.taxonomy import Taxonomy,consensus
+        #results = uc_results
+        results = {}
+        
+        # open gast_file to get results
+        tagtax_filename     = os.path.join(gast_dir,"tagtax")
+        tagtax_fh = open(tagtax_filename,'w')
+       
+        gast_file          = os.path.join(gast_dir, "gast"+dna_region)
+        if not os.path.exists(gast_file):
+            logger.info("Could not find gast file: "+gast_file)
+            sys.exit("Could not find gast file: "+gast_file)
+        for line in  open(gast_file,'r'): 
+            # must split on tab because last field may be empty and must be maintained as blank
+            data=line.strip().split("\t")
+            if len(data) == 3:
+                data.append("")
+            # 0=id, 1=ref, 2=dist, 3=align
+            results[data[0]]=[data[1].split('|')[0],data[2],data[3]]
+            
+        for read in results:
+            #print read, results[read]
+            pass
+        
+        for line in  open(names_file,'r'):
+            data=line.strip().split("\t")
+            dupes = data[1].split(",")
+            read  = data[0]
+            taxObjects  = []
+            distance    =0
+            refs_for    ={}
+            #print 'read',read
+            if read not in results:
+                results[read]=["Unknown", '1', "NA", '0', '0', "NA", "0;0;0;0;0;0;0;0", "0;0;0;0;0;0;0;0", "100;100;100;100;100;100;100;100"]
+                refs_for[read] = [ "NA" ]
+            else:
+                #print 'read in res',read, results[read]
+                for i in range( 0,len(results[read])):
+                #for resultread in results[read]:
+                    #print results[read]
+                    ref = results[read][0]
+                    if ref in ref_taxa:
+                        for tax in ref_taxa[ref]:
+                            for t in tax:
+                                taxObjects.append(Taxonomy(t))
                     else:
-                       refhvr_taxa[refhvr_id] = [tax]
-            refdb_fh.close()
-            #print "\n\n"
-            #for refid in refhvr_taxa:
-            #    print refid, refhvr_taxa[refid]
-            #print "\n\ntaxa",refhvr_taxa
-            # open names file and loop through the ids
-            # foreach id find the taxa (from reference data)
-            # and get consensus etc from taxonomy.py
-            taxObjects = []
-            names_fh = open(names_file,'r')
-            tagtax_fh = open(tagtax_filename,'w')
-            for line in names_fh:
-                data  = line.strip().split("\t")
-                id    = data[0]
-                reads = data[1].split(",")
-                #HKD9NCB01ANWGP_0	v6_AD520|AB086227|carbazole-degrading	0.017	60M
-                #if id == 'HKD9NCB01CH4T3_0':
-                #    print 'Found id HKD9NCB01CH4T3_0 '+ref_hits['HKD9NCB01CH4T3_0']
-                #if id == 'HKD9NCB01C3J1P_0':
-                #    print 'Found id HKD9NCB01C3J1P_0 '+ref_hits['HKD9NCB01C3J1P_0']
-                        
-                #if ( (exists $ref_hits{$id}) && ($ref_hits{$id}[0] ne 0) ) # 0 is a non-hit
-                #if id in ref_hits and ref_hits[id][0] != 0:
-                if id in ref_hits and ref_hits[id][0] != '0':
-                    logger.debug('Found id from ref_hits: '+id+" "+' '.join(ref_hits[id]))
-                    for ref in ref_hits[id]:
-                        logger.debug('ref from ref_hits: '+ref)
-                        for tax in refhvr_taxa[ref]:
-                            
-                            # get taxonomy object from taxonomy.py
-                            taxObj = Taxonomy(tax)
-                            taxObjects.append( taxObj )
-                            #taxon = taxObj.taxstring()
-                            #rank =  taxObj.depth()
-                    taxReturn = consensus( taxObjects, C.majority );
-                    # consensus rank and taxon
-                    
-                    # 0=taxObj, 1=winning vote, 2=minrank, 3=rankCounts, 4=maxPcts, 5=naPcts;
-                    taxon = taxReturn[0].taxstring()
-                    rank =  taxReturn[0].depth()
-                    #print taxReturn[0], taxReturn[0].data,taxReturn[0].taxstring()
-                    #while ($taxon =~ /;Unassigned$/) {$taxon =~ s/;Unassigned$//;}
-                    while taxon.split(';')[-1] == 'Unassigned':
-                        taxon = ';'.join(taxon.split(';')[:-1])
-                    if not taxon:
-                        taxon = "Unknown"
-                    # don't trust below domain if too far from the hit
-                    #print 'distances',distances[id],max_distance
-                    #print rank, taxon
-                    if float(distances[id]) >= float(max_distance):
-                        #taxon =~ s/;.*$//;
-                        taxon = taxon.split(';')[0]
-                        rank = "domain"
-                    for r in reads:
-                        #"\t", $r, $taxon, $rank, scalar @taxObjects, $taxReturn[1], $taxReturn[2], $taxReturn[3], $taxReturn[4], $taxReturn[5], $distances{$id}) . "\n";                   
-                        
-                        tagtax_fh.write(r+"\t"+taxon+"\t"+rank+"\t"+str(len(taxObjects))+"\t"+taxReturn[1]+"\t"+taxReturn[2]+"\t"+taxReturn[3]+"\t"+taxReturn[4]+"\t"+taxReturn[5]+"\t"+str(distances[id])+"\n")
-                else:
-                    for r in reads:
-                        tagtax_fh.write(r+"\tUnknown\tNA\t0\t0\tNA\t0;0;0;0;0;0;0;0\t0;0;0;0;0;0;0;0\t100;100;100;100;100;100;100;100\t1\n")
-            tagtax_fh.close()
-        logger.info("Finished gast2tax")
-        print "Finished gast2tax"
-        return ["SUCCESS","Finished gast2tax"]
+                        pass
+                    if read in refs_for:
+                        if results[read][0] not in refs_for[read]:
+                            refs_for[read].append(results[read][0])  
+                    else:
+                        refs_for[read] = [results[read][0]]                   
+                     
+                    # should all be the same distance
+                    distance = results[read][1]
+                #Lookup the consensus taxonomy for the array
+                taxReturn = consensus(taxObjects, C.majority)
+                
+                # 0=taxObj, 1=winning vote, 2=minrank, 3=rankCounts, 4=maxPcts, 5=naPcts;
+                taxon = taxReturn[0].taxstring()
+                rank = taxReturn[0].depth()
+                #print read,taxon,rank,taxReturn[0],taxReturn[1]
+                if not taxon: taxon = "Unknown"
+            
+                # (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts)
+                results[read] = [ taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5] ] 
+                #print "\t".join([read,taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5]]) + "\n"
+                
+            # Replace hash with final taxonomy results, for each copy of the sequence
+            for d in dupes:
+                
+                tagtax_fh.write(d+"\t"+results[read][0]+"\t"+results[read][2]+"\t"+results[read][3]+"\t"+','.join(sorted(refs_for[read]))+"\t"+results[read][1]+"\n")
+               
+        tagtax_fh.close()
+        return results
+

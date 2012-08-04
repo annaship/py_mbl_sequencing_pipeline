@@ -26,7 +26,7 @@ from pipeline.runconfig import RunConfig
 from pipeline.run import Run
 from pipeline.chimera import Chimera
 from pipeline.gast import Gast
-from pipeline.validate import MetadataUtils
+from pipeline.metadata import MetadataUtils
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
@@ -40,6 +40,105 @@ import cogent
 
 import pipeline.constants as C
 
+def get_values(is_vamps, args, config_dict={}):
+    collector={}
+#     requested_steps = args.steps.split(",") 
+#     for step in collector_steps:
+#         stepDict = 'pipeline_'+step+'_items'
+#         step_collection = globals()[stepDict]
+#         print stepDict, C.step_collection
+        
+    if is_vamps:
+        stanza='vamps_pipeline'
+        collector['vamps_user_upload'] = True
+        for item in C.list_of_vamps_items:
+            if item in args and getattr( args, item ) != None:
+                collector[item]  = getattr( args, item )
+            elif config_dict and item in config_dict[stanza] and config_dict[stanza][item] != '':
+                collector[item]  = config_dict[stanza][item]
+            elif config_dict and item in config_dict['general'] and config_dict['general'][item] != '':
+                collector[item]  = config_dict['general'][item]
+            else:
+                collector[item] = C.list_of_vamps_items[item]
+    else:
+        stanza='mbl_pipeline'
+        collector['vamps_user_upload'] = False
+        for item in C.list_of_mbl_items:
+            if item in args and getattr( args, item ) != None:
+                collector[item]  = getattr( args, item )
+            elif config_dict and item in config_dict[stanza] and config_dict[stanza][item] != '':
+                collector[item]  = config_dict[stanza][item]
+            elif config_dict and item in config_dict['general'] and config_dict['general'][item] != '':
+                collector[item]  = config_dict['general'][item]
+            else:
+                collector[item] = C.list_of_mbl_items[item]
+           
+    return collector
+    
+def validate_args(args):
+    """
+    # THOUGHTS
+    # vamps users
+    # single project and dataset
+    # Supply an ini file OR commandline (for web interface), but no csv file
+    #
+    # MBL pipeline
+    # REQUIRE a csv file and a ini file
+    """
+    collector={}
+    if args.csvPath:
+        print "Must be MBL origin"
+        
+        if not args.configPath:
+            sys.exit("MBL Pipeline: you must supply an ini file with a csv file")
+        else:
+            config_dict = configDictionaryFromFile_ini(args.configPath)           
+            collector= get_values(False, args, config_dict)
+    else:
+        print "VAMPS User origin"
+        list_of_items = C.list_of_vamps_items
+        
+        if args.configPath:
+            config_dict = configDictionaryFromFile_ini(args.configPath)
+            # eg dna_region
+            # precidence: cl,ini file
+            
+            collector = get_values(True, args, config_dict)
+            
+        else:
+            # Should never get here because configPath is required
+            sys.exit("No config file")
+        collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
+        # these are all the bool items from the ini file
+        # they need to be converted fron str to bool here
+        if 'from_fasta' in collector and collector['from_fasta'] == 'True':
+            collector['from_fasta'] = True
+        else:
+            collector['from_fasta'] = False
+        if 'use_cluster' in collector and collector['use_cluster'] == 'True':
+            collector['use_cluster'] = True
+        else:
+            collector['use_cluster'] = False
+        if 'load_vamps_database' in collector and collector['load_vamps_database'] == 'True':
+            collector['load_vamps_database'] = True
+        else:
+            collector['load_vamps_database'] = False 
+            
+        collector['runcode'] = args.run
+        collector['run'] = args.run
+        collector['steps'] = args.steps
+#     if 'run' in collector and collector['run'] != '':
+#         collector['runcode'] = collector['run']
+#     elif 'runcode' in collector and collector['runcode'] != '':
+#         collector['run'] = collector['runcode']
+#     else:
+#         sys.exit("No run or runcode found")
+    
+    collector['loglevel'] = collector['loglevel'].upper()
+    collector['datetime'] = str(datetime.date.today())
+    return collector
+        
+        
 if __name__ == '__main__':
     usage = """
         usage: ./pipeline-ui.py [options]
@@ -90,31 +189,43 @@ if __name__ == '__main__':
     # which means that csv file will require more commandline parameters.
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
     parser.add_argument('-c', '--configuration', required=True,                         dest = "configPath",
-                                                 help = 'Configuration parameters of the run. See README File')
+                                                 help = 'Configuration parameters (.ini file) of the run. See README File')
     parser.add_argument("-r", "--run",     required=True,  action="store",              dest = "run", 
                                                     help="unique run number ") 
-    parser.add_argument("-p", "--platform",     required=True,  action="store",         dest = "platform", 
+                                                    
+                                                    
+    parser.add_argument("-s", "--steps",     required=False,  action="store",           dest = "steps",            default = 'status',
+                                                help="""
+                                                Comma seperated list of steps.  
+                                                Choices are: validate,trim,chimera,status,upload_env454,gast,otu,upload_vamps,clean
+                                                """)
+                                                
+    #################################################################################################################### 
+    parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
+                                                 help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL')
+     # see note for base_output_dir in runconfig.py  about line: 130                                               
+    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", default='.',
+                                                help="default: ./") 
+    parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   default='',
+                                                    help="Directory where sequence files can be found. ")                           
+    #################################################################################################################### 
+    # Illumina and 454 Specific
+    parser.add_argument('-csv', '--csv',            required=False,                         dest = "csvPath",
+                                                        help = 'CSV file path. See README File')
+    parser.add_argument("-p", "--platform",     required=False,  action="store",         dest = "platform", 
                                                     help="Platform ")                                                  
-    parser.add_argument('-f', '--config_format',  required=True,   action="store",     dest = "config_file_type",  
+    parser.add_argument('-f', '--config_format',  required=False,   action="store",     dest = "config_file_type",  
                                                  help = 'ini or csv') 
     
-    parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   default='',
-                                                    help="Directory where sequence files can be found. ")
+    
     
     parser.add_argument("-ft", "--seq_file_type",     required=False,  action="store",  dest = "input_file_format", default='',
                                                     help="Sequence file type: fasta, fastq or sff ")
     parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",dest = "input_file_suffix", default='',
                                                     help="Sequence file suffix [optional] ") 
-    # see note for base_output_dir in runconfig.py  about line: 130                                               
-    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", default='.',
-                                                help="default: ./")
-    parser.add_argument("-s", "--steps",     required=False,  action="store",           dest = "steps",             default = 'status',
-                                                help="""
-                                                Comma seperated list of steps.  
-                                                Choices are: validate,trim,chimera,status,upload_env454,gast,otu,upload_vamps,clean
-                                                """)
-    parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
-                                                 help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL') 
+    
+    
+     
     parser.add_argument('-cp', '--compressed',  required=False,   action="store",       dest = "compressed",        default='True',       
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
     parser.add_argument('-o', '--output_directory',  required=False,   action="store",  dest = "output_dir",        default='.',       
@@ -123,8 +234,24 @@ if __name__ == '__main__':
                                                  help = 'Database host') 
     parser.add_argument('-db', '--database_name',  required=False,   action="store", dest = "database_name",        default='test',       
                                                  help = 'Database name') 
-    
-
+    #
+    # VAMPS Specific: all can be in the ini file
+    #
+    parser.add_argument("-site",  "--site",         required=False,  action="store",   dest = "site", 
+                                                        help="""database hostname: vamps or vampsdev
+                                                        [default: vampsdev]""")     
+    parser.add_argument("-u", "--user",             required=False,  action="store",   dest = "user", 
+                                                        help="user name")         
+    parser.add_argument("-p", "--project",          required=False,  action='store', dest = "project", 
+                                                        help="") 
+    parser.add_argument('-d',"--dataset",           required=False,  action="store",   dest = "dataset", 
+                                                        help = '')
+    parser.add_argument("-load", "--load_database", required=False,  action="store",   dest = "load_db", 
+                                                        help = 'VAMPS: load files into vamps db')                                              
+    parser.add_argument("-env", "--envsource",      required=False,  action="store",   dest = "env_source_id", 
+                                                        help = '')
+    parser.add_argument("-uc", "--use_cluster",      required=False,  action="store",   dest = "use_cluster", 
+                                                        help = 'if false: the cluster will not be used (for testing)') 
     #DEBUG	Detailed information, typically of interest only when diagnosing problems.
     #INFO	Confirmation that things are working as expected.
     #WARNING	An indication that something unexpected happened, or indicative of some problem in the near future (e.g. 'disk space low'). 
@@ -134,10 +261,25 @@ if __name__ == '__main__':
     
     args = parser.parse_args() 
 
+    # this will read the args and ini file and return a dictionary
+    data_object = validate_args(args)
+    if 'commandline' in data_object and data_object['commandline'] == True:
+        for item in data_object:
+            print item+' = ',data_object[item]
+        answer = raw_input("\n\tDoes this look okay? ('c' to continue; 'q' to quit) ")
+        if answer == 'q':
+            sys.exit()
+        elif answer == 'c':
+            pass
+        else:
+            sys.exit()
+            
+    # set logging
     
-    loggerlevel = args.loglevel.upper()
-    print "\nLog Level set to:",loggerlevel    
-    logger.setLevel(loggerlevel)
+    print "\nLog Level set to:",data_object['loglevel']    
+    logger.setLevel(data_object['loglevel'] )
+    
+    logger.info("Starting pipeline")
     ##############
     #
     #  Test cl parameters
