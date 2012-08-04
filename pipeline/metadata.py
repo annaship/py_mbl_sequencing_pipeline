@@ -19,6 +19,7 @@ import glob
 import time
 import shutil
 import random
+import datetime
 from pipeline.pipelinelogging import logger
 import constants as C
 from pipeline.db_upload import MyConnection
@@ -33,66 +34,77 @@ class MetadataUtils:
     validate and create a dictionary from them
     """
     Name = "MetadataUtils"
-    def __init__(self, args):
-        self.args = args
-        self.known_header_list_illumina = C.csv_header_list_illumina
-        self.known_header_list_454 = C.csv_header_list_454
-        self.primer_suites     = C.primer_suites 
-        self.dna_regions       = C.dna_regions
+    def __init__(self, command_line_args = None, configuration_dictionary = None):
+        self.args = command_line_args
+        self.general_config_dict = configuration_dictionary
+        self.known_header_list  = C.csv_header_list
+        self.pipeline_run_items = C.pipeline_run_items
+        self.primer_suites      = C.primer_suites 
+        self.dna_regions        = C.dna_regions
         self.data_object = {}
         self.data_object['general'] = {}
         self.warn_msg = """\n\tThe config File () seems to be okay. If the items above look correct
         then press 'c' to continue the pipeline\n"""
+        
             
-            
-    def validate(self):  
-        if self.args.platform == 'illumina':
+    def convert_and_save_ini(self):
+        
+        new_ini_file = os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'],self.general_config_dict['run'] + '.ini')
+        # converts csv to ini and saves to output_dir
+        if self.general_config_dict['platform'] == 'vamps':
+            self.save_ini_file(new_ini_file)
+        else:
+            self.convert_csv_to_ini(new_ini_file)
+        self.general_config_dict['configPath']
+        self.general_config_dict['configPath_original'] = self.general_config_dict['configPath']
+        self.general_config_dict['configPath'] = new_ini_file
+        print self.general_config_dict['configPath']
+        # change path and type to new ini
+        # regardless of what they were before        
+    
+    
+    
+    def validate(self): 
+        
+        if self.general_config_dict['platform'] == 'illumina':
             self.warn_msg = self.validate_illumina_ini()
-        elif self.args.platform == '454':
+        elif self.general_config_dict['platform'] == '454':
             data = self.validate_454_ini()
-        elif self.args.platform == 'ion_torrent':
+        elif self.general_config_dict['platform'] == 'ion_torrent':
             pass
+        elif self.general_config_dict['platform'] == 'vamps':
+            data = self.validate_vamps_ini()
         else:
             sys.exit("Unknown platform and configFile type for validation")
             
-    def convert_and_save_ini(self):
-        # converts csv to ini and saves to output_dir
-        if self.args.config_file_type == 'csv':
-            ini_file = self.convert_csv_to_ini()
-            self.args.configPath  = ini_file
-            self.args.config_file_type ='ini'
-        elif self.args.config_file_type == 'ini':
-            ini_file = self.save_ini_file()
-            self.args.configPath  = ini_file
-            self.args.config_file_type ='ini'
-        else:
-            sys.exit("Unknown config file type: "+config_file_type) 
-    
+
+        return self.data_object
+            
     def get_general_data(self):
         """
         """
         return self.data_object['general']
         
-    def create_dictionary_from_ini(self):
-        """
-        # read an ini config file and convert to a dictionary
-        """
-        import ConfigParser
-        if os.path.exists(self.args.configPath):
-            data_object = {}
-            user_config = ConfigParser.ConfigParser()
-            user_config.read(self.args.configPath)
-            
-            for section in user_config.sections():
-                
-                section_dict = data_object[section] = {}
-                for option in user_config.options(section):
-                    section_dict[option] = user_config.get(section,option)
-                    
-        else:
-            print "error could not open config file: ",self.args.configPath
-        
-        return data_object 
+#     def create_dictionary_from_ini(self):
+#         """
+#         # read an ini config file and convert to a dictionary
+#         """
+#         import ConfigParser
+#         if os.path.exists(self.general_config_dict['configPath']):
+#             data_object = {}
+#             user_config = ConfigParser.ConfigParser()
+#             user_config.read(self.general_config_dict['configPath'])
+#             
+#             for section in user_config.sections():
+#                 
+#                 section_dict = data_object[section] = {}
+#                 for option in user_config.options(section):
+#                     section_dict[option] = user_config.get(section,option)
+#                     
+#         else:
+#             print "error could not open config file: ",self.general_config_dict['configPath']
+#         
+#         return data_object 
 
     def get_command_line_items(self, general_data):
     
@@ -147,11 +159,12 @@ class MetadataUtils:
 #         print "TODO: write validate def for 454/csv"
 #         data_object = self.populate_data_object_454(args, my_csv)
         
-        
+    def validate_vamps_ini(self):
+        pass
     def validate_454_ini(self):
         print "Validating ini type Config File"
         print "TODO - write validation def for 454/ini"
-        self.data_object = self.create_dictionary_from_ini() 
+        #self.data_object = self.create_dictionary_from_ini() 
         # 454 ini file requirements:
         
         
@@ -161,14 +174,15 @@ class MetadataUtils:
         The csv headers are checked earlier
         """
         
-        print "Validating ini type Config File (may have been converted fron csv)"
+        print "Validating ini type Config File (may have been converted from csv)"
         return_code = False
         error_code  = False
         warn_code   = False
         msg = ''
         error=False
         warn=False
-        self.data_object = self.create_dictionary_from_ini()
+        #self.data_object = self.create_dictionary_from_ini()
+        self.data_object = self.configDictionaryFromFile_ini(self.general_config_dict['configPath'])
         
         
         (error_code,warn_code) = self.check_for_missing_values(self.data_object)  
@@ -393,15 +407,16 @@ class MetadataUtils:
     def get_input_files(self,file_suffix):
     
         files_list = []
-        if os.path.isdir(self.args.input_dir):
+        print 'input::',self.general_config_dict['input_dir']
+        if os.path.isdir(self.general_config_dict['input_dir']):
             
-            for infile in glob.glob( os.path.join(self.args.input_dir, '*'+file_suffix) ):
+            for infile in glob.glob( os.path.join(self.general_config_dict['input_dir'], '*'+file_suffix) ):
                 if os.path.isdir(infile) == True:
                     pass
                 else:
                     files_list.append(os.path.basename(infile))
         else:
-            logger.warning("No input directory or directory permissions problem: "+self.args.input_dir)
+            logger.warning("No input directory or directory permissions problem: "+self.general_config_dict['input_dir'])
             
         return files_list
         
@@ -578,11 +593,17 @@ class MetadataUtils:
                         logger.debug("\tdataset '"+d+"' is new")
             logger.debug("\tDataset Count: "+str(len(datasets)))
         return (error,warn)      
-        
+ 
+ 
     def get_confirmation(self, steps, general_data):
         print "\n"
         for item,value in general_data.iteritems():
-            print "%20s = %-20s" % (item,value)
+            #print len(value)
+            if len(value) > 80:
+                tmp = value.split(',')
+                print "%20s = %s .. %s" % (item,tmp[0],tmp[-1])
+            else:
+                print "%20s = %-20s" % (item,value)
         print "\nStep(s) to be performed: ",steps
         print "\n"+self.warn_msg+"\n"
         if 'validate' in steps.split(','):
@@ -593,12 +614,11 @@ class MetadataUtils:
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
         
-    def convert_csv_to_ini(self):
+    def convert_csv_to_ini(self,new_ini_file):
         #print self.args
         from pipeline.get_ini import readCSV
-        ini_file = os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')
-        fh = open(ini_file,'w')
-        my_csv = readCSV(file_path = self.args.configPath)
+        fh = open(new_ini_file,'w')
+        my_csv = readCSV(file_path = self.general_config_dict['csvPath'])
         
         content     = my_csv.read_csv()
         headers     = content[1].keys()
@@ -608,30 +628,39 @@ class MetadataUtils:
         # get list of keys
         keys_list = []
         if self.check_headers(headers_clean):
-        
+            logger.info("CSV headers okay")
             for k,values in content.iteritems():
                 keys_list.append(values['barcode_index']+"_"+values['run_key']+"_"+values['lane'])
         
         # general section
+        fh.write("#\n#\tCreated by MBL Pipeline for run: "+self.general_config_dict['run']+" on "+self.general_config_dict['date']+"\n#\n\n")  
         fh.write("[general]\n") 
-        fh.write("run = "+self.args.run+"\n")
-        fh.write("run_date = "+self.args.run+"\n")
-        fh.write("config_file = "+os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')+"\n")
-        fh.write("config_format = ini\n")
-        fh.write("config_file_orig = "+self.args.configPath+"\n")
-        fh.write("config_format_orig = "+self.args.config_file_type+"\n")
-        fh.write("platform = "+self.args.platform+"\n")
+        fh.write("run = "+self.general_config_dict['run']+"\n")
+        fh.write("run_date = "+self.general_config_dict['run']+"\n")
+        fh.write("config_file = "+new_ini_file+"\n")
+        fh.write("config_file_orig = "+self.general_config_dict['configPath']+"\n")
+        fh.write("platform = "+self.general_config_dict['platform']+"\n")
         
-        fh.write("output_dir = "+os.path.join(self.args.baseoutputdir,self.args.run)+"\n")
-        fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
-        fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")
-        fh.write("anchor_file = "        + getattr(self.args,'anchor_file', "")+"\n")
-        fh.write("primer_file = "        + getattr(self.args,'primer_file', "")+"\n")
-        fh.write("require_distal = "     + getattr(self.args,'require_distal', "1")+"\n")
+        fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
+        
+        fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
+        fh.write("input_file_format = " + self.general_config_dict['input_file_format']+"\n")
+        fh.write("anchor_file = "        + self.general_config_dict['anchor_file']+"\n")
+        fh.write("primer_file = "        + self.general_config_dict['primer_file']+"\n")
+        fh.write("require_distal = "     + str(self.general_config_dict['require_distal'])+"\n")
+        fh.write("input_dir = "          + self.general_config_dict['input_dir']+"\n")
+        
+        
+#         fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
+#         fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")
+#         fh.write("anchor_file = "        + getattr(self.args,'anchor_file', "")+"\n")
+#         fh.write("primer_file = "        + getattr(self.args,'primer_file', "")+"\n")
+#         fh.write("require_distal = "     + getattr(self.args,'require_distal', "1")+"\n")
+#         fh.write("input_dir = "+getattr(self.args,'input_dir', ".")+"\n") 
+        
         fh.write("idx_keys = "           +','.join(keys_list)+"\n")
-        fh.write("input_dir = "+getattr(self.args,'input_dir', ".")+"\n") 
-        if self.args.input_dir:
-            file_list = self.get_input_files(self.args.input_file_suffix)
+        if self.general_config_dict['input_dir']:
+            file_list = self.get_input_files(self.general_config_dict['input_file_suffix'])
             fh.write("input_files = "     + ','.join(file_list)+"\n") 
         else:
             fh.write("input_files = \n") 
@@ -639,9 +668,9 @@ class MetadataUtils:
         
         for k,values in content.iteritems():
             fh.write("\n")
-            if self.args.platform == 'illumina':
+            if self.general_config_dict['platform'] == 'illumina':
                 fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
-            elif self.args.platform == '454':
+            elif self.general_config_dict['platform'] == '454':
                 fh.write("["+values['lane']+"_"+values['run_key']+"]\n")
                 
             for v in values:
@@ -649,265 +678,135 @@ class MetadataUtils:
                 
         fh.close()
         
-        return ini_file 
+        return new_ini_file 
         
-    def save_ini_file(self):
+    def save_ini_file(self,new_ini_file):
         # give it a new name
+        out_fh = open(new_ini_file,'w')
+        #for line in open(os.path.abspath(self.general_config_dict['configPath']),"r"):
+        #    out_fh.write(line)
+        self.general_config_dict['configPath_original'] = self.general_config_dict['configPath']
+        self.general_config_dict['configPath'] = new_ini_file
         
-        with open(os.path.abspath(self.args.configPath),"r") as fh_from:
-            lines = fh_from.readlines()
-        fh_from.close()
-        ini_file = os.path.join(self.args.baseoutputdir,self.args.run,self.args.run + '.ini')
-        with open(ini_file,'w') as fh_to:
-            for line in lines:
-                fh_to.write(line)              
-        fh_to.close()
-        
-        return ini_file
+        out_fh.write("#\n#\tCreated by MBL Pipeline for run: "+self.general_config_dict['run']+" on "+self.general_config_dict['date']+"\n#\n\n")  
+        out_fh.write("[general]\n")   
+        for item in self.general_config_dict:
+            
+            out_fh.write(item+" = "+str(self.general_config_dict[item]) + "\n")
+        #out_fh.write("\n["+self.general_config_dict['platform']+"]\n") 
+        #for item in self.general_config_dict:
+        #    if item not in C.general_run_items:
+        #        out_fh.write(item+" = "+str(self.general_config_dict[item]) + "\n")
+        out_fh.close()
+
+
             
     def check_headers(self,headers):
-        if self.args.platform=='illumina':
-            known_header_list= C.csv_header_list_illumina
-        elif self.args.platform == '454':
-            known_header_list = C.csv_header_list_454
+        if self.general_config_dict['platform']=='illumina':
+            known_header_list= self.known_header_list['illumina']
+        elif self.general_config_dict['platform'] == '454':
+            known_header_list = self.known_header_list['454']
         else:
             logger.error("in utils: check_headers - unknown platform")
+            
         if sorted(known_header_list) != sorted(headers):
             sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(known_header_list)))
         else:
             return True
-# def send_metadata_to_database(data, data_object):
-#     cursor = data_object['cursor']
-#     cursor_env454 = data_object['cursor_env454']
-#     sub_table = data_object['submission_tbl']
-#     tubes_table_vamps = data_object['tubes_tbl']
-#     seqs_table_env454 = data_object['seqs_454']
-#     metadata_table_env454 = data_object['metadata_454']
-#     vamps_user = data_object['vamps_user']
-#     upload_code = data_object['upload_code']
-#     datetime = data_object['datetime']
-#     submit_code = upload_code+'_'+vamps_user
-#     env_source = '100'  # 100 is unknown
-#     platform = 'illumina' # this is ONLY for illumina data - right?
-#     # get contact
-#     cursor.execute("select last_name,first_name,email,institution from vamps_auth where user='"+vamps_user+"'")
-#     (last_name,first_name,email,institution) = cursor.fetchone()
-#     for project in data:
-#         
-#         insert_string = "insert ignore into %s (\
-#             upload_code,\
-#             temp_project,\
-#             user,\
-#             last_name,\
-#             first_name,\
-#             email,\
-#             institution,\
-#             env_source_id,\
-#             num_of_tubes,\
-#             date_initial\
-#             ) \
-#             values('"+upload_code+"',\
-#                 '"+project+"',\
-#                 '"+vamps_user+"',\
-#                 '"+last_name+"',\
-#                 '"+first_name+"',\
-#                 '"+email+"',\
-#                 '"+institution+"',\
-#                 '"+env_source+"',\
-#                 '"+str(data[project]['ds_count'])+"',\
-#                 '"+datetime+"'\
-#                 )"
-#         print insert_string
-#         cursor.execute(insert_string % (sub_table))
-#         ds_num = 0
-#         #known_header_list = ["run_key","run","lane","dataset","project",
-#         #"tubelabel","barcode","adaptor","dna_region","amp_operator",
-#         #"seq_operator","barcode_index","overlap","insert_size",
-#         #"file_prefix","read_length","primer_suite"]
-#         for dataset_items in data[project]['datasets']:
-#             ds_num += 1
-#             insert_string = "insert into %s (\
-#                 upload_code,\
-#                 runkey,\
-#                 run,\
-#                 lane,\
-#                 project,\
-#                 dataset,\
-#                 tubelabel,\
-#                 barcode,\
-#                 adaptor,\
-#                 dna_region,\
-#                 amp_operator,\
-#                 seq_operator,\
-#                 barcode_index,\
-#                 overlap,\
-#                 insert_size,\
-#                 file_prefix,\
-#                 read_length,\
-#                 primer_suite,\
-#                 date_initial\
-#                 ) \
-#                 values('"+upload_code+"',\
-#                     '"+dataset_items['run_key']+"',\
-#                     '"+dataset_items['run']+"',\
-#                     '"+dataset_items['lane']+"',\
-#                     '"+project+"',\
-#                     '"+dataset_items['dataset']+"',\
-#                     '"+dataset_items['tubelabel']+"',\
-#                     '"+dataset_items['barcode']+"',\
-#                     '"+dataset_items['adaptor']+"',\
-#                     '"+dataset_items['dna_region']+"',\
-#                     '"+dataset_items['amp_operator']+"',\
-#                     '"+dataset_items['seq_operator']+"',\
-#                     '"+dataset_items['barcode_index']+"',\
-#                     '"+dataset_items['overlap']+"',\
-#                     '"+dataset_items['insert_size']+"',\
-#                     '"+dataset_items['file_prefix']+"',\
-#                     '"+dataset_items['read_length']+"',\
-#                     '"+dataset_items['primer_suite']+"',\
-#                     '"+datetime+"')"
-#             
-#             cursor.execute(insert_string % (tubes_table_vamps))
-#             
-#             cursor_env454.execute(insert_string % (metadata_table_env454))
-    # ls /xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/*fa.unique
-    #barcode_index = 'idx': 'AAGCTA',
-    #barcode = run_key = 'inline_barcode': 'NNNNACGCA
-    
-# def read_sequence_files(data, data_object):
-#     # sample directory
-#     seqs_table_env454 = data_object['seqs_454']
-#     cursor_env454 = data_object['cursor_env454']
-#     fasta_dir = "/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-#     file_suffix = "fa.unique"
-#     file_count = 0
-#     for filename in os.listdir(fasta_dir): 
-#         
-#         if filename[-len(file_suffix):] == file_suffix:
-#             size = os.path.getsize(fasta_dir +filename)
-#             
-#             #cat 'filename' | grep ">" | wc -l
-#             #print "result",x
-#             print os.path.split(filename)[-1]
-#             p = subprocess.Popen(["cat "+ fasta_dir +filename+ " | grep '>' | wc -l"], shell=True, stdout=subprocess.PIPE)
-#             #p = subprocess.Popen(["cat", fasta_dir +filename, "|", "grep", '>',"|","wc","-l"], shell=True, stdout=subprocess.PIPE)
-#             print "  seq_count:",p.communicate()[0].strip()
-#             file_count += 1
-#             
-#             dataset = '_'.join(filename.split('-')[0].split('_')[:-1])
-#             project = ''
-#             for p in data:
-#                 #print type(data[p]),data[p]['datasets'],"\n\n"
-#                 data[p]['datasets'][0]['dataset']
-#                 for n in range(0,len(data[p]['datasets'])):
-#                     if data[p]['datasets'][n]['dataset'] == dataset:
-#                         project = p
-#                         #domain = data[p]['datasets'][n]['domain']
-#                         dna_region = data[p]['datasets'][n]['dna_region']
-#                         break
-#             f = FastaReader(fasta_dir +filename)
-#             while f.next():
-#                 id = f.id.split('|')[0]
-#                 #print id
-#                 cursor_env454.execute("insert ignore into "+seqs_table_env454+" (read_id,sequence,length,project,dataset,source) \
-#                     VALUES('"+id+"','"+f.seq+"','"+str(len(f.seq))+"','"+project+"','"+dataset+"','"+dna_region+"')")
-#     print "File Count",file_count
+
+    def configDictionaryFromFile_ini(self,config_file_path):
+        import ConfigParser
         
-#if __name__ == '__main__':
-
-#    m =  Metadata_utils
+        configDict = {}
+        user_config = ConfigParser.ConfigParser()
+        user_config.read(config_file_path)
+        
+        for section in user_config.sections():
+            section_dict = configDict[section] = {}
+            for option in user_config.options(section):
+                section_dict[option] = user_config.get(section,option)
     
-    # import argparse
-#     
-#     # DEFAULTS
-#     user = ''  
-#     #project = 'p'+str(random.randrange(100000,999999))
-#    
-#     unique = str(random.randrange(1000000, 9999999))
-#     data_object = {}
-#     
-# 
-#     
-#     myusage = """usage: illumina_input.py -m metadatafile -d seqdir [options]
-#          
-#          
-#          
-#          where
-#             -m, --metadatafile The name of the text file.  [required]
-#             
-#             -d, --directory    The name of the directory where the sequence files are located.   [required]
-#             
-#               
-#             -site            vamps or vampsdev.
-#                                 [default: vampsdev]
-#             -r,  --run
-#             -u, --vamps_user       Needed for database
-#                                 vamps_user is to keep a record of who uploaded
-#             
-#     
-#     
-#     """
-#     parser = argparse.ArgumentParser(description="Read Illumina directory, scan/validate metadata file and import sequences and metadata" ,usage=myusage)
-#     
-#     parser.add_argument("-u", "--vamps_user",         required=True,  action="store",   dest = "vamps_user", 
-#                                                     help="user name")  
-#                                          
-#     parser.add_argument("-m", "--metadatafile",  required=True,  action="store",   dest = "metadata_file", 
-#                                                     help="Metadata File ") 
-#     parser.add_argument("-d", "--directory",     required=False,  action="store",   dest = "seqsdir", 
-#                                                     help="Taxonomy File ")
-#     parser.add_argument("-s", "--site",     required=False,  action="store",   dest = "site", default='vampsdev',
-#                                                     help="Taxonomy File ")                                      
-#     parser.add_argument("-r", "--run",     required=False,  action="store",   dest = "runcode",
-#                                                     help="Taxonomy File ")
-#     print "Starting illumina_imput.py"
-#     
-#     args = parser.parse_args()
-#     
-#     data_object['metadata_file'] = args.metadata_file
-#     data_object['seqsdir'] = args.seqsdir
-#     #data_object['basedir'] = args.basedir
-#     data_object['datetime'] = str(datetime.date.today())
-#     data_object['vamps_user'] = args.vamps_user
-#     if args.runcode:
-#         data_object['upload_code'] = args.vamps_user+'_'+args.runcode
-#     else:
-#         data_object['upload_code'] = args.vamps_user+'_'+unique
-#     
-#     
-#     data_object['submission_tbl'] = 'vamps_submissions_illumina'
-#     data_object['tubes_tbl'] = 'vamps_submissions_tubes_illumina'
-#     data_object['metadata_454'] = 'illumina_metadata_av'    
-#     data_object['seqs_454'] = 'illumina_seqs_av'
-#     
-#     if args.site:
-#         site = args.site
-#     
-#     if site == 'vamps':
-#         db_host = 'vampsdb'
-#         db_name = 'vamps'
-#         db_home = '/xraid2-2/vampsweb/vamps/'
-#     else:
-#         db_host = 'vampsdev'
-#         db_name = 'vamps'
-#         db_home = '/xraid2-2/vampsweb/vampsdev/'
-#     
-#     db_host_env454 = 'newbpcdb2'
-#     db_name_env454 = 'env454'
-#     db_home_env454 = os.getenv("HOME")
-#     print db_home_env454
-#     obj_env454=ConMySQL.New(db_host_env454, db_name_env454, db_home_env454)
-#     data_object['cursor_env454'] = obj_env454.get_cursor()
-#     obj=ConMySQL.New(db_host, db_name, db_home)
-#     data_object['cursor'] = obj.get_cursor()
-#     
-#     dbuser = obj.get_db_user()
-#     data_object['db_user'] = dbuser
-#     
-#     data = validate_metadata_file(data_object)
-#     send_metadata_to_database(data, data_object)
-#     read_sequence_files(data, data_object)
-#     
-#     data_object['cursor'].close()
-    
+        return configDict
+        
+    def get_values(self, args, general_config_dict ):
+        collector={}
 
+        for item in self.pipeline_run_items[args.platform]:
+            # set collector[item] to the default first
+            collector[item] = self.pipeline_run_items[args.platform][item]
+            # now look for args (then ini) values to replace
+            if item in args and getattr( args, item ) != None:
+                collector[item]  = getattr( args, item )
+            elif general_config_dict and item in general_config_dict[args.platform] and general_config_dict[args.platform][item] != '':
+                collector[item]  = general_config_dict[args.platform][item]
+        
+        # get all the items from general_config_dict['general']
+        
+        for item in general_config_dict['general']:
+            collector[item]  = general_config_dict['general'][item]
+            
+                
+        return collector
+    
+    def validate_args(self):
+        """
+        # THOUGHTS
+        # vamps users
+        # single project and dataset
+        # Supply an ini file OR commandline (for web interface), but no csv file
+        #
+        # MBL pipeline
+        # REQUIRE a csv file and a ini file
+        """
+        collector={}
+        
+        if self.args.platform == 'illumina' and not self.args.csvPath:
+            sys.exit("illumina requires a csv file - Exiting")
+        
+        if self.args.csvPath:
+            print "Must be MBL origin: illumina, 454 or ion_torrent"
+            
+            if not self.args.configPath:
+                sys.exit("MBL Pipeline: you must supply an ini file with a csv file")
+            else:
+                general_config_dict = self.configDictionaryFromFile_ini(self.args.configPath) 
+                if self.args.platform in general_config_dict and 'general' in general_config_dict:
+                    collector= self.get_values( self.args, general_config_dict)
+                else:
+                    sys.exit("The ini file needs both a [general] and ["+ self.args.platform +"] section - Exiting.")
+        else:
+            print "VAMPS Pipeline:"
+           # list_of_items = C.pipeline_run_items_vamps
+            
+            if self.args.configPath:
+                general_config_dict = self.configDictionaryFromFile_ini(self.args.configPath)
+                
+                # eg dna_region
+                # precidence: cl,ini file
+                if self.args.platform in general_config_dict and 'general' in general_config_dict:
+                    collector = self.get_values( self.args, general_config_dict)
+                else:
+                    sys.exit("The ini file needs both a [general] and ["+ self.args.platform +"] section - Exiting.")
+                
+            else:
+                # Should never get here because configPath is required
+                sys.exit("No config file")
+            collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
+            # these are all the bool items from the ini file
+            # they need to be converted fron str to bool here
+
+        collector['configPath'] = self.args.configPath
+        for i in collector:
+            if collector[i] == 'True' or collector[i] == 'true':
+                collector[i] = True
+            elif collector[i] == 'False' or collector[i] == 'false':
+                collector[i] = False 
+        collector['runcode'] = self.args.run
+        collector['run'] = self.args.run
+        collector['steps'] = self.args.steps
+        collector['platform'] = self.args.platform
+        collector['loglevel'] = collector['loglevel'].upper()
+        collector['date'] = str(datetime.date.today())
+        
+        return collector
+            
