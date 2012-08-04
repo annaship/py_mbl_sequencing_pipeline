@@ -39,105 +39,9 @@ from pipelineprocessor import process
 import cogent
 
 import pipeline.constants as C
+# read a config file and convert to a dictionary
+known_platforms = ('illumina','454','ion_torrent','vamps')
 
-def get_values(is_vamps, args, config_dict={}):
-    collector={}
-#     requested_steps = args.steps.split(",") 
-#     for step in collector_steps:
-#         stepDict = 'pipeline_'+step+'_items'
-#         step_collection = globals()[stepDict]
-#         print stepDict, C.step_collection
-        
-    if is_vamps:
-        stanza='vamps_pipeline'
-        collector['vamps_user_upload'] = True
-        for item in C.list_of_vamps_items:
-            if item in args and getattr( args, item ) != None:
-                collector[item]  = getattr( args, item )
-            elif config_dict and item in config_dict[stanza] and config_dict[stanza][item] != '':
-                collector[item]  = config_dict[stanza][item]
-            elif config_dict and item in config_dict['general'] and config_dict['general'][item] != '':
-                collector[item]  = config_dict['general'][item]
-            else:
-                collector[item] = C.list_of_vamps_items[item]
-    else:
-        stanza='mbl_pipeline'
-        collector['vamps_user_upload'] = False
-        for item in C.list_of_mbl_items:
-            if item in args and getattr( args, item ) != None:
-                collector[item]  = getattr( args, item )
-            elif config_dict and item in config_dict[stanza] and config_dict[stanza][item] != '':
-                collector[item]  = config_dict[stanza][item]
-            elif config_dict and item in config_dict['general'] and config_dict['general'][item] != '':
-                collector[item]  = config_dict['general'][item]
-            else:
-                collector[item] = C.list_of_mbl_items[item]
-           
-    return collector
-    
-def validate_args(args):
-    """
-    # THOUGHTS
-    # vamps users
-    # single project and dataset
-    # Supply an ini file OR commandline (for web interface), but no csv file
-    #
-    # MBL pipeline
-    # REQUIRE a csv file and a ini file
-    """
-    collector={}
-    if args.csvPath:
-        print "Must be MBL origin"
-        
-        if not args.configPath:
-            sys.exit("MBL Pipeline: you must supply an ini file with a csv file")
-        else:
-            config_dict = configDictionaryFromFile_ini(args.configPath)           
-            collector= get_values(False, args, config_dict)
-    else:
-        print "VAMPS User origin"
-        list_of_items = C.list_of_vamps_items
-        
-        if args.configPath:
-            config_dict = configDictionaryFromFile_ini(args.configPath)
-            # eg dna_region
-            # precidence: cl,ini file
-            
-            collector = get_values(True, args, config_dict)
-            
-        else:
-            # Should never get here because configPath is required
-            sys.exit("No config file")
-        collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
-        # these are all the bool items from the ini file
-        # they need to be converted fron str to bool here
-        if 'from_fasta' in collector and collector['from_fasta'] == 'True':
-            collector['from_fasta'] = True
-        else:
-            collector['from_fasta'] = False
-        if 'use_cluster' in collector and collector['use_cluster'] == 'True':
-            collector['use_cluster'] = True
-        else:
-            collector['use_cluster'] = False
-        if 'load_vamps_database' in collector and collector['load_vamps_database'] == 'True':
-            collector['load_vamps_database'] = True
-        else:
-            collector['load_vamps_database'] = False 
-            
-        collector['runcode'] = args.run
-        collector['run'] = args.run
-        collector['steps'] = args.steps
-#     if 'run' in collector and collector['run'] != '':
-#         collector['runcode'] = collector['run']
-#     elif 'runcode' in collector and collector['runcode'] != '':
-#         collector['run'] = collector['runcode']
-#     else:
-#         sys.exit("No run or runcode found")
-    
-    collector['loglevel'] = collector['loglevel'].upper()
-    collector['datetime'] = str(datetime.date.today())
-    return collector
-        
         
 if __name__ == '__main__':
     usage = """
@@ -181,12 +85,14 @@ if __name__ == '__main__':
         sys.exit()
     #THE_DEFAULT_BASE_OUTPUT = '.'
 
-    # required items: configuration file, run and config_file_type only
-    # DO Not give items defaults here as the script needs to look in the ini file as well
-    # except steps (status) and loglevel (error) and baseoutputdir (./)(for ouptput_dir creation)
-    # see validate.py:  get_command_line_items()
+    # required items: configuration file, run and platform only
+    # NO DEFAULTS HERE: DO Not give items defaults here as the script needs to look in the ini file as well
+    # except steps (status) and loglevel (error) and 
+    # see metadata.py and constants.py:  get_command_line_items()
     # BUT general section of ini file must have important things not supplied on command line
     # which means that csv file will require more commandline parameters.
+    # NOTE: do not store any of the command line item as store_true or store_false or they
+    # may not be able to be overridden buy the config file (ini).
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
     parser.add_argument('-c', '--configuration', required=True,                         dest = "configPath",
                                                  help = 'Configuration parameters (.ini file) of the run. See README File')
@@ -199,40 +105,40 @@ if __name__ == '__main__':
                                                 Comma seperated list of steps.  
                                                 Choices are: validate,trim,chimera,status,upload_env454,gast,otu,upload_vamps,clean
                                                 """)
-                                                
+    parser.add_argument("-p", "--platform",     required=True,  action="store",         dest = "platform", 
+                                                    help="Platform: illumina, 454, ion_torrent, or vamps ")                                              
     #################################################################################################################### 
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
                                                  help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL')
      # see note for base_output_dir in runconfig.py  about line: 130                                               
-    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", default='.',
+    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", 
                                                 help="default: ./") 
-    parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   default='',
+    parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   
                                                     help="Directory where sequence files can be found. ")                           
     #################################################################################################################### 
     # Illumina and 454 Specific
     parser.add_argument('-csv', '--csv',            required=False,                         dest = "csvPath",
                                                         help = 'CSV file path. See README File')
-    parser.add_argument("-p", "--platform",     required=False,  action="store",         dest = "platform", 
-                                                    help="Platform ")                                                  
+                                                     
     parser.add_argument('-f', '--config_format',  required=False,   action="store",     dest = "config_file_type",  
                                                  help = 'ini or csv') 
     
     
     
-    parser.add_argument("-ft", "--seq_file_type",     required=False,  action="store",  dest = "input_file_format", default='',
+    parser.add_argument("-ft", "--seq_file_type",     required=False,  action="store",  dest = "input_file_format", 
                                                     help="Sequence file type: fasta, fastq or sff ")
-    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",dest = "input_file_suffix", default='',
+    parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",dest = "input_file_suffix",
                                                     help="Sequence file suffix [optional] ") 
     
     
      
-    parser.add_argument('-cp', '--compressed',  required=False,   action="store",       dest = "compressed",        default='True',       
+    parser.add_argument('-cp', '--compressed',  required=False,   action="store",       dest = "compressed",              
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
-    parser.add_argument('-o', '--output_directory',  required=False,   action="store",  dest = "output_dir",        default='.',       
+    parser.add_argument('-o', '--output_directory',  required=False,   action="store",  dest = "output_dir",            
                                                  help = 'Output directory') 
-    parser.add_argument('-ho', '--database_host',  required=False,   action="store",  dest = "database_host",        default='vampsdev',       
+    parser.add_argument('-db_host', '--database_host',  required=False,   action="store",  dest = "database_host",          
                                                  help = 'Database host') 
-    parser.add_argument('-db', '--database_name',  required=False,   action="store", dest = "database_name",        default='test',       
+    parser.add_argument('-db_name', '--database_name',  required=False,   action="store", dest = "database_name",        
                                                  help = 'Database name') 
     #
     # VAMPS Specific: all can be in the ini file
@@ -242,9 +148,9 @@ if __name__ == '__main__':
                                                         [default: vampsdev]""")     
     parser.add_argument("-u", "--user",             required=False,  action="store",   dest = "user", 
                                                         help="user name")         
-    parser.add_argument("-pr", "--project",          required=False,  action='store', dest = "project", 
+    parser.add_argument("-proj", "--project",          required=False,  action='store', dest = "project", 
                                                         help="") 
-    parser.add_argument('-d',"--dataset",           required=False,  action="store",   dest = "dataset", 
+    parser.add_argument('-dset',"--dataset",           required=False,  action="store",   dest = "dataset", 
                                                         help = '')
     parser.add_argument("-load", "--load_database", required=False,  action="store",   dest = "load_db", 
                                                         help = 'VAMPS: load files into vamps db')                                              
@@ -260,9 +166,15 @@ if __name__ == '__main__':
     #CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
     
     args = parser.parse_args() 
-
+    if args.platform not in known_platforms:
+    	sys.exit("unknown platform - Exiting")
+    	
+    v = MetadataUtils(command_line_args = args)
+    
     # this will read the args and ini file and return a dictionary
-    data_object = validate_args(args)
+    
+    data_object = v.validate_args()
+    
     if 'commandline' in data_object and data_object['commandline'] == True:
         for item in data_object:
             print item+' = ',data_object[item]
@@ -303,34 +215,33 @@ if __name__ == '__main__':
     # base output directory and run are required so need to create output_dir here
     # to write ini file and status file
     ##############
-    if not os.path.exists(os.path.join(args.baseoutputdir,args.run)):
-        logger.debug("Creating output directory: "+os.path.join(args.baseoutputdir,args.run))
-        os.makedirs(os.path.join(args.baseoutputdir,args.run))    
-    
-   
+    try:
+        if not os.path.exists(os.path.join(data_object['baseoutputdir'], data_object['run'])):
+            logger.debug("Creating output directory: "+os.path.join(data_object['baseoutputdir'], data_object['run']))
+            os.makedirs(os.path.join(data_object['baseoutputdir'], data_object['run']))    
+    except:
+        sys.exit("the baseoutputdir is required in the general section of the ini file - Exiting.")
     
     ##############
     #
     #  VALIDATE THE INI FILE
     #
-    ##############  
-    # pass True to validate, convert (csv => ini if needed) and write out ini file
-    #print 'steps',args.steps
-    #if args.steps == 'validate':
-    #    v = MetadataUtils(args, validate=True)
-    #else:
-    v = MetadataUtils(args)
-    v.convert_and_save_ini()
-    v.validate()
-    general_data = v.get_general_data()
+    ############## 
+
     
-    answer = v.get_confirmation(args.steps, general_data)
+    del v
+    v = MetadataUtils( configuration_dictionary = data_object )
+    v.convert_and_save_ini()
+    data_object = v.validate()
+    #general_data = v.get_general_data()
+    #print data_object['general']
+    answer = v.get_confirmation(args.steps, data_object['general'])
     
     if answer == 'q':
         sys.exit()
     elif answer == 'v':
         # view CONFIG file contents
-        fh = open(os.path.join(args.baseoutputdir, args.run, args.run+'.ini'))
+        fh = open(os.path.join(data_object['general']['baseoutputdir'], data_object['general']['run'], data_object['general']['run']+'.ini'))
         lines = fh.readlines()
         print "\n=== START ===\n"
         for line in lines:
@@ -344,8 +255,9 @@ if __name__ == '__main__':
     #
     # CREATE THE RUN OBJECT (see runconfig.py for details)
     #
-    ##############     
-    run = Run(args.configPath, args, os.path.dirname(os.path.realpath(__file__)))    
+    ##############  
+
+    run = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
     
 
 #    for key in run.samples:
