@@ -158,7 +158,11 @@ class RunConfig:
         self.maximumLength  = general_config.get('maximumLength', C.maximumLength)
         self.minAvgQual     = general_config.get('minAvgQual',    C.minAvgQual)
         self.force_runkey   = general_config.get('force_runkey', None)
-        
+        if self.platform == 'vamps':
+            self.user           = general_config['user']
+            self.use_cluster    = general_config['use_cluster']
+            self.dna_region     = general_config['dna_region'] 
+            self.input_files    = general_config['input_files'] 
         # added gast_input_source for vamps uploads
         # so when users want to gast at a later time they will
         # look in the database and not the files (which may be missing)

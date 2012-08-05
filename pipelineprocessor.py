@@ -411,8 +411,8 @@ def gast(run):
     # or we can get the 'lane_keys' directly from the config_file
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
-    if(run.vamps_user_upload):
-        idx_keys = [run.user+run.runcode]        
+    if run.platform == 'vamps':
+        idx_keys = [run.user+run.run]        
     else:
         try:
             idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
@@ -439,9 +439,8 @@ def gast(run):
     
     # get GAST object
     mygast = Gast(run, idx_keys)
-    if mygast.error:
-        run.run_status_file_h.write("GAST Error: "+mygast.error+"\n")
-        sys.exit()
+    
+    
         
     # CLUSTERGAST
     result_code = mygast.clustergast(idx_keys)
@@ -486,7 +485,7 @@ def upload_vamps(run):
     # or we can get the 'lane_keys' directly from the config_file
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
-    if(run.vamps_user_upload):
+    if(run.platform == 'vamps'):
         idx_keys = [run.user+run.runcode]        
     else:
         try:

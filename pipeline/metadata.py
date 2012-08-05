@@ -47,7 +47,7 @@ class MetadataUtils:
         self.dna_regions        = C.dna_regions
         self.data_object = {}
         self.data_object['general'] = {}
-        self.warn_msg = """\n\tThe config File () seems to be okay. If the items above look correct
+        self.warn_msg = """\n\tThe config File seems to be okay. If the items above look correct
         then press 'c' to continue the pipeline\n"""
         
             
@@ -421,6 +421,8 @@ class MetadataUtils:
                 else:
                     files_list.append(os.path.basename(infile))
         else:
+            if fasta_file:
+                pass
             logger.warning("No input directory or directory permissions problem: "+self.general_config_dict['input_dir'])
             
         return files_list
@@ -665,7 +667,7 @@ class MetadataUtils:
 #         fh.write("input_dir = "+getattr(self.args,'input_dir', ".")+"\n") 
         
         fh.write("idx_keys = "           +','.join(keys_list)+"\n")
-        if self.general_config_dict['input_dir']:
+        if 'input_dir' in self.general_config_dict and self.general_config_dict['input_dir'] != '':
             file_list = self.get_input_files(self.general_config_dict['input_file_suffix'])
             fh.write("input_files = "     + ','.join(file_list)+"\n") 
         else:
@@ -703,6 +705,22 @@ class MetadataUtils:
         #for item in self.general_config_dict:
         #    if item not in C.general_run_items:
         #        out_fh.write(item+" = "+str(self.general_config_dict[item]) + "\n")
+        
+        
+        
+        if 'fasta_file' in self.general_config_dict and self.general_config_dict['fasta_file'] != '':
+            (path,fasta) = os.path.split(self.general_config_dict['fasta_file'])
+            if 'input_dir' in self.general_config_dict and self.general_config_dict['input_dir'] != path:
+                sys.exit("Your input_dir and fasta_file directory don't agree - Exiting\n\t"+self.general_config_dict['input_dir']+" != "+self.general_config_dict['fasta_file'])
+            
+            out_fh.write("input_dir = "+path+"\n")
+            out_fh.write("input_files = "+fasta+"\n")
+            out_fh.write("input_file_suffix = fasta\n")
+        elif 'input_dir' in self.general_config_dict and self.general_config_dict['input_dir'] != '':
+            file_list = self.get_input_files(self.general_config_dict['input_file_suffix'])
+            fh.write("input_files = "     + ','.join(file_list)+"\n") 
+        else:
+            fh.write("input_files = \n") 
         out_fh.close()
 
 

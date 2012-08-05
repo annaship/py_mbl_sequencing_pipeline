@@ -53,10 +53,7 @@ class Vamps:
 
         self.run 	 = run
         self.outdir  = run.output_dir
-        try:
-            self.basedir = run.basedir
-        except:
-            self.basedir = self.outdir
+        
 
         self.use_cluster = 1
         self.project = run.project

@@ -217,12 +217,13 @@ if __name__ == '__main__':
     ##############
     
     try:
-        if not os.path.exists(os.path.join(data_object['baseoutputdir'], data_object['run'])):
-            logger.debug("Creating output directory: "+os.path.join(data_object['baseoutputdir'], data_object['run']))
-            os.makedirs(os.path.join(data_object['baseoutputdir'], data_object['run']))    
+        outdir = os.path.join(data_object['baseoutputdir'], data_object['run'])
+        if not os.path.exists(outdir):
+            logger.debug("Creating output directory: "+outdir)
+            os.makedirs(outdir)    
     except:
         sys.exit("the baseoutputdir is required in the general section of the ini file - Exiting.")
-    
+    data_object['output_dir'] = outdir
     ##############
     #
     #  VALIDATE THE INI FILE

@@ -138,16 +138,24 @@ cluster_initial_check_interval  = 10
 ################################################################################################  
 
 ############# defaults for GAST ################################################################ 
-usearch = '/bioware/uclust/usearch'
-fastasampler = '/bioware/seqinfo/bin/fastasampler'
-calcnodes = '/bioware/seqinfo/bin/calcnodes'
-mysqlimport = '/usr/bin/mysqlimport'
-#qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
-clusterize = '/bioware/seqinfo/bin/clusterize'
+usearch_cmd         = '/bioware/uclust/usearch6.0.192_i86linux32'
+usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
+fastasampler_cmd    = '/bioware/seqinfo/bin/fastasampler'
+calcnodes_cmd       = '/bioware/seqinfo/bin/calcnodes'
+mysqlimport_cmd     = '/usr/bin/mysqlimport'
+qsub_cmd            = '/usr/local/sge/bin/lx24-amd64/qsub'
+clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
+mothur_cmd          = '/bioware/mothur/mothur'
+ref_database_dir        = '/xraid2-2/g454/blastdbs/gast_distributions/'
+tax_database_dir        = '/xraid2-2/g454/blastdbs/gast_distributions/'
 max_accepts = 10
 max_rejects = 0
 pctid_threshold = 0.70
 majority = 66
+cluster_nodes = 0
+use_full_length = 0
+ignore_terminal_gaps = 0
+ignore_all_gaps = 0
 max_distance = {'default': 0.30, 'v6': 0.30, 'v6a': 0.30, 'v6v4': 0.25, 'v3v5': 0.25}
 #cluster wait
 maxwaittime = 1000  # seconds
