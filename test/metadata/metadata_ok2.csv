@@ -1,5 +1,5 @@
 "run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor","dna_region","amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix","read_length","primer_suite","first_name","last_name","email","institution","project_title","project_description","funding","env_sample_source","dataset_description"
-20120613,"jreveillaud","NNNNACGCA",3,"H40","JCR_SPO_Bv6","H40",,,"v6","JR","JV","ATCACG","complete",230,"H40",101,"Bacterial v6 Suite",first,last,email,inst,ptitle,pdesc,123456,100,ddesc
+20120613,"jreveillaud","NNNNACGCA",3,"H40","JCR_SPO_Bv6","H40",,,"v6","JR","JV","ATCACG","complete",230,"H40",101,"Bacterial v6 Suite",first,last,email,inst,ptitle,pdesc,123456,gtr,des,
 20120613,"jreveillaud","NNNNCGCTC",3,"63ION","JCR_SPO_Bv6","63ION",,,"v6","JR","JV","ATCACG","complete",230,"63ION",101,"Bacterial v6 Suite",first,last,email,inst,ptitle,pdesc,123456,100,ddesc
 20120613,"jreveillaud","NNNNCTAGC",3,"W5","JCR_SPO_Bv6","W5",,,"v6","JR","JV","ATCACG","complete",230,"W5",101,"Bacterial v6 Suite",first,last,email,inst,ptitle,pdesc,123456,100,ddesc
 20120613,"jreveillaud","NNNNGACTC",3,"x1","JCR_SPO_Bv6","x1",,,"v6","JR","JV","ATCACG","complete",230,"x1",101,"Bacterial v6 Suite",first,last,email,inst,ptitle,pdesc,123456,100,ddesc

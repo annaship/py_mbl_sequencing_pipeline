@@ -32,7 +32,7 @@ csv_header_list = {
                             "funding",          "env_sample_source","dataset_description" ]
 }
 
-
+known_platforms = ('illumina','454','ion_torrent','vamps')
 primer_suites    = ["bacterialv6suite","Bacterial v6 Suite","bacterial_v6_suite","archaealv6suite","eukaryalv9suite"]
 dna_regions      = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", 
                     "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6"]
@@ -59,18 +59,18 @@ pipeline_run_items = {
 'vamps' : { 'dna_region':'v6',
             'domain':'bacteria',
             'project':'test_project',
-            'dataset':'ds1',
+            'dataset':'test_dataset',
             'from_fasta':False,
             'fasta_file':'',
             'load_vamps_database':True,
             'envsource':'100',
             'use_cluster':True,
             'cluster_nodes':100,
-            'loglevel':'error',
             'site':'vampsdev',
             'user':'',
+            'baseoutputdir':'.',
             'require_distal':True,
-            'commandline':True,
+            'commandline':False,
             'config_file_type':'ini',
             'platform':'vamps'
             },
@@ -80,9 +80,9 @@ pipeline_run_items = {
                 'database_host':'vampsdev',
                 'database_name':'test',
                 'platform':'illumina',
-                'loglevel':'error',
                 'csvPath':'',
                 'anchor_file':'',
+                'baseoutputdir':'.',
                 'input_dir':'.',
                 'primer_file':'',
                 'require_distal':True
@@ -91,13 +91,13 @@ pipeline_run_items = {
 			'input_file_suffix':'sff',
 			'platform':'454',
 			'csvPath':'',
-			'loglevel':'error',
-			'input_dir':'.'
+			'input_dir':'.',
+			'baseoutputdir':'.'
 		},
 'ion_torrent' : {'platform':'ion_torrent',
                 'csvPath':'',
-                'loglevel':'error',
-                'input_dir':'.'
+                'input_dir':'.',
+                'baseoutputdir':'.'
                 }
 }
 # this is the maximum distance from the end of the sequence where script

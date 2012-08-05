@@ -38,7 +38,7 @@ class RunConfig:
     def __init__(self, config_info, basepythondir):
         self.configPath = config_info
         #self.args       = args
-        self.run_date   = None
+        self.run   = None
         self.platform   = None # enum('454','illumina','ion_torrent','')
         self.input_dir  = None
         self.output_dir = None
@@ -131,7 +131,7 @@ class RunConfig:
         else:
             self.base_output_dir = '.'
         # this is our default output dir -- Always rundate?
-        self.output_dir = os.path.join(self.base_output_dir, self.run_date)
+        self.output_dir = os.path.join(self.base_output_dir, self.run)
         #self.output_dir = os.path.join(config_dict['general']['output_dir'])
         self.run_status_file_name = os.path.join(self.output_dir,"STATUS.txt")
         self.run_status_file_h = None #handle to file
@@ -150,7 +150,7 @@ class RunConfig:
         # get the general stuff
         general_config = configDict['general']
         #if general_config['gast_data_source'] != 'database':
-        self.run_date       = general_config['run_date']
+        self.run       = general_config['run']
         self.platform       = general_config.get('platform', "unknown")
         self.input_dir      = general_config.get('input_dir', None)
         self.require_distal = general_config.get('require_distal', True)

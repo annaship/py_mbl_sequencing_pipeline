@@ -40,7 +40,7 @@ import cogent
 
 import pipeline.constants as C
 # read a config file and convert to a dictionary
-known_platforms = ('illumina','454','ion_torrent','vamps')
+
 
         
 if __name__ == '__main__':
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     # NOTE: do not store any of the command line item as store_true or store_false or they
     # may not be able to be overridden buy the config file (ini).
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
-    parser.add_argument('-c', '--configuration', required=True,                         dest = "configPath",
+    parser.add_argument('-c', '--configuration', required=False,                         dest = "configPath",
                                                  help = 'Configuration parameters (.ini file) of the run. See README File')
     parser.add_argument("-r", "--run",     required=True,  action="store",              dest = "run", 
                                                     help="unique run number ") 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     #CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
     
     args = parser.parse_args() 
-    if args.platform not in known_platforms:
+    if args.platform not in C.known_platforms:
     	sys.exit("unknown platform - Exiting")
     	
     v = MetadataUtils(command_line_args = args)
@@ -188,8 +188,8 @@ if __name__ == '__main__':
             
     # set logging
     
-    print "\nLog Level set to:",data_object['loglevel']    
-    logger.setLevel(data_object['loglevel'] )
+    print "\nLog Level set to:",args.loglevel  
+    logger.setLevel(args.loglevel.upper() )
     
     logger.info("Starting pipeline")
     ##############
@@ -215,6 +215,7 @@ if __name__ == '__main__':
     # base output directory and run are required so need to create output_dir here
     # to write ini file and status file
     ##############
+    
     try:
         if not os.path.exists(os.path.join(data_object['baseoutputdir'], data_object['run'])):
             logger.debug("Creating output directory: "+os.path.join(data_object['baseoutputdir'], data_object['run']))
@@ -227,16 +228,16 @@ if __name__ == '__main__':
     #  VALIDATE THE INI FILE
     #
     ############## 
-
     
+    #print 'do1',data_object
     del v
     v = MetadataUtils( configuration_dictionary = data_object )
     v.convert_and_save_ini()
     data_object = v.validate()
     #general_data = v.get_general_data()
-    #print data_object['general']
+    print data_object['general']
     answer = v.get_confirmation(args.steps, data_object['general'])
-    
+    #print 'do2',data_object
     if answer == 'q':
         sys.exit()
     elif answer == 'v':
@@ -257,7 +258,7 @@ if __name__ == '__main__':
     #
     ##############  
 
-    run = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
+    run_object = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
     
 
 #    for key in run.samples:
@@ -268,5 +269,5 @@ if __name__ == '__main__':
     # now do all the work
     #
     ##############         
-    process(run, args.steps)
+    process(run_object, args.steps)
 

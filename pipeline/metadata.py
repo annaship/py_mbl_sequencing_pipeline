@@ -32,6 +32,10 @@ class MetadataUtils:
     """
     Class to read metadata files (csv and ini style)
     validate and create a dictionary from them
+    Two parts: 
+    1) From pipeline-ui.py to validate the input args
+    2) From runconfig.py to write the final ini file and create the dictionary
+    that is used to create the run object
     """
     Name = "MetadataUtils"
     def __init__(self, command_line_args = None, configuration_dictionary = None):
@@ -58,7 +62,7 @@ class MetadataUtils:
         self.general_config_dict['configPath']
         self.general_config_dict['configPath_original'] = self.general_config_dict['configPath']
         self.general_config_dict['configPath'] = new_ini_file
-        print self.general_config_dict['configPath']
+        
         # change path and type to new ini
         # regardless of what they were before        
     
@@ -106,63 +110,63 @@ class MetadataUtils:
 #         
 #         return data_object 
 
-    def get_command_line_items(self, general_data):
-    
-        # command line items take precedence over ini file items of the same name
-        # defaults should be here and NOT in argparse/commandline
-        if self.args.input_dir:       
-            general_data['input_dir'] = self.args.input_dir
-        else:
-            if not general_data['input_dir']:
-                general_data['input_dir'] = './'
-        
-        if self.args.run:
-            general_data['run'] = self.args.run
-            general_data['run_date'] = self.args.run
-        else:
-            if 'run' in general_data:                
-                general_data['run_date'] = general_data['run']
-            elif 'run_date' in general_data:
-                general_data['run'] = general_data['run_date']
-            else:
-                sys.exit("Cannot find the run or run_date on command line or in config file - Exiting")
-        # make sure RUN is before OUTPUT_DIR        
-        try:
-            general_data['output_dir'] = os.path.join(self.args.baseoutputdir,self.args.run)
-        except:
-            if 'output_dir' not in general_data:
-                general_data['output_dir'] = os.path.join('.',self.args.run)       
-        #getattr(args,'force_runkey', "")
-        
-        
-        if self.args.platform:
-            general_data['platform'] = self.args.platform
-        else:
-            if 'platform' not in general_data:
-                sys.exit("Cannot find the platform from command line or in config file - Exiting")
-                
-        
-        if self.args.input_file_format:
-            general_data['input_file_format'] = self.args.input_file_format
-        else:
-            if 'input_file_format' not in general_data:
-                general_data['input_file_format'] = ''
-        if self.args.input_file_suffix:
-            general_data['input_file_suffix'] = self.args.input_file_suffix
-        else:
-            if 'input_file_suffix' not in general_data:
-                general_data['input_file_suffix'] = ''
-        
-        return general_data
+#     def get_command_line_items(self, general_data):
+#     
+#         # command line items take precedence over ini file items of the same name
+#         # defaults should be here and NOT in argparse/commandline
+#         if self.args.input_dir:       
+#             general_data['input_dir'] = self.args.input_dir
+#         else:
+#             if not general_data['input_dir']:
+#                 general_data['input_dir'] = './'
+#         
+#         if self.args.run:
+#             general_data['run'] = self.args.run
+#             general_data['run_date'] = self.args.run
+#         else:
+#             if 'run' in general_data:                
+#                 general_data['run_date'] = general_data['run']
+#             elif 'run_date' in general_data:
+#                 general_data['run'] = general_data['run_date']
+#             else:
+#                 sys.exit("Cannot find the run or run_date on command line or in config file - Exiting")
+#         # make sure RUN is before OUTPUT_DIR        
+#         try:
+#             general_data['output_dir'] = os.path.join(self.args.baseoutputdir,self.args.run)
+#         except:
+#             if 'output_dir' not in general_data:
+#                 general_data['output_dir'] = os.path.join('.',self.args.run)       
+#         #getattr(args,'force_runkey', "")
+#         
+#         
+#         if self.args.platform:
+#             general_data['platform'] = self.args.platform
+#         else:
+#             if 'platform' not in general_data:
+#                 sys.exit("Cannot find the platform from command line or in config file - Exiting")
+#                 
+#         
+#         if self.args.input_file_format:
+#             general_data['input_file_format'] = self.args.input_file_format
+#         else:
+#             if 'input_file_format' not in general_data:
+#                 general_data['input_file_format'] = ''
+#         if self.args.input_file_suffix:
+#             general_data['input_file_suffix'] = self.args.input_file_suffix
+#         else:
+#             if 'input_file_suffix' not in general_data:
+#                 general_data['input_file_suffix'] = ''
+#         
+#         return general_data
         
 #     def validate_454_csv(self, args, my_csv):
 #         print "TODO: write validate def for 454/csv"
 #         data_object = self.populate_data_object_454(args, my_csv)
         
     def validate_vamps_ini(self):
-        pass
+        # configPath is the new configPath
+        self.data_object = self.configDictionaryFromFile_ini(self.general_config_dict['configPath'])
     def validate_454_ini(self):
-        print "Validating ini type Config File"
         print "TODO - write validation def for 454/ini"
         #self.data_object = self.create_dictionary_from_ini() 
         # 454 ini file requirements:
@@ -181,7 +185,8 @@ class MetadataUtils:
         msg = ''
         error=False
         warn=False
-        #self.data_object = self.create_dictionary_from_ini()
+        #print 'configpath',self.general_config_dict['configPath']
+        # configPath here is the new configPath
         self.data_object = self.configDictionaryFromFile_ini(self.general_config_dict['configPath'])
         
         
@@ -282,7 +287,7 @@ class MetadataUtils:
             data['general']['output_dir'] = os.path.join(args.baseoutputdir,args.run)
             data['general']['platform'] = args.platform
             data['general']['run'] = args.run
-            data['general']['run_date'] = args.run
+            #data['general']['run_date'] = args.run
             data['general']["input_file_format"] = args.input_file_format
             data['general']["input_file_suffix"] = args.input_file_suffix
     
@@ -301,7 +306,7 @@ class MetadataUtils:
             #megadata['general']['output_dir'] = self.args.output_dir
             data['general']['platform'] = self.run.platform
             data['general']['run'] = self.run.run_date
-            data['general']['run_date'] = self.run.run_date
+            #data['general']['run_date'] = self.run.run_date
             #megadata['general']['run'] = self.args.run
             data['general']["input_file_format"] = self.run.input_file_format
             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
@@ -312,7 +317,7 @@ class MetadataUtils:
             data['general']['output_dir'] = os.path.join(args.baseoutputdir,args.run)
             data['general']['platform'] = args.platform
             data['general']['run'] = args.run
-            data['general']['run_date'] = args.run
+            #data['general']['run_date'] = args.run
             #megadata['general']['run'] = self.args.run
             data['general']["input_file_format"] = args.input_file_format
             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
@@ -636,11 +641,12 @@ class MetadataUtils:
         fh.write("#\n#\tCreated by MBL Pipeline for run: "+self.general_config_dict['run']+" on "+self.general_config_dict['date']+"\n#\n\n")  
         fh.write("[general]\n") 
         fh.write("run = "+self.general_config_dict['run']+"\n")
-        fh.write("run_date = "+self.general_config_dict['run']+"\n")
-        fh.write("config_file = "+new_ini_file+"\n")
-        fh.write("config_file_orig = "+self.general_config_dict['configPath']+"\n")
-        fh.write("platform = "+self.general_config_dict['platform']+"\n")
+        #fh.write("run_date = "+self.general_config_dict['run']+"\n")
+        fh.write("configPath = "+new_ini_file+"\n")
         
+        fh.write("configPath_orig = "+self.general_config_dict['configPath']+"\n")
+        fh.write("platform = "+self.general_config_dict['platform']+"\n")
+        fh.write("baseoutputdir = "          + self.general_config_dict['baseoutputdir']+"\n")
         fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
         
         fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
@@ -649,7 +655,7 @@ class MetadataUtils:
         fh.write("primer_file = "        + self.general_config_dict['primer_file']+"\n")
         fh.write("require_distal = "     + str(self.general_config_dict['require_distal'])+"\n")
         fh.write("input_dir = "          + self.general_config_dict['input_dir']+"\n")
-        
+        fh.write("date = "          + str(datetime.date.today())+"\n")
         
 #         fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
 #         fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")
@@ -728,7 +734,7 @@ class MetadataUtils:
     
         return configDict
         
-    def get_values(self, args, general_config_dict ):
+    def get_values(self, args, general_config_dict = {} ):
         collector={}
 
         for item in self.pipeline_run_items[args.platform]:
@@ -741,9 +747,9 @@ class MetadataUtils:
                 collector[item]  = general_config_dict[args.platform][item]
         
         # get all the items from general_config_dict['general']
-        
-        for item in general_config_dict['general']:
-            collector[item]  = general_config_dict['general'][item]
+        if 'general' in general_config_dict:
+            for item in general_config_dict['general']:
+                collector[item]  = general_config_dict['general'][item]
             
                 
         return collector
@@ -760,52 +766,56 @@ class MetadataUtils:
         """
         collector={}
         
-        if self.args.platform == 'illumina' and not self.args.csvPath:
-            sys.exit("illumina requires a csv file - Exiting")
-        
-        if self.args.csvPath:
-            print "Must be MBL origin: illumina, 454 or ion_torrent"
-            
-            if not self.args.configPath:
-                sys.exit("MBL Pipeline: you must supply an ini file with a csv file")
+        if self.args.configPath:
+            general_config_dict = self.configDictionaryFromFile_ini(self.args.configPath) 
+            if self.args.platform in general_config_dict and 'general' in general_config_dict:
+                collector= self.get_values( self.args, general_config_dict)
             else:
-                general_config_dict = self.configDictionaryFromFile_ini(self.args.configPath) 
-                if self.args.platform in general_config_dict and 'general' in general_config_dict:
-                    collector= self.get_values( self.args, general_config_dict)
-                else:
-                    sys.exit("The ini file needs both a [general] and ["+ self.args.platform +"] section - Exiting.")
+                sys.exit("The ini file needs both a [general] and ["+ self.args.platform +"] section - Exiting.")
         else:
-            print "VAMPS Pipeline:"
-           # list_of_items = C.pipeline_run_items_vamps
+            # no configPath
+            collector= self.get_values( self.args )
             
-            if self.args.configPath:
-                general_config_dict = self.configDictionaryFromFile_ini(self.args.configPath)
-                
-                # eg dna_region
-                # precidence: cl,ini file
-                if self.args.platform in general_config_dict and 'general' in general_config_dict:
-                    collector = self.get_values( self.args, general_config_dict)
-                else:
-                    sys.exit("The ini file needs both a [general] and ["+ self.args.platform +"] section - Exiting.")
-                
+        if self.args.platform == 'illumina':
+            print "Illumina Pipeline"
+            if not self.args.csvPath:
+                sys.exit("illumina requires a csv file - Exiting")
+            
+        elif self.args.platform == 'vamps':
+            print "VAMPS Pipeline:"
+            
+            if 'project' not in collector or collector['project'] == '':    
+                collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
             else:
-                # Should never get here because configPath is required
-                sys.exit("No config file")
-            collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
-            # these are all the bool items from the ini file
-            # they need to be converted fron str to bool here
-
-        collector['configPath'] = self.args.configPath
+                logger.debug("No project found in vamps pipeline")
+        
+        elif self.args.platform == '454':
+            print "454 Pipeline"
+            
+        elif self.args.platform == 'ion_torrent':
+            print "Ion Torrent Pipeline"
+            
+        else:
+            sys.exit("Validate args: Unknown Platform")
+        
+        if  self.args.configPath:
+            collector['configPath'] = self.args.configPath
+        else:
+            collector['configPath'] = ""
+        # these are all the bool items in the collector
+        # they need to be converted fron str to bool here
         for i in collector:
             if collector[i] == 'True' or collector[i] == 'true':
                 collector[i] = True
             elif collector[i] == 'False' or collector[i] == 'false':
-                collector[i] = False 
-        collector['runcode'] = self.args.run
+                collector[i] = False
+        
+        #collector['runcode'] = self.args.run
         collector['run'] = self.args.run
+        #collector['run_date'] = self.args.run
         collector['steps'] = self.args.steps
         collector['platform'] = self.args.platform
-        collector['loglevel'] = collector['loglevel'].upper()
+        
         collector['date'] = str(datetime.date.today())
         
         return collector
