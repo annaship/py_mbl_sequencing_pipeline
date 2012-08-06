@@ -489,6 +489,7 @@ def upload_vamps(run):
     #myvamps.info(idx_keys)
     
 def status(run):
+    
     f = open(run.run_status_file_name)
     lines = f.readlines()
     f.close()

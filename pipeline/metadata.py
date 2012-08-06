@@ -661,8 +661,10 @@ class MetadataUtils:
         fh.write("primer_file = "        + self.general_config_dict['primer_file']+"\n")
         fh.write("require_distal = "     + str(self.general_config_dict['require_distal'])+"\n")
         fh.write("input_dir = "          + self.general_config_dict['input_dir']+"\n")
-        fh.write("date = "          + str(datetime.date.today())+"\n")
-        
+        fh.write("date = "              + str(datetime.date.today())+"\n")
+        fh.write("compressed = "          + str(self.general_config_dict['compressed'])+"\n")
+        fh.write("database_host = "          + self.general_config_dict['database_host']+"\n")
+        fh.write("database_name = "          + self.general_config_dict['database_name']+"\n")
 #         fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
 #         fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")
 #         fh.write("anchor_file = "        + getattr(self.args,'anchor_file', "")+"\n")
@@ -773,8 +775,10 @@ class MetadataUtils:
         collector={}
 
         for item in self.pipeline_run_items[args.platform]:
+            
             # set collector[item] to the default first
             collector[item] = self.pipeline_run_items[args.platform][item]
+            
             # now look for args (then ini) values to replace
             if item in args and getattr( args, item ) != None:
                 collector[item]  = getattr( args, item )
@@ -786,7 +790,7 @@ class MetadataUtils:
             for item in general_config_dict['general']:
                 collector[item]  = general_config_dict['general'][item]
             
-                
+               
         return collector
     
     def validate_args(self):

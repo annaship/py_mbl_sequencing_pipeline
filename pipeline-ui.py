@@ -169,7 +169,7 @@ if __name__ == '__main__':
     # this will read the args and ini file and return a dictionary
     
     data_object = v.validate_args()
-    
+    print data_object
     if 'commandline' in data_object and data_object['commandline'] == True:
         for item in data_object:
             print item+' = ',data_object[item]
@@ -202,6 +202,8 @@ if __name__ == '__main__':
     #       input_dir and you only are using some (default will read all files)
     # 4) 
     #
+   
+   
    
     ##############
     #
