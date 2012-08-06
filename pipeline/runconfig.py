@@ -159,7 +159,7 @@ class RunConfig:
         self.maximumLength  = general_config.get('maximumLength', C.maximumLength)
         self.minAvgQual     = general_config.get('minAvgQual',    C.minAvgQual)
         self.force_runkey   = general_config.get('force_runkey', None)
-        print general_config
+        
         if self.platform == 'vamps':
             self.user           = general_config['user']
             self.use_cluster    = general_config['use_cluster']
@@ -169,6 +169,10 @@ class RunConfig:
                 self.fasta_file    = general_config['fasta_file'] 
             except:
                 self.fasta_file    =None
+        if self.platform == 'illumina':
+            self.compressed     = general_config['compressed'] 
+            self.database_name  = general_config['database_name'] 
+            self.database_host  = general_config['database_host'] 
         # added gast_input_source for vamps uploads
         # so when users want to gast at a later time they will
         # look in the database and not the files (which may be missing)

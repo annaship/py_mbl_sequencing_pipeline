@@ -260,7 +260,7 @@ if __name__ == '__main__':
     # CREATE THE RUN OBJECT (see runconfig.py for details)
     #
     ##############  
-
+    
     run_object = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
     
 
