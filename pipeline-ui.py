@@ -152,7 +152,10 @@ if __name__ == '__main__':
     parser.add_argument("-env", "--envsource",      required=False,  action="store",   dest = "env_source_id", 
                                                         help = '')
     parser.add_argument("-uc", "--use_cluster",      required=False,  action="store",   dest = "use_cluster", 
-                                                        help = 'if false: the cluster will not be used (for testing)') 
+                                                        help = '') 
+    parser.add_argument("-fasta","--fasta",                  required=False,  action="store",   dest = "fasta_file", 
+                                                        help = '') 
+    
     #DEBUG	Detailed information, typically of interest only when diagnosing problems.
     #INFO	Confirmation that things are working as expected.
     #WARNING	An indication that something unexpected happened, or indicative of some problem in the near future (e.g. 'disk space low'). 
@@ -169,7 +172,6 @@ if __name__ == '__main__':
     # this will read the args and ini file and return a dictionary
     
     data_object = v.validate_args()
-    
     if 'commandline' in data_object and data_object['commandline'] == True:
         for item in data_object:
             print item+' = ',data_object[item]
@@ -182,6 +184,7 @@ if __name__ == '__main__':
             sys.exit()
             
     # set logging
+
     
     print "\nLog Level set to:",args.loglevel  
     logger.setLevel(args.loglevel.upper() )
@@ -203,6 +206,8 @@ if __name__ == '__main__':
     # 4) 
     #
    
+   
+   
     ##############
     #
     # CREATE or FIND OUTPUT DIRECTORY
@@ -210,7 +215,7 @@ if __name__ == '__main__':
     # base output directory and run are required so need to create output_dir here
     # to write ini file and status file
     ##############
-    print data_object['baseoutputdir']
+    
     try:
         outdir = os.path.join(data_object['baseoutputdir'], data_object['run'])
         #outdir = data_object['output_dir']
@@ -233,7 +238,7 @@ if __name__ == '__main__':
     v.convert_and_save_ini()
     data_object = v.validate()
     #general_data = v.get_general_data()
-    print data_object['general']
+
     answer = v.get_confirmation(args.steps, data_object['general'])
     #print 'do2',data_object
     if answer == 'q':

@@ -90,7 +90,6 @@ def process(run, steps):
             # call the method in here
             step_method = globals()[step]
             step_method(run)
-
 def validate(run):
     #open_zipped_directory(run.run_date, run.output_dir)
     #logger.debug("Validating")
@@ -489,6 +488,7 @@ def upload_vamps(run):
     #myvamps.info(idx_keys)
     
 def status(run):
+    
     f = open(run.run_status_file_name)
     lines = f.readlines()
     f.close()
