@@ -159,6 +159,7 @@ class RunConfig:
         self.maximumLength  = general_config.get('maximumLength', C.maximumLength)
         self.minAvgQual     = general_config.get('minAvgQual',    C.minAvgQual)
         self.force_runkey   = general_config.get('force_runkey', None)
+        print general_config
         if self.platform == 'vamps':
             self.user           = general_config['user']
             self.use_cluster    = general_config['use_cluster']
