@@ -20,6 +20,7 @@ import time
 import shutil
 import random
 import datetime
+from types import *
 from pipeline.pipelinelogging import logger
 import constants as C
 from pipeline.db_upload import MyConnection
@@ -609,7 +610,7 @@ class MetadataUtils:
         print "\n"
         for item,value in general_data.iteritems():
             #print len(value)
-            if len(value) > 80:
+            if type(value) != bool and len(value) > 80:
                 tmp = value.split(',')
                 print "%20s = %s .. %s" % (item,tmp[0],tmp[-1])
             else:
@@ -762,7 +763,11 @@ class MetadataUtils:
             section_dict = configDict[section] = {}
             for option in user_config.options(section):
                 section_dict[option] = user_config.get(section,option)
-    
+                if section_dict[option] == 'True' or section_dict[option] == 'true':
+                    section_dict[option] = True
+                elif section_dict[option] == 'False' or section_dict[option] == 'false':
+                    section_dict[option] = False
+                    
         return configDict
         
     def get_values(self, args, general_config_dict = {} ):
@@ -845,7 +850,7 @@ class MetadataUtils:
                 collector[i] = True
             elif collector[i] == 'False' or collector[i] == 'false':
                 collector[i] = False
-        
+        print collector
         #collector['runcode'] = self.args.run
         collector['run'] = self.args.run
         #collector['run_date'] = self.args.run

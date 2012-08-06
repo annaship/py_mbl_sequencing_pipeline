@@ -680,18 +680,16 @@ class Gast:
         tagtax_fh.close()
         return results
 
-    def create_uniques_from_fasta(self,fasta_file,key):
-        
-        mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+fasta_file+", outputdir="+os.path.join(self.basedir,key)+"/);\""; 
-        
-        #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
-        subprocess.call(mothur_cmd, shell=True)
+#    def create_uniques_from_fasta(self,fasta_file,key):
+#         
+#         mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+fasta_file+", outputdir="+os.path.join(self.basedir,key)+"/);\""; 
+#         
+#         #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
+#         subprocess.call(mothur_cmd, shell=True)
     def check_for_uniques_files(self,keys):
         if self.run.platform == 'vamps':
             # one fasta file or (one project and dataset from db)
             if self.run.fasta_file != '':
-                print 'XXXXXXX'
-                
                 output_dir = os.path.join(self.basedir,keys[0])
                 unique_file = os.path.join(output_dir, keys[0]+'.unique.fa')
                 if not os.path.exists(unique_file):
