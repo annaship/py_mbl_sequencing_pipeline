@@ -34,11 +34,8 @@ class Gast:
         self.refdb_dir = C.ref_database_dir
         
         print self.run.input_files
-        for key in idx_keys:
-            output_dir = os.path.join(self.basedir,key)
-            unique_file = os.path.join(output_dir, key+'.unique.fa')
-            if not os.path.exists(unique_file):
-                self.create_uniques_from_fasta(unique_file)
+        
+        
         
     def clustergast(self, idx_keys):
         """
@@ -683,10 +680,23 @@ class Gast:
         tagtax_fh.close()
         return results
 
-    def create_uniques_from_fasta(self,fasta_file):
-        mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+fasta_file+");\"";    
+    def create_uniques_from_fasta(self,fasta_file,key):
+        
+        mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+fasta_file+", outputdir="+os.path.join(self.basedir,key)+"/);\""; 
+        
         #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
         subprocess.call(mothur_cmd, shell=True)
+    def check_for_uniques_files(self,keys):
+        for key in keys:
+            fasta_file = ""
+            output_dir = os.path.join(self.basedir,key)
+            unique_file = os.path.join(output_dir, key+'.unique.fa')
+            if not os.path.exists(unique_file):
+                mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+fasta_file+", outputdir="+os.path.join(self.basedir,key)+"/);\""; 
         
+                #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
+                subprocess.call(mothur_cmd, shell=True)
+                
+                
     def get_fasta_from_database(self):
         pass

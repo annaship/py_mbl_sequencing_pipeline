@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
                                                  help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL')
      # see note for base_output_dir in runconfig.py  about line: 130                                               
-    parser.add_argument("-b", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", 
+    parser.add_argument("-o", "--output_directory",     required=False,  action="store",   dest = "output_dir", 
                                                 help="default: ./") 
     parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   
                                                     help="Directory where sequence files can be found. ")                           
@@ -123,19 +123,14 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--config_format',  required=False,   action="store",     dest = "config_file_type",  
                                                  help = 'ini or csv') 
     
-    
-    
+      
     parser.add_argument("-ft", "--seq_file_type",     required=False,  action="store",  dest = "input_file_format", 
                                                     help="Sequence file type: fasta, fastq or sff ")
     parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",dest = "input_file_suffix",
                                                     help="Sequence file suffix [optional] ") 
-    
-    
      
     parser.add_argument('-cp', '--compressed',  required=False,   action="store",       dest = "compressed",              
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
-    parser.add_argument('-o', '--output_directory',  required=False,   action="store",  dest = "output_dir",            
-                                                 help = 'Output directory') 
     parser.add_argument('-db_host', '--database_host',  required=False,   action="store",  dest = "database_host",          
                                                  help = 'Database host') 
     parser.add_argument('-db_name', '--database_name',  required=False,   action="store", dest = "database_name",        
@@ -215,14 +210,15 @@ if __name__ == '__main__':
     # base output directory and run are required so need to create output_dir here
     # to write ini file and status file
     ##############
-    
+    print data_object['output_dir']
     try:
-        outdir = os.path.join(data_object['baseoutputdir'], data_object['run'])
+        #outdir = os.path.join(data_object['output_dir'], data_object['run'])
+        outdir = data_object['output_dir']
         if not os.path.exists(outdir):
             logger.debug("Creating output directory: "+outdir)
             os.makedirs(outdir)    
     except:
-        sys.exit("the baseoutputdir is required in the general section of the ini file - Exiting.")
+        sys.exit("Could not find or create the output_dir "+data_object['output_dir']+" - Exiting.")
     data_object['output_dir'] = outdir
     ##############
     #
@@ -243,7 +239,7 @@ if __name__ == '__main__':
         sys.exit()
     elif answer == 'v':
         # view CONFIG file contents
-        fh = open(os.path.join(data_object['general']['baseoutputdir'], data_object['general']['run'], data_object['general']['run']+'.ini'))
+        fh = open(os.path.join(data_object['general']['output_dir'],  data_object['general']['run']+'.ini'))
         lines = fh.readlines()
         print "\n=== START ===\n"
         for line in lines:

@@ -53,7 +53,8 @@ class MetadataUtils:
             
     def convert_and_save_ini(self):
         
-        new_ini_file = os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'],self.general_config_dict['run'] + '.ini')
+        new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'] + '.ini')
+        #new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'],self.general_config_dict['run'] + '.ini')
         # converts csv to ini and saves to output_dir
         if self.general_config_dict['platform'] == 'vamps':
             self.save_ini_file(new_ini_file)
@@ -284,7 +285,8 @@ class MetadataUtils:
         else:            
             infile = args.configPath
             data['general']['input_dir'] = args.input_dir
-            data['general']['output_dir'] = os.path.join(args.baseoutputdir,args.run)
+            #data['general']['output_dir'] = os.path.join(args.output_dir,args.run)
+            data['general']['output_dir'] = args.output_dir
             data['general']['platform'] = args.platform
             data['general']['run'] = args.run
             #data['general']['run_date'] = args.run
@@ -314,7 +316,8 @@ class MetadataUtils:
         else:            
             infile = args.configPath
             data['general']['input_dir'] = args.input_dir
-            data['general']['output_dir'] = os.path.join(args.baseoutputdir,args.run)
+            #data['general']['output_dir'] = os.path.join(args.output_dir,args.run)
+            data['general']['output_dir'] = args.output_dir
             data['general']['platform'] = args.platform
             data['general']['run'] = args.run
             #data['general']['run_date'] = args.run
@@ -648,8 +651,8 @@ class MetadataUtils:
         
         fh.write("configPath_orig = "+self.general_config_dict['configPath']+"\n")
         fh.write("platform = "+self.general_config_dict['platform']+"\n")
-        fh.write("baseoutputdir = "          + self.general_config_dict['baseoutputdir']+"\n")
-        fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
+        fh.write("output_dir = "          + self.general_config_dict['output_dir']+"\n")
+        #fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
         
         fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
         fh.write("input_file_format = " + self.general_config_dict['input_file_format']+"\n")
@@ -734,7 +737,20 @@ class MetadataUtils:
             logger.error("in utils: check_headers - unknown platform")
             
         if sorted(known_header_list) != sorted(headers):
-            sys.exit("ERROR : unknown_headers:\nyours: "+ ' '.join(sorted(headers))+"\nours:  "+' '.join(sorted(known_header_list)))
+            print "="*40
+            print "csv file header problem"
+            print "%-20s %-20s" % ("REQUIRED", "YOUR CSV")
+            for i in sorted(known_header_list):
+                if i in headers:
+                    print "%-20s%-20s" % (i,i)
+                else:
+                    print "%-20s%-20s" % (i,"X---------X <--- missing")
+            for i in headers:
+                print i+"fff"
+                if i not in known_header_list:
+                    print "%-20s%-20s" % (" ",i+" <--- extra")
+            print "="*40
+            sys.exit("ERROR : unknown or missing headers\n")
         else:
             return True
 

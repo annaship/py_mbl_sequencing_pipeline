@@ -68,7 +68,7 @@ pipeline_run_items = {
             'cluster_nodes':100,
             'site':'vampsdev',
             'user':'',
-            'baseoutputdir':'.',
+            'output_dir':'.',
             'require_distal':True,
             'commandline':False,
             'config_file_type':'ini',
@@ -82,7 +82,7 @@ pipeline_run_items = {
                 'platform':'illumina',
                 'csvPath':'',
                 'anchor_file':'',
-                'baseoutputdir':'.',
+                'output_dir':'.',
                 'input_dir':'.',
                 'primer_file':'',
                 'require_distal':True
@@ -92,12 +92,12 @@ pipeline_run_items = {
 			'platform':'454',
 			'csvPath':'',
 			'input_dir':'.',
-			'baseoutputdir':'.'
+			'output_dir':'.'
 		},
 'ion_torrent' : {'platform':'ion_torrent',
                 'csvPath':'',
                 'input_dir':'.',
-                'baseoutputdir':'.'
+                'output_dir':'.'
                 }
 }
 # this is the maximum distance from the end of the sequence where script
