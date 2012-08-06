@@ -692,11 +692,21 @@ class Gast:
             if self.run.fasta_file != '':
                 output_dir = os.path.join(self.basedir,keys[0])
                 unique_file = os.path.join(output_dir, keys[0]+'.unique.fa')
+                names_file = os.path.join(output_dir, keys[0]+'.names')
                 if not os.path.exists(unique_file):
                     mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.run.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
             
                     #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
                     subprocess.call(mothur_cmd, shell=True)
+                    
+                    # rename new unique file and names file to
+                    old_file_prefix = os.path.basename(self.run.fasta_file).split('.')[0]
+                    print old_file_prefix
+                    new_uniques_file = os.path.join(output_dir, keys[0]+'.unique.fa')
+                    shutil.move(os.path.basename(unique_file), to)
+                    shutil.move('a.txt', 'b.kml')
+                    os.rename(filename, filename[7:])
+                    os.rename(filename, filename[7:])
                 else:
                     if self.run.project and self.run.dataset:
                         pass

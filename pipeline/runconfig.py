@@ -125,14 +125,14 @@ class RunConfig:
         # if neither of these are set then output to current directory
         # and always attach the rundate dir to it
         
-        if 'baseoutputdir' in config_dict['general']:
-            self.base_output_dir = os.path.normpath(config_dict['general']['baseoutputdir']) #user supplied or default 
+        if 'output_dir' in config_dict['general']:
+            self.output_dir = os.path.normpath(config_dict['general']['output_dir']) #user supplied or default 
         elif config_dict['general']['output_dir']:
-            self.base_output_dir = os.path.normpath(config_dict['general']['output_dir'])
+            self.output_dir = os.path.normpath(config_dict['general']['output_dir'])
         else:
-            self.base_output_dir = '.'
+            self.output_dir = '.'
         # this is our default output dir -- Always rundate?
-        self.output_dir = os.path.join(self.base_output_dir, self.run)
+        #self.output_dir = os.path.join(self.output_dir, self.run)
         #self.output_dir = os.path.join(config_dict['general']['output_dir'])
         self.run_status_file_name = os.path.join(self.output_dir,"STATUS.txt")
         self.run_status_file_h = None #handle to file
