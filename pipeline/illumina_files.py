@@ -7,6 +7,7 @@ import fastalib as fa
 from subprocess import call
 import ast
 
+"TODO: add tests and test case"
 #from collections import defaultdict
 
 class IlluminaFiles:
@@ -37,8 +38,7 @@ class IlluminaFiles:
         
     def split_files(self, compressed = False):
         """
-        TODO: *) path should be argument, not hard-coded!
-              *) compressed should be argument, not hard-coded!
+        TODO: *) compressed should be argument, not hard-coded!
               *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
         """         
         compressed = ast.literal_eval(compressed)     
