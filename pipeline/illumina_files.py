@@ -21,7 +21,7 @@ class IlluminaFiles:
     
     """
     def __init__(self, run):
-        if os.uname()[1] == 'ashipunova.mbl.edu':
+        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == "as-macbook.local":
             self.LOCAL = True
         else:
             self.LOCAL = False
@@ -38,10 +38,10 @@ class IlluminaFiles:
         
     def split_files(self, compressed = False):
         """
-        TODO: *) compressed should be argument, not hard-coded!
-              *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
-        """         
-        compressed = ast.literal_eval(compressed)     
+        TODO: *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
+        """   
+#        print "compressed = %s" %       compressed
+#        compressed = ast.literal_eval(compressed)     
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
         self.read1(in_files_r1, compressed)
         self.read2(in_files_r2, compressed)

@@ -265,7 +265,7 @@ def illumina_files(run):
 #        import shutil 
 #        shutil.rmtree('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis/')
     illumina_files = IlluminaFiles(run)
-    illumina_files.split_files(compressed = run.args.compressed)
+    illumina_files.split_files(compressed = run.compressed)
     illumina_files.perfect_reads()
     illumina_files.uniq_fa()
     

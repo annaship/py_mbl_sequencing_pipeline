@@ -4,13 +4,14 @@
 #from os import listdir, walk
 #from os.path import isfile, join
 import csv
+import re
 
 from pipeline.pipelinelogging import logger
 #import logging
 #import constants as C
             
 class readCSV:
-    """read a CSV submition data"""
+    """read CSV submition data"""
     Name = "readCSV"
     """
     TODO: run_key_id into run_info_ill
@@ -28,7 +29,6 @@ class readCSV:
                 self.basedir = self.outdir
             self.rundate     = self.run.run_date
             self.use_cluster = 1
-            self.csv_dir     = self.run.input_dir + "/csv/" 
         self.file_path = file_path
         self.filenames = []
         #Tables:
@@ -46,38 +46,46 @@ class readCSV:
         self.taxonomy_table_name               = "taxonomy"
         #Fields:
         self.sequence_field_name               = "sequence_comp" 
+        self.end_commas                        = 0
 
 
     def read_csv(self):
         content = {}
         headers = None
-
-#        inputFile = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv'
-#            spamReader = csv.reader(open('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/csv/bpc_metadata_JCR_SPO_Bv6_1.csv', 'rb'), delimiter=' ', quotechar='|')
-        
-        reader = csv.reader(open(self.file_path, 'rb'), delimiter=',')
-        rownum = 0
+        reader  = csv.reader(open(self.file_path, 'rb'), delimiter=',')
+        rownum  = 0
+        empty_commas_len = 0
         for row in reader:
             if reader.line_num == 1:
                 """
                 If we are on the first line, create the headers list from the first row
                 """
+                if not row[-1]:
+                    row = self.empty_ends_columns(row)                    
                 headers = row
             else:
                 """
                 Create the sub-dictionary by using the zip() function.
                 """
+                "TODO: remove only the same amount of empties as header had (end_commas)"
+                if self.end_commas:
+                    row = self.empty_ends_columns(row)
                 content[rownum] = dict(zip(headers, row))
-#                content[row[0]]['Stabling'] = [s.strip() for s in content[row[0]]['Stabling'].split(',')]
             rownum += 1
 
-#        
         """
         print dir(myReader)
         ['__class__', '__delattr__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__iter__', '__new__', '__reduce__',
          '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'dialect', 'line_num', 'next']
         """ 
         return content
+    
+    def empty_ends_columns(self, row):
+        while row[-1] is '':
+            row.pop()
+            self.end_commas += 1
+        if self.end_commas:
+            return row
     
     def create_conf(self):
         pass
