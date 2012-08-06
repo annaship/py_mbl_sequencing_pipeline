@@ -64,10 +64,10 @@ class dbUpload:
     """db upload methods"""
     Name = "dbUpload"
     """
+    TODO: add tests and test case
     TODO: change hardcoded values to args: 
         self.sequence_table_name = "sequence_ill", 
         self.sequence_field_name = "sequence_comp"  
-    TODO: run_key_id into run_info_ill
     TODO: generalize all bulk uploads and all inserts? to not copy and paste
     TODO: add refssu_id
     TODO: change csv validaton for new fields
@@ -93,7 +93,7 @@ class dbUpload:
 #        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
 #        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
-        "todo: put in args"
+        "TODO: put host = 'newbpcdb2', db='env454' in args"
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
         self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
@@ -192,14 +192,6 @@ class dbUpload:
                 my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
                 tax_id = self.my_conn.execute_no_fetch(my_sql)
                 self.tax_id_dict[taxonomy] = tax_id
-
-    # collect taxonomy and id info into dict, to use later in insert
-#    def create_tax_id_dict(self, tax_id, taxonomy):
-#        if tax_id:
-#            self.tax_id_dict[taxonomy] = tax_id
-#        else:
-#            taxonomy_id = self.get_id("taxonomy", taxonomy)
-#            self.tax_id_dict[taxonomy] = taxonomy_id
             
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]

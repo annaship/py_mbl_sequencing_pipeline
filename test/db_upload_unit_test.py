@@ -36,6 +36,54 @@ class DbUloadTestCase(unittest.TestCase):
         res = self._connection.execute_no_fetch(sql)
         self.assertEqual(res, 1)
         
+"        inset test if taxonomy exists"
+"        inset test if taxonomy not exists"
+"""
+insert dataset
+insert run_key
+insert run
+insert dna_region
+insert project
+insert dataset
+insert run_info_ill
+insert sequence_ill
+insert sequence_pdr_info_ill
+insert sequence_uniq_info_ill
+insert taxonomy
+
+methods:
+execute_fetch_select(self, sql) 
+execute_no_fetch(self, sql) 
+__init__(self, run = None) 
+get_fasta_file_names(self) 
+get_run_info_ill_id(self, filename_base) 
+insert_seq(self, sequences) 
+get_seq_id_dict(self, sequences) 
+get_id(self, table_name, value) 
+get_sequence_id(self, seq) 
+insert_pdr_info(self, fasta, run_info_ill_id) 
+get_gasta_result(self, filename) 
+insert_taxonomy(self, fasta, gast_dict) 
+insert_sequence_uniq_info_ill(self, fasta, gast_dict) 
+put_run_info(self, content = None) 
+insert_bulk_data(self, key, values) 
+get_contact_v_info(self) 
+insert_contact(self) 
+get_contact_id(self, data_owner) 
+insert_rundate(self) 
+insert_project(self, content_row, contact_id) 
+insert_dataset(self, content_row) 
+insert_run_info(self, content_row) 
+insert_primer(self) 
+del_sequence_uniq_info(self) 
+del_sequences(self) 
+del_sequence_pdr_info(self) 
+del_run_info(self) 
+count_sequence_pdr_info_ill(self) 
+count_seq_from_file(self) 
+check_seq_upload(self) 
+put_seq_statistics_in_file(self, filename, seq_in_file)
+"""
 
 if __name__ == '__main__':
     unittest.main()

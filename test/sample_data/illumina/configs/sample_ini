@@ -1,0 +1,13 @@
+[general]
+run_date = 20120601
+platform = illumina
+input_dir = ./test/sample_data/illumina/Project_J_v6_30
+output_dir = .
+input_file_names = 
+input_file_suffix = fa.unique
+
+input_file_formats = fasta
+input_file_lanes = 1 
+baseoutputdir=output
+
+[illumina]
