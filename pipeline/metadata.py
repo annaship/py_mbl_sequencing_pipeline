@@ -806,6 +806,7 @@ class MetadataUtils:
         else:
             # no configPath
             collector= self.get_values( self.args )
+
             
         if self.args.platform == 'illumina':
             print "Illumina Pipeline"
