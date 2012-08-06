@@ -416,7 +416,6 @@ class MetadataUtils:
     def get_input_files(self,file_suffix):
     
         files_list = []
-        print 'input::',self.general_config_dict['input_dir']
         if os.path.isdir(self.general_config_dict['input_dir']):
             
             for infile in glob.glob( os.path.join(self.general_config_dict['input_dir'], '*'+file_suffix) ):
@@ -647,31 +646,24 @@ class MetadataUtils:
         fh.write("#\n#\tCreated by MBL Pipeline for run: "+self.general_config_dict['run']+" on "+self.general_config_dict['date']+"\n#\n\n")  
         fh.write("[general]\n") 
         fh.write("run = "+self.general_config_dict['run']+"\n")
-        #fh.write("run_date = "+self.general_config_dict['run']+"\n")
         fh.write("configPath = "+new_ini_file+"\n")
         
         fh.write("configPath_orig = "+self.general_config_dict['configPath']+"\n")
         fh.write("platform = "+self.general_config_dict['platform']+"\n")
         fh.write("output_dir = "          + self.general_config_dict['output_dir']+"\n")
         #fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
-        
-        fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
-        fh.write("input_file_format = " + self.general_config_dict['input_file_format']+"\n")
-        fh.write("anchor_file = "        + self.general_config_dict['anchor_file']+"\n")
-        fh.write("primer_file = "        + self.general_config_dict['primer_file']+"\n")
-        fh.write("require_distal = "     + str(self.general_config_dict['require_distal'])+"\n")
+        if self.general_config_dict['platform'] == 'illumina':
+            fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
+            fh.write("input_file_format = " + self.general_config_dict['input_file_format']+"\n")
+            fh.write("anchor_file = "        + self.general_config_dict['anchor_file']+"\n")
+            fh.write("primer_file = "        + self.general_config_dict['primer_file']+"\n")
+            fh.write("compressed = "          + str(self.general_config_dict['compressed'])+"\n")
+            fh.write("database_host = "          + self.general_config_dict['database_host']+"\n")
+            fh.write("database_name = "          + self.general_config_dict['database_name']+"\n")
+            
         fh.write("input_dir = "          + self.general_config_dict['input_dir']+"\n")
+        fh.write("require_distal = "     + str(self.general_config_dict['require_distal'])+"\n")
         fh.write("date = "              + str(datetime.date.today())+"\n")
-        fh.write("compressed = "          + str(self.general_config_dict['compressed'])+"\n")
-        fh.write("database_host = "          + self.general_config_dict['database_host']+"\n")
-        fh.write("database_name = "          + self.general_config_dict['database_name']+"\n")
-#         fh.write("input_file_suffix = "  + getattr(self.args,'input_file_suffix', "")+"\n")
-#         fh.write("input_file_format = " + getattr(self.args,'input_file_format', "")+"\n")
-#         fh.write("anchor_file = "        + getattr(self.args,'anchor_file', "")+"\n")
-#         fh.write("primer_file = "        + getattr(self.args,'primer_file', "")+"\n")
-#         fh.write("require_distal = "     + getattr(self.args,'require_distal', "1")+"\n")
-#         fh.write("input_dir = "+getattr(self.args,'input_dir', ".")+"\n") 
-        
         fh.write("idx_keys = "           +','.join(keys_list)+"\n")
         if 'input_dir' in self.general_config_dict and self.general_config_dict['input_dir'] != '':
             file_list = self.get_input_files(self.general_config_dict['input_file_suffix'])
@@ -827,7 +819,9 @@ class MetadataUtils:
                 collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
             else:
                 logger.debug("No project found in vamps pipeline")
-        
+            if self.args.fasta_file:
+                collector['project'] = self.args.fasta_file
+                collector['from_fasta'] = True
         elif self.args.platform == '454':
             print "454 Pipeline"
             
