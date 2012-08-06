@@ -724,7 +724,7 @@ class MetadataUtils:
             file_list = self.get_input_files(self.general_config_dict['input_file_suffix'])
             fh.write("input_files = "     + ','.join(file_list)+"\n") 
         else:
-            fh.write("input_files = \n") 
+            out_fh.write("input_files = \n") 
         out_fh.close()
 
 
