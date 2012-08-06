@@ -687,6 +687,18 @@ class Gast:
         #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
         subprocess.call(mothur_cmd, shell=True)
     def check_for_uniques_files(self,keys):
+        if self.run.platform == 'vamps':
+            # one fasta file or (one project and dataset from db)
+            if self.run.fasta_file != '':
+                pass
+            else:
+                if self.run.project and self.run.dataset:
+                    pass
+                else:
+                    pass
+                #get from database
+        else:
+            pass
         for key in keys:
             fasta_file = ""
             output_dir = os.path.join(self.basedir,key)
@@ -696,7 +708,7 @@ class Gast:
         
                 #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
                 subprocess.call(mothur_cmd, shell=True)
-                
+        return ("SUCCESS","check for uniques")        
                 
     def get_fasta_from_database(self):
         pass

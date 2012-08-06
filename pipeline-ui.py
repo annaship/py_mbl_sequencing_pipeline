@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
                                                  help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL')
      # see note for base_output_dir in runconfig.py  about line: 130                                               
-    parser.add_argument("-o", "--output_directory",     required=False,  action="store",   dest = "output_dir", 
+    parser.add_argument("-o", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", 
                                                 help="default: ./") 
     parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   
                                                     help="Directory where sequence files can be found. ")                           
@@ -210,10 +210,10 @@ if __name__ == '__main__':
     # base output directory and run are required so need to create output_dir here
     # to write ini file and status file
     ##############
-    print data_object['output_dir']
+    print data_object['baseoutputdir']
     try:
-        #outdir = os.path.join(data_object['output_dir'], data_object['run'])
-        outdir = data_object['output_dir']
+        outdir = os.path.join(data_object['baseoutputdir'], data_object['run'])
+        #outdir = data_object['output_dir']
         if not os.path.exists(outdir):
             logger.debug("Creating output directory: "+outdir)
             os.makedirs(outdir)    
