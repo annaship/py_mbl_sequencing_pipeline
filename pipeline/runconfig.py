@@ -163,6 +163,10 @@ class RunConfig:
             self.use_cluster    = general_config['use_cluster']
             self.dna_region     = general_config['dna_region'] 
             self.input_files    = general_config['input_files'] 
+            try:
+                self.fasta_file    = general_config['fasta_file'] 
+            except:
+                self.fasta_file    =None
         # added gast_input_source for vamps uploads
         # so when users want to gast at a later time they will
         # look in the database and not the files (which may be missing)

@@ -55,6 +55,7 @@ maxN            = 0
 #general_run_items = ['baseoutputdir' , 'run' , 'platform','configPath']
 # VAMPS as a platform
 
+
 pipeline_run_items = {
 'vamps' : { 'dna_region':'v6',
             'domain':'bacteria',
@@ -68,7 +69,7 @@ pipeline_run_items = {
             'cluster_nodes':100,
             'site':'vampsdev',
             'user':'',
-            'baseoutputdir':'.',
+            'baseoutputdir':'output',
             'require_distal':True,
             'commandline':False,
             'config_file_type':'ini',
@@ -82,7 +83,7 @@ pipeline_run_items = {
                 'platform':'illumina',
                 'csvPath':'',
                 'anchor_file':'',
-                'baseoutputdir':'.',
+                'baseoutputdir':'output',
                 'input_dir':'.',
                 'primer_file':'',
                 'require_distal':True
@@ -92,12 +93,12 @@ pipeline_run_items = {
 			'platform':'454',
 			'csvPath':'',
 			'input_dir':'.',
-			'baseoutputdir':'.'
+			'baseoutputdir':'output'
 		},
 'ion_torrent' : {'platform':'ion_torrent',
                 'csvPath':'',
                 'input_dir':'.',
-                'baseoutputdir':'.'
+                'baseoutputdir':'output'
                 }
 }
 # this is the maximum distance from the end of the sequence where script

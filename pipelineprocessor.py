@@ -15,6 +15,7 @@
 # Please read the COPYING file.
 #
 
+
 import os
 from stat import * # ST_SIZE etc
 import sys
@@ -164,11 +165,12 @@ def chimera(run):
     chimera_cluster_ids = [] 
     logger.debug("Starting Chimera Checker")
     # lets read the trim status file out here and keep those details out of the Chimera code
-    new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+    idx_keys = get_keys(run)
+    #new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
     
     mychimera = Chimera(run)
     
-    c_den    = mychimera.chimera_denovo(new_lane_keys)
+    c_den    = mychimera.chimera_denovo(idx_keys)
     if c_den[0] == 'SUCCESS':
         chimera_cluster_ids += c_den[2]
         chimera_code='PASS'
@@ -179,7 +181,7 @@ def chimera(run):
     else:
         chimera_code='FAIL'
     
-    c_ref    = mychimera.chimera_reference(new_lane_keys)
+    c_ref    = mychimera.chimera_reference(idx_keys)
     
     if c_ref[0] == 'SUCCESS':
         chimera_cluster_ids += c_ref[2]
@@ -224,12 +226,12 @@ def chimera(run):
         sys.exit("2-Chimera checking Failed")
     sleep(2)   
     if  chimera_code == 'PASS' and  chimera_cluster_code[0] == 'SUCCESS':
-        mychimera.write_chimeras_to_deleted_file(new_lane_keys)
+        mychimera.write_chimeras_to_deleted_file(idx_keys)
         # should also recreate fasta
         # then read chimera files and place (or replace) any chimeric read_id
         # into the deleted file.
         
-        mymblutils = MBLPipelineFastaUtils(new_lane_keys, mychimera.outdir)
+        mymblutils = MBLPipelineFastaUtils(idx_keys, mychimera.outdir)
         
         # write new cleaned files that remove chimera if apropriate
         # these are in fasta_mbl_pipeline.py
@@ -281,9 +283,10 @@ def env454run_info_upload(run):
     
 def env454upload(run):  
     """
-    Run: python pipeline_ui -c csv/mc.csv -s env454upload -l debug -p illumina -r 20120613 -ft fasta -i /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/short_out -f csv
+    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
-    TODO: Upload env454 data into raw, trim, gast etc tables from files
+    TODO: 
+        2) Upload env454 data into raw, trim, gast etc tables from files
     """
     
     whole_start = time()
@@ -410,43 +413,27 @@ def gast(run):
     # or we can get the 'lane_keys' directly from the config_file
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
-    if run.platform == 'vamps':
-        idx_keys = [run.user+run.run]        
-    else:
-        try:
-            idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
-            # {"status": "success", "new_lane_keys": ["1_GATGA"]}
-        except:
-            # here we have no idx_keys - must create them from run
-            # if illumina they are index_runkey_lane concatenation
-            # if 454 the are lane_key
-            if run.platform == 'illumina':  
-                idx_keys = run.idx_keys
-                ct = 0
-                for h in run.samples:
-                    logger.debug(h,run.samples[h])
-                    ct +=1
-                print ct
-            elif run.platform == '454':
-                idx_keys = run.idx_keys
-            elif run.platform == 'ion_torrent':
-                idx_keys = run.idx_keys
-            else:
-                logger.debug("GAST: No keys found - Exiting")
-                run.run_status_file_h.write("GAST: No keys found - Exiting\n")
-                sys.exit()
+    idx_keys = get_keys(run)
+    
     
     # get GAST object
     mygast = Gast(run, idx_keys)
     
     
-        
+    # Check for unique files and create them if not there
+    result_code = mygast.check_for_uniques_files(idx_keys)
+    run.run_status_file_h.write(json.dumps(result_code)+"\n")
+    if result_code[0] == 'ERROR':
+        logger.error("uniques not found failed")
+        sys.exit("uniques not found failed")
+    sleep(5)
+    
     # CLUSTERGAST
     result_code = mygast.clustergast(idx_keys)
     run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("clutergast failed")
-        sys.exit("clutergast failed")
+        sys.exit("clustergast failed")
     sleep(5)
     
     # GAST_CLEANUP
@@ -484,31 +471,7 @@ def upload_vamps(run):
     # or we can get the 'lane_keys' directly from the config_file
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
-    if(run.platform == 'vamps'):
-        idx_keys = [run.user+run.runcode]        
-    else:
-        try:
-            idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
-            # {"status": "success", "new_lane_keys": ["1_GATGA"]}
-        except:
-            # here we have no idx_keys - must create them from run
-            # if illumina they are index_runkey_lane concatenation
-            # if 454 the are lane_key
-            if run.platform == 'illumina':  
-                idx_keys = run.idx_keys
-                ct = 0
-                for h in run.samples:
-                    logger.debug(h,run.samples[h])
-                    ct +=1
-                print ct
-            elif run.platform == '454':
-                idx_keys = run.idx_keys
-            elif run.platform == 'ion_torrent':
-                idx_keys = run.idx_keys
-            else:
-                logger.debug("UPLOAD_VAMPS: No keys found - Exiting")
-                run.run_status_file_h.write("UPLOAD_VAMPS: No keys found - Exiting\n")
-                sys.exit()
+    idx_keys = get_keys(run)
 
 #     if(run.vamps_user_upload):
 #         idx_keys = [run.user+run.runcode]        
@@ -555,4 +518,30 @@ def clean(run):
                 # the directory will remain with an empty STATUS.txt file
                 #os.removedirs(run.output_dir)
 
-    
+def get_keys(run):
+    try:
+        idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+        # {"status": "success", "new_lane_keys": ["1_GATGA"]}
+    except:
+        # here we have no idx_keys - must create them from run
+        # if illumina they are index_runkey_lane concatenation
+        # if 454 the are lane_key
+        if run.platform == 'illumina':  
+            idx_keys = run.idx_keys
+            ct = 0
+            for h in run.samples:
+                logger.debug(h,run.samples[h])
+                ct +=1
+            print ct
+        elif run.platform == '454':
+            idx_keys = run.idx_keys
+        elif run.platform == 'ion_torrent':
+            idx_keys = run.idx_keys
+        elif run.platform == 'vamps':
+            idx_keys = [run.user+run.run]  
+        else:
+            logger.debug("GAST: No keys found - Exiting")
+            run.run_status_file_h.write("GAST: No keys found - Exiting\n")
+            sys.exit()
+            
+    return idx_keys
