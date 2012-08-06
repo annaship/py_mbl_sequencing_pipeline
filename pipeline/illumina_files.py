@@ -30,7 +30,7 @@ class IlluminaFiles:
         self.id_dataset     = {}
         self.dataset_emails = dict((self.run.samples[key].dataset, self.run.samples[key].email) for key in self.run.samples)
         self.in_file_path   = self.run.input_dir
-        self.out_file_path  = self.create_out_dir(os.path.join(self.run.args.output_dir, "analysis"))
+        self.out_file_path  = self.create_out_dir(os.path.join(self.run.output_dir, "analysis"))
 #        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
 #        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
         self.results_path  = self.create_out_dir(os.path.join(self.out_file_path, "perfect_reads"))

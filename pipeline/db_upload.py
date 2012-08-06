@@ -86,8 +86,8 @@ class dbUpload:
         self.rundate     = self.run.run_date
         self.use_cluster = 1
         self.in_file_path = self.run.input_dir
-        host_name = run.args.database_host
-        database_name = run.args.database_name
+        host_name = run.database_host
+        database_name = run.database_name
         
 #
 #        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
