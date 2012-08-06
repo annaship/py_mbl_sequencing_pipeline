@@ -55,6 +55,7 @@ maxN            = 0
 #general_run_items = ['baseoutputdir' , 'run' , 'platform','configPath']
 # VAMPS as a platform
 
+
 pipeline_run_items = {
 'vamps' : { 'dna_region':'v6',
             'domain':'bacteria',
