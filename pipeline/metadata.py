@@ -848,7 +848,7 @@ class MetadataUtils:
                 collector[i] = True
             elif collector[i] == 'False' or collector[i] == 'false':
                 collector[i] = False
-        print collector
+        
         #collector['runcode'] = self.args.run
         collector['run'] = self.args.run
         #collector['run_date'] = self.args.run
