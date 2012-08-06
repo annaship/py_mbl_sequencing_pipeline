@@ -15,6 +15,7 @@
 # Please read the COPYING file.
 #
 
+
 import os
 from stat import * # ST_SIZE etc
 import sys
@@ -282,9 +283,10 @@ def env454run_info_upload(run):
     
 def env454upload(run):  
     """
-    Run: python pipeline_ui -c csv/mc.csv -s env454upload -l debug -p illumina -r 20120613 -ft fasta -i /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/short_out -f csv
+    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
-    TODO: Upload env454 data into raw, trim, gast etc tables from files
+    TODO: 
+        2) Upload env454 data into raw, trim, gast etc tables from files
     """
     
     whole_start = time()
