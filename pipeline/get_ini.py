@@ -52,7 +52,9 @@ class readCSV:
     def read_csv(self):
         content = {}
         headers = None
-        reader  = csv.reader(open(self.file_path, 'rb'), delimiter=',')
+        #reader  = csv.reader(open(self.file_path, 'rb'), delimiter=',')
+        # should be opened in universal new-line mode
+        reader  = csv.reader(open(self.file_path, 'rU'), delimiter=',')
         rownum  = 0
         empty_commas_len = 0
         for row in reader:
