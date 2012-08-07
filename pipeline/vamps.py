@@ -52,14 +52,15 @@ class Vamps:
     def __init__(self, run = None):
 
         self.run 	 = run
-        self.outdir  = run.output_dir
+        self.prefix = self.run.user+self.run.run
+        self.outdir  = os.path.join(self.run.output_dir,self.prefix)
         
 
         self.use_cluster = 1
-        self.project = run.project
-        self.dataset = run.dataset
+        self.project = self.run.project
+        self.dataset = self.run.dataset
         self.project_dataset = self.project+'--'+self.dataset
-        self.prefix = self.run.user+self.run.run
+        
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
         path = os.environ['PATH']
@@ -70,7 +71,6 @@ class Vamps:
         # If we are here from a vamps gast process
         # then there should be just one dataset to gast
         # but if MBL pipe then many datasets are prbably involved.
-        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
         # 1) clustergast
         # 2) gast cleanup
         # 3) gast2tax
@@ -80,12 +80,19 @@ class Vamps:
         self.gast_concat_file = os.path.join(self.out_gast_dir,'gast_concat')
         #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
         self.tagtax_file = os.path.join(self.out_gast_dir,'tagtax')
-        self.uniques_file = os.path.join(self.outdir,self.prefix+'.unique.fa')
+        if os.path.exists(os.path.join(self.outdir,self.prefix+'.unique.fa')):
+            self.uniques_file = os.path.join(self.outdir,self.prefix+'.unique.fa')
+        #elif os.path.exists(os.path.join(self.outdir,self.prefix,self.prefix+'.unique.fa')):
+        #    self.uniques_file = os.path.join(self.outdir,self.prefix,self.prefix+'.unique.fa')
+        else:
+            sys.exit("Could not find uniques file")
+        
+        
         # get dataset_count here from uniques_file
         grep_cmd = ['grep','-c','>',self.uniques_file]
         self.dataset_count = subprocess.check_output(grep_cmd).strip()
         
-        print run.dataset_count, self.dataset_count
+        print "Dataset Count", self.dataset_count
         
         # to be created:
         self.taxes_file = os.path.join(self.outdir,'vamps_data_cube_uploads.txt')

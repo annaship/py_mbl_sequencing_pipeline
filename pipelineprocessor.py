@@ -44,7 +44,7 @@ import json
 import fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
-existing_steps = C.existing_steps
+
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -69,21 +69,12 @@ def process(run, steps):
     # loop through official list...this way we execute the
     # users requested steps in the correct order 
 
-    for step in existing_steps:
+    for step in C.existing_steps:
         if step in requested_steps:
             # call the method in here
             step_method = globals()[step]
             step_method(run)
 
-
-#     for step in requested_steps:
-#         if step not in existing_steps:
-#             print "Invalid processing step: " + step
-#             sys.exit("Invalid processing step: " + step)
-#         else:
-#             # call the method in here
-#             step_method = globals()[step]
-#             step_method(run)
 def validate(run):
     #open_zipped_directory(run.run_date, run.output_dir)
     #logger.debug("Validating")
@@ -454,7 +445,7 @@ def cluster(run):
     
     
     
-def upload_vamps(run):
+def vampsupload(run):
     """
     Upload data files to VAMPS database
     """
@@ -476,11 +467,11 @@ def upload_vamps(run):
 
         
     myvamps.taxonomy(idx_keys)
-    #myvamps.sequences(idx_keys)        
-    #myvamps.exports(idx_keys)
-    #myvamps.projects(idx_keys)
-    #myvamps.info(idx_keys)
-    
+    myvamps.sequences(idx_keys)        
+    myvamps.exports(idx_keys)
+    myvamps.projects(idx_keys)
+    myvamps.info(idx_keys)
+    #myvamps.load_database(idx_keys)
 def status(run):
     
     f = open(run.run_status_file_name)

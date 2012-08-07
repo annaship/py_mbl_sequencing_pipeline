@@ -165,6 +165,10 @@ class RunConfig:
             self.use_cluster    = general_config['use_cluster']
             self.dna_region     = general_config['dna_region'] 
             self.input_files    = general_config['input_files'] 
+            self.project        = general_config['project'] 
+            self.dataset        = general_config['dataset']
+            self.site           = general_config['site']
+            self.env_source_id  = general_config['envsource']
             try:
                 self.fasta_file    = general_config['fasta_file'] 
             except:
