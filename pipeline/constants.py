@@ -54,7 +54,11 @@ maxN            = 0
 # these should contain all the items that are possible for each platform with defaults
 #general_run_items = ['baseoutputdir' , 'run' , 'platform','configPath']
 # VAMPS as a platform
-
+# if you add another item here be sure to check that
+# these other places have been updated
+# runconfig.py:initializeFromDictionary() make sure the run object gets the general_config item
+# metadata.py:convert_csv_to_ini()        make sure that the item gets written to
+#    the NEW ini file
 
 pipeline_run_items = {
 'vamps' : { 'dna_region':'v6',

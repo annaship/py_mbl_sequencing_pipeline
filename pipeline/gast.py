@@ -462,7 +462,7 @@ class Gast:
 
     def gast2tax(self, idx_keys): 
         
-        for key in keys:
+        for key in idx_keys:
             output_dir = os.path.join(self.basedir,key)
             gast_dir = os.path.join(output_dir,'gast')
             if key in self.run.samples:
@@ -687,22 +687,41 @@ class Gast:
 #         #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
 #         subprocess.call(mothur_cmd, shell=True)
     def check_for_uniques_files(self,keys):
+        logger.info("Checking for uniques file")
         if self.run.platform == 'vamps':
             # one fasta file or (one project and dataset from db)
-            if self.run.fasta_file != '':
+            if os.path.exists(self.run.fasta_file):
                 output_dir = os.path.join(self.basedir,keys[0])
-                unique_file = os.path.join(output_dir, keys[0]+'.unique.fa')
-                if not os.path.exists(unique_file):
-                    mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.run.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
-            
-                    #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
-                    subprocess.call(mothur_cmd, shell=True)
+                uniques_file = os.path.join(output_dir, keys[0]+'.unique.fa')
+                names_file = os.path.join(output_dir, keys[0]+'.names')
+                
+                mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.run.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
+        
+                #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
+                subprocess.call(mothur_cmd, shell=True)
+                
+                # rename new unique file and names file to standard names
+                fasta_file_prefix = os.path.basename(self.run.fasta_file).split('.')[0]
+                #print 'prefix',fasta_file_prefix
+                new_uniques_file = os.path.join(output_dir, fasta_file_prefix+'.unique.fa')
+                new_names_file   = os.path.join(output_dir, fasta_file_prefix+'.names')
+                #print 'new_uniques_file',new_uniques_file
+                if os.path.exists(new_uniques_file):
+                
+                    shutil.move(new_uniques_file, uniques_file)
+                    shutil.move(new_names_file, names_file)
+                    logger.info("Renaming uniques and names files")
                 else:
-                    if self.run.project and self.run.dataset:
-                        pass
-                    else:
-                        pass
-                #get from database
+                    sys.exit("Could not find uniques +/- names file:"+new_uniques_file)
+                #shutil.move('a.txt', 'b.kml')
+                #os.rename(filename, filename[7:])
+                #os.rename(filename, filename[7:])
+            else:
+                if self.run.project and self.run.dataset:
+                    pass
+                else:
+                    pass
+            #get from database
         else:
             pass
             
