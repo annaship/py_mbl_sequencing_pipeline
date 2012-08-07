@@ -464,7 +464,6 @@ def vampsupload(run):
                 
     myvamps = Vamps(run)
     
-
         
     myvamps.taxonomy(idx_keys)
     myvamps.sequences(idx_keys)        
