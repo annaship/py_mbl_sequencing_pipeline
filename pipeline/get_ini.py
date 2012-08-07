@@ -46,7 +46,7 @@ class readCSV:
         self.taxonomy_table_name               = "taxonomy"
         #Fields:
         self.sequence_field_name               = "sequence_comp" 
-        self.end_commas                        = 0
+        self.header_end_commas                        = 0
 
 
     def read_csv(self):
@@ -58,18 +58,17 @@ class readCSV:
         for row in reader:
             if reader.line_num == 1:
                 """
-                If we are on the first line, create the headers list from the first row
+                If we are on the first line, create the headers list from the first row, clean it first
                 """
                 if not row[-1]:
-                    row = self.empty_ends_columns(row)                    
+                    row, self.header_end_commas = self.empty_ends_columns(row)                    
                 headers = row
             else:
                 """
                 Create the sub-dictionary by using the zip() function.
                 """
-                "TODO: remove only the same amount of empties as header had (end_commas)"
-                if self.end_commas:
-                    row = self.empty_ends_columns(row)
+                if self.header_end_commas:
+                    row, end_commas = self.empty_ends_columns(row)
                 content[rownum] = dict(zip(headers, row))
             rownum += 1
 
@@ -81,11 +80,16 @@ class readCSV:
         return content
     
     def empty_ends_columns(self, row):
-        while row[-1] is '':
-            row.pop()
-            self.end_commas += 1
-        if self.end_commas:
-            return row
+        end_commas = 0
+        if self.header_end_commas:
+            row        = row[:-self.header_end_commas]
+            end_commas = self.header_end_commas
+        else:                
+            while row[-1] is '':
+                row.pop()
+                end_commas += 1
+        if end_commas:
+            return row, end_commas
     
     def create_conf(self):
         pass
