@@ -81,15 +81,27 @@ def process(run, steps):
     run.run_status_file_h = open(run.run_status_file_name, "a")
     
     # loop through official list...this way we execute the
-    # users requested steps in the correct order                
+    # users requested steps in the correct order 
     for step in requested_steps:
         if step not in existing_steps:
-            print "Invalid processing step: " + step
-            sys.exit("Invalid processing step: " + step)
-        else:
+            print "Invalid processing step: " + step + " - Exiting"
+            sys.exit()
+
+    for step in existing_steps:
+        if step in requested_steps:
             # call the method in here
             step_method = globals()[step]
             step_method(run)
+
+
+#     for step in requested_steps:
+#         if step not in existing_steps:
+#             print "Invalid processing step: " + step
+#             sys.exit("Invalid processing step: " + step)
+#         else:
+#             # call the method in here
+#             step_method = globals()[step]
+#             step_method(run)
 def validate(run):
     #open_zipped_directory(run.run_date, run.output_dir)
     #logger.debug("Validating")
