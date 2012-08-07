@@ -103,6 +103,7 @@ pipeline_run_items = {
                 'database_host':'vampsdev',
                 'database_name':'test',
                 'platform':'illumina',
+                'use_cluster':True,
                 'csvPath':'',
                 'anchor_file':'',
                 'baseoutputdir':'output',
@@ -113,6 +114,7 @@ pipeline_run_items = {
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',
 			'platform':'454',
+			'use_cluster':True,
 			'csvPath':'',
 			'input_dir':'.',
 			'baseoutputdir':'output'

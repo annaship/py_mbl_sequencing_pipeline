@@ -20,7 +20,7 @@ class Gast:
         self.basedir = self.run.output_dir
         
         self.use_cluster = self.run.use_cluster
-        
+        self.idx_keys = idx_keys
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
         path = os.environ['PATH']
@@ -33,11 +33,21 @@ class Gast:
         # but if MBL pipe then many datasets are prbably involved.
         self.refdb_dir = C.ref_database_dir
         
-        print self.run.input_files
+        # create our directories for each key
+        for key in self.idx_keys:
+            
+            output_dir = os.path.join(self.basedir,key)
+            if not os.path.exists(output_dir):
+                os.mkdir(output_dir)
+                gast_dir = os.path.join(output_dir,'gast')
+                if os.path.exists(gast_dir):
+                    # empty then recreate directory
+                    shutil.rmtree(gast_dir)
+                    os.mkdir(gast_dir)
+                else:
+                    os.mkdir(gast_dir)
         
-        
-        
-    def clustergast(self, idx_keys):
+    def clustergast(self):
         """
         clustergast - runs the GAST pipeline on the cluster.
                GAST uses UClust to identify the best matches of a read sequence
@@ -83,25 +93,13 @@ class Gast:
             logger.info("Using cluster for clustergast")
         else:
             logger.info("Not using cluster")
-        for key in idx_keys:
+        for key in self.idx_keys:
             cluster_nodes = C.cluster_nodes
             logger.info("Cluster nodes set to: "+str(cluster_nodes))
             output_dir = os.path.join(self.basedir,key)
-            if not os.path.exists(output_dir):	
-                os.mkdir(output_dir)
-            
-            print 'OUT',output_dir
-            # find gast_idr
             gast_dir = os.path.join(output_dir,'gast')
-            print 'GAST',gast_dir
-            if not os.path.exists(gast_dir):	
-                os.mkdir(gast_dir)
-            else:
-                # empty then recreate directory
-                shutil.rmtree(gast_dir)
-                os.mkdir(gast_dir)
-                
-                
+  # SMPL1_3_NNNNCGCTC_3          
+            #print 'samples',key,self.run.samples
             if key in self.run.samples:
                 dna_region = self.run.samples[key].dna_region
             else:            
@@ -302,13 +300,13 @@ class Gast:
     
         
             
-    def gast_cleanup(self, idx_keys):
+    def gast_cleanup(self):
         """
         gast_cleanup - follows clustergast, explodes the data and copies to gast_concat and gast files
         """
         logger.info("Starting GAST Cleanup")
         self.run.run_status_file_h.write("Starting gast_cleanup\n")
-        for key in idx_keys:
+        for key in self.idx_keys:
             output_dir = os.path.join(self.basedir,key)
             gast_dir = os.path.join(output_dir,'gast')
             if key in self.run.samples:
@@ -460,9 +458,9 @@ class Gast:
         logger.info("Finished gast_cleanup")
         return ("SUCCESS","gast_cleanup")
 
-    def gast2tax(self, idx_keys): 
+    def gast2tax(self): 
         
-        for key in idx_keys:
+        for key in self.idx_keys:
             output_dir = os.path.join(self.basedir,key)
             gast_dir = os.path.join(output_dir,'gast')
             if key in self.run.samples:

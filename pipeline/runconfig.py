@@ -160,10 +160,15 @@ class RunConfig:
         self.maximumLength  = general_config.get('maximumLength', C.maximumLength)
         self.minAvgQual     = general_config.get('minAvgQual',    C.minAvgQual)
         self.force_runkey   = general_config.get('force_runkey', None)
-        
+        self.use_cluster    = general_config['use_cluster']
+        try:
+            self.idx_keys           = general_config['idx_keys']
+        except:
+            self.idx_keys = ""
+            
         if self.platform == 'vamps':
             self.user           = general_config['user']
-            self.use_cluster    = general_config['use_cluster']
+            
             self.dna_region     = general_config['dna_region'] 
             self.input_files    = general_config['input_files'] 
             self.project        = general_config['project'] 
@@ -187,9 +192,10 @@ class RunConfig:
             self.gast_input_source = general_config['gast_input_source']
         if 'files_list' in general_config:
             input_file_names = general_config['files_list']
+            self.input_files = ','.join(general_config['files_list'])
         else:
             input_file_names  = [input_str.strip() for input_str in general_config['input_files'].split(',')]
-        
+            self.input_files = general_config['input_files']
 #         
 #         # for ini file:  (no plurals)
 #         # 1) if input_file_format is a comma sep list then it should match the count of input_file_name

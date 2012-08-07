@@ -670,6 +670,7 @@ class MetadataUtils:
             
         fh.write("input_dir = "          + self.general_config_dict['input_dir']+"\n")
         fh.write("require_distal = "     + str(self.general_config_dict['require_distal'])+"\n")
+        fh.write("use_cluster = "              + str(self.general_config_dict['use_cluster'])+"\n")
         fh.write("date = "              + str(datetime.date.today())+"\n")
         fh.write("idx_keys = "           +','.join(keys_list)+"\n")
         if 'input_dir' in self.general_config_dict and self.general_config_dict['input_dir'] != '':

@@ -397,8 +397,8 @@ def gast(run):
     # or we can get the 'lane_keys' directly from the config_file
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
+    # Should return a list not a string
     idx_keys = get_keys(run)
-    
     
     # get GAST object
     mygast = Gast(run, idx_keys)
@@ -413,7 +413,7 @@ def gast(run):
     sleep(5)
     
     # CLUSTERGAST
-    result_code = mygast.clustergast(idx_keys)
+    result_code = mygast.clustergast()
     run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("clutergast failed")
@@ -421,7 +421,7 @@ def gast(run):
     sleep(5)
     
     # GAST_CLEANUP
-    result_code = mygast.gast_cleanup(idx_keys)
+    result_code = mygast.gast_cleanup()
     run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("gast_cleanup failed")        
@@ -429,7 +429,7 @@ def gast(run):
     sleep(5)
     
     # GAST2TAX
-    result_code = mygast.gast2tax(idx_keys)
+    result_code = mygast.gast2tax()
     run.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("gast2tax failed") 
@@ -527,5 +527,10 @@ def get_keys(run):
             logger.debug("GAST: No keys found - Exiting")
             run.run_status_file_h.write("GAST: No keys found - Exiting\n")
             sys.exit()
-            
+    if type(idx_keys) is types.StringType:
+        return idx_keys.split(',')
+    elif type(idx_keys) is types.ListType:
+        return idx_keys
+    else:
+        return None
     return idx_keys
