@@ -38,6 +38,20 @@ dna_regions      = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", 
                     "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6"]
 
 
+VALIDATE_STEP           = "validate"
+TRIM_STEP               = "trim"
+CHIMERA_STEP            = "chimera"
+GAST_STEP               = "gast"
+VAMPSUPLOAD             = "vampsupload"
+CLUSTER_STEP            = "cluster"
+DELETE_RUN              = "delete"
+ENV454UPLOAD            = "env454upload"
+ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
+STATUS_STEP             = 'status'
+CLEAN_STEP              = 'clean'
+ILLUMINA_FILES_STEP     = 'illumina_files'
+
+existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ILLUMINA_FILES_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
 
 ########### RUN CONFIG #############################################################################
 input_file_formats = ['sff', 'fasta', 'fasta-mbl', 'fastq', 'fastq-illumina', 'fastq-sanger']

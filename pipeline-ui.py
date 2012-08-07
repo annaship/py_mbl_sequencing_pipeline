@@ -164,6 +164,15 @@ if __name__ == '__main__':
     #CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
     
     args = parser.parse_args() 
+    
+    requested_steps = args.steps.split(",")   
+    for step in requested_steps:
+        if step not in C.existing_steps:
+            print "\nInvalid processing step: " + step
+            print "Valid steps: ",', '.join(C.existing_steps),"\n"
+            print "Exiting"
+            sys.exit()
+    
     if args.platform not in C.known_platforms:
     	sys.exit("unknown platform - Exiting")
     	

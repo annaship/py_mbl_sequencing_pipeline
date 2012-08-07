@@ -854,7 +854,7 @@ class MetadataUtils:
         #collector['runcode'] = self.args.run
         collector['run'] = self.args.run
         #collector['run_date'] = self.args.run
-        collector['steps'] = self.args.steps
+        #collector['steps'] = self.args.steps
         collector['platform'] = self.args.platform
         
         collector['date'] = str(datetime.date.today())

@@ -44,21 +44,7 @@ import json
 import fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
-
-VALIDATE_STEP           = "validate"
-TRIM_STEP               = "trim"
-CHIMERA_STEP            = "chimera"
-GAST_STEP               = "gast"
-VAMPSUPLOAD             = "vampsupload"
-CLUSTER_STEP            = "cluster"
-DELETE_RUN              = "delete"
-ENV454UPLOAD            = "env454upload"
-ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
-STATUS_STEP             = 'status'
-CLEAN_STEP              = 'clean'
-ILLUMINA_FILES_STEP     = 'illumina_files'
-
-existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ILLUMINA_FILES_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
+existing_steps = C.existing_steps
 
 # the main loop for performing each of the user's supplied steps
 def process(run, steps):
@@ -82,10 +68,6 @@ def process(run, steps):
     
     # loop through official list...this way we execute the
     # users requested steps in the correct order 
-    for step in requested_steps:
-        if step not in existing_steps:
-            print "Invalid processing step: " + step + " - Exiting"
-            sys.exit()
 
     for step in existing_steps:
         if step in requested_steps:
