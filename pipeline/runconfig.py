@@ -34,6 +34,7 @@ def configDictionaryFromFile_ini(config_file_path):
     return configDict
 
 
+
 class RunConfig:
     """Doc string here."""
     def __init__(self, config_info, basepythondir):
