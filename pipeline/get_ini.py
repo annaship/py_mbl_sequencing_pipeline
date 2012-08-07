@@ -60,6 +60,7 @@ class readCSV:
                 """
                 If we are on the first line, create the headers list from the first row, clean it first
                 """
+                print 'row',row
                 if not row[-1]:
                     row, self.header_end_commas = self.empty_ends_columns(row)                    
                 headers = row
