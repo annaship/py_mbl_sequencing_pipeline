@@ -267,7 +267,6 @@ def env454run_info_upload(run):
     
 def env454upload(run):  
     """
-    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
     TODO: 
         2) Upload env454 data into raw, trim, gast etc tables from files
@@ -282,6 +281,9 @@ def env454upload(run):
     filenames   = my_env454upload.get_fasta_file_names()
     seq_in_file = 0
     total_seq   = 0
+    
+    print "RUNNNN"
+    print run
     
     for filename in filenames:
         try:

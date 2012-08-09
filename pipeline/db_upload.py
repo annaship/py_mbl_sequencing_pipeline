@@ -83,7 +83,7 @@ class dbUpload:
     def __init__(self, run = None):
         self.run         = run
 #        print dir(run)
-        self.rundate     = self.run.run_date
+        self.rundate     = self.run.run
         self.use_cluster = 1
         self.in_file_path = self.run.input_dir
         host_name = run.database_host
