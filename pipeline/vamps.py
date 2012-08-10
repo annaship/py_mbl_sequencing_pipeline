@@ -49,16 +49,16 @@ class FastaReader:
 class Vamps:
     """Uploads data to the VAMPS (or vampsdev) database"""
     Name = "VAMPS"
-    def __init__(self, run = None):
+    def __init__(self, run_object = None):
 
-        self.run 	 = run
-        self.prefix = self.run.user+self.run.run
-        self.outdir  = os.path.join(self.run.output_dir,self.prefix)
+        self.robj 	 = run_object
+        self.prefix = self.robj.user+self.robj.run
+        self.outdir  = os.path.join(self.robj.output_dir,self.prefix)
         
 
         self.use_cluster = 1
-        self.project = self.run.project
-        self.dataset = self.run.dataset
+        self.project = self.robj.project
+        self.dataset = self.robj.dataset
         self.project_dataset = self.project+'--'+self.dataset
         
         os.environ['SGE_ROOT']='/usr/local/sge'
@@ -357,14 +357,14 @@ class Vamps:
         """
         logger.info("Starting vamps_upload: projects_info")
         
-        if self.run.site == 'vamps':
+        if self.robj.site == 'vamps':
             db_host    = 'vampsdb'
             db_name    = 'vamps'
         else:
             db_host    = 'vampsdev'
             db_name    = 'vamps'
         myconn = MyConnection(host=db_host, db=db_name)
-        query = "SELECT last_name,first_name,email,institution from vamps_auth where user='%s'" % (self.run.user)
+        query = "SELECT last_name,first_name,email,institution from vamps_auth where user='%s'" % (self.robj.user)
         data = myconn.execute_fetch_select(query)
         
         fh = open(self.projects_info_file,'w')
@@ -374,9 +374,9 @@ class Vamps:
         contact= data[0][1]+' '+data[0][0]
         email= data[0][2]
         institution= data[0][3]
-        user = self.run.user
+        user = self.robj.user
         fh.write("\t".join(["HEADER","project","title","description","contact", "email","institution","user","env_source_id"] )+"\n")
-        fh.write("\t".join(["0",self.project, title, description, contact, email, institution, user, self.run.env_source_id] )+"\n")
+        fh.write("\t".join(["0",self.project, title, description, contact, email, institution, user, self.robj.env_source_id] )+"\n")
         # if this project already exists in the db???
         # the next step should update the table rather than add new to the db
         
@@ -415,7 +415,7 @@ class Vamps:
         #   if the existing project doesn't belong to the owner then die with a warning to change project name
         #      (or maybe change the name by adding _user)
         
-        if self.run.site == 'vamps':
+        if self.robj.site == 'vamps':
             db_host    = 'vampsdb'
             db_name    = 'vamps'
         else:
@@ -530,7 +530,7 @@ class Vamps:
                 
             qUser = "insert into %s (project, user)\
                         VALUES('%s','%s')" \
-                        % (users_table, self.project, self.run.user)
+                        % (users_table, self.project, self.robj.user)
             myconn.execute_no_fetch(qUser) 
             
             
