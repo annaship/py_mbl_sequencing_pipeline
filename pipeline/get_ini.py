@@ -19,15 +19,15 @@ class readCSV:
     for item in thelist:
       thefile.write("%s\n" % item)
     """
-    def __init__(self, run = None, file_path = None):
+    def __init__(self, run_object = None, file_path = None):
         if run:
-            self.run         = run
+            self.runobj         = run_object
             self.outdir      = run.output_dir
             try:
                 self.basedir = run.basedir
             except:
                 self.basedir = self.outdir
-            self.rundate     = self.run.run_date
+            self.runobjdate     = self.runobj.run_date
             self.use_cluster = 1
         self.file_path = file_path
         self.filenames = []
@@ -37,9 +37,9 @@ class readCSV:
         self.primer_suite_table_name           = "primer_suite"
         self.project_table_name                = "project"
         self.rank_table_name                   = "rank"
-        self.run_table_name                    = "run"
-        self.run_info_ill_table_name           = "run_info_ill"
-        self.run_key_table_name                = "run_key"
+        self.runobj_table_name                    = "run"
+        self.runobj_info_ill_table_name           = "run_info_ill"
+        self.runobj_key_table_name                = "run_key"
         self.sequence_ill_table_name           = "sequence_ill"
         self.sequence_pdr_info_ill_table_name  = "sequence_pdr_info_ill"
         self.sequence_uniq_info_ill_table_name = "sequence_uniq_info_ill"

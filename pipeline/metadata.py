@@ -282,8 +282,8 @@ class MetadataUtils:
         test_datasets = {}
         dataset_counter = {}
         headers = ''
-        if self.run:
-            infile = self.run.configPath
+        if self.runobj:
+            infile = self.runobj.configPath
         else:            
             infile = args.configPath
             data['general']['input_dir'] = args.input_dir

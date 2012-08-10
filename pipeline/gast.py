@@ -13,13 +13,13 @@ class Gast:
     Name = "GAST"
     def __init__(self, run_object = None, idx_keys=None):
 
-        self.robj     = run_object
+        self.runobj     = run_object
         
         self.test = True
        
-        self.basedir = self.robj.output_dir
+        self.basedir = self.runobj.output_dir
         
-        self.use_cluster = self.robj.use_cluster
+        self.use_cluster = self.runobj.use_cluster
         self.idx_keys = idx_keys
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
@@ -56,7 +56,7 @@ class Gast:
                Illumina :
         """
         logger.info("Starting Clustergast")
-        self.robj.run_status_file_h.write("Starting clustergast\n")
+        self.runobj.run_status_file_h.write("Starting clustergast\n")
         # Step1: create empty gast table in database: gast_<rundate>
         # Step2: Count the number of sequences so the job can be split for nodes
         # $facount = `grep -c \">\" $fasta_uniqs_filename`;
@@ -100,11 +100,11 @@ class Gast:
             output_dir = os.path.join(self.basedir,key)
             gast_dir = os.path.join(output_dir,'gast')
   # SMPL1_3_NNNNCGCTC_3          
-            #print 'samples',key,self.robj.samples
-            if key in self.robj.samples:
-                dna_region = self.robj.samples[key].dna_region
+            #print 'samples',key,self.runobj.samples
+            if key in self.runobj.samples:
+                dna_region = self.runobj.samples[key].dna_region
             else:            
-                dna_region = self.robj.dna_region
+                dna_region = self.runobj.dna_region
             if not dna_region:
                 logger.error("clustergast: We have no DNA Region: Setting dna_region to 'unknown'")
                 dna_region = 'unknown'
@@ -118,11 +118,11 @@ class Gast:
             #the add this to grep command
             #and change usearch to usearch64
             unique_file = 'Not Found'
-            if self.robj.platform == 'vamps':    
+            if self.runobj.platform == 'vamps':    
                 unique_file = os.path.join(output_dir, key+'.unique.fa')
-            elif self.robj.platform == 'illumina':
-                #self.robj.input_file_suffix'.unique.fa'
-                unique_file = os.path.join(input_dir, key + self.robj.input_file_suffix)
+            elif self.runobj.platform == 'illumina':
+                #self.runobj.input_file_suffix'.unique.fa'
+                unique_file = os.path.join(input_dir, key + self.runobj.input_file_suffix)
             else:
                 pass
                 
@@ -169,7 +169,7 @@ class Gast:
                     
                     if self.use_cluster:
                         fh = open(script_filename,'w')
-                        qstat_name = "gast" + key + '_' + self.robj.run + "_" + str(i)
+                        qstat_name = "gast" + key + '_' + self.runobj.run + "_" + str(i)
                         fh.write("#!/bin/csh\n")
                         fh.write("#$ -j y\n" )
                         fh.write("#$ -o " + log_file + "\n")
@@ -311,17 +311,17 @@ class Gast:
         gast_cleanup - follows clustergast, explodes the data and copies to gast_concat and gast files
         """
         logger.info("Starting GAST Cleanup")
-        self.robj.run_status_file_h.write("Starting gast_cleanup\n")
+        self.runobj.run_status_file_h.write("Starting gast_cleanup\n")
         for key in self.idx_keys:
             output_dir = os.path.join(self.basedir,key)
             gast_dir = os.path.join(output_dir,'gast')
-            if key in self.robj.samples:
-                dna_region = self.robj.samples[key].dna_region
+            if key in self.runobj.samples:
+                dna_region = self.runobj.samples[key].dna_region
             else:            
-                dna_region = self.robj.dna_region
+                dna_region = self.runobj.dna_region
             if not dna_region:
                 logger.error("gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'")
-                self.robj.run_status_file_h.write("gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'\n")
+                self.runobj.run_status_file_h.write("gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'\n")
                 dna_region = 'unknown'
             # find gast_dir
             
@@ -334,12 +334,12 @@ class Gast:
             # and outdir is like 1_AGTCG/2012-06-25
             unique_file = 'Not Found'
             names_file  = 'Not Found'
-            if self.robj.platform == 'vamps':    
+            if self.runobj.platform == 'vamps':    
                 unique_file = os.path.join(output_dir, key+'.unique.fa')
                 names_file = os.path.join(output_dir,key+'.names')
-            elif self.robj.platform == 'illumina':
-                #self.robj.input_file_suffix'.unique.fa'
-                unique_file = os.path.join(input_dir, key + self.robj.input_file_suffix)
+            elif self.runobj.platform == 'illumina':
+                #self.runobj.input_file_suffix'.unique.fa'
+                unique_file = os.path.join(input_dir, key + self.runobj.input_file_suffix)
                 names_file = os.path.join(input_dir,key+'.names')
             else:
                 pass
@@ -392,7 +392,7 @@ class Gast:
                 in_gast_fh  = open(clustergast_filename_single,'r')
             else:
                 print "No clustergast file found:",clustergast_filename_single,"\nExiting"
-                self.robj.run_status_file_h.write("No clustergast file found:",clustergast_filename_single," Exiting\n")
+                self.runobj.run_status_file_h.write("No clustergast file found:",clustergast_filename_single," Exiting\n")
                 sys.exit()
             for line in in_gast_fh:
                 
@@ -480,13 +480,13 @@ class Gast:
         for key in self.idx_keys:
             output_dir = os.path.join(self.basedir,key)
             gast_dir = os.path.join(output_dir,'gast')
-            if key in self.robj.samples:
-                dna_region = self.robj.samples[key].dna_region
+            if key in self.runobj.samples:
+                dna_region = self.runobj.samples[key].dna_region
             else:            
-                dna_region = self.robj.dna_region
+                dna_region = self.runobj.dna_region
             if not dna_region:
                 logger.error("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
-                self.robj.run_status_file_h.write("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
+                self.runobj.run_status_file_h.write("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 dna_region = 'unknown'
             
             (refdb,taxdb) = self.get_reference_databases(dna_region)
@@ -498,12 +498,12 @@ class Gast:
                 max_distance = C.max_distance[dna_region] 
             unique_file = 'Not Found'
             names_file  = 'Not Found'
-            if self.robj.platform == 'vamps':    
+            if self.runobj.platform == 'vamps':    
                 unique_file = os.path.join(output_dir, key+'.unique.fa')
                 names_file = os.path.join(output_dir,key+'.names')
-            elif self.robj.platform == 'illumina':
-                #self.robj.input_file_suffix'.unique.fa'
-                unique_file = os.path.join(input_dir, key + self.robj.input_file_suffix)
+            elif self.runobj.platform == 'illumina':
+                #self.runobj.input_file_suffix'.unique.fa'
+                unique_file = os.path.join(input_dir, key + self.runobj.input_file_suffix)
                 names_file = os.path.join(input_dir,key+'.names')
             else:
                 pass
@@ -718,15 +718,15 @@ class Gast:
 #         subprocess.call(mothur_cmd, shell=True)
     def check_for_uniques_files(self,keys):
         logger.info("Checking for uniques file")
-        if self.robj.platform == 'vamps':
+        if self.runobj.platform == 'vamps':
             # one fasta file or (one project and dataset from db)
-            if os.path.exists(self.robj.fasta_file):
+            if os.path.exists(self.runobj.fasta_file):
                 output_dir = os.path.join(self.basedir,keys[0])
                 uniques_file = os.path.join(output_dir, keys[0]+'.unique.fa')
                 names_file = os.path.join(output_dir, keys[0]+'.names')
                 #import pipeline.fastaunique as fu
-                #mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.robj.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
-                fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.robj.fasta_file+" -o "+uniques_file+" -n "+names_file 
+                #mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.runobj.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
+                fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.runobj.fasta_file+" -o "+uniques_file+" -n "+names_file 
                 print fastaunique_cmd
                 #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
                 subprocess.call(fastaunique_cmd, shell=True)
@@ -735,7 +735,7 @@ class Gast:
                 #os.rename(filename, filename[7:])
                 #os.rename(filename, filename[7:])
             else:
-                if self.robj.project and self.robj.dataset:
+                if self.runobj.project and self.runobj.dataset:
                     pass
                 else:
                     pass
