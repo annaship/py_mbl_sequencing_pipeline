@@ -6,6 +6,7 @@ import fastqlib as fq
 import fastalib as fa
 from subprocess import call
 import ast
+import pprint
 
 "TODO: add tests and test case"
 #from collections import defaultdict
@@ -20,17 +21,18 @@ class IlluminaFiles:
     
     
     """
-    def __init__(self, run):
+    def __init__(self, runobj):
         if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == "as-macbook.local":
             self.LOCAL = True
         else:
             self.LOCAL = False
-        self.run            = run
+        pprint(vars(runobj))            
+        self.runobj         = runobj
         self.out_files      = {} 
         self.id_dataset     = {}
-        self.dataset_emails = dict((self.run.samples[key].dataset, self.run.samples[key].email) for key in self.run.samples)
-        self.in_file_path   = self.run.input_dir
-        self.out_file_path  = self.create_out_dir(os.path.join(self.run.output_dir, "analysis"))
+        self.dataset_emails = dict((self.runobj.samples[key].dataset, self.runobj.samples[key].email) for key in self.runobj.samples)
+        self.in_file_path   = self.runobj.input_dir
+        self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
 #        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
 #        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
         self.results_path  = self.create_out_dir(os.path.join(self.out_file_path, "perfect_reads"))
@@ -179,8 +181,8 @@ pair_2 = %s
             while f_input.next():
                 e = f_input.entry
                 ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number
-                if ini_run_key in self.run.samples.keys() and int(e.pair_no) == 1:
-                    sample = self.run.samples[ini_run_key] 
+                if ini_run_key in self.runobj.samples.keys() and int(e.pair_no) == 1:
+                    sample = self.runobj.samples[ini_run_key] 
                     dataset_file_name = sample.dataset + "_R1"
                     self.out_files[dataset_file_name].store_entry(e)
 #                    print "id = %s,\nseq = %s" % (e.id, e.sequence)
