@@ -20,7 +20,7 @@ class readCSV:
       thefile.write("%s\n" % item)
     """
     def __init__(self, run_object = None, file_path = None):
-        if run:
+        if run_object:
             self.runobj         = run_object
             self.outdir      = run.output_dir
             try:
