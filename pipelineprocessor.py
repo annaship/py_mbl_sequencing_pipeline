@@ -281,12 +281,6 @@ def env454upload(runobj):
     filenames   = my_env454upload.get_fasta_file_names()
     seq_in_file = 0
     total_seq   = 0
-<<<<<<< HEAD
-    
-    
-=======
-        
->>>>>>> change path for gast files, add them for the test purposes. run_info and db upload works
     for filename in filenames:
         try:
             logger.debug("\n----------------\nfilename = %s" % filename)
