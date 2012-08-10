@@ -32,7 +32,13 @@ class Gast:
         # then there should be just one dataset to gast
         # but if MBL pipe then many datasets are prbably involved.
         self.refdb_dir = C.ref_database_dir
-        
+        self.limit = 3
+        if self.runobj.platform == 'illumina':
+            self.input_dir = self.runobj.input_dir
+            try:
+                self.input_file_suffix = self.runobj.input_file_suffix
+            except:
+                self.input_file_suffix = ''
         # create our directories for each key
         for key in self.idx_keys:
             
@@ -78,7 +84,6 @@ class Gast:
         
 
 
-
         ###################################################################
         # use fasta.uniques file
         # split into smaller files
@@ -94,7 +99,14 @@ class Gast:
             logger.info("Using cluster for clustergast")
         else:
             logger.info("Not using cluster")
+        counter=0
         for key in self.idx_keys:
+            print key
+            counter +=1
+            print "\nFile:",str(counter)
+            if counter >= self.limit:
+                pass
+            
             cluster_nodes = C.cluster_nodes
             logger.info("Cluster nodes set to: "+str(cluster_nodes))
             output_dir = os.path.join(self.basedir,key)
@@ -118,11 +130,14 @@ class Gast:
             #the add this to grep command
             #and change usearch to usearch64
             unique_file = 'Not Found'
+            names_file  = 'Not Found'
             if self.runobj.platform == 'vamps':    
                 unique_file = os.path.join(output_dir, key+'.unique.fa')
             elif self.runobj.platform == 'illumina':
-                #self.runobj.input_file_suffix'.unique.fa'
-                unique_file = os.path.join(input_dir, key + self.runobj.input_file_suffix)
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
+                
             else:
                 pass
                 
@@ -325,7 +340,7 @@ class Gast:
                 dna_region = 'unknown'
             # find gast_dir
             
-
+            
             # for vamps user upload
             # basedir is like avoorhis_3453211
             # and outdir is like avoorhis_3453211/2012-06-25
@@ -338,9 +353,9 @@ class Gast:
                 unique_file = os.path.join(output_dir, key+'.unique.fa')
                 names_file = os.path.join(output_dir,key+'.names')
             elif self.runobj.platform == 'illumina':
-                #self.runobj.input_file_suffix'.unique.fa'
-                unique_file = os.path.join(input_dir, key + self.runobj.input_file_suffix)
-                names_file = os.path.join(input_dir,key+'.names')
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
             else:
                 pass
             print 'UNIQUE FILE',unique_file
@@ -502,9 +517,9 @@ class Gast:
                 unique_file = os.path.join(output_dir, key+'.unique.fa')
                 names_file = os.path.join(output_dir,key+'.names')
             elif self.runobj.platform == 'illumina':
-                #self.runobj.input_file_suffix'.unique.fa'
-                unique_file = os.path.join(input_dir, key + self.runobj.input_file_suffix)
-                names_file = os.path.join(input_dir,key+'.names')
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
             else:
                 pass
             #usearch_filename= os.path.join(self.gast_dir, "uc")
@@ -574,7 +589,7 @@ class Gast:
         #usearch_cmd += ' --iddef 3'
         usearch_cmd += ' -gapopen 6I/1E'
         usearch_cmd += ' -db ' + refdb  
-        usearch_cmd += ' -strand both'              
+        usearch_cmd += ' -strand plus'              
         usearch_cmd += ' -uc ' + usearch_filename 
         usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
         usearch_cmd += ' -maxrejects ' + str(C.max_rejects)

@@ -282,8 +282,6 @@ def env454upload(runobj):
     seq_in_file = 0
     total_seq   = 0
     
-    print "RUNNNN"
-    print runobj
     
     for filename in filenames:
         try:

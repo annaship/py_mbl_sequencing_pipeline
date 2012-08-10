@@ -862,8 +862,10 @@ class MetadataUtils:
         #collector['run_date'] = self.args.run
         #collector['steps'] = self.args.steps
         collector['platform'] = self.args.platform
-        
+        if self.args.input_dir:       
+             collector['input_dir'] = self.args.input_dir
+
         collector['date'] = str(datetime.date.today())
-        
+        print collector
         return collector
             
