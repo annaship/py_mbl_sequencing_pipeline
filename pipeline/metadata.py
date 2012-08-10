@@ -675,7 +675,7 @@ class MetadataUtils:
         fh.write("date = "              + str(datetime.date.today())+"\n")
         fh.write("idx_keys = "           +','.join(keys_list)+"\n")
         if 'input_dir' in self.general_config_dict and self.general_config_dict['input_dir'] != '':
-            file_list = self.get_input_files(self.general_config_dict['input_file_suffix'])
+            file_list = self.get_input_files()
             fh.write("input_files = "     + ','.join(file_list)+"\n") 
         else:
             fh.write("input_files = \n") 
