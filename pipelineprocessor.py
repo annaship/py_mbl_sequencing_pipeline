@@ -281,8 +281,12 @@ def env454upload(runobj):
     filenames   = my_env454upload.get_fasta_file_names()
     seq_in_file = 0
     total_seq   = 0
+<<<<<<< HEAD
     
     
+=======
+        
+>>>>>>> change path for gast files, add them for the test purposes. run_info and db upload works
     for filename in filenames:
         try:
             logger.debug("\n----------------\nfilename = %s" % filename)
@@ -360,7 +364,7 @@ def env454upload(runobj):
             print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
-#    print "total_seq = %s" % total_seq
+    print "total_seq = %s" % total_seq
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time() - whole_start)

@@ -80,20 +80,21 @@ class dbUpload:
         # insert_sequence_uniq_info_ill()
 
     """
-    def __init__(self, run = None):
-        self.run         = run
-#        print dir(run)
-        self.rundate     = self.run.run
+    def __init__(self, runobj = None):
+        self.runobj      = runobj
+        self.rundate     = self.runobj.run
         self.use_cluster = 1
-        self.in_file_path = self.run.input_dir
-        host_name = run.database_host
-        database_name = run.database_name
+#        /test/sample_data/illumina/result/20120614/analysis
+        "TODO: have all directory names in one place for gast, db_upload etc, using run_obj.input_dir and run_obj.output_dir"
+        res_path = "../result/" + self.rundate + "/analysis/perfect_reads"
+        self.in_file_path = os.path.join(self.runobj.input_dir, res_path)
+        host_name = runobj.database_host
+        database_name = runobj.database_name
         
 #
 #        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
 #        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
-        "TODO: put host = 'newbpcdb2', db='env454' in args"
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
         self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
@@ -101,7 +102,7 @@ class dbUpload:
         self.my_csv      = None
 #        ['__doc__', '__init__', '__module__', 'anchors', 'args', 'base_output_dir', 'base_python_dir', 'chimera_status_file_h', 'chimera_status_file_name', 'configFile', 'config_file_type', 'force_runkey', 'gast_input_source', 'initializeFromDictionary', 'input_dir', 'input_file_info', 'maximumLength', 'minAvgQual', 'minimumLength', 'output_dir', 'platform', 'primer_suites', 'require_distal', 'run_date', 'run_key_lane_dict', 'run_keys', 'run_status_file_h', 'run_status_file_name', 'samples', 'sff_files', 'trim_status_file_h', 'trim_status_file_name', 'vamps_user_upload']
 
-        self.unique_file_counts = os.path.join(run.output_dir, "unique_file_counts")
+        self.unique_file_counts = os.path.join(runobj.output_dir, "unique_file_counts")
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         self.run_id      = None
@@ -216,22 +217,23 @@ class dbUpload:
     
     def put_run_info(self, content = None):
 
-        values = list(set([run_key.split('_')[1] for run_key in self.run.run_keys]))
+        values = list(set([run_key.split('_')[1] for run_key in self.runobj.run_keys]))
         self.insert_bulk_data('run_key', values)
-        values = list(set([self.run.samples[key].dna_region for key in self.run.samples]))
+        values = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
         self.insert_bulk_data('dna_region', values)
         self.insert_rundate()
-        
+        self.insert_test_contact()
+       
 #        --------- indiv_inserts --------- 
 
 #        for k, v in content.items():
 #            print k, v['dataset'], v
-        for key in self.run.samples:
-            value = self.run.samples[key]
+        for key in self.runobj.samples:
+            value = self.runobj.samples[key]
 #            print dict(run.samples[key])
 #            print key, value.dataset
             self.get_contact_v_info()
-            self.insert_contact()
+#            self.insert_contact()
             contact_id = self.get_contact_id(value.data_owner)
             self.insert_project(value, contact_id)
             self.insert_dataset(value) 
@@ -251,8 +253,11 @@ class dbUpload:
         TODO: get info from Hilary? from vamps?
         """
         pass
-    def insert_contact(self):
-        pass
+    def insert_test_contact(self):
+        my_sql = '''INSERT IGNORE INTO contact (contact, email, institution, vamps_name, first_name, last_name)
+                VALUES ("guest user", "guest@guest.com", "guest institution", "guest", "guest", "user")'''
+        self.my_conn.execute_no_fetch(my_sql)        
+        
     def get_contact_id(self, data_owner):
         my_sql = """SELECT contact_id FROM contact WHERE vamps_name = '%s'""" % (data_owner)
         res    = self.my_conn.execute_fetch_select(my_sql)

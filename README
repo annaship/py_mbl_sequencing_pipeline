@@ -3,3 +3,13 @@ QA/QC procedures from scratch in Python programming language.
 
 Since this is something we are going to be working on as a side effort, probably
 it will take some time to get to a point where people can start using it.
+
+1)
+The illumina processing step is finished up to creating fasta unique files. You can try it with:
+python pipleine-ui.py -csv ./test/sample_data/illumina/configs/sample_metadata.csv -s illumina_files -l debug -p illumina -r 20120614 -ft fastq -i ./test/sample_data/illumina/Project_J_v6_30 -o ./test/sample_data/illumina/result -cp False
+
+2) The env upload steps are ready.
+a) -csv ./test/sample_data/illumina/configs/sample_metadata.csv -s env454run_info_upload -l debug -p illumina -r 20120614 -ft fastq -i ./test/sample_data/illumina/Project_J_v6_30 -o ./test/sample_data/illumina/result -cp False
+b) -csv ./test/sample_data/illumina/configs/sample_metadata.csv -s env454upload -l debug -p illumina -r 20120614 -ft fastq -i ./test/sample_data/illumina/Project_J_v6_30 -o ./test/sample_data/illumina/result -cp False
+
+To run it the results from illumina_files (the previous step) should be in the directory which it's created: "test/sample_data/illumina/result/20120614/analysis/perfect_reads" and it needs "gast" files. For now they are in test/sample_data/illumina/ready_gast_results.zip. Unzip them into the "perfect_reads" directory.

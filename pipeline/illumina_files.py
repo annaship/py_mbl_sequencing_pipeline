@@ -6,7 +6,6 @@ import fastqlib as fq
 import fastalib as fa
 from subprocess import call
 import ast
-import pprint
 
 "TODO: add tests and test case"
 #from collections import defaultdict
@@ -26,7 +25,6 @@ class IlluminaFiles:
             self.LOCAL = True
         else:
             self.LOCAL = False
-        pprint(vars(runobj))            
         self.runobj         = runobj
         self.out_files      = {} 
         self.id_dataset     = {}
