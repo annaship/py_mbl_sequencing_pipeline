@@ -98,7 +98,6 @@ pipeline_run_items = {
             'platform':'vamps'
             },
 'illumina' : {'input_file_format':'fastq',
-                'input_file_suffix':'fa.unique',
                 'compressed':True,
                 'database_host':'vampsdev',
                 'database_name':'test',
@@ -170,7 +169,8 @@ calcnodes_cmd       = '/bioware/seqinfo/bin/calcnodes'
 mysqlimport_cmd     = '/usr/bin/mysqlimport'
 qsub_cmd            = '/usr/local/sge/bin/lx24-amd64/qsub'
 clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
-mothur_cmd          = '/bioware/mothur/mothur'
+#mothur_cmd          = '/bioware/mothur/mothur'
+fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
 ref_database_dir        = '/xraid2-2/g454/blastdbs/gast_distributions/'
 tax_database_dir        = '/xraid2-2/g454/blastdbs/gast_distributions/'
 max_accepts = 10

@@ -271,7 +271,7 @@ if __name__ == '__main__':
     #
     ##############  
     
-    run_object = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
+    robj = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
     
 
 #    for key in run.samples:
@@ -282,5 +282,5 @@ if __name__ == '__main__':
     # now do all the work
     #
     ##############         
-    process(run_object, args.steps)
+    process(robj, args.steps)
 

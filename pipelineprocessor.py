@@ -47,7 +47,7 @@ from pipeline.db_upload import MyConnection, dbUpload
 
 
 # the main loop for performing each of the user's supplied steps
-def process(run, steps):
+def process(robj, steps):
     
     requested_steps = steps.split(",")            
     if 'clean' in requested_steps and len(requested_steps) > 1:
@@ -55,16 +55,16 @@ def process(run, steps):
     
     # create output directory:
     # this should have been created in pipeline-ui.py. but just in case....
-    if not os.path.exists(run.output_dir):
-        logger.debug("Creating output directory: "+run.output_dir)
-        os.makedirs(run.output_dir)  
+    if not os.path.exists(robj.output_dir):
+        logger.debug("Creating output directory: "+robj.output_dir)
+        os.makedirs(robj.output_dir)  
 
     
     # Open run STATUS File here.
     # open in append mode because we may start the run in the middle
     # say at the gast stage and don't want to over write.
     # if we re-run trimming we'll get two trim status reports
-    run.run_status_file_h = open(run.run_status_file_name, "a")
+    robj.run_status_file_h = open(robj.run_status_file_name, "a")
     
     # loop through official list...this way we execute the
     # users requested steps in the correct order 
@@ -73,42 +73,42 @@ def process(run, steps):
         if step in requested_steps:
             # call the method in here
             step_method = globals()[step]
-            step_method(run)
+            step_method(robj)
 
-def validate(run):
-    #open_zipped_directory(run.run_date, run.output_dir)
+def validate(robj):
+    #open_zipped_directory(robj.run_date, robj.output_dir)
     #logger.debug("Validating")
     pass
     #v = MetadataUtils(run, validate=True)
     
     #print 'Validates:  Configfile and Run Object'
-    #run.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tConfigFile Validated\n")
+    #robj.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tConfigFile Validated\n")
 
     
 
 ##########################################################################################
 # perform trim step
-# TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
+# Trimrobj.trimrun() does all the work of looping over each input file and sequence in each file
 # all the stats are kept in the trimrun object
 #
 # when complete...write out the datafiles for the most part on a lane/runkey basis
 #
-def trim(run):
+def trim(robj):
     # def is in utils.py
-    #open_zipped_directory(run.run_date, run.output_dir)
+    #open_zipped_directory(robj.run_date, robj.output_dir)
     # (re) create the trim status file
-    run.trim_status_file_h = open(run.trim_status_file_name, "w")
+    robj.trim_status_file_h = open(robj.trim_status_file_name, "w")
     
     # do the trim work
-    mytrim = TrimRun(run) 
+    mytrim = TrimRun(robj) 
     
     # pass True to write out the straight fasta file of all trimmed non-deleted seqs
     # Remember: this is before chimera checking
-    if run.platform == 'illumina':
+    if robj.platform == 'illumina':
         trim_codes = mytrim.trimrun_illumina(True)
-    elif run.platform == '454':
+    elif robj.platform == '454':
         trim_codes = mytrim.trimrun_454(True)
-    elif run.platform == 'ion-torrent':
+    elif robj.platform == 'ion-torrent':
         trim_codes = mytrim.trimrun_ion_torrent(True)
     else:
         trim_codes = ['ERROR','No Platform Found']
@@ -122,37 +122,37 @@ def trim(run):
         logger.debug("Trimming finished successfully")
         # write the data files
         mytrim.write_data_files(new_lane_keys)
-        run.trim_status_file_h.write(json.dumps(trim_results_dict))
-        run.trim_status_file_h.close()
-        run.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
-        run.run_status_file_h.close()
+        robj.trim_status_file_h.write(json.dumps(trim_results_dict))
+        robj.trim_status_file_h.close()
+        robj.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
+        robj.run_status_file_h.close()
     else:
         logger.debug("Trimming finished ERROR")
         trim_results_dict['status'] = "error"
         trim_results_dict['code1'] = trim_codes[1]
         trim_results_dict['code2'] = trim_codes[2]
-        run.trim_status_file_h.write(json.dumps(trim_results_dict))
-        run.trim_status_file_h.close()
-        run.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
-        run.run_status_file_h.close()
+        robj.trim_status_file_h.write(json.dumps(trim_results_dict))
+        robj.trim_status_file_h.close()
+        robj.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
+        robj.run_status_file_h.close()
         sys.exit("Trim Error")
         
         
     # def is in utils.py: truncates and rewrites
-    #zip_up_directory(run.run_date, run.output_dir, 'w')
+    #zip_up_directory(robj.run_date, robj.output_dir, 'w')
 
 # chimera assumes that a trim has been run and that there are files
 # sitting around that describe the results of each lane:runkey sequences
 # it also expectes there to be a trim_status.txt file around
 # which should have a json format with status and the run keys listed        
-def chimera(run):
+def chimera(robj):
     chimera_cluster_ids = [] 
     logger.debug("Starting Chimera Checker")
     # lets read the trim status file out here and keep those details out of the Chimera code
-    idx_keys = get_keys(run)
-    #new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+    idx_keys = get_keys(robj)
+    #new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(robj.trim_status_file_name,"r").read()))["new_lane_keys"]
     
-    mychimera = Chimera(run)
+    mychimera = Chimera(robj)
     
     c_den    = mychimera.chimera_denovo(idx_keys)
     if c_den[0] == 'SUCCESS':
@@ -178,35 +178,35 @@ def chimera(run):
         chimera_code='FAIL'
     
     #print chimera_cluster_ids
-    run.chimera_status_file_h = open(run.chimera_status_file_name,"w")
+    robj.chimera_status_file_h = open(robj.chimera_status_file_name,"w")
     if chimera_code == 'PASS':  
         
         chimera_cluster_code = wait_for_cluster_to_finish(chimera_cluster_ids) 
         if chimera_cluster_code[0] == 'SUCCESS':
             logger.info("Chimera checking finished successfully")
-            run.chimera_status_file_h.write("CHIMERA SUCCESS\n")
-            run.run_status_file_h.write("CHIMERA SUCCESS\n")
+            robj.chimera_status_file_h.write("CHIMERA SUCCESS\n")
+            robj.run_status_file_h.write("CHIMERA SUCCESS\n")
             
         else:
             logger.info("3-Chimera checking Failed")
-            run.chimera_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
-            run.run_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
+            robj.chimera_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
+            robj.run_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
             sys.exit("3-Chimera checking Failed")
             
     elif chimera_code == 'NOREGION':
         logger.info("No regions found that need chimera checking")
-        run.chimera_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")
-        run.run_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")
+        robj.chimera_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")
+        robj.run_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")
         
     elif chimera_code == 'FAIL':
         logger.info("1-Chimera checking Failed")
-        run.chimera_status_file_h.write("1-CHIMERA ERROR: \n")
-        run.run_status_file_h.write("1-CHIMERA ERROR: \n")
+        robj.chimera_status_file_h.write("1-CHIMERA ERROR: \n")
+        robj.run_status_file_h.write("1-CHIMERA ERROR: \n")
         sys.exit("1-Chimera Failed")
     else:
         logger.info("2-Chimera checking Failed")
-        run.chimera_status_file_h.write("2-CHIMERA ERROR: \n")
-        run.run_status_file_h.write("2-CHIMERA ERROR: \n")
+        robj.chimera_status_file_h.write("2-CHIMERA ERROR: \n")
+        robj.run_status_file_h.write("2-CHIMERA ERROR: \n")
         sys.exit("2-Chimera checking Failed")
     sleep(2)   
     if  chimera_code == 'PASS' and  chimera_cluster_code[0] == 'SUCCESS':
@@ -243,29 +243,29 @@ def chimera(run):
         mymblutils.write_clean_files_to_database()
         
     # def is in utils.py: appends
-    #zip_up_directory(run.run_date, run.output_dir, 'a')
-def illumina_files(run):  
+    #zip_up_directory(robj.run_date, robj.output_dir, 'a')
+def illumina_files(robj):  
     start = time()
 #    if os.uname()[1] == 'ashipunova.mbl.edu':
 #        import shutil 
 #        shutil.rmtree('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis/')
-    illumina_files = IlluminaFiles(run)
-    illumina_files.split_files(compressed = run.compressed)
+    illumina_files = IlluminaFiles(robj)
+    illumina_files.split_files(compressed = robj.compressed)
     illumina_files.perfect_reads()
     illumina_files.uniq_fa()
     
     elapsed = (time() - start)
     print "illumina_files time = %s" % str(elapsed)
         
-def env454run_info_upload(run):
+def env454run_info_upload(robj):
 
-    my_read_csv = dbUpload(run)
+    my_read_csv = dbUpload(robj)
     start = time()
     my_read_csv.put_run_info()
     elapsed = (time() - start)
     print "put_run_info time = %s" % str(elapsed)
     
-def env454upload(run):  
+def env454upload(robj):  
     """
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
     TODO: 
@@ -277,13 +277,13 @@ def env454upload(run):
 #    my_read_csv = readCSV(run)
 #    my_read_csv.read_csv()
     
-    my_env454upload = dbUpload(run)
+    my_env454upload = dbUpload(robj)
     filenames   = my_env454upload.get_fasta_file_names()
     seq_in_file = 0
     total_seq   = 0
     
     print "RUNNNN"
-    print run
+    print robj
     
     for filename in filenames:
         try:
@@ -371,26 +371,26 @@ def env454upload(run):
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file
     # that was just created in vamps_gast.py
-#    if(run.vamps_user_upload):
-#        lane_keys = [run.user+run.runcode]        
+#    if(robj.vamps_user_upload):
+#        lane_keys = [robj.user+robj.runcode]        
 #    else:
-#        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+#        lane_keys = convert_unicode_dictionary_to_str(json.loads(open(robj.trim_status_file_name,"r").read()))["new_lane_keys"]
     
 #    print "PPP anchors = %s, base_output_dir = %s, base_python_dir = %s, chimera_status_file_h = %s, chimera_status_file_name = %s,\n\
 #     force_runkey = %s, gast_input_source = %s, initializeFromDictionary = %s, input_dir = %s, input_file_info = %s, maximumLength = %s,\n\
 #      minAvgQual = %s, minimumLength = %s, output_dir = %s, platform = %s, primer_suites = %s, require_distal = %s, run_date = %s, \n\
-#      run_key_lane_dict = %s, run_keys = %s, samples = %s, sff_files = %s, trim_status_file_h = %s, trim_status_file_name = %s, vamps_user_upload = %s\n" % (run.anchors, run.base_output_dir, run.base_python_dir, run.chimera_status_file_h, run.chimera_status_file_name, run.force_runkey, run.gast_input_source, run.initializeFromDictionary, run.input_dir, run.input_file_info, run.maximumLength, run.minAvgQual, run.minimumLength, run.output_dir, run.platform, run.primer_suites, run.require_distal, run.run_date, run.run_key_lane_dict, run.run_keys, run.samples, run.sff_files, run.trim_status_file_h, run.trim_status_file_name, run.vamps_user_upload)
+#      run_key_lane_dict = %s, run_keys = %s, samples = %s, sff_files = %s, trim_status_file_h = %s, trim_status_file_name = %s, vamps_user_upload = %s\n" % (robj.anchors, robj.base_output_dir, robj.base_python_dir, robj.chimera_status_file_h, robj.chimera_status_file_name, robj.force_runkey, robj.gast_input_source, robj.initializeFromDictionary, robj.input_dir, robj.input_file_info, robj.maximumLength, robj.minAvgQual, robj.minimumLength, robj.output_dir, robj.platform, robj.primer_suites, robj.require_distal, robj.run_date, robj.run_key_lane_dict, robj.run_keys, robj.samples, robj.sff_files, robj.trim_status_file_h, robj.trim_status_file_name, robj.vamps_user_upload)
 #   dir(run) = ['__doc__', '__init__', '__module__', 'anchors', 'base_output_dir', 'base_python_dir', 'chimera_status_file_h', 
 #'chimera_status_file_name', 'force_runkey', 'gast_input_source', 'initializeFromDictionary', 'input_dir', 'input_file_info', 'maximumLength', 
 #'minAvgQual', 'minimumLength', 'output_dir', 'platform', 'primer_suites', 'require_distal', 'run_date', 'run_key_lane_dict', 'run_keys', 'samples', 
 #'sff_files', 'trim_status_file_h', 'trim_status_file_name', 'vamps_user_upload']
 
-#    logger.debug("PPP run.rundate = ")
-#    logger.debug(run.rundate)
+#    logger.debug("PPP robj.rundate = ")
+#    logger.debug(robj.rundate)
 #    my_env454upload.select_run(lane_keys)
 
 
-def gast(run):  
+def gast(robj):  
     
     
     # for vamps 'new_lane_keys' will be prefix 
@@ -400,15 +400,15 @@ def gast(run):
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
     # Should return a list not a string
-    idx_keys = get_keys(run)
+    idx_keys = get_keys(robj)
     
     # get GAST object
-    mygast = Gast(run, idx_keys)
+    mygast = Gast(robj, idx_keys)
     
     
     # Check for unique files and create them if not there
     result_code = mygast.check_for_uniques_files(idx_keys)
-    run.run_status_file_h.write(json.dumps(result_code)+"\n")
+    robj.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("uniques not found failed")
         sys.exit("uniques not found failed")
@@ -416,7 +416,7 @@ def gast(run):
     
     # CLUSTERGAST
     result_code = mygast.clustergast()
-    run.run_status_file_h.write(json.dumps(result_code)+"\n")
+    robj.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("clutergast failed")
         sys.exit("clustergast failed")
@@ -424,7 +424,7 @@ def gast(run):
     
     # GAST_CLEANUP
     result_code = mygast.gast_cleanup()
-    run.run_status_file_h.write(json.dumps(result_code)+"\n")
+    robj.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("gast_cleanup failed")        
         sys.exit("gast_cleanup failed")
@@ -432,12 +432,12 @@ def gast(run):
     
     # GAST2TAX
     result_code = mygast.gast2tax()
-    run.run_status_file_h.write(json.dumps(result_code)+"\n")
+    robj.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("gast2tax failed") 
         sys.exit("gast2tax failed")
         
-def cluster(run):
+def cluster(robj):
     """
     TO be developed eventually:
         Select otu creation method
@@ -447,7 +447,7 @@ def cluster(run):
     
     
     
-def vampsupload(run):
+def vampsupload(robj):
     """
     Upload data files to VAMPS database
     """
@@ -457,14 +457,14 @@ def vampsupload(run):
     # or we can get the 'lane_keys' directly from the config_file
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
-    idx_keys = get_keys(run)
+    idx_keys = get_keys(robj)
 
-#     if(run.vamps_user_upload):
-#         idx_keys = [run.user+run.runcode]        
+#     if(robj.vamps_user_upload):
+#         idx_keys = [robj.user+robj.runcode]        
 #     else:
-#         idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+#         idx_keys = convert_unicode_dictionary_to_str(json.loads(open(robj.trim_status_file_name,"r").read()))["new_lane_keys"]
                 
-    myvamps = Vamps(run)
+    myvamps = Vamps(robj)
     
         
     myvamps.taxonomy(idx_keys)
@@ -473,9 +473,9 @@ def vampsupload(run):
     myvamps.projects(idx_keys)
     myvamps.info(idx_keys)
     #myvamps.load_database(idx_keys)
-def status(run):
+def status(robj):
     
-    f = open(run.run_status_file_name)
+    f = open(robj.run_status_file_name)
     lines = f.readlines()
     f.close()
     
@@ -486,48 +486,48 @@ def status(run):
         print line
     print "="*40+"\n"
     
-def clean(run):
+def clean(robj):
     """
     Removes a run from the database and output directory
     """
     
-    answer = raw_input("\npress 'y' to delete the run '"+run.run_date+"': ")
+    answer = raw_input("\npress 'y' to delete the run '"+robj.run_date+"': ")
     if answer == 'y' or answer == 'Y':
         
-        for (archiveDirPath, dirNames, fileNames) in os.walk(run.output_dir):
-            print "Removing run:",run.run_date
+        for (archiveDirPath, dirNames, fileNames) in os.walk(robj.output_dir):
+            print "Removing run:",robj.run_date
             for file in fileNames:
-                filePath = os.path.join(run.output_dir,file)
+                filePath = os.path.join(robj.output_dir,file)
                 print filePath
-                os.remove(os.path.join(run.output_dir,file))
+                os.remove(os.path.join(robj.output_dir,file))
                 # should we also remove STATUS.txt and *.ini and start again?
                 # the directory will remain with an empty STATUS.txt file
-                #os.removedirs(run.output_dir)
+                #os.removedirs(robj.output_dir)
 
-def get_keys(run):
+def get_keys(robj):
     try:
-        idx_keys = convert_unicode_dictionary_to_str(json.loads(open(run.trim_status_file_name,"r").read()))["new_lane_keys"]
+        idx_keys = convert_unicode_dictionary_to_str(json.loads(open(robj.trim_status_file_name,"r").read()))["new_lane_keys"]
         # {"status": "success", "new_lane_keys": ["1_GATGA"]}
     except:
         # here we have no idx_keys - must create them from run
         # if illumina they are index_runkey_lane concatenation
         # if 454 the are lane_key
-        if run.platform == 'illumina':  
-            idx_keys = run.idx_keys
+        if robj.platform == 'illumina':  
+            idx_keys = robj.idx_keys
             ct = 0
-            for h in run.samples:
-                logger.debug(h,run.samples[h])
+            for h in robj.samples:
+                logger.debug(h,robj.samples[h])
                 ct +=1
             print ct
-        elif run.platform == '454':
-            idx_keys = run.idx_keys
-        elif run.platform == 'ion_torrent':
-            idx_keys = run.idx_keys
-        elif run.platform == 'vamps':
-            idx_keys = [run.user+run.run]  
+        elif robj.platform == '454':
+            idx_keys = robj.idx_keys
+        elif robj.platform == 'ion_torrent':
+            idx_keys = robj.idx_keys
+        elif robj.platform == 'vamps':
+            idx_keys = [robj.user+robj.run]  
         else:
             logger.debug("GAST: No keys found - Exiting")
-            run.run_status_file_h.write("GAST: No keys found - Exiting\n")
+            robj.run_status_file_h.write("GAST: No keys found - Exiting\n")
             sys.exit()
     if type(idx_keys) is types.StringType:
         return idx_keys.split(',')

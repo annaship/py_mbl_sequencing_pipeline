@@ -414,12 +414,13 @@ class MetadataUtils:
 #         return data
     
         
-    def get_input_files(self,file_suffix):
+    def get_input_files(self):
     
         files_list = []
+        print self.general_config_dict['input_dir']
         if os.path.isdir(self.general_config_dict['input_dir']):
             
-            for infile in glob.glob( os.path.join(self.general_config_dict['input_dir'], '*'+file_suffix) ):
+            for infile in glob.glob( os.path.join(self.general_config_dict['input_dir'], '*') ):
                 if os.path.isdir(infile) == True:
                     pass
                 else:
@@ -660,7 +661,7 @@ class MetadataUtils:
         fh.write("output_dir = "          + self.general_config_dict['output_dir']+"\n")
         #fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
         if self.general_config_dict['platform'] == 'illumina':
-            fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
+            #fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
             fh.write("input_file_format = " + self.general_config_dict['input_file_format']+"\n")
             fh.write("anchor_file = "        + self.general_config_dict['anchor_file']+"\n")
             fh.write("primer_file = "        + self.general_config_dict['primer_file']+"\n")
@@ -721,10 +722,10 @@ class MetadataUtils:
             
             out_fh.write("input_dir = "+path+"\n")
             out_fh.write("input_files = "+fasta+"\n")
-            out_fh.write("input_file_suffix = fasta\n")
+            #out_fh.write("input_file_suffix = fasta\n")
         elif 'input_dir' in self.general_config_dict and self.general_config_dict['input_dir'] != '':
-            file_list = self.get_input_files(self.general_config_dict['input_file_suffix'])
-            fh.write("input_files = "     + ','.join(file_list)+"\n") 
+            file_list = self.get_input_files()
+            out_fh.write("input_files = "     + ','.join(file_list)+"\n") 
         else:
             out_fh.write("input_files = \n") 
         out_fh.close()

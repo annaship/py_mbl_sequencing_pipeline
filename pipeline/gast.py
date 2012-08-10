@@ -52,7 +52,8 @@ class Gast:
         clustergast - runs the GAST pipeline on the cluster.
                GAST uses UClust to identify the best matches of a read sequence
                to references sequences in a reference database.
-               The uniques and names files have previously been created in trim_run.py.
+               VAMPS: The uniques and names files have previously been created in trim_run.py.
+               Illumina :
         """
         logger.info("Starting Clustergast")
         self.run.run_status_file_h.write("Starting clustergast\n")
@@ -109,18 +110,23 @@ class Gast:
                 dna_region = 'unknown'
                 
             (refdb,taxdb) = self.get_reference_databases(dna_region)
-            print 'DBs',refdb,taxdb
+            #print 'DBs',refdb,taxdb
             
             # if no dna_region OR no refdb can be found then use
             # refssu
             #if refdb contains refssu
             #the add this to grep command
             #and change usearch to usearch64
-            
+            unique_file = 'Not Found'
+            if self.run.platform == 'vamps':    
+                unique_file = os.path.join(output_dir, key+'.unique.fa')
+            elif self.run.platform == 'illumina':
+                #self.run.input_file_suffix'.unique.fa'
+                unique_file = os.path.join(input_dir, key + self.run.input_file_suffix)
+            else:
+                pass
                 
-            unique_file = os.path.join(output_dir, key+'.unique.fa')
             print 'UNIQUE FILE',unique_file
-            
 
             #print gast_dir
             #sys.exit("EXIT")
@@ -326,9 +332,20 @@ class Gast:
             # for MBL pipeline
             # basedir is like 1_AGTCG
             # and outdir is like 1_AGTCG/2012-06-25
+            unique_file = 'Not Found'
+            names_file  = 'Not Found'
+            if self.run.platform == 'vamps':    
+                unique_file = os.path.join(output_dir, key+'.unique.fa')
+                names_file = os.path.join(output_dir,key+'.names')
+            elif self.run.platform == 'illumina':
+                #self.run.input_file_suffix'.unique.fa'
+                unique_file = os.path.join(input_dir, key + self.run.input_file_suffix)
+                names_file = os.path.join(input_dir,key+'.names')
+            else:
+                pass
+            print 'UNIQUE FILE',unique_file
             
-            unique_file = os.path.join(output_dir,key+'.unique.fa')
-            names_file = os.path.join(output_dir,key+'.names')
+            
             #print 'names file',names_file
             
             if not os.path.exists(gast_dir):
@@ -478,9 +495,18 @@ class Gast:
             #print tax_file
             max_distance = C.max_distance['default']
             if dna_region in C.max_distance:
-                max_distance = C.max_distance[dna_region]    
-            unique_file = os.path.join(output_dir, key+'.unique.fa')
-            names_file  = os.path.join(output_dir, key+'.names')
+                max_distance = C.max_distance[dna_region] 
+            unique_file = 'Not Found'
+            names_file  = 'Not Found'
+            if self.run.platform == 'vamps':    
+                unique_file = os.path.join(output_dir, key+'.unique.fa')
+                names_file = os.path.join(output_dir,key+'.names')
+            elif self.run.platform == 'illumina':
+                #self.run.input_file_suffix'.unique.fa'
+                unique_file = os.path.join(input_dir, key + self.run.input_file_suffix)
+                names_file = os.path.join(input_dir,key+'.names')
+            else:
+                pass
             #usearch_filename= os.path.join(self.gast_dir, "uc")
             #uc_results = self.parse_uclust(usearch_filename)
             #print uc_results
@@ -607,9 +633,11 @@ class Gast:
         results = {}
         
         # open gast_file to get results
-        tagtax_filename     = os.path.join(gast_dir,"tagtax")
-        tagtax_fh = open(tagtax_filename,'w')
-       
+        tagtax_terse_filename     = os.path.join(gast_dir,"tagtax_terse")
+        tagtax_long_filename     = os.path.join(gast_dir,"tagtax_long")
+        tagtax_terse_fh = open(tagtax_terse_filename,'w')
+        tagtax_long_fh = open(tagtax_long_filename,'w')
+        tagtax_long_fh.write("\t".join(["read_id","taxonomy","distance","rank","refssu_count","vote","minrank","taxa_counts","max_pcts","na_pcts","refhvr_ids"])+"\n")
         gast_file          = os.path.join(gast_dir, "gast"+dna_region)
         if not os.path.exists(gast_file):
             logger.info("Could not find gast file: "+gast_file)
@@ -669,13 +697,17 @@ class Gast:
                 # (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts)
                 results[read] = [ taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5] ] 
                 #print "\t".join([read,taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5]]) + "\n"
+#read_id taxonomy        distance        rank    refssu_count    vote    minrank taxa_counts     max_pcts        na_pcts refhvr_ids
+#D4ZHLFP1:25:B022DACXX:3:1101:12919:40734 1:N:0:TGACCA|frequency:162     Bacteria;Proteobacteria;Gammaproteobacteria     0.117   class   2       100     genus   1;1;1;2;2;2;0;0 100;100;100;50;50;50;0;0        0;0;0;0;0;0;100;100     v6_CI671
+#D4ZHLFP1:25:B022DACXX:3:1101:10432:76870 1:N:0:TGACCA|frequency:105     Bacteria;Proteobacteria;Gammaproteobacteria     0.017   class   1       100     class   1;1;1;0;0;0;0;0 100;100;100;0;0;0;0;0   0;0;0;100;100;100;100;100       v6_BW306
                 
             # Replace hash with final taxonomy results, for each copy of the sequence
             for d in dupes:
-                
-                tagtax_fh.write(d+"\t"+results[read][0]+"\t"+results[read][2]+"\t"+results[read][3]+"\t"+','.join(sorted(refs_for[read]))+"\t"+results[read][1]+"\n")
+               # print OUT join("\t", $d, @{$results{$read}}, join(",", sort @{$refs_for{$read}})) . "\n";
+                tagtax_long_fh.write( d+"\t"+"\t".join(results[read])+"\t"+','.join(sorted(refs_for[read]))  + "\n")
+                tagtax_terse_fh.write(d+"\t"+results[read][0]+"\t"+results[read][2]+"\t"+results[read][3]+"\t"+','.join(sorted(refs_for[read]))+"\t"+results[read][1]+"\n")
                
-        tagtax_fh.close()
+        tagtax_terse_fh.close()
         return results
 
 #    def create_uniques_from_fasta(self,fasta_file,key):
@@ -692,25 +724,13 @@ class Gast:
                 output_dir = os.path.join(self.basedir,keys[0])
                 uniques_file = os.path.join(output_dir, keys[0]+'.unique.fa')
                 names_file = os.path.join(output_dir, keys[0]+'.names')
-                
-                mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.run.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
-        
+                #import pipeline.fastaunique as fu
+                #mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.run.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
+                fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.run.fasta_file+" -o "+uniques_file+" -n "+names_file 
+                print fastaunique_cmd
                 #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
-                subprocess.call(mothur_cmd, shell=True)
+                subprocess.call(fastaunique_cmd, shell=True)
                 
-                # rename new unique file and names file to standard names
-                fasta_file_prefix = os.path.basename(self.run.fasta_file).split('.')[0]
-                #print 'prefix',fasta_file_prefix
-                new_uniques_file = os.path.join(output_dir, fasta_file_prefix+'.unique.fa')
-                new_names_file   = os.path.join(output_dir, fasta_file_prefix+'.names')
-                #print 'new_uniques_file',new_uniques_file
-                if os.path.exists(new_uniques_file):
-                
-                    shutil.move(new_uniques_file, uniques_file)
-                    shutil.move(new_names_file, names_file)
-                    logger.info("Renaming uniques and names files")
-                else:
-                    sys.exit("Could not find uniques +/- names file:"+new_uniques_file)
                 #shutil.move('a.txt', 'b.kml')
                 #os.rename(filename, filename[7:])
                 #os.rename(filename, filename[7:])
