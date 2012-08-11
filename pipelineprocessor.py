@@ -411,27 +411,27 @@ def gast(runobj):
     sleep(5)
     
     # CLUSTERGAST
-    result_code = mygast.clustergast()
-    runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
-    if result_code[0] == 'ERROR':
-        logger.error("clutergast failed")
-        sys.exit("clustergast failed")
-    sleep(5)
-    
-    # GAST_CLEANUP
-    result_code = mygast.gast_cleanup()
-    runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
-    if result_code[0] == 'ERROR':
-        logger.error("gast_cleanup failed")        
-        sys.exit("gast_cleanup failed")
-    sleep(5)
-    
-    # GAST2TAX
-    result_code = mygast.gast2tax()
-    runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
-    if result_code[0] == 'ERROR':
-        logger.error("gast2tax failed") 
-        sys.exit("gast2tax failed")
+#     result_code = mygast.clustergast()
+#     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
+#     if result_code[0] == 'ERROR':
+#         logger.error("clutergast failed")
+#         sys.exit("clustergast failed")
+#     sleep(5)
+#     
+#     # GAST_CLEANUP
+#     result_code = mygast.gast_cleanup()
+#     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
+#     if result_code[0] == 'ERROR':
+#         logger.error("gast_cleanup failed")        
+#         sys.exit("gast_cleanup failed")
+#     sleep(5)
+#     
+#     # GAST2TAX
+#     result_code = mygast.gast2tax()
+#     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
+#     if result_code[0] == 'ERROR':
+#         logger.error("gast2tax failed") 
+#         sys.exit("gast2tax failed")
         
 def cluster(runobj):
     """

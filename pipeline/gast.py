@@ -38,7 +38,7 @@ class Gast:
         self.analysis_dir = os.path.join(self.basedir,'analysis')
         if not os.path.exists(self.analysis_dir):
             os.mkdir(self.analysis_dir)
-        self.global_gast_dir = os.path.join(analysis_dir,'gast')
+        self.global_gast_dir = os.path.join(self.analysis_dir,'gast')
         if not os.path.exists(self.global_gast_dir):
             os.mkdir(self.global_gast_dir)
             
@@ -46,7 +46,7 @@ class Gast:
         if self.runobj.platform == 'illumina':
             reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
             if os.path.exists(reads_dir):
-                self.input_dir 
+                self.input_dir = reads_dir
             else:
                 self.input_dir = self.runobj.input_dir
             
