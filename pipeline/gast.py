@@ -39,9 +39,12 @@ class Gast:
         if not os.path.exists(self.analysis_dir):
             os.mkdir(self.analysis_dir)
         self.global_gast_dir = os.path.join(self.analysis_dir,'gast')
-        if not os.path.exists(self.global_gast_dir):
+        if os.path.exists(self.global_gast_dir):
+            # delete gast directory and recreate
+            shutil.rmtree(self.global_gast_dir)
             os.mkdir(self.global_gast_dir)
-            
+        else:
+            os.mkdir(self.global_gast_dir)
             
         if self.runobj.platform == 'illumina':
             reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
@@ -406,12 +409,14 @@ class Gast:
                           
                 for line in in_gast_fh:
                     
-                    s = line.strip().split()
+                    s = line.strip().split("\t")
                     if len(s) == 4:
                         read_id     = s[0]
                         refhvr_id   = s[1].split('|')[0]
                         distance    = s[2]
                         alignment   = s[3]
+                    else:
+                        logger.debug("gast_cleanup: wrong field count")
                     #print read_id,refhvr_id
                     # if this was in the gast table zero it out because it had a valid hit
                     # so we don't insert them as non-hits later
@@ -456,7 +461,10 @@ class Gast:
                 for line in open(clustergast_filename_single,'r'):
                     data = line.strip().split("\t")
                     id = data[0]
-                    refhvr_id = data[1].split('|')[0]
+                    try:
+                        refhvr_id = data[1].split('|')[0]
+                    except:
+                        refhvr_id = data[1]
                     distance = data[2]
                     #print 'data',data
                     if id in concat:
@@ -603,8 +611,11 @@ class Gast:
             
         grep_cmd = "grep"
         grep_cmd += " -P \"^H\\t\" " + usearch_filename + " |"
-        grep_cmd += " sed -e 's/|.*\$//' |"
-        grep_cmd += " awk '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
+        #grep_cmd += " sed -e 's/|.*\$//' |"
+        # changed grep command to remove frequency from read_id
+        grep_cmd += " sed -e 's/|frequency:[0-9]*//' |"
+        grep_cmd += " awk -F\"\\t\" '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
+        
         grep_cmd += " sort -k1,1b -k2,2gr |"
         # append to file:
         grep_cmd += " clustergast_tophit "+use_full_length+" >> " + clustergast_filename
