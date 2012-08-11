@@ -111,7 +111,20 @@ class Gast:
             logger.info("Not using cluster")
         counter=0
         for key in self.idx_keys:
-            print key
+            
+            if self.runobj.platform == 'illumina':
+                output_dir = os.path.join(self.global_gast_dir,key)
+                gast_dir = os.path.join(self.global_gast_dir,key)
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
+            elif self.runobj.platform == 'vamps':
+                output_dir = os.path.join(self.basedir,key)
+                gast_dir = os.path.join(output_dir,'gast')
+                unique_file = os.path.join(output_dir, key+'.unique.fa')
+            else:
+                sys.exit("clustergast: no platform")
+            
             counter +=1
             print "\nFile:",str(counter)
             if counter >= self.limit:
@@ -119,9 +132,7 @@ class Gast:
             
             cluster_nodes = C.cluster_nodes
             logger.info("Cluster nodes set to: "+str(cluster_nodes))
-            output_dir = os.path.join(self.basedir,key)
-            gast_dir = os.path.join(output_dir,'gast')
-  # SMPL1_3_NNNNCGCTC_3          
+                   
             #print 'samples',key,self.runobj.samples
             if key in self.runobj.samples:
                 dna_region = self.runobj.samples[key].dna_region
@@ -134,27 +145,6 @@ class Gast:
             (refdb,taxdb) = self.get_reference_databases(dna_region)
             #print 'DBs',refdb,taxdb
             
-            # if no dna_region OR no refdb can be found then use
-            # refssu
-            #if refdb contains refssu
-            #the add this to grep command
-            #and change usearch to usearch64
-            unique_file = 'Not Found'
-            names_file  = 'Not Found'
-            if self.runobj.platform == 'vamps':    
-                unique_file = os.path.join(output_dir, key+'.unique.fa')
-            elif self.runobj.platform == 'illumina':
-                file_prefix = self.runobj.samples[key].file_prefix
-                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
-                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
-                
-            else:
-                pass
-                
-            print 'UNIQUE FILE',unique_file
-
-            #print gast_dir
-            #sys.exit("EXIT")
             
             
             i = 0
@@ -338,8 +328,20 @@ class Gast:
         logger.info("Starting GAST Cleanup")
         self.runobj.run_status_file_h.write("Starting gast_cleanup\n")
         for key in self.idx_keys:
-            output_dir = os.path.join(self.basedir,key)
-            gast_dir = os.path.join(output_dir,'gast')
+            if self.runobj.platform == 'illumina':
+                output_dir = os.path.join(self.global_gast_dir,key)
+                gast_dir = os.path.join(self.global_gast_dir,key)
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
+            elif self.runobj.platform == 'vamps':
+                output_dir = os.path.join(self.basedir,key)
+                gast_dir = os.path.join(output_dir,'gast')
+                unique_file = os.path.join(output_dir, key+'.unique.fa')
+                names_file = os.path.join(output_dir,key+'.names')
+            else:
+                sys.exit("gast_cleanup: no platform")
+                
             if key in self.runobj.samples:
                 dna_region = self.runobj.samples[key].dna_region
             else:            
@@ -351,35 +353,14 @@ class Gast:
             # find gast_dir
             
             
-            # for vamps user upload
-            # basedir is like avoorhis_3453211
-            # and outdir is like avoorhis_3453211/2012-06-25
-            # for MBL pipeline
-            # basedir is like 1_AGTCG
-            # and outdir is like 1_AGTCG/2012-06-25
-            unique_file = 'Not Found'
-            names_file  = 'Not Found'
-            if self.runobj.platform == 'vamps':    
-                unique_file = os.path.join(output_dir, key+'.unique.fa')
-                names_file = os.path.join(output_dir,key+'.names')
-            elif self.runobj.platform == 'illumina':
-                file_prefix = self.runobj.samples[key].file_prefix
-                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
-                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
-            else:
-                pass
-            print 'UNIQUE FILE',unique_file
-            
-            
-            #print 'names file',names_file
-            
             if not os.path.exists(gast_dir):
                 logger.error("Could not find gast directory: "+gast_dir+" Exiting")
                 sys.exit()
             clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
-            
-            logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename_single)))
-            
+            try:
+                logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename_single)))
+            except:
+                logger.debug('gast filesize: zero')
             gast_filename          = os.path.join(gast_dir, "gast")
             gastconcat_filename    = os.path.join(gast_dir, "gast_concat")  
             #dupes_filename    = os.path.join(gast_dir, "dupes") 
@@ -415,86 +396,87 @@ class Gast:
             gast_fh     = open(gast_filename,'w')
             if(os.path.exists(clustergast_filename_single)):
                 in_gast_fh  = open(clustergast_filename_single,'r')
-            else:
-                print "No clustergast file found:",clustergast_filename_single,"\nExiting"
-                self.runobj.run_status_file_h.write("No clustergast file found:",clustergast_filename_single," Exiting\n")
-                sys.exit()
-            for line in in_gast_fh:
-                
-                s = line.strip().split()
-                if len(s) == 4:
-                    read_id     = s[0]
-                    refhvr_id   = s[1].split('|')[0]
-                    distance    = s[2]
-                    alignment   = s[3]
-                #print read_id,refhvr_id
-                # if this was in the gast table zero it out because it had a valid hit
-                # so we don't insert them as non-hits later
-                if read_id in nonhits:
-                    del nonhits[read_id]
-                    #print 'deleling',read_id
-                #print 'nonhits',nonhits
-                if read_id not in copies:
-                    logger.info(read_id+' not in names file: Skipping')
-                    continue
+                          
+                for line in in_gast_fh:
                     
-                # give the same ref and dist for each duplicate
-                for id in copies[read_id]:
-                    
-                    if id != read_id:
-                        #print id,read_id,distance,refhvr_id  
-                        gast_fh.write( id + "\t" + refhvr_id + "\t" + distance + "\t" + alignment + "\n" )
+                    s = line.strip().split()
+                    if len(s) == 4:
+                        read_id     = s[0]
+                        refhvr_id   = s[1].split('|')[0]
+                        distance    = s[2]
+                        alignment   = s[3]
+                    #print read_id,refhvr_id
+                    # if this was in the gast table zero it out because it had a valid hit
+                    # so we don't insert them as non-hits later
+                    if read_id in nonhits:
+                        del nonhits[read_id]
+                        #print 'deleling',read_id
+                    #print 'nonhits',nonhits
+                    if read_id not in copies:
+                        logger.info(read_id+' not in names file: Skipping')
+                        continue
                         
-                                               
-            in_gast_fh.close()
-             
-            #######################################
-            # 
-            #  Insert a record for any valid sequence that had no blast hit and therefore no gast result
-            #       into gast_filename
-            # 
-            #######################################   
-            for read in sorted(nonhits.iterkeys()):                
-                for d in copies[read]: 
-                    gast_fh.write( d+"\t0\t1\t\n")
-                    
-                    
-            gast_fh.close()
-            
-            # concatenate the two gast files
-            clustergast_fh = open(clustergast_filename_single,'a')            
-            shutil.copyfileobj(open(gast_filename,'rb'), clustergast_fh)
-            clustergast_fh.close()
-            #the open again and get data for gast concat
-            concat = {}
-            print clustergast_filename_single
-            for line in open(clustergast_filename_single,'r'):
-                data = line.strip().split("\t")
-                id = data[0]
-                refhvr_id = data[1].split('|')[0]
-                distance = data[2]
-                #print 'data',data
-                if id in concat:
-                    concat[id]['refhvrs'].append(refhvr_id)                        
-                else:
-                    concat[id] = {}
-                    concat[id]['refhvrs'] = [refhvr_id]
-                concat[id]['distance'] = distance     
+                    # give the same ref and dist for each duplicate
+                    for id in copies[read_id]:
+                        
+                        if id != read_id:
+                            #print id,read_id,distance,refhvr_id  
+                            gast_fh.write( id + "\t" + refhvr_id + "\t" + distance + "\t" + alignment + "\n" )
+                            
+                                                   
+                in_gast_fh.close()
+                 
+                #######################################
+                # 
+                #  Insert a record for any valid sequence that had no blast hit and therefore no gast result
+                #       into gast_filename
+                # 
+                #######################################   
+                for read in sorted(nonhits.iterkeys()):                
+                    for d in copies[read]: 
+                        gast_fh.write( d+"\t0\t1\t\n")
+                        
+                        
+                gast_fh.close()
                 
-            
-            
-            #######################################
-            #
-            # Insert records into gast_concat_filename
-            #
-            #######################################             
-            # first we need to open the gast_filename
-            gastconcat_fh     = open(gastconcat_filename,'w')
-            for id, value in concat.iteritems():
-                #print 'trying gastconcat', id,value
-                gastconcat_fh.write( id + "\t" + concat[id]['distance'] + "\t" + ' '.join(concat[id]['refhvrs']) + "\n" )
-            gastconcat_fh.close()
-            
+                # concatenate the two gast files
+                clustergast_fh = open(clustergast_filename_single,'a')            
+                shutil.copyfileobj(open(gast_filename,'rb'), clustergast_fh)
+                clustergast_fh.close()
+                #the open again and get data for gast concat
+                concat = {}
+                print clustergast_filename_single
+                for line in open(clustergast_filename_single,'r'):
+                    data = line.strip().split("\t")
+                    id = data[0]
+                    refhvr_id = data[1].split('|')[0]
+                    distance = data[2]
+                    #print 'data',data
+                    if id in concat:
+                        concat[id]['refhvrs'].append(refhvr_id)                        
+                    else:
+                        concat[id] = {}
+                        concat[id]['refhvrs'] = [refhvr_id]
+                    concat[id]['distance'] = distance     
+                    
+                
+                
+                #######################################
+                #
+                # Insert records into gast_concat_filename
+                #
+                #######################################             
+                # first we need to open the gast_filename
+                gastconcat_fh     = open(gastconcat_filename,'w')
+                for id, value in concat.iteritems():
+                    #print 'trying gastconcat', id,value
+                    gastconcat_fh.write( id + "\t" + concat[id]['distance'] + "\t" + ' '.join(concat[id]['refhvrs']) + "\n" )
+                gastconcat_fh.close()
+           
+            else:
+                print "No clustergast file found:",clustergast_filename_single,"\nContinuing on ..."
+                self.runobj.run_status_file_h.write("No clustergast file found: "+clustergast_filename_single+" Exiting\n")
+  
             
         print "Finished gast_cleanup"   
         logger.info("Finished gast_cleanup")
@@ -503,8 +485,20 @@ class Gast:
     def gast2tax(self): 
         
         for key in self.idx_keys:
-            output_dir = os.path.join(self.basedir,key)
-            gast_dir = os.path.join(output_dir,'gast')
+            if self.runobj.platform == 'illumina':
+                output_dir = os.path.join(self.global_gast_dir,key)
+                gast_dir = os.path.join(self.global_gast_dir,key)
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
+            elif self.runobj.platform == 'vamps':
+                output_dir = os.path.join(self.basedir,key)
+                gast_dir = os.path.join(output_dir,'gast')
+                unique_file = os.path.join(output_dir, key+'.unique.fa')
+                names_file = os.path.join(output_dir,key+'.names')
+            else:
+                sys.exit("gast2tax: no platform")
+                
             if key in self.runobj.samples:
                 dna_region = self.runobj.samples[key].dna_region
             else:            
@@ -521,23 +515,10 @@ class Gast:
             max_distance = C.max_distance['default']
             if dna_region in C.max_distance:
                 max_distance = C.max_distance[dna_region] 
-            unique_file = 'Not Found'
-            names_file  = 'Not Found'
-            if self.runobj.platform == 'vamps':    
-                unique_file = os.path.join(output_dir, key+'.unique.fa')
-                names_file = os.path.join(output_dir,key+'.names')
-            elif self.runobj.platform == 'illumina':
-                file_prefix = self.runobj.samples[key].file_prefix
-                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
-                names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
-            else:
-                pass
-            #usearch_filename= os.path.join(self.gast_dir, "uc")
-            #uc_results = self.parse_uclust(usearch_filename)
-            #print uc_results
+            
             
             ref_taxa = self.load_reftaxa(taxdb)
-            names_file  = os.path.join(output_dir, key+'.names')
+    
             self.assign_taxonomy(gast_dir,dna_region,names_file, ref_taxa);
             
         return ("SUCCESS","gast2tax") 
@@ -665,8 +646,8 @@ class Gast:
         tagtax_long_fh.write("\t".join(["read_id","taxonomy","distance","rank","refssu_count","vote","minrank","taxa_counts","max_pcts","na_pcts","refhvr_ids"])+"\n")
         gast_file          = os.path.join(gast_dir, "gast"+dna_region)
         if not os.path.exists(gast_file):
-            logger.info("Could not find gast file: "+gast_file)
-            sys.exit("Could not find gast file: "+gast_file)
+            logger.info("gast:assign_taxonomy: Could not find gast file: "+gast_file+". Returning")
+            return results
         for line in  open(gast_file,'r'): 
             # must split on tab because last field may be empty and must be maintained as blank
             data=line.strip().split("\t")
@@ -749,11 +730,11 @@ class Gast:
                 output_dir = os.path.join(self.basedir,keys[0])
                 uniques_file = os.path.join(output_dir, keys[0]+'.unique.fa')
                 names_file = os.path.join(output_dir, keys[0]+'.names')
-                #import pipeline.fastaunique as fu
-                #mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+self.runobj.fasta_file+", outputdir="+os.path.join(self.basedir,keys[0])+"/);\""; 
+                
+                # the -x means do not store frequency data in defline of fasta file
                 fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.runobj.fasta_file+" -o "+uniques_file+" -n "+names_file 
                 print fastaunique_cmd
-                #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
+                
                 subprocess.call(fastaunique_cmd, shell=True)
                 
                 #shutil.move('a.txt', 'b.kml')
