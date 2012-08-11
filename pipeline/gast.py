@@ -21,37 +21,47 @@ class Gast:
         
         self.use_cluster = self.runobj.use_cluster
         self.idx_keys = idx_keys
+        
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
         path = os.environ['PATH']
         os.environ['PATH'] = '/usr/local/sge/bin/lx24-amd64:'+path
         
+        self.refdb_dir = C.ref_database_dir
         
+        # for testing
+        self.limit = 3
        
         # If we are here from a vamps gast process
         # then there should be just one dataset to gast
-        # but if MBL pipe then many datasets are prbably involved.
-        self.refdb_dir = C.ref_database_dir
-        self.limit = 3
+        # but if MBL/illumina pipe then many datasets are probably involved.
+        self.analysis_dir = os.path.join(self.basedir,'analysis')
+        if not os.path.exists(self.analysis_dir):
+            os.mkdir(self.analysis_dir)
+        self.global_gast_dir = os.path.join(analysis_dir,'gast')
+        if not os.path.exists(self.global_gast_dir):
+            os.mkdir(self.global_gast_dir)
+            
+            
         if self.runobj.platform == 'illumina':
-            self.input_dir = self.runobj.input_dir
-            try:
-                self.input_file_suffix = self.runobj.input_file_suffix
-            except:
-                self.input_file_suffix = ''
+            reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
+            if os.path.exists(reads_dir):
+                self.input_dir 
+            else:
+                self.input_dir = self.runobj.input_dir
+            
         # create our directories for each key
         for key in self.idx_keys:
-            
-            output_dir = os.path.join(self.basedir,key)
+            output_dir = os.path.join(self.global_gast_dir,key)
             if not os.path.exists(output_dir):
                 os.mkdir(output_dir)
-                gast_dir = os.path.join(output_dir,'gast')
-                if os.path.exists(gast_dir):
-                    # empty then recreate directory
-                    shutil.rmtree(gast_dir)
-                    os.mkdir(gast_dir)
-                else:
-                    os.mkdir(gast_dir)
+#                 gast_dir = output_dir
+#                 if os.path.exists(gast_dir):
+#                     # empty then recreate directory
+#                     shutil.rmtree(gast_dir)
+#                     os.mkdir(gast_dir)
+#                 else:
+#                     os.mkdir(gast_dir)
         
     def clustergast(self):
         """
