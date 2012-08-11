@@ -403,7 +403,7 @@ def gast(runobj):
     
     
     # Check for unique files and create them if not there
-    result_code = mygast.check_for_uniques_files(idx_keys)
+    result_code = mygast.check_for_unique_files(idx_keys)
     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
     if result_code[0] == 'ERROR':
         logger.error("uniques not found failed")

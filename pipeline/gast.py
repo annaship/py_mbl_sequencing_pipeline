@@ -126,7 +126,7 @@ class Gast:
                 sys.exit("clustergast: no platform")
             
             counter +=1
-            print "\nFile:",str(counter)
+            
             if counter >= self.limit:
                 pass
             
@@ -146,157 +146,161 @@ class Gast:
             #print 'DBs',refdb,taxdb
             
             
-            
-            i = 0
-            if cluster_nodes:
-                grep_cmd = ['grep','-c','>',unique_file]
-                logger.debug( ' '.join(grep_cmd) )
-                facount = subprocess.check_output(grep_cmd).strip()
-                logger.debug( key+' count '+facount)
-                calcnode_cmd = [calcnodes,'-t',str(facount),'-n',str(cluster_nodes),'-f','1']
+            if os.path.exists(unique_file) and os.path.getsize(unique_file) > 0:
+                print "\nFile:",str(counter)
+                i = 0
+                if cluster_nodes:
+                    grep_cmd = ['grep','-c','>',unique_file]
+                    logger.debug( ' '.join(grep_cmd) )
+                    facount = subprocess.check_output(grep_cmd).strip()
+                    logger.debug( key+' count '+facount)
+                    calcnode_cmd = [calcnodes,'-t',str(facount),'-n',str(cluster_nodes),'-f','1']
+                    
+                    calcout = subprocess.check_output(calcnode_cmd).strip()
+                    logger.debug("calcout:\n"+calcout)
+                    #calcout:
+                    # node=1 start=1 end=1 rows=1
+                    # node=2 start=2 end=2 rows=1
+                    # node=3 start=3 end=3 rows=1           
+                    lines = calcout.split("\n")
+                    gast_file_list = []
+                    for line in lines:
+                        i += 1
+                        if i >= cluster_nodes:
+                            continue
+                        script_filename = os.path.join(gast_dir,qsub_prefix + str(i))
+                        gast_filename   = os.path.join(gast_dir, gast_prefix + str(i))
+                        fastasamp_filename = os.path.join(gast_dir, 'samp_' + str(i))
+                        clustergast_filename   = os.path.join(gast_dir, key+".gast_" + str(i))
+                        gast_file_list.append(clustergast_filename)
+                        usearch_filename= os.path.join(gast_dir, "uc_" + str(i))
+                        log_file = os.path.join(gast_dir, 'clustergast.log_' + str(i))
+                        
+                        data = line.split()
+                        
+                        if len(data) < 2:
+                            continue
+                        start = data[1].split('=')[1]
+                        end  = data[2].split('=')[1]
+                        
+                        if self.use_cluster:
+                            fh = open(script_filename,'w')
+                            qstat_name = "gast" + key + '_' + self.runobj.run + "_" + str(i)
+                            fh.write("#!/bin/csh\n")
+                            fh.write("#$ -j y\n" )
+                            fh.write("#$ -o " + log_file + "\n")
+                            fh.write("#$ -N " + qstat_name + "\n\n")
+                            #fh.write("source /xraid/bioware/Modules/etc/profile.modules\n");
+                            #fh.write("module load bioware\n\n");
+        
+                            # setup environment
+                            fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
+                            fh.write("module load bioware\n\n")
+                        
+                        cmd1 = self.get_fastasampler_cmd(unique_file, fastasamp_filename,start,end)
+                        
+    
+                        logger.debug("fastasampler command: "+cmd1)
+                        
+                        if self.use_cluster:
+                            fh.write(cmd1 + "\n")
+                        else:
+                            subprocess.call(cmd1,shell=True)
+                        
+                        cmd2 = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
+    
+                        logger.debug("usearch command: "+cmd2)
+                        #print 'usearch',cmd2
+                        if self.use_cluster:
+                            fh.write(cmd2 + "\n")
+                        else:
+                            subprocess.call(cmd2,shell=True)
+                        
+                        cmd3 = self.get_grep_cmd(usearch_filename, clustergast_filename)
+    
+                        logger.debug("grep command: "+cmd3)
+                        if self.use_cluster:                
+                            fh.write(cmd3 + "\n")
+                            fh.close()
+                            
+                            # make script executable and run it
+                            os.chmod(script_filename, stat.S_IRWXU)
+                            qsub_cmd = clusterize + " " + script_filename
+                            
+                            # on vamps and vampsdev qsub cannot be run - unless you call it from the
+                            # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
+                            qsub_cmd = C.qsub_cmd + " " + script_filename
+                            logger.debug("qsub command: "+qsub_cmd)
+                            
+                            #subprocess.call(qsub_cmd, shell=True)
+                            proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            # proc.communicate will block - probably not what we want
+                            #(stdout, stderr) = proc.communicate() #block the last onehere
+                            #print stderr,stdout
+        
+                        else:
+                            subprocess.call(cmd3,shell=True)
+                            print cmd3
                 
-                calcout = subprocess.check_output(calcnode_cmd).strip()
-                logger.debug("calcout:\n"+calcout)
-                #calcout:
-                # node=1 start=1 end=1 rows=1
-                # node=2 start=2 end=2 rows=1
-                # node=3 start=3 end=3 rows=1           
-                lines = calcout.split("\n")
-                gast_file_list = []
-                for line in lines:
-                    i += 1
-                    if i >= cluster_nodes:
-                        continue
-                    script_filename = os.path.join(gast_dir,qsub_prefix + str(i))
-                    gast_filename   = os.path.join(gast_dir, gast_prefix + str(i))
-                    fastasamp_filename = os.path.join(gast_dir, 'samp_' + str(i))
-                    clustergast_filename   = os.path.join(gast_dir, key+".gast_" + str(i))
-                    gast_file_list.append(clustergast_filename)
-                    usearch_filename= os.path.join(gast_dir, "uc_" + str(i))
-                    log_file = os.path.join(gast_dir, 'clustergast.log_' + str(i))
+                else:
+                    #fastasamp_filename = os.path.join(gast_dir, 'samp')
+                    usearch_filename= os.path.join(gast_dir, "uc")
+                    clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
+                    print usearch_filename,clustergast_filename_single
                     
-                    data = line.split()
+                    cmd1 = self.get_usearch_cmd(unique_file,refdb,usearch_filename)
+                    print cmd1
+                    subprocess.call(cmd1,shell=True)
+                    cmd2 = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
+                    print cmd2
+                    subprocess.call(cmd2,shell=True)
                     
-                    if len(data) < 2:
-                        continue
-                    start = data[1].split('=')[1]
-                    end  = data[2].split('=')[1]
-                    
-                    if self.use_cluster:
-                        fh = open(script_filename,'w')
-                        qstat_name = "gast" + key + '_' + self.runobj.run + "_" + str(i)
-                        fh.write("#!/bin/csh\n")
-                        fh.write("#$ -j y\n" )
-                        fh.write("#$ -o " + log_file + "\n")
-                        fh.write("#$ -N " + qstat_name + "\n\n")
-                        #fh.write("source /xraid/bioware/Modules/etc/profile.modules\n");
-                        #fh.write("module load bioware\n\n");
+                if self.use_cluster:
+                    # wait here for all the clustergast scripts to finish
+                    temp_file_list = gast_file_list
+                
+                    c = False
+                    maxwaittime = C.maxwaittime  # seconds
+                    sleeptime   = C.sleeptime    # seconds
+                    counter = 0
+                    while c == False:
+                        counter += 1
+                        if counter >= maxwaittime / sleeptime:
+                            raise Exception("Max wait time exceeded in gast.py")
+                        for index, file in enumerate(temp_file_list):
+                            #print temp_file_list
+                            if os.path.exists(file) and os.path.getsize(file) > 0:
+                                # remove from tmp list
+                                logger.debug("Found file now removing from list: "+file)
+                                temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
+                        
+                        if temp_file_list:
+                            logger.info("waiting for clustergast files to fill...")
+                            logger.debug(' '.join(temp_file_list))
+                            logger.info("\ttime: "+str(counter * sleeptime)+" | files left: "+str(len(temp_file_list)))
+                            time.sleep(sleeptime)
+                        else:
+                            c = True
+                        
+                # now concatenate all the clustergast_files into one file (if they were split)
+                if cluster_nodes:
+                    # gast file
+                    clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
+                    clustergast_fh = open(clustergast_filename_single,'w')
+                    # have to turn off cluster above to be able to 'find' these files for concatenation
+                    for n in range(1,i-1):
+                        #cmd = "cat "+ gast_dir + key+".gast_" + str(n) + " >> " + gast_dir + key+".gast"
+                        file = os.path.join(gast_dir, key+".gast_" + str(n))
+                        if(os.path.exists(file)):                    
+                            shutil.copyfileobj(open(file,'rb'), clustergast_fh)
+                        else:
+                            logger.info( "Could not find file: "+os.path.basename(file)+" Skipping")
     
-                        # setup environment
-                        fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
-                        fh.write("module load bioware\n\n")
-                    
-                    cmd1 = self.get_fastasampler_cmd(unique_file, fastasamp_filename,start,end)
-                    
-
-                    logger.debug("fastasampler command: "+cmd1)
-                    
-                    if self.use_cluster:
-                        fh.write(cmd1 + "\n")
-                    else:
-                        subprocess.call(cmd1,shell=True)
-                    
-                    cmd2 = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
-
-                    logger.debug("usearch command: "+cmd2)
-                    print 'usearch',cmd2
-                    if self.use_cluster:
-                        fh.write(cmd2 + "\n")
-                    else:
-                        subprocess.call(cmd2,shell=True)
-                    
-                    cmd3 = self.get_grep_cmd(usearch_filename, clustergast_filename)
-
-                    logger.debug("grep command: "+cmd3)
-                    if self.use_cluster:                
-                        fh.write(cmd3 + "\n")
-                        fh.close()
-                        
-                        # make script executable and run it
-                        os.chmod(script_filename, stat.S_IRWXU)
-                        qsub_cmd = clusterize + " " + script_filename
-                        
-                        # on vamps and vampsdev qsub cannot be run - unless you call it from the
-                        # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
-                        qsub_cmd = C.qsub_cmd + " " + script_filename
-                        logger.debug("qsub command: "+qsub_cmd)
-                        
-                        #subprocess.call(qsub_cmd, shell=True)
-                        proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        # proc.communicate will block - probably not what we want
-                        #(stdout, stderr) = proc.communicate() #block the last onehere
-                        #print stderr,stdout
-    
-                    else:
-                        subprocess.call(cmd3,shell=True)
-                        print cmd3
-            
+                    clustergast_fh.flush()
+                    clustergast_fh.close()
             else:
-                #fastasamp_filename = os.path.join(gast_dir, 'samp')
-                usearch_filename= os.path.join(gast_dir, "uc")
-                clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
-                print usearch_filename,clustergast_filename_single
-                cmd1 = self.get_usearch_cmd(unique_file,refdb,usearch_filename)
-                print cmd1
-                subprocess.call(cmd1,shell=True)
-                cmd2 = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
-                print cmd2
-                subprocess.call(cmd2,shell=True)
+                logger.warning( "unique_file not found or zero size: "+unique_file)
                 
-            if self.use_cluster:
-                # wait here for all the clustergast scripts to finish
-                temp_file_list = gast_file_list
-            
-                c = False
-                maxwaittime = C.maxwaittime  # seconds
-                sleeptime   = C.sleeptime    # seconds
-                counter = 0
-                while c == False:
-                    counter += 1
-                    if counter >= maxwaittime / sleeptime:
-                        raise Exception("Max wait time exceeded in gast.py")
-                    for index, file in enumerate(temp_file_list):
-                        #print temp_file_list
-                        if os.path.exists(file) and os.path.getsize(file) > 0:
-                            # remove from tmp list
-                            logger.debug("Found file now removing from list: "+file)
-                            temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
-                    
-                    if temp_file_list:
-                        logger.info("waiting for clustergast files to fill...")
-                        logger.debug(' '.join(temp_file_list))
-                        logger.info("\ttime: "+str(counter * sleeptime)+" | files left: "+str(len(temp_file_list)))
-                        time.sleep(sleeptime)
-                    else:
-                        c = True
-                    
-            # now concatenate all the clustergast_files into one file (if they were split)
-            if cluster_nodes:
-                # gast file
-                clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
-                clustergast_fh = open(clustergast_filename_single,'w')
-                # have to turn off cluster above to be able to 'find' these files for concatenation
-                for n in range(1,i-1):
-                    #cmd = "cat "+ gast_dir + key+".gast_" + str(n) + " >> " + gast_dir + key+".gast"
-                    file = os.path.join(gast_dir, key+".gast_" + str(n))
-                    if(os.path.exists(file)):                    
-                        shutil.copyfileobj(open(file,'rb'), clustergast_fh)
-                    else:
-                        logger.info( "Could not find file: "+os.path.basename(file)+" Skipping")
-
-                clustergast_fh.flush()
-                clustergast_fh.close()
-            
         if not self.test:    
             # remove tmp files
             for n in range(i+1):
@@ -325,7 +329,6 @@ class Gast:
         """
         gast_cleanup - follows clustergast, explodes the data and copies to gast_concat and gast files
         """
-        logger.info("Starting GAST Cleanup")
         self.runobj.run_status_file_h.write("Starting gast_cleanup\n")
         for key in self.idx_keys:
             if self.runobj.platform == 'illumina':
@@ -356,11 +359,13 @@ class Gast:
             if not os.path.exists(gast_dir):
                 logger.error("Could not find gast directory: "+gast_dir+" Exiting")
                 sys.exit()
+                
             clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
             try:
                 logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename_single)))
             except:
                 logger.debug('gast filesize: zero')
+                
             gast_filename          = os.path.join(gast_dir, "gast")
             gastconcat_filename    = os.path.join(gast_dir, "gast_concat")  
             #dupes_filename    = os.path.join(gast_dir, "dupes") 
@@ -368,21 +373,23 @@ class Gast:
             copies = {}
             nonhits = {}
             # open and read names file
-            names_fh = open(names_file,'r')
-            for line in names_fh:
-                s = line.strip().split("\t")
-                
-                index_read = s[0]                
-                copies[index_read] = s[1].split(',')
-                
-                if index_read in nonhits:
-                    nonhits[index_read] += 1
-                else:
-                    nonhits[index_read] = 1
+            
+            if os.path.exists(names_file) and os.path.getsize(names_file) > 0:
+                names_fh = open(names_file,'r')
+                for line in names_fh:
+                    s = line.strip().split("\t")
                     
-                
-                
-            names_fh.close()            
+                    index_read = s[0]                
+                    copies[index_read] = s[1].split(',')
+                    
+                    if index_read in nonhits:
+                        nonhits[index_read] += 1
+                    else:
+                        nonhits[index_read] = 1
+                        
+                    
+                    
+                names_fh.close()            
             #print nonhits
             #print copies
             
@@ -394,7 +401,7 @@ class Gast:
             # read the .gast file from clustergast            
             concat = {}
             gast_fh     = open(gast_filename,'w')
-            if(os.path.exists(clustergast_filename_single)):
+            if os.path.exists(clustergast_filename_single):
                 in_gast_fh  = open(clustergast_filename_single,'r')
                           
                 for line in in_gast_fh:
@@ -445,7 +452,7 @@ class Gast:
                 clustergast_fh.close()
                 #the open again and get data for gast concat
                 concat = {}
-                print clustergast_filename_single
+                #print clustergast_filename_single
                 for line in open(clustergast_filename_single,'r'):
                     data = line.strip().split("\t")
                     id = data[0]
@@ -474,7 +481,7 @@ class Gast:
                 gastconcat_fh.close()
            
             else:
-                print "No clustergast file found:",clustergast_filename_single,"\nContinuing on ..."
+                logger.warning("No clustergast file found:"+clustergast_filename_single+"\nContinuing on ...")
                 self.runobj.run_status_file_h.write("No clustergast file found: "+clustergast_filename_single+" Exiting\n")
   
             
@@ -508,19 +515,20 @@ class Gast:
                 self.runobj.run_status_file_h.write("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 dna_region = 'unknown'
             
-            (refdb,taxdb) = self.get_reference_databases(dna_region)
-            
-            
-            #print tax_file
-            max_distance = C.max_distance['default']
-            if dna_region in C.max_distance:
-                max_distance = C.max_distance[dna_region] 
-            
-            
-            ref_taxa = self.load_reftaxa(taxdb)
-    
-            self.assign_taxonomy(gast_dir,dna_region,names_file, ref_taxa);
-            
+            if os.path.exists(names_file) and os.path.getsize(names_file) > 0: 
+                (refdb,taxdb) = self.get_reference_databases(dna_region)
+                
+                #print tax_file
+                max_distance = C.max_distance['default']
+                if dna_region in C.max_distance:
+                    max_distance = C.max_distance[dna_region] 
+                
+                
+                ref_taxa = self.load_reftaxa(taxdb)
+        
+                self.assign_taxonomy(gast_dir,dna_region,names_file, ref_taxa);
+        
+        print "Finished gast2tax" 
         return ("SUCCESS","gast2tax") 
         
     
@@ -532,7 +540,7 @@ class Gast:
             dna_region = 'v4v6'
         if dna_region == 'v6v4a':
             dna_region = 'v4v6a'
-        if C.use_full_length:
+        if C.use_full_length or dna_region == 'unknown':
             if os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
                 refdb = os.path.join(self.refdb_dir, 'refssu.udb')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
@@ -722,17 +730,31 @@ class Gast:
 #         
 #         #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
 #         subprocess.call(mothur_cmd, shell=True)
-    def check_for_uniques_files(self,keys):
+    def check_for_unique_files(self, keys):
         logger.info("Checking for uniques file")
+        if self.runobj.platform == 'illumina':
+            reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
+            for key in keys:
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                if os.path.exists(unique_file):
+                    if os.path.getsize(unique_file) > 0:
+                        logger.debug( "Found uniques file: "+unique_file)
+                    else:
+                        logger.warning( "Found uniques file BUT zero size "+unique_file)
+                else:
+                    logger.debug( "NO uniques file found "+unique_file)
+                
+                
         if self.runobj.platform == 'vamps':
             # one fasta file or (one project and dataset from db)
             if os.path.exists(self.runobj.fasta_file):
                 output_dir = os.path.join(self.basedir,keys[0])
-                uniques_file = os.path.join(output_dir, keys[0]+'.unique.fa')
+                unique_file = os.path.join(output_dir, keys[0]+'.unique.fa')
                 names_file = os.path.join(output_dir, keys[0]+'.names')
                 
                 # the -x means do not store frequency data in defline of fasta file
-                fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.runobj.fasta_file+" -o "+uniques_file+" -n "+names_file 
+                fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.runobj.fasta_file+" -o "+unique_file+" -n "+names_file 
                 print fastaunique_cmd
                 
                 subprocess.call(fastaunique_cmd, shell=True)
