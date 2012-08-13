@@ -49,12 +49,13 @@ class FastaReader:
 class Vamps:
     """Uploads data to the VAMPS (or vampsdev) database"""
     Name = "VAMPS"
-    def __init__(self, run_object = None):
+    def __init__(self, run_object = None, idx_keys=None):
 
         self.runobj 	 = run_object
-        self.prefix = self.runobj.user+self.runobj.run
-        self.outdir  = os.path.join(self.runobj.output_dir,self.prefix)
         
+        self.basedir = self.runobj.output_dir
+        #self.outdir  = os.path.join(self.runobj.output_dir,self.prefix)
+        self.idx_keys = idx_keys
 
         self.use_cluster = 1
         self.project = self.runobj.project
@@ -76,35 +77,51 @@ class Vamps:
         # 3) gast2tax
         
         # already present:
-        self.out_gast_dir = os.path.join(self.outdir,"gast")  #directory
-        self.gast_concat_file = os.path.join(self.out_gast_dir,'gast_concat')
-        #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
-        self.tagtax_file = os.path.join(self.out_gast_dir,'tagtax')
-        if os.path.exists(os.path.join(self.outdir,self.prefix+'.unique.fa')):
-            self.uniques_file = os.path.join(self.outdir,self.prefix+'.unique.fa')
-        #elif os.path.exists(os.path.join(self.outdir,self.prefix,self.prefix+'.unique.fa')):
-        #    self.uniques_file = os.path.join(self.outdir,self.prefix,self.prefix+'.unique.fa')
-        else:
-            sys.exit("Could not find uniques file")
+        self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
+        if not os.path.exists(self.global_gast_dir):
+            sys.exit("Could not find global gast dir: "+self.global_gast_dir)
         
-
-        
-        # get dataset_count here from uniques_file
-        grep_cmd = ['grep','-c','>',self.uniques_file]
-        self.dataset_count = subprocess.check_output(grep_cmd).strip()
-        
-        print "Dataset Count", self.dataset_count
-        
-        # to be created:
-        self.taxes_file = os.path.join(self.outdir,'vamps_data_cube_uploads.txt')
-        self.summed_taxes_file = os.path.join(self.outdir,'vamps_junk_data_cube_pipe.txt')
-        self.distinct_taxes_file = os.path.join(self.outdir,'vamps_taxonomy_pipe.txt')
-        self.sequences_file = os.path.join(self.outdir,'vamps_sequences_pipe.txt')
-        self.export_file = os.path.join(self.outdir,'vamps_export_pipe.txt')
-        self.projects_datasets_file = os.path.join(self.outdir,'vamps_projects_datasets_pipe.txt')
-        self.projects_info_file = os.path.join(self.outdir,'vamps_projects_info_pipe.txt')
-        
-    def taxonomy(self, lane_keys):
+        for key in self.idx_keys:
+            out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
+            gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
+            if not os.path.exists(gast_concat_file):
+                sys.exit("Could not find gast_concat_file file: "+gast_concat_file)
+            #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
+            tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
+            if not os.path.exists(tagtax_file):
+                sys.exit("Could not find tagtax_file file: "+tagtax_file)
+            unique_file = os.path.join(out_gast_dir,'unique.fa')
+            if not os.path.exists(unique_file):
+                sys.exit("Could not find uniques file: "+unique_file)
+            
+    
+            
+            # get dataset_count here from unique_file
+            grep_cmd = ['grep','-c','>',unique_file]
+            dataset_count = subprocess.check_output(grep_cmd).strip()
+            
+            print "Dataset Count", dataset_count
+            
+            # to be created:
+            taxes_file = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
+            summed_taxes_file = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
+            distinct_taxes_file = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
+            sequences_file = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
+            export_file = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
+            projects_datasets_file = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
+            projects_info_file = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
+            
+            self.taxonomy(tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file)
+            sys.exit()
+            self.sequences()        
+            self.exports()
+            self.projects()
+            myvamps.info()
+            if self.runobj.load_vamps_database:
+                self.load_database()
+            
+            
+    def taxonomy(self,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
         """
         fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy tables
         """
@@ -112,7 +129,7 @@ class Vamps:
         # SUMMED create a look-up
         taxa_lookup = {}
         self.read_id_lookup={}
-        for line in  open(self.tagtax_file,'r'):
+        for line in  open(tagtax_file,'r'):
             line = line.strip()
             items = line.split()
             taxa = items[1]
@@ -130,7 +147,7 @@ class Vamps:
         # taxa_lookup: {'Unknown': 146, 'Bacteria': 11888, 'Bacteria;Chloroflexi': 101}
         # dataset_count is 3 (3 taxa in this dataset)
         # frequency is 3/144
-        fh1 = open(self.taxes_file,'w')
+        fh1 = open(taxes_file,'w')
         
         
         fh1.write("\t".join( ["HEADER","project", "dataset", "taxonomy", "superkingdom", 
@@ -142,7 +159,7 @@ class Vamps:
             
             taxes = tax.split(';')
             
-            freq = float(cnt) / int(self.dataset_count)
+            freq = float(cnt) / int(dataset_count)
             rank = C.ranks[len(taxes)-1]
             for i in range(len(C.ranks)):                
                 if len(taxes) <= i:
@@ -156,7 +173,7 @@ class Vamps:
             datarow.append(rank)
             datarow.append(str(cnt))
             datarow.append(str(freq))
-            datarow.append(self.dataset_count)
+            datarow.append(dataset_count)
             datarow.append("GAST")
             
             w = "\t".join(datarow)
@@ -173,7 +190,7 @@ class Vamps:
         #
         # SUMMED DATA CUBE TABLE
         #
-        fh2 = open(self.summed_taxes_file,'w')
+        fh2 = open(summed_taxes_file,'w')
         
         fh2.write("\t".join(["HEADER","taxonomy", "sum_tax_counts", "frequency", "dataset_count","rank", 
                             "project","dataset","project--dataset","classifier"] )+"\n")
@@ -184,7 +201,7 @@ class Vamps:
             ranks_list = ";".join(ranks_subarray) # i.e., superkingdom, phylum, class
             # open data_cube file again
             
-            for line in  open(self.taxes_file,'r'):
+            for line in  open(taxes_file,'r'):
                 #print 'lo',line.split()[0]
                 line = line.strip()
                 if line.split()[0] == 'HEADER':
@@ -205,7 +222,7 @@ class Vamps:
                 
                 taxonomy = tax
                 sum_tax_counts = cnt
-                frequency = float(cnt) / int(self.dataset_count)
+                frequency = float(cnt) / int(dataset_count)
                 rank = i
                 #if len(taxonomy) - len(replace(taxonomy,';','')) >= i
                 #print len(taxonomy),len(''.join(taxonomy.split(';')))
@@ -214,7 +231,7 @@ class Vamps:
                     datarow.append(taxonomy)
                     datarow.append(str(sum_tax_counts))
                     datarow.append(str(frequency))
-                    datarow.append(str(self.dataset_count))
+                    datarow.append(str(dataset_count))
                     datarow.append(str(rank))
                     datarow.append(self.project)
                     datarow.append(self.dataset)
@@ -233,10 +250,10 @@ class Vamps:
         #
         # DISTINCT TAXONOMY
         #
-        fh3 = open(self.distinct_taxes_file,'w')
+        fh3 = open(distinct_taxes_file,'w')
         fh3.write("\t".join(["HEADER","taxon_string", "rank", "num_kids"] )+"\n")
         taxon_string_lookup={}
-        for line in  open(self.summed_taxes_file,'r'):
+        for line in  open(summed_taxes_file,'r'):
             if line.split()[0] == 'HEADER':
                 continue
             items = line.strip().split()            
@@ -262,7 +279,7 @@ class Vamps:
             fh3.write(w+"\n")
         fh3.close()
         
-    def sequences(self, lane_keys):
+    def sequences(self):
         """
         fill vamps_sequences table
         """
@@ -290,7 +307,7 @@ class Vamps:
         
         
         # open uniques fa file
-        f = FastaReader(self.uniques_file)
+        f = FastaReader(self.unique_file)
         
         while f.next():
             datarow = ['']
@@ -326,7 +343,7 @@ class Vamps:
         fh.close()
         logger.info("")
         
-    def exports(self, lane_keys):
+    def exports(self):
         """
         fill vamps_exports table
         """
@@ -334,7 +351,7 @@ class Vamps:
         print "TODO: upload_vamps 5- exports"
         logger.info("Finishing VAMPS exports()")
         
-    def projects(self, lane_keys):
+    def projects(self):
         """
         fill vamps_projects_datasets table
         """
@@ -351,7 +368,7 @@ class Vamps:
         fh.close()
         logger.info("Finishing VAMPS projects()")
         
-    def info(self, lane_keys):
+    def info(self):
         """
         fill vamps_project_info table
         """
@@ -383,7 +400,7 @@ class Vamps:
         fh.close()
         logger.info("Finishing VAMPS info()")
 
-    def load_database(self, lane_keys):
+    def load_database(self):
         """
         
         """
@@ -430,7 +447,7 @@ class Vamps:
         data = myconn.execute_fetch_select(query)
         if data:
             logger.info("found this project "+data[0][0]+" Exiting")
-            sys.exit("Duplicate project name found; Canceling upload to database but your GASTed data are here: "+ self.outdir)
+            sys.exit("Duplicate project name found; Canceling upload to database but your GASTed data are here: "+ self.out_gast_dir)
         else:
             # project is unknown in database - continue
             

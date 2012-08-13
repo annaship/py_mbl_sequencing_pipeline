@@ -460,15 +460,10 @@ def vampsupload(runobj):
 #     else:
 #         idx_keys = convert_unicode_dictionary_to_str(json.loads(open(runobj.trim_status_file_name,"r").read()))["new_lane_keys"]
                 
-    myvamps = Vamps(runobj)
+    myvamps = Vamps(runobj, idx_keys)
     
         
-    myvamps.taxonomy(idx_keys)
-    myvamps.sequences(idx_keys)        
-    myvamps.exports(idx_keys)
-    myvamps.projects(idx_keys)
-    myvamps.info(idx_keys)
-    #myvamps.load_database(idx_keys)
+    
 def status(runobj):
     
     f = open(runobj.run_status_file_name)

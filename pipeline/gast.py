@@ -35,10 +35,10 @@ class Gast:
         # If we are here from a vamps gast process
         # then there should be just one dataset to gast
         # but if MBL/illumina pipe then many datasets are probably involved.
-        self.analysis_dir = os.path.join(self.basedir,'analysis')
+        self.analysis_dir = os.path.join(self.basedir,C.analysis_dir)
         if not os.path.exists(self.analysis_dir):
             os.mkdir(self.analysis_dir)
-        self.global_gast_dir = os.path.join(self.analysis_dir,'gast')
+        self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
         if os.path.exists(self.global_gast_dir):
             # delete gast directory and recreate
             shutil.rmtree(self.global_gast_dir)
@@ -47,7 +47,7 @@ class Gast:
             os.mkdir(self.global_gast_dir)
             
         if self.runobj.platform == 'illumina':
-            reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
+            reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
             if os.path.exists(reads_dir):
                 self.input_dir = reads_dir
             else:
@@ -587,11 +587,11 @@ class Gast:
     def get_usearch_cmd(self,fastasamp_filename, refdb,usearch_filename  ):    
         
         if C.use_full_length:            
-            usearch = C.usearch64
+            usearch6 = C.usearch64
         else:
-            usearch = C.usearch_cmd
+            usearch6 = C.usearch6_cmd
             
-        usearch_cmd = usearch
+        usearch_cmd = usearch6
         usearch_cmd += ' -usearch_global ' + fastasamp_filename
         #usearch_cmd += ' --iddef 3'
         usearch_cmd += ' -gapopen 6I/1E'
@@ -603,7 +603,7 @@ class Gast:
         usearch_cmd += ' -id ' + str(C.pctid_threshold)
         
         
-        usearch_cmd = '/bioware/uclust/usearch5.0.151_i86linux32'
+        usearch_cmd = C.usearch5_cmd
         usearch_cmd += ' --global '
         usearch_cmd += ' --query ' + fastasamp_filename
         usearch_cmd += ' --iddef 3'

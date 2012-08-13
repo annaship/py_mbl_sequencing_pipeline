@@ -162,7 +162,8 @@ cluster_initial_check_interval  = 10
 ################################################################################################  
 
 ############# defaults for GAST ################################################################ 
-usearch_cmd         = '/bioware/uclust/usearch6.0.192_i86linux32'
+usearch6_cmd        = '/bioware/uclust/usearch6.0.192_i86linux32'
+usearch5_cmd        = '/bioware/uclust/usearch5.0.151_i86linux32'
 usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
 fastasampler_cmd    = '/bioware/seqinfo/bin/fastasampler'
 calcnodes_cmd       = '/bioware/seqinfo/bin/calcnodes'
@@ -171,8 +172,12 @@ qsub_cmd            = '/usr/local/sge/bin/lx24-amd64/qsub'
 clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #mothur_cmd          = '/bioware/mothur/mothur'
 fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
-ref_database_dir        = '/xraid2-2/g454/blastdbs/gast_distributions/'
-tax_database_dir        = '/xraid2-2/g454/blastdbs/gast_distributions/'
+ref_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
+tax_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
+analysis_dir        = 'analysis'
+gast_dir            = 'analysis/gast'
+illumina_reads_dir  = 'analysis/perfect_reads'
+
 max_accepts = 10
 max_rejects = 0
 pctid_threshold = 0.70
