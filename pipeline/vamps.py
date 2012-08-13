@@ -119,7 +119,7 @@ class Vamps:
             self.projects(projects_datasets_file, dataset_count)
             self.info(projects_info_file)
             if self.runobj.load_vamps_database:
-                self.load_database()
+                self.load_database(taxes_file,summed_taxes_file,disctinct_taxes_file,sequences_file,projects_datasets_file,project_info_file)
             
             
     def taxonomy(self,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
@@ -366,7 +366,7 @@ class Vamps:
         fh = open(projects_datasets_file,'w')
         
         fh.write("\t".join(["HEADER","project","dataset","dataset_count","has_tax", "date_trimmed","dataset_info"] )+"\n")
-        fh.write("\t".join(["0", self.project, self.dataset, dataset_count, has_tax, date_trimmed, dataset_description] )+"\n")
+        fh.write("\t"+"\t".join([self.project, self.dataset, dataset_count, has_tax, date_trimmed, dataset_description] )+"\n")
         
         fh.close()
         logger.info("Finishing VAMPS projects()")
@@ -396,14 +396,14 @@ class Vamps:
         institution= data[0][3]
         
         fh.write("\t".join(["HEADER","project","title","description","contact", "email","institution","user","env_source_id"] )+"\n")
-        fh.write("\t".join(["0",self.project, title, description, contact, email, institution, user, self.runobj.env_source_id] )+"\n")
+        fh.write("\t"+"\t".join([self.project, title, description, contact, email, institution, user, self.runobj.env_source_id] )+"\n")
         # if this project already exists in the db???
         # the next step should update the table rather than add new to the db
         
         fh.close()
         logger.info("Finishing VAMPS info()")
 
-    def load_database(self):
+    def load_database(self,taxes_file,summed_taxes_file,disctinct_taxes_file,sequences_file,projects_datasets_file,project_info_file):
         """
         
         """
@@ -458,7 +458,7 @@ class Vamps:
             #
             #  DATA_CUBE
             #
-            for line in open(self.taxes_file,'r'):
+            for line in open(taxes_file,'r'):
                 line = line.strip().split("\t")
                 if line[0]=='HEADER':
                     continue
@@ -475,7 +475,7 @@ class Vamps:
             #
             # SUMMED (JUNK) DATA_CUBE
             #
-            for line in open(self.summed_taxes_file,'r'):
+            for line in open(summed_taxes_file,'r'):
                 line = line.strip().split("\t")
                 if line[0]=='HEADER':
                     continue
@@ -491,7 +491,7 @@ class Vamps:
             #
             #  TAXONOMY
             #
-            for line in open(self.distinct_taxes_file,'r'):
+            for line in open(distinct_taxes_file,'r'):
                 line = line.strip().split("\t")
                 if line[0]=='HEADER':
                     continue
@@ -504,7 +504,7 @@ class Vamps:
             #
             #  SEQUENCES
             #
-            for line in open(self.sequences_file,'r'):
+            for line in open(sequences_file,'r'):
                 line = line.strip().split("\t")
                 if line[0]=='HEADER':
                     continue
@@ -518,7 +518,7 @@ class Vamps:
             #
             #  PROJECTS_DATASETS
             #
-            for line in open(self.projects_datasets_file,'r'):
+            for line in open(projects_datasets_file,'r'):
                 line = line.strip().split("\t")
                 # [1:]  # split and remove the leading 'zero'
                 if line[0]=='HEADER':
@@ -533,7 +533,7 @@ class Vamps:
             #
             # INFO
             #
-            for line in open(self.projects_info_file,'r'):
+            for line in open(project_info_file,'r'):
                 line = line.strip().split("\t")
                 #[1:]  # split on tab and remove the leading 'zero'
                 if line[0]=='HEADER':
