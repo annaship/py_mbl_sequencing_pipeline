@@ -17,6 +17,7 @@ import constants as C
 import ast
 from pipeline.get_ini import readCSV
 
+
 # read a config file and convert to a dictionary
 def configDictionaryFromFile_ini(config_file_path):
     import ConfigParser
@@ -166,8 +167,7 @@ class RunConfig:
             self.idx_keys = ""
             
         if self.platform == 'vamps':
-            self.user           = general_config['user']
-            
+            self.user           = general_config['user']           
             self.dna_region     = general_config['dna_region'] 
             self.input_files    = general_config['input_files'] 
             self.project        = general_config['project'] 
