@@ -33,7 +33,8 @@ from pipeline.get_ini import readCSV
 
 import logging
 import argparse
-from pipelineprocessor import process    
+from pipelineprocessor import process  
+import pprint  
 
 # pycogent
 import cogent
@@ -182,9 +183,10 @@ if __name__ == '__main__':
     # this will read the args and ini file and return a dictionary
     
     data_object = v.validate_args()
+#    for attr in dir(data_object):
+#        print "obj.%s = %s" % (attr, getattr(data_object, attr))
+
     if 'commandline' in data_object and data_object['commandline'] == True:
-        for item in data_object:
-            print item+' = ',data_object[item]
         answer = raw_input("\n\tDoes this look okay? ('c' to continue; 'q' to quit) ")
         if answer == 'q':
             sys.exit()
@@ -242,7 +244,7 @@ if __name__ == '__main__':
     ############## 
     
     
-    #print 'do1',data_object
+#    print 'do1',data_object
     del v
     v = MetadataUtils( configuration_dictionary = data_object )
     v.convert_and_save_ini()
@@ -270,7 +272,18 @@ if __name__ == '__main__':
     # CREATE THE RUN OBJECT (see runconfig.py for details)
     #
     ##############  
-    
+#    aa = os.path.dirname(os.path.realpath(__file__))
+    print "data_object[general]"
+    print data_object['general']
+#    for attr in dir(data_object['general']):
+    print "itemssss"
+    for item in data_object:
+        print item+' = ',data_object[item]
+#    for attr in dir(data_object):
+#        print "obj.%s = %s" % (attr, getattr(data_object, attr))
+#        if (attr == "__class__"):
+#            for attr1 in dir(attr):
+#                print "obj.%s = %s" % (attr1, getattr(attr1, attr))
     runobj = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
     
 
