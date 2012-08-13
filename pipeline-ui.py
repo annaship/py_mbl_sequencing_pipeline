@@ -272,18 +272,6 @@ if __name__ == '__main__':
     # CREATE THE RUN OBJECT (see runconfig.py for details)
     #
     ##############  
-#    aa = os.path.dirname(os.path.realpath(__file__))
-    print "data_object[general]"
-    print data_object['general']
-#    for attr in dir(data_object['general']):
-    print "itemssss"
-    for item in data_object:
-        print item+' = ',data_object[item]
-#    for attr in dir(data_object):
-#        print "obj.%s = %s" % (attr, getattr(data_object, attr))
-#        if (attr == "__class__"):
-#            for attr1 in dir(attr):
-#                print "obj.%s = %s" % (attr1, getattr(attr1, attr))
     runobj = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
     
 
