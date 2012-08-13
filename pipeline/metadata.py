@@ -628,7 +628,7 @@ class MetadataUtils:
             sys.exit()
         print os.uname()
         print os.uname()[1]
-        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == 'as-macbook.home':
+        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == 'as-macbook.local':
             return "c"
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
@@ -687,7 +687,8 @@ class MetadataUtils:
         else:
             fh.write("input_files = \n") 
         #fh.write(getattr(args,'force_runkey', ""))        
-        
+ 
+ 
         for k,values in content.iteritems():
             fh.write("\n")
             if self.general_config_dict['platform'] == 'illumina':
