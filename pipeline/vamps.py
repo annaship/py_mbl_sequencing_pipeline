@@ -512,7 +512,8 @@ class Vamps:
             sys.exit("Duplicate project name found; Canceling upload to database but your GASTed data are here: "+ out_gast_dir)
         else:
             # project is unknown in database - continue
-            
+ 
+ 
             #
             #  DATA_CUBE
             #
