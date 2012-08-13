@@ -20,16 +20,11 @@ class DbUloadTestCase(unittest.TestCase):
         cls._connection.execute_no_fetch(msql) 
         msql = "SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';" 
         cls._connection.execute_no_fetch(msql) 
-
-        for table_name in ["test.dataset", "test.run_key", "test.run", 
-                      "test.dna_region", "test.project", "test.dataset", "test.run_info_ill", 
-                      "test.sequence_ill", "test.sequence_pdr_info_ill", "test.sequence_uniq_info_ill", "test.taxonomy"]:
-            truncate_test_db_sql = "TRUNCATE %s;" % table_name
-            cls._connection.execute_no_fetch(truncate_test_db_sql)
         
         data_object = fake_data_object.data_object
         pi_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         cls._runobj = Run(data_object, pi_path)    
+#        cls.setUpRunInfo()
 
     @classmethod  
     def tearDownClass(cls):
@@ -45,25 +40,22 @@ class DbUloadTestCase(unittest.TestCase):
 #    def test_1(self):
 #        print "URA"
 #
-#    def test_get_run_info_ill_id(self):
-#        my_read_csv = dbup.dbUpload(self._runobj)
-#        my_read_csv.put_run_info()
-#        self.assertEqual(int(res[0][0]), 1)
 
-#        dbup.get_run_info_ill_id()
-#        self._connection.execute_no_fetch(msql) 
-
-#        my_env454upload = dbup(self._runobj)
-#        filenames   = my_env454upload.get_fasta_file_names()
-#        seq_in_file = 0
-#        total_seq   = 0
-#        
-#        for filename in filenames:
-#            try:
-#                logger.debug("\n----------------\nfilename = %s" % filename)
-#                fasta_file_path = filename
-#                filename_base   = "-".join(filename.split("/")[-1].split("-")[:-1])
-#                run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
+    @unittest.skip("Needs clean db")    
+    def test_setUpCleanDb(self):
+        for table_name in ["test.dataset", "test.run_key", "test.run", 
+                      "test.dna_region", "test.project", "test.dataset", "test.run_info_ill", 
+                      "test.sequence_ill", "test.sequence_pdr_info_ill", "test.sequence_uniq_info_ill", "test.taxonomy"]:
+            truncate_test_db_sql = "TRUNCATE %s;" % table_name
+            self._connection.execute_no_fetch(truncate_test_db_sql)
+    
+    @unittest.skip("Needs clean db")
+    def test_setUpRunInfo(self):
+        my_read_csv = dbup.dbUpload(self._runobj)
+        my_read_csv.put_run_info()
+        print "done with put_run_info" 
+        
+    @unittest.skip("Needs clean db")
     def test_execute_fetch_select(self): 
         msql = 'INSERT INTO run_info_ill VALUES ("1", "1529", "2164", "8", "6951", "2411", "83", "", "", "19", "JV", "JV", "GCCTAA", "0", "230", "6_FP1BermC_6_14_10_CGCTC", "101", "23")'
         self._connection.execute_no_fetch(msql) 
@@ -74,12 +66,15 @@ class DbUloadTestCase(unittest.TestCase):
         res = self._connection.execute_fetch_select(sql)
         self.assertEqual(int(res[0][0]), 1)
 #        
+    @unittest.skip("Needs clean db")
     def test_execute_no_fetch(self):
         taxonomy = "Blah; Blah; Blah"
         sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
         res = self._connection.execute_no_fetch(sql)
+        "taxonomy not exists"
         self.assertEqual(res, 1)
 
+    @unittest.skip("Run after the previous one")
     def test_taxonomy_exists(self):
         taxonomy = "Blah; Blah; Blah"
         sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
@@ -87,6 +82,16 @@ class DbUloadTestCase(unittest.TestCase):
         "taxonomy exists, nothing inserted"
         self.assertEqual(res, 0)
     
+        "FIrst: illumina_files time = 136.972903013"
+
+    
+    def test_get_fasta_file_names(self):
+        my_instance = dbup.dbUpload(self._runobj)
+
+        filenames = my_instance.get_fasta_file_names()
+        file_names_list = fake_data_object.file_names_list
+        self.assertEqual(filenames, file_names_list)
+        
         
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
