@@ -109,7 +109,7 @@ class Vamps:
             sequences_file = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
             export_file = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
             projects_datasets_file = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
-            projects_info_file = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
+            project_info_file = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
             (tax_collector,read_id_lookup) = self.taxonomy(tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file)
             
@@ -117,9 +117,9 @@ class Vamps:
             
             self.exports()
             self.projects(projects_datasets_file, dataset_count)
-            self.info(projects_info_file)
+            self.info(project_info_file)
             if self.runobj.load_vamps_database:
-                self.load_database(taxes_file,summed_taxes_file,disctinct_taxes_file,sequences_file,projects_datasets_file,project_info_file)
+                self.load_database(taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file)
             
             
     def taxonomy(self,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
@@ -371,7 +371,7 @@ class Vamps:
         fh.close()
         logger.info("Finishing VAMPS projects()")
         
-    def info(self, projects_info_file):
+    def info(self, project_info_file):
         """
         fill vamps_project_info table
         """
@@ -388,7 +388,7 @@ class Vamps:
         data = myconn.execute_fetch_select(query)
 
         
-        fh = open(projects_info_file,'w')
+        fh = open(project_info_file,'w')
          
         title="title"
         description='description'
@@ -404,7 +404,7 @@ class Vamps:
         fh.close()
         logger.info("Finishing VAMPS info()")
 
-    def load_database(self,taxes_file,summed_taxes_file,disctinct_taxes_file,sequences_file,projects_datasets_file,project_info_file):
+    def load_database(self,taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file):
         """
         
         """
