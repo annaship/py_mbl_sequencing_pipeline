@@ -58,9 +58,7 @@ class Vamps:
         self.idx_keys = idx_keys
 
         self.use_cluster = 1
-        self.project = self.runobj.project
-        self.dataset = self.runobj.dataset
-        self.project_dataset = self.project+'--'+self.dataset
+        
         
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
@@ -85,21 +83,29 @@ class Vamps:
             out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
             gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
             if not os.path.exists(gast_concat_file):
-                sys.exit("Could not find gast_concat_file file: "+gast_concat_file)
+                logger.warning("Could not find gast_concat_file file: "+gast_concat_file)
             #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
             tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
             if not os.path.exists(tagtax_file):
-                sys.exit("Could not find tagtax_file file: "+tagtax_file)
-            unique_file = os.path.join(out_gast_dir,'unique.fa')
+                logger.warning("Could not find tagtax_file file: "+tagtax_file)
+            
+            if self.runobj.platform == 'vamps':
+                unique_file = os.path.join(out_gast_dir,'unique.fa')
+            elif self.runobj.platform == 'illumina':
+                #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
+                reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
+                file_prefix = self.runobj.samples[key].file_prefix
+                unique_file = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                
+                
             if not os.path.exists(unique_file):
-                sys.exit("Could not find uniques file: "+unique_file)
-            
-    
-            
+                logger("Could not find uniques file: "+unique_file)
             # get dataset_count here from unique_file
             grep_cmd = ['grep','-c','>',unique_file]
-            dataset_count = subprocess.check_output(grep_cmd).strip()
-            
+            try:
+                dataset_count = subprocess.check_output(grep_cmd).strip()
+            except:
+                dataset_count = 0
             print "Dataset Count", dataset_count
             
             # to be created:
@@ -111,38 +117,48 @@ class Vamps:
             projects_datasets_file = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
             project_info_file = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
-            (tax_collector,read_id_lookup) = self.taxonomy(tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file)
+            (tax_collector,read_id_lookup) = self.taxonomy(key,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file)
             
-            self.sequences(tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
+            self.sequences(key,tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
             
             self.exports()
-            self.projects(projects_datasets_file, dataset_count)
-            self.info(project_info_file)
+            self.projects(key,projects_datasets_file, dataset_count)
+            self.info(key,project_info_file)
             if self.runobj.load_vamps_database:
-                self.load_database(taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file)
+                self.load_database(key,out_gast_dir,taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file)
             
             
-    def taxonomy(self,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
+    def taxonomy(self,key,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
         """
         fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy tables
         """
         logger.info("Starting vamps_upload: taxonomy")
         # SUMMED create a look-up
+        if self.runobj.platform == 'vamps':
+            project = self.runobj.project
+            dataset = self.runobj.dataset
+            project_dataset = project+'--'+dataset
+        elif self.runobj.platform == 'illumina':
+            project = self.runobj.samples[key].project
+            dataset = self.runobj.samples[key].dataset
+            project_dataset = project+'--'+dataset
+            
         taxa_lookup = {}
         read_id_lookup={}
-        for line in  open(tagtax_file,'r'):
-            line = line.strip()
-            items = line.split()
-            taxa = items[1]
-            if taxa[-3:] == ';NA':
-                taxa = taxa[:-3]
-            read_id=items[0]
-            read_id_lookup[read_id]=taxa
-            
-            if taxa in taxa_lookup:                
-                taxa_lookup[taxa] += 1 
-            else:
-                taxa_lookup[taxa] = 1 
+        if os.path.exists(tagtax_file):
+            for line in  open(tagtax_file,'r'):
+                line = line.strip()
+                items = line.split()
+                taxa = items[1]
+                if taxa[-3:] == ';NA':
+                    taxa = taxa[:-3]
+                read_id=items[0]
+                read_id_lookup[read_id]=taxa
+                
+                if taxa in taxa_lookup:                
+                    taxa_lookup[taxa] += 1 
+                else:
+                    taxa_lookup[taxa] = 1 
                 
         #  DATA CUBE TABLE
         # taxa_lookup: {'Unknown': 146, 'Bacteria': 11888, 'Bacteria;Chloroflexi': 101}
@@ -156,7 +172,7 @@ class Vamps:
                             "strain", "rank", "knt", "frequency", "dataset_count", "classifier"]) + "\n")
         tax_collector={}
         for tax,cnt in taxa_lookup.iteritems():
-            datarow = ['',self.project,self.dataset]
+            datarow = ['',project,dataset]
             
             taxes = tax.split(';')
             
@@ -234,9 +250,9 @@ class Vamps:
                     datarow.append(str(frequency))
                     datarow.append(str(dataset_count))
                     datarow.append(str(rank))
-                    datarow.append(self.project)
-                    datarow.append(self.dataset)
-                    datarow.append(self.project_dataset)
+                    datarow.append(project)
+                    datarow.append(dataset)
+                    datarow.append(project_dataset)
                     datarow.append("GAST")
             
                 w = "\t".join(datarow)
@@ -282,14 +298,24 @@ class Vamps:
         
         return (tax_collector,read_id_lookup)
         
-    def sequences(self,tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file):
+    def sequences(self,key,tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file):
         """
         fill vamps_sequences table
         """
         
         logger.info("Starting vamps_upload: sequences")
+        if self.runobj.platform == 'vamps':
+            project = self.runobj.project
+            dataset = self.runobj.dataset
+            project_dataset = project+'--'+dataset
+        elif self.runobj.platform == 'illumina':
+            project = self.runobj.samples[key].project
+            dataset = self.runobj.samples[key].dataset
+            project_dataset = project+'--'+dataset
+            
         # open gast_concat table to get the distances and the ferids
         refid_collector={}
+        #if os.path.exists(gast_concat_file):
         for line in  open(gast_concat_file,'r'):
             line = line.strip()
             items=line.split()
@@ -299,7 +325,7 @@ class Vamps:
             refid_collector[id]={}
             refid_collector[id]['distance']=distance
             refid_collector[id]['refhvr_ids']=refhvr_ids
-            
+                
             
         
         
@@ -310,40 +336,41 @@ class Vamps:
         
         
         # open uniques fa file
-        f = FastaReader(unique_file)
-        
-        while f.next():
-            datarow = ['']
-            id = f.id.split('|')[0]
-            seq = f.seq
-            tax = read_id_lookup[id]
-            rank = tax_collector[tax]['rank']
-            cnt = tax_collector[tax]['cnt']
-            freq = tax_collector[tax]['freq']
-            if id in refid_collector:
-                distance = refid_collector[id]['distance']
-                refhvr_ids = refid_collector[id]['refhvr_ids']
-            else:
-                distance = '1.0'
-                refhvr_ids = '0'
+        if os.path.exists(unique_file) and os.path.getsize(unique_file) > 0:
+            f = FastaReader(unique_file)
             
-            datarow.append(seq)
-            datarow.append(self.project)
-            datarow.append(self.dataset)
-            datarow.append(tax)
-            datarow.append(refhvr_ids)
-            datarow.append(rank)
-            datarow.append(cnt)
-            datarow.append(freq)
-            datarow.append(distance)
-            datarow.append(id)
-            datarow.append(self.project_dataset)
-            w = "\t".join(datarow)
-            #print 'w',w
-            fh.write(w+"\n")
-            
-            
-        fh.close()
+            while f.next():
+                datarow = ['']
+                id = f.id.split('|')[0]
+                seq = f.seq
+                tax = read_id_lookup[id]
+                rank = tax_collector[tax]['rank']
+                cnt = tax_collector[tax]['cnt']
+                freq = tax_collector[tax]['freq']
+                if id in refid_collector:
+                    distance = refid_collector[id]['distance']
+                    refhvr_ids = refid_collector[id]['refhvr_ids']
+                else:
+                    distance = '1.0'
+                    refhvr_ids = '0'
+                
+                datarow.append(seq)
+                datarow.append(project)
+                datarow.append(dataset)
+                datarow.append(tax)
+                datarow.append(refhvr_ids)
+                datarow.append(rank)
+                datarow.append(cnt)
+                datarow.append(freq)
+                datarow.append(distance)
+                datarow.append(id)
+                datarow.append(project_dataset)
+                w = "\t".join(datarow)
+                #print 'w',w
+                fh.write(w+"\n")
+                
+                
+            fh.close()
         logger.info("")
         
     def exports(self):
@@ -354,29 +381,44 @@ class Vamps:
         print "TODO: upload_vamps 5- exports"
         logger.info("Finishing VAMPS exports()")
         
-    def projects(self, projects_datasets_file, dataset_count):
+    def projects(self, key, projects_datasets_file, dataset_count):
         """
         fill vamps_projects_datasets table
         """
         logger.info("Starting vamps_upload: projects_datasets")
+        if self.runobj.platform == 'vamps':
+            project = self.runobj.project
+            dataset = self.runobj.dataset
+            project_dataset = project+'--'+dataset
+        elif self.runobj.platform == 'illumina':
+            project = self.runobj.samples[key].project
+            dataset = self.runobj.samples[key].dataset
+            project_dataset = project+'--'+dataset
         date_trimmed = 'unknown'
-        dataset_description = self.dataset
+        dataset_description = dataset
         dataset_count = str(dataset_count)
         has_tax = '1' # true
         fh = open(projects_datasets_file,'w')
         
         fh.write("\t".join(["HEADER","project","dataset","dataset_count","has_tax", "date_trimmed","dataset_info"] )+"\n")
-        fh.write("\t"+"\t".join([self.project, self.dataset, dataset_count, has_tax, date_trimmed, dataset_description] )+"\n")
+        fh.write("\t"+"\t".join([project, dataset, dataset_count, has_tax, date_trimmed, dataset_description] )+"\n")
         
         fh.close()
         logger.info("Finishing VAMPS projects()")
         
-    def info(self, project_info_file):
+    def info(self, key,project_info_file):
         """
         fill vamps_project_info table
         """
         logger.info("Starting vamps_upload: projects_info")
-        user = self.runobj.user
+        if self.runobj.platform == 'vamps':
+            user = self.runobj.user
+            project = self.runobj.project
+            sample_source = self.runobj.env_source_id
+        elif self.runobj.platform == 'illumina':
+            user = self.runobj.samples[key].data_owner
+            project = self.runobj.samples[key].project
+            sample_source = self.runobj.samples[key].env_sample_source
         if self.runobj.site == 'vamps':
             db_host    = 'vampsdb'
             db_name    = 'vamps'
@@ -397,14 +439,14 @@ class Vamps:
         institution= data[0][3]
         
         fh.write("\t".join(["HEADER","project","title","description","contact", "email","institution","user","env_source_id"] )+"\n")
-        fh.write("\t"+"\t".join([self.project, title, description, contact, email, institution, user, self.runobj.env_source_id] )+"\n")
+        fh.write("\t"+"\t".join([project, title, description, contact, email, institution, user, sample_source] )+"\n")
         # if this project already exists in the db???
         # the next step should update the table rather than add new to the db
         
         fh.close()
         logger.info("Finishing VAMPS info()")
 
-    def load_database(self,taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file):
+    def load_database(self,key,out_gast_dir,taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file):
         """
         
         """
@@ -417,16 +459,30 @@ class Vamps:
 #         self.projects_datasets_file = os.path.join(self.outdir,'vamps_projects_datasets_pipe.txt')
 #         self.projects_info_file = os.path.join(self.outdir,'vamps_projects_info_pipe.txt')
         # USER: vamps_db_tables
-        data_cube_table     = C.data_cube_table
-        summed_cube_table   = C.summed_cube_table
-        taxonomy_table      = C.taxonomy_table
-        sequences_table     = C.sequences_table
-        exports_table       = C.exports_table
-        info_table_user     = C.info_table_user
-        info_table          = C.info_table
-        datasets_table      = C.datasets_table
-        users_table         = C.users_table
-        
+        if self.runobj.platform == 'vamps':
+            user = self.runobj.user
+            project = self.runobj.project
+            data_cube_table     = C.database_tables['vamps_user_uploads']['tax_dc_tbl']
+            summed_cube_table   = C.database_tables['vamps_user_uploads']['tax_summed_tbl']
+            taxonomy_table      = C.database_tables['vamps_user_uploads']['tax_tbl']
+            sequences_table     = C.database_tables['vamps_user_uploads']['sequences_tbl']
+            export_table        = C.database_tables['vamps_user_uploads']['export_tbl']
+            datasets_table      = C.database_tables['vamps_user_uploads']['datasets_tbl']
+            users_table         = C.database_tables['vamps_user_uploads']['users_tbl']
+            
+        elif self.runobj.platform == 'illumina':
+            user = self.runobj[key].data_owner
+            project = self.runobj.samples[key].project
+            data_cube_table     = C.database_tables['vamps_mbl_origin']['tax_dc_tbl']
+            summed_cube_table   = C.database_tables['vamps_mbl_origin']['tax_summed_tbl']
+            taxonomy_table      = C.database_tables['vamps_mbl_origin']['tax_tbl']
+            sequences_table     = C.database_tables['vamps_mbl_origin']['sequences_tbl']
+            export_table        = C.database_tables['vamps_mbl_origin']['export_tbl']
+            datasets_table      = C.database_tables['vamps_mbl_origin']['datasets_tbl']
+            users_table         = C.database_tables['vamps_mbl_origin']['users_tbl']
+            
+        info_table          = C.database_tables['vamps_mbl_origin']['info_tbl']
+        users_info_table    = C.database_tables['vamps_user_uploads']['info_tbl']    
         # We only have a single project and dataset here:
         # if the project is new  then we add the data to the upload_info and projects_datasets_pipe table
         # but if the project is not new:
@@ -443,16 +499,17 @@ class Vamps:
         else:
             db_host    = 'vampsdev'
             db_name    = 'vamps'
+            
         myconn = MyConnection(host=db_host, db=db_name)
         query = "SELECT project_name from %s where project_name='%s' \
                     UNION \
                  SELECT project_name from %s where project_name='%s' \
-                 " % (info_table_user,self.project,info_table,self.project)
+                 " % (users_info_table, project, info_table, project)
                  
         data = myconn.execute_fetch_select(query)
         if data:
             logger.info("found this project "+data[0][0]+" Exiting")
-            sys.exit("Duplicate project name found; Canceling upload to database but your GASTed data are here: "+ self.out_gast_dir)
+            sys.exit("Duplicate project name found; Canceling upload to database but your GASTed data are here: "+ out_gast_dir)
         else:
             # project is unknown in database - continue
             
@@ -552,15 +609,10 @@ class Vamps:
                 
             qUser = "insert into %s (project, user)\
                         VALUES('%s','%s')" \
-                        % (users_table, self.project, self.runobj.user)
+                        % (users_table, project, user)
             myconn.execute_no_fetch(qUser) 
             
             
-        
-        
-        
-        
-        
         
         
         logger.info("Finished load VAMPS data")

@@ -597,7 +597,8 @@ class Gast:
         #usearch_cmd += ' --iddef 3'
         usearch_cmd += ' -gapopen 6I/1E'
         usearch_cmd += ' -db ' + refdb  
-        usearch_cmd += ' -strand plus'              
+        usearch_cmd += ' -strand plus'   
+        usearch_cmd += ' -quicksort '
         usearch_cmd += ' -uc ' + usearch_filename 
         usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
         usearch_cmd += ' -maxrejects ' + str(C.max_rejects)

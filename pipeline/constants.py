@@ -104,6 +104,8 @@ pipeline_run_items = {
                 'platform':'illumina',
                 'use_cluster':True,
                 'csvPath':'',
+                'site':'vampsdev',
+                'load_vamps_database':False,
                 'anchor_file':'',
                 'baseoutputdir':'output',
                 'input_dir':'.',
@@ -211,15 +213,32 @@ refdbs = {'unknown':'refssu_all',
     
 ########### VAMPS UPLOAD ###########################################################################  
 ranks = ('superkingdom','phylum','class','orderx','family','genus','species','strain')
-data_cube_table     = 'vamps_data_cube_uploads'
-summed_cube_table   = 'vamps_junk_data_cube_pipe'
-taxonomy_table      = 'vamps_taxonomy_pipe'
-sequences_table     = 'vamps_sequences_pipe'
-exports_table       ='vamps_export_pipe'
-info_table_user     = 'vamps_upload_info'
-info_table          = 'vamps_projects_info'
-datasets_table      = 'vamps_projects_datasets_pipe'
-users_table         = 'vamps_users'
+database_tables = {
+'vamps_user_uploads': {
+            'tax_dc_tbl'      : 'vamps_data_cube_uploads',
+            'tax_summed_tbl'  : 'vamps_junk_data_cube_pipe',
+            'tax_tbl'         : 'vamps_taxonomy_pipe',
+            'sequences_tbl'   : 'vamps_sequences_pipe',
+            'export_tbl'      : 'vamps_export_pipe',
+            'info_tbl'        : 'vamps_upload_info',
+            'datasets_tbl'    : 'vamps_projects_datasets_pipe',
+            'users_tbl'       :'vamps_users'
+            },
+'vamps_mbl_origin': {
+            'tax_dc_tbl'      : 'vamps_data_cube',
+            'tax_summed_tbl'  : 'vamps_junk_data_cube',
+            'tax_tbl'         : 'vamps_taxonomy',
+            'sequences_tbl'   : 'vamps_sequences',
+            'export_tbl'      : 'vamps_export',
+            'info_tbl'        : 'vamps_projects_info',
+            'datasets_tbl'    : 'vamps_projects_datasets',
+            'users_tbl'       : 'vamps_users'
+            }
+
+}
+
+
+
 ####################################################################################################
   
     

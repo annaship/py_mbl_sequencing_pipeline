@@ -183,6 +183,8 @@ class RunConfig:
             self.compressed     = general_config['compressed'] 
             self.database_name  = general_config['database_name'] 
             self.database_host  = general_config['database_host'] 
+            self.site           = general_config['site']
+            self.load_vamps_database = general_config['load_vamps_database']
         # added gast_input_source for vamps uploads
         # so when users want to gast at a later time they will
         # look in the database and not the files (which may be missing)
