@@ -78,9 +78,15 @@ class DbUloadTestCase(unittest.TestCase):
         taxonomy = "Blah; Blah; Blah"
         sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
         res = self._connection.execute_no_fetch(sql)
-        print "res = "
-        print res
         self.assertEqual(res, 1)
+
+    def test_taxonomy_exists(self):
+        taxonomy = "Blah; Blah; Blah"
+        sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
+        res = self._connection.execute_no_fetch(sql)
+        "taxonomy exists, nothing inserted"
+        self.assertEqual(res, 0)
+    
         
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
@@ -99,7 +105,7 @@ insert taxonomy
 
 methods:
     execute_fetch_select(self, sql) 
-execute_no_fetch(self, sql) 
+    execute_no_fetch(self, sql) 
 __init__(self, run = None) 
 get_fasta_file_names(self) 
 get_run_info_ill_id(self, filename_base) 
