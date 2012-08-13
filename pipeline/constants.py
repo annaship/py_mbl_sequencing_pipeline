@@ -208,7 +208,7 @@ refdbs = {'unknown':'refssu_all',
         'v9'    :'refv9',
         'ITS'   :'refITS'       
         }
-##################################################################################################      
+    
 ########### VAMPS UPLOAD ###########################################################################  
 ranks = ('superkingdom','phylum','class','orderx','family','genus','species','strain')
 data_cube_table     = 'vamps_data_cube_uploads'

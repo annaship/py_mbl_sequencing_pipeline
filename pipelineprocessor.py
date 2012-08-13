@@ -442,7 +442,6 @@ def cluster(runobj):
     pass
     
     
-    
 def vampsupload(runobj):
     """
     Upload data files to VAMPS database
