@@ -173,8 +173,7 @@ class MetadataUtils:
             sys.exit("Fasta file path doesn't exist: "+self.data_object['fasta_file'] )
         elif 'fasta_file' in self.data_object['general'] and not os.path.exists(self.data_object['general']['fasta_file']): 
             sys.exit("Fasta file path doesn't exist: "+self.data_object['general']['fasta_file'] )
-             
-             
+                          
     def validate_454_ini(self):
         print "TODO - write validation def for 454/ini"
         #self.data_object = self.create_dictionary_from_ini() 
@@ -629,7 +628,7 @@ class MetadataUtils:
             sys.exit()
         print os.uname()
         print os.uname()[1]
-        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == 'as-macbook.home':
+        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == 'as-macbook.local':
             return "c"
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
