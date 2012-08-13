@@ -290,7 +290,7 @@ class PipelneUtils:
                 full_name = os.path.join(dirname, file_name)
                 (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
                 files[full_name] = (file_base, file_extension)
-        print "len(files) = %s" % len(files)
+#        print "len(files) = %s" % len(files)
         return files    
 
 

@@ -488,7 +488,6 @@ def clean(runobj):
             print "Removing run:",runobj.run_date
             for file in fileNames:
                 filePath = os.path.join(runobj.output_dir,file)
-                print filePath
                 os.remove(os.path.join(runobj.output_dir,file))
                 # should we also remove STATUS.txt and *.ini and start again?
                 # the directory will remain with an empty STATUS.txt file

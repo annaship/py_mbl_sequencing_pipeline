@@ -115,7 +115,6 @@ class dbUpload:
         files = pipelne_utils.get_all_files(self.in_file_path)
         for full_name in files.keys():    
             if (files[full_name][1] == ".unique") and (files[full_name][0].split(".")[-1].strip() == "fa"):
-                print full_name
                 fa_files.append(full_name)
         return fa_files
         
@@ -179,7 +178,9 @@ class dbUpload:
                 # reraise the exception, as it's an unexpected error
                 raise
         
-
+    """TODO: why run_info_ill
+    1    1529    2164    8    6951    2411    83            19    JV    JV    GCCTAA    0    230    6_FP1BermC_6_14_10_CGCTC    101    23
+    """
     def insert_taxonomy(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
         "if we already had this taxonomy in this run, just skip it"
