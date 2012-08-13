@@ -386,6 +386,7 @@ class Vamps:
         myconn = MyConnection(host=db_host, db=db_name)
         query = "SELECT last_name,first_name,email,institution from vamps_auth where user='%s'" % (user)
         data = myconn.execute_fetch_select(query)
+
         
         fh = open(projects_info_file,'w')
          
