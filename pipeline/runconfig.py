@@ -17,7 +17,6 @@ import constants as C
 import ast
 from pipeline.get_ini import readCSV
 
-
 # read a config file and convert to a dictionary
 def configDictionaryFromFile_ini(config_file_path):
     import ConfigParser

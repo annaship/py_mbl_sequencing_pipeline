@@ -1,8 +1,14 @@
 import unittest
 import sys
+import os
 sys.path.append("../")
 #from mock import Mock 
 import pipeline.db_upload as dbup
+#from pipeline.db_upload import MyConnection, dbUpload 
+
+from pipeline.run import Run
+import test.run_object_factory as fake_data_object
+
 
 class DbUloadTestCase(unittest.TestCase): 
     @classmethod  
@@ -20,6 +26,23 @@ class DbUloadTestCase(unittest.TestCase):
                       "test.sequence_ill", "test.sequence_pdr_info_ill", "test.sequence_uniq_info_ill", "test.taxonomy"]:
             truncate_test_db_sql = "TRUNCATE %s;" % table_name
             cls._connection.execute_no_fetch(truncate_test_db_sql)
+        
+        data_object = fake_data_object.data_object
+#        print "data_object TTT = "
+#        print data_object
+        pi_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+        cls._runobj = Run(data_object, pi_path)    
+        
+        
+#        data_object = {'general': {'csvPath': './test/sample_data/illumina/configs/sample_metadata.csv', 'platform': 'illumina', 'use_cluster': True, 'input_file_format': 'fastq', 'input_dir': './test/sample_data/illumina/Project_J_v6_30', 'database_name': 'test', 'configPath': '', 'anchor_file': '', 'primer_file': '', 'baseoutputdir': './test/sample_data/illumina/result', 'compressed': False, 'require_distal': True, 'date': '2012-08-10', 'run': '20120614', 'database_host': 'vampsdev'}}
+#        data_object = {'csvPath': './test/sample_data/illumina/configs/sample_metadata.csv', 'platform': 'illumina', 'use_cluster': True, 'input_file_format': 'fastq', 'input_dir': './test/sample_data/illumina/Project_J_v6_30', 'database_name': 'test', 'configPath': '', 'anchor_file': '', 'primer_file': '', 'baseoutputdir': './test/sample_data/illumina/result', 'compressed': False, 'require_distal': True, 'date': '2012-08-10', 'run': '20120614', 'database_host': 'vampsdev'}
+##        cls._runobj = Run(data_object, os.path.dirname(os.path.realpath(__file__)))    
+#        print os.path.dirname(os.path.realpath(__file__))
+##        /Users/ashipunova/work/bpc/today/py_pipeline/py_mbl_sequencing_pipeline/test
+#        pi_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+##        cls._runobj = 
+#        aa = Run(data_object, pi_path)    
+
 
 #        msql = "SET SQL_MODE=@OLD_SQL_MODE"
 #        cls._connection.execute_no_fetch(msql) 
@@ -39,9 +62,16 @@ class DbUloadTestCase(unittest.TestCase):
 #        content = {'182': {'platform': 'Illumina', 'run_key': 'NNNNGCTAC', 'lane': '4', 'run': '20120613', 'IDX': 'GGCTAC', 'dna_region': 'v6', 'vamps_user': 'jreveillaud', 'adaptor': '', 'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H38', 'project': 'JCR_SPO_Bv6', 'read_length': '101', 'file_prefix': 'H38', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H38', 'amp_operator': 'JR', 'insert_size': '230'}}
 #        self._connection.put_run_info(content)
 #
-        "TODO how to get run object?"
-#    def test_get_run_info_ill_id(self):
-#        my_env454upload = dbup(run)
+    def test_get_run_info_ill_id(self):
+#        print self._runobj
+#        print type(dbup.dbUpload)
+        my_read_csv = dbup.dbUpload(self._runobj)
+        my_read_csv.put_run_info()
+
+#        dbup.get_run_info_ill_id()
+#        self._connection.execute_no_fetch(msql) 
+
+#        my_env454upload = dbup(self._runobj)
 #        filenames   = my_env454upload.get_fasta_file_names()
 #        seq_in_file = 0
 #        total_seq   = 0
@@ -53,6 +83,10 @@ class DbUloadTestCase(unittest.TestCase):
 #                filename_base   = "-".join(filename.split("/")[-1].split("-")[:-1])
 #                run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
     def test_execute_fetch_select(self): 
+#        print "UUU"
+#        print dir(self.runobj)
+
+
         msql = 'INSERT INTO run_info_ill VALUES ("1", "1529", "2164", "8", "6951", "2411", "83", "", "", "19", "JV", "JV", "GCCTAA", "0", "230", "6_FP1BermC_6_14_10_CGCTC", "101", "23")'
         self._connection.execute_no_fetch(msql) 
         
