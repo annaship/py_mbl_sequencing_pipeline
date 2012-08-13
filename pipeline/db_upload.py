@@ -115,7 +115,6 @@ class dbUpload:
         files = pipelne_utils.get_all_files(self.in_file_path)
         for full_name in files.keys():    
             if (files[full_name][1] == ".unique") and (files[full_name][0].split(".")[-1].strip() == "fa"):
-                print full_name
                 fa_files.append(full_name)
         return fa_files
         

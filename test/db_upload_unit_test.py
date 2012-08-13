@@ -24,7 +24,9 @@ class DbUloadTestCase(unittest.TestCase):
         data_object = fake_data_object.data_object
         pi_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         cls._runobj = Run(data_object, pi_path)    
-#        cls.setUpRunInfo()
+        cls._my_db_upload = dbup.dbUpload(cls._runobj)
+
+        cls.filenames = []
 
     @classmethod  
     def tearDownClass(cls):
@@ -83,16 +85,20 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(res, 0)
     
         "FIrst: illumina_files time = 136.972903013"
-
     
     def test_get_fasta_file_names(self):
-        my_instance = dbup.dbUpload(self._runobj)
-
-        filenames = my_instance.get_fasta_file_names()
+        filenames = self._my_db_upload.get_fasta_file_names()
         file_names_list = fake_data_object.file_names_list
         self.assertEqual(filenames, file_names_list)
-        
-        
+    
+    def test_get_run_info_ill_id(self):
+        filenames = self._my_db_upload.get_fasta_file_names()
+        for filename in filenames:
+            filename_base   = "-".join(filename.split("/")[-1].split("-")[:-1])
+            run_info_ill_id = self._my_db_upload.get_run_info_ill_id(filename_base)        
+            self.assertEqual(run_info_ill_id, 71)
+            break
+
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
 """
@@ -109,10 +115,10 @@ insert sequence_uniq_info_ill
 insert taxonomy
 
 methods:
+__init__(self, run = None) 
     execute_fetch_select(self, sql) 
     execute_no_fetch(self, sql) 
-__init__(self, run = None) 
-get_fasta_file_names(self) 
+    get_fasta_file_names(self) 
 get_run_info_ill_id(self, filename_base) 
 insert_seq(self, sequences) 
 get_seq_id_dict(self, sequences) 

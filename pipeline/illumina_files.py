@@ -89,7 +89,7 @@ class IlluminaFiles:
                 full_name = os.path.join(dirname, file_name)
                 (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
                 files[full_name] = (file_base, file_extension)
-        print "len(files) = %s" % len(files)
+#        print "len(files) = %s" % len(files)
         return files
     
     "TODO: made one method out of the next two"
@@ -99,7 +99,7 @@ class IlluminaFiles:
         for dataset in self.dataset_emails.keys():
             file_name = os.path.join(self.out_file_path, dataset + ".ini")
             n +=1
-            print "%s ini file: %s" % (n, file_name)
+#            print "%s ini file: %s" % (n, file_name)
             program_name = "analyze-illumina-v6-overlaps"
             if self.LOCAL:
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"
@@ -115,7 +115,7 @@ class IlluminaFiles:
         for full_name in files.keys():    
             if files[full_name][1] == ".fa":
                 n +=1   
-                print "%s fasta file: %s" % (n, full_name)
+#                print "%s fasta file: %s" % (n, full_name)
                 program_name = "fastaunique"
                 if self.LOCAL:
                     program_name = "/Users/ashipunova/bin/illumina-utils/fastaunique"                
