@@ -111,12 +111,13 @@ class Vamps:
             projects_datasets_file = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
             projects_info_file = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
-            self.taxonomy(tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file)
-            sys.exit()
-            self.sequences()        
+            (tax_collector,read_id_lookup) = self.taxonomy(tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file)
+            
+            self.sequences(tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
+            
             self.exports()
-            self.projects()
-            myvamps.info()
+            self.projects(projects_datasets_file, dataset_count)
+            self.info(projects_info_file)
             if self.runobj.load_vamps_database:
                 self.load_database()
             
@@ -128,7 +129,7 @@ class Vamps:
         logger.info("Starting vamps_upload: taxonomy")
         # SUMMED create a look-up
         taxa_lookup = {}
-        self.read_id_lookup={}
+        read_id_lookup={}
         for line in  open(tagtax_file,'r'):
             line = line.strip()
             items = line.split()
@@ -136,7 +137,7 @@ class Vamps:
             if taxa[-3:] == ';NA':
                 taxa = taxa[:-3]
             read_id=items[0]
-            self.read_id_lookup[read_id]=taxa
+            read_id_lookup[read_id]=taxa
             
             if taxa in taxa_lookup:                
                 taxa_lookup[taxa] += 1 
@@ -153,7 +154,7 @@ class Vamps:
         fh1.write("\t".join( ["HEADER","project", "dataset", "taxonomy", "superkingdom", 
                             "phylum", "class", "orderx", "family", "genus", "species", 
                             "strain", "rank", "knt", "frequency", "dataset_count", "classifier"]) + "\n")
-        self.tax_collector={}
+        tax_collector={}
         for tax,cnt in taxa_lookup.iteritems():
             datarow = ['',self.project,self.dataset]
             
@@ -165,7 +166,7 @@ class Vamps:
                 if len(taxes) <= i:
                     taxes.append(C.ranks[i] + "_NA")
 
-            self.tax_collector[tax] = {}
+            tax_collector[tax] = {}
 
 
             datarow.append(tax)
@@ -180,9 +181,9 @@ class Vamps:
             #print w
             fh1.write(w+"\n")
            
-            self.tax_collector[tax]['rank'] = rank
-            self.tax_collector[tax]['cnt'] = str(cnt)
-            self.tax_collector[tax]['freq'] = str(freq)
+            tax_collector[tax]['rank'] = rank
+            tax_collector[tax]['cnt'] = str(cnt)
+            tax_collector[tax]['freq'] = str(freq)
             
             
         fh1.close()
@@ -279,47 +280,49 @@ class Vamps:
             fh3.write(w+"\n")
         fh3.close()
         
-    def sequences(self):
+        return (tax_collector,read_id_lookup)
+        
+    def sequences(self,tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file):
         """
         fill vamps_sequences table
         """
         
         logger.info("Starting vamps_upload: sequences")
         # open gast_concat table to get the distances and the ferids
-        self.refid_collector={}
-        for line in  open(self.gast_concat_file,'r'):
+        refid_collector={}
+        for line in  open(gast_concat_file,'r'):
             line = line.strip()
             items=line.split()
             id=items[0]
             distance=items[1]
             refhvr_ids=items[2]
-            self.refid_collector[id]={}
-            self.refid_collector[id]['distance']=distance
-            self.refid_collector[id]['refhvr_ids']=refhvr_ids
+            refid_collector[id]={}
+            refid_collector[id]['distance']=distance
+            refid_collector[id]['refhvr_ids']=refhvr_ids
             
             
         
         
-        fh = open(self.sequences_file,'w')
+        fh = open(sequences_file,'w')
         fh.write("\t".join(["HEADER","project","dataset","taxonomy","refhvr_ids", "rank",
                             "seq_count","frequency","distance","read_id","project_dataset"] )+"\n")
         
         
         
         # open uniques fa file
-        f = FastaReader(self.unique_file)
+        f = FastaReader(unique_file)
         
         while f.next():
             datarow = ['']
             id = f.id.split('|')[0]
             seq = f.seq
-            tax = self.read_id_lookup[id]
-            rank = self.tax_collector[tax]['rank']
-            cnt = self.tax_collector[tax]['cnt']
-            freq = self.tax_collector[tax]['freq']
-            if id in self.refid_collector:
-                distance = self.refid_collector[id]['distance']
-                refhvr_ids = self.refid_collector[id]['refhvr_ids']
+            tax = read_id_lookup[id]
+            rank = tax_collector[tax]['rank']
+            cnt = tax_collector[tax]['cnt']
+            freq = tax_collector[tax]['freq']
+            if id in refid_collector:
+                distance = refid_collector[id]['distance']
+                refhvr_ids = refid_collector[id]['refhvr_ids']
             else:
                 distance = '1.0'
                 refhvr_ids = '0'
@@ -351,16 +354,16 @@ class Vamps:
         print "TODO: upload_vamps 5- exports"
         logger.info("Finishing VAMPS exports()")
         
-    def projects(self):
+    def projects(self, projects_datasets_file, dataset_count):
         """
         fill vamps_projects_datasets table
         """
         logger.info("Starting vamps_upload: projects_datasets")
         date_trimmed = 'unknown'
         dataset_description = self.dataset
-        dataset_count = str(self.dataset_count)
+        dataset_count = str(dataset_count)
         has_tax = '1' # true
-        fh = open(self.projects_datasets_file,'w')
+        fh = open(projects_datasets_file,'w')
         
         fh.write("\t".join(["HEADER","project","dataset","dataset_count","has_tax", "date_trimmed","dataset_info"] )+"\n")
         fh.write("\t".join(["0", self.project, self.dataset, dataset_count, has_tax, date_trimmed, dataset_description] )+"\n")
@@ -368,12 +371,12 @@ class Vamps:
         fh.close()
         logger.info("Finishing VAMPS projects()")
         
-    def info(self):
+    def info(self, projects_info_file):
         """
         fill vamps_project_info table
         """
         logger.info("Starting vamps_upload: projects_info")
-        
+        user = self.runobj.user
         if self.runobj.site == 'vamps':
             db_host    = 'vampsdb'
             db_name    = 'vamps'
@@ -381,17 +384,17 @@ class Vamps:
             db_host    = 'vampsdev'
             db_name    = 'vamps'
         myconn = MyConnection(host=db_host, db=db_name)
-        query = "SELECT last_name,first_name,email,institution from vamps_auth where user='%s'" % (self.runobj.user)
+        query = "SELECT last_name,first_name,email,institution from vamps_auth where user='%s'" % (user)
         data = myconn.execute_fetch_select(query)
         
-        fh = open(self.projects_info_file,'w')
+        fh = open(projects_info_file,'w')
          
         title="title"
         description='description'
         contact= data[0][1]+' '+data[0][0]
         email= data[0][2]
         institution= data[0][3]
-        user = self.runobj.user
+        
         fh.write("\t".join(["HEADER","project","title","description","contact", "email","institution","user","env_source_id"] )+"\n")
         fh.write("\t".join(["0",self.project, title, description, contact, email, institution, user, self.runobj.env_source_id] )+"\n")
         # if this project already exists in the db???
@@ -413,15 +416,15 @@ class Vamps:
 #         self.projects_datasets_file = os.path.join(self.outdir,'vamps_projects_datasets_pipe.txt')
 #         self.projects_info_file = os.path.join(self.outdir,'vamps_projects_info_pipe.txt')
         # USER: vamps_db_tables
-        data_cube_table     = 'vamps_data_cube_uploads'
-        summed_cube_table   = 'vamps_junk_data_cube_pipe'
-        taxonomy_table      = 'vamps_taxonomy_pipe'
-        sequences_table      = 'vamps_sequences_pipe'
-        exports_table       ='vamps_export_pipe'
-        info_table_user     = 'vamps_upload_info'
-        info_table          = 'vamps_projects_info'
-        datasets_table      = 'vamps_projects_datasets_pipe'
-        users_table         = 'vamps_users'
+        data_cube_table     = C.data_cube_table
+        summed_cube_table   = C.summed_cube_table
+        taxonomy_table      = C.taxonomy_table
+        sequences_table     = C.sequences_table
+        exports_table       = C.exports_table
+        info_table_user     = C.info_table_user
+        info_table          = C.info_table
+        datasets_table      = C.datasets_table
+        users_table         = C.users_table
         
         # We only have a single project and dataset here:
         # if the project is new  then we add the data to the upload_info and projects_datasets_pipe table

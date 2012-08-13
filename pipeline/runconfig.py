@@ -175,10 +175,11 @@ class RunConfig:
             self.dataset        = general_config['dataset']
             self.site           = general_config['site']
             self.env_source_id  = general_config['envsource']
+            self.load_vamps_database = general_config['load_vamps_database']
             try:
                 self.fasta_file    = general_config['fasta_file'] 
             except:
-                self.fasta_file    =None
+                self.fasta_file    = None
         if self.platform == 'illumina':
             self.compressed     = general_config['compressed'] 
             self.database_name  = general_config['database_name'] 

@@ -211,6 +211,15 @@ refdbs = {'unknown':'refssu_all',
 ##################################################################################################      
 ########### VAMPS UPLOAD ###########################################################################  
 ranks = ('superkingdom','phylum','class','orderx','family','genus','species','strain')
+data_cube_table     = 'vamps_data_cube_uploads'
+summed_cube_table   = 'vamps_junk_data_cube_pipe'
+taxonomy_table      = 'vamps_taxonomy_pipe'
+sequences_table     = 'vamps_sequences_pipe'
+exports_table       ='vamps_export_pipe'
+info_table_user     = 'vamps_upload_info'
+info_table          = 'vamps_projects_info'
+datasets_table      = 'vamps_projects_datasets_pipe'
+users_table         = 'vamps_users'
 ####################################################################################################
   
     
