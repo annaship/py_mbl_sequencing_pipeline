@@ -434,6 +434,7 @@ class Vamps:
         #       (maybe check if dataset already exists and die if yes)
         #   if the existing project doesn't belong to the owner then die with a warning to change project name
         #      (or maybe change the name by adding _user)
+
         
         if self.runobj.site == 'vamps':
             db_host    = 'vampsdb'
