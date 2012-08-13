@@ -169,6 +169,12 @@ class MetadataUtils:
     def validate_vamps_ini(self):
         # configPath is the new configPath
         self.data_object = self.configDictionaryFromFile_ini(self.general_config_dict['configPath'])
+        if 'fasta_file' in self.data_object and not os.path.exists(self.data_object['fasta_file']):
+            sys.exit("Fasta file path doesn't exist: "+self.data_object['fasta_file'] )
+        elif 'fasta_file' in self.data_object['general'] and not os.path.exists(self.data_object['general']['fasta_file']): 
+            sys.exit("Fasta file path doesn't exist: "+self.data_object['general']['fasta_file'] )
+             
+             
     def validate_454_ini(self):
         print "TODO - write validation def for 454/ini"
         #self.data_object = self.create_dictionary_from_ini() 

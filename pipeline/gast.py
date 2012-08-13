@@ -122,9 +122,9 @@ class Gast:
                 unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
                 names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
             elif self.runobj.platform == 'vamps':
-                output_dir = os.path.join(self.basedir,key)
-                gast_dir = os.path.join(output_dir,'gast')
-                unique_file = os.path.join(output_dir, key+'.unique.fa')
+                output_dir = os.path.join(self.global_gast_dir,key)
+                gast_dir = os.path.join(self.global_gast_dir,key)
+                unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
             else:
                 sys.exit("clustergast: no platform")
             
@@ -341,10 +341,10 @@ class Gast:
                 unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
                 names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
             elif self.runobj.platform == 'vamps':
-                output_dir = os.path.join(self.basedir,key)
-                gast_dir = os.path.join(output_dir,'gast')
-                unique_file = os.path.join(output_dir, key+'.unique.fa')
-                names_file = os.path.join(output_dir,key+'.names')
+                output_dir = os.path.join(self.global_gast_dir,key)
+                gast_dir = os.path.join(self.global_gast_dir,key)
+                unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
+                names_file = os.path.join(self.global_gast_dir,key,'names')
             else:
                 sys.exit("gast_cleanup: no platform")
                 
@@ -455,7 +455,7 @@ class Gast:
                 clustergast_fh = open(clustergast_filename_single,'a')            
                 shutil.copyfileobj(open(gast_filename,'rb'), clustergast_fh)
                 clustergast_fh.close()
-                #the open again and get data for gast concat
+                #then open again and get data for gast concat
                 concat = {}
                 #print clustergast_filename_single
                 for line in open(clustergast_filename_single,'r'):
@@ -507,10 +507,10 @@ class Gast:
                 unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
                 names_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique.names")
             elif self.runobj.platform == 'vamps':
-                output_dir = os.path.join(self.basedir,key)
-                gast_dir = os.path.join(output_dir,'gast')
-                unique_file = os.path.join(output_dir, key+'.unique.fa')
-                names_file = os.path.join(output_dir,key+'.names')
+                output_dir = os.path.join(self.global_gast_dir,key)
+                gast_dir = os.path.join(self.global_gast_dir,key)
+                unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
+                names_file = os.path.join(self.global_gast_dir,key,'names')
             else:
                 sys.exit("gast2tax: no platform")
                 
@@ -601,6 +601,21 @@ class Gast:
         usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
         usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
         usearch_cmd += ' -id ' + str(C.pctid_threshold)
+        
+        
+        usearch_cmd = '/bioware/uclust/usearch5.0.151_i86linux32'
+        usearch_cmd += ' --global '
+        usearch_cmd += ' --query ' + fastasamp_filename
+        usearch_cmd += ' --iddef 3'
+        usearch_cmd += ' --gapopen 6I/1E'
+        usearch_cmd += ' --db ' + refdb               
+        usearch_cmd += ' --uc ' + usearch_filename 
+        usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
+        usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
+        usearch_cmd += ' --id ' + str(C.pctid_threshold)
+        
+        
+        
         return usearch_cmd
         
     def get_grep_cmd(self,usearch_filename,  clustergast_filename ):
@@ -617,7 +632,7 @@ class Gast:
         grep_cmd += " awk -F\"\\t\" '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
         
         grep_cmd += " sort -k1,1b -k2,2gr |"
-        # append to file:
+        # append to clustergast file:
         grep_cmd += " clustergast_tophit "+use_full_length+" >> " + clustergast_filename
         print grep_cmd
         return grep_cmd  
@@ -657,6 +672,7 @@ class Gast:
         #results = uc_results
         results = {}
         
+        #test_read='FI1U8LC02GEF7N'
         # open gast_file to get results
         tagtax_terse_filename     = os.path.join(gast_dir,"tagtax_terse")
         tagtax_long_filename     = os.path.join(gast_dir,"tagtax_long")
@@ -673,11 +689,15 @@ class Gast:
             if len(data) == 3:
                 data.append("")
             # 0=id, 1=ref, 2=dist, 3=align
-            results[data[0]]=[data[1].split('|')[0],data[2],data[3]]
+            #if data[0]==test_read:
+            #    print 'found test in gastv6 ',data[1].split('|')[0],data[2],data[3]
+                
+            read = data[0]
+            if read in results:
+                results[read].append( [data[1].split('|')[0], data[2], data[3]] )
+            else:            
+                results[read]=[ [data[1].split('|')[0], data[2], data[3]] ]
             
-        for read in results:
-            #print read, results[read]
-            pass
         
         for line in  open(names_file,'r'):
             data=line.strip().split("\t")
@@ -686,30 +706,38 @@ class Gast:
             taxObjects  = []
             distance    =0
             refs_for    ={}
+            
             #print 'read',read
             if read not in results:
                 results[read]=["Unknown", '1', "NA", '0', '0', "NA", "0;0;0;0;0;0;0;0", "0;0;0;0;0;0;0;0", "100;100;100;100;100;100;100;100"]
                 refs_for[read] = [ "NA" ]
             else:
                 #print 'read in res',read, results[read]
+                #if read == test_read:
+                #    print 'found ',test_read,results[test_read]
                 for i in range( 0,len(results[read])):
-                #for resultread in results[read]:
-                    #print results[read]
-                    ref = results[read][0]
+                    #for resultread in results[read]:
+                    #print 'resread',results[read]
+                    ref = results[read][i][0]
                     if ref in ref_taxa:
                         for tax in ref_taxa[ref]:
                             for t in tax:
                                 taxObjects.append(Taxonomy(t))
                     else:
                         pass
+                        
                     if read in refs_for:
-                        if results[read][0] not in refs_for[read]:
-                            refs_for[read].append(results[read][0])  
+                        #if read ==test_read:
+                        #    print '2',read,refs_for[test_read]
+                        if results[read][i][0] not in refs_for[read]:
+                            refs_for[read].append(results[read][i][0])  
                     else:
-                        refs_for[read] = [results[read][0]]                   
+                        #if read == test_read:
+                        #    print '1',read,results[read][i][0]
+                        refs_for[read] = [results[read][i][0]]                   
                      
                     # should all be the same distance
-                    distance = results[read][1]
+                    distance = results[read][i][1]
                 #Lookup the consensus taxonomy for the array
                 taxReturn = consensus(taxObjects, C.majority)
                 
@@ -743,9 +771,10 @@ class Gast:
 #         subprocess.call(mothur_cmd, shell=True)
     def check_for_unique_files(self, keys):
         logger.info("Checking for uniques file")
-        if self.runobj.platform == 'illumina':
-            reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
-            for key in keys:
+        for key in keys:
+            if self.runobj.platform == 'illumina':
+                reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
+                
                 file_prefix = self.runobj.samples[key].file_prefix
                 unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
                 if os.path.exists(unique_file):
@@ -755,33 +784,33 @@ class Gast:
                         logger.warning( "Found uniques file BUT zero size "+unique_file)
                 else:
                     logger.debug( "NO uniques file found "+unique_file)
-                
-                
-        if self.runobj.platform == 'vamps':
-            # one fasta file or (one project and dataset from db)
-            if os.path.exists(self.runobj.fasta_file):
-                output_dir = os.path.join(self.basedir,keys[0])
-                unique_file = os.path.join(output_dir, keys[0]+'.unique.fa')
-                names_file = os.path.join(output_dir, keys[0]+'.names')
-                
-                # the -x means do not store frequency data in defline of fasta file
-                fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.runobj.fasta_file+" -o "+unique_file+" -n "+names_file 
-                print fastaunique_cmd
-                
-                subprocess.call(fastaunique_cmd, shell=True)
-                
-                #shutil.move('a.txt', 'b.kml')
-                #os.rename(filename, filename[7:])
-                #os.rename(filename, filename[7:])
-            else:
-                if self.runobj.project and self.runobj.dataset:
-                    pass
+                    
+                    
+            if self.runobj.platform == 'vamps':
+                # one fasta file or (one project and dataset from db)
+                if os.path.exists(self.runobj.fasta_file):
+                    #output_dir = os.path.join(self.basedir,keys[0])
+                    unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
+                    names_file = os.path.join(self.global_gast_dir,key,'names')
+                    
+                    # the -x means do not store frequency data in defline of fasta file
+                    fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.runobj.fasta_file+" -o "+unique_file+" -n "+names_file 
+                    print fastaunique_cmd
+                    
+                    subprocess.call(fastaunique_cmd, shell=True)
+                    
+                    #shutil.move('a.txt', 'b.kml')
+                    #os.rename(filename, filename[7:])
+                    #os.rename(filename, filename[7:])
                 else:
-                    pass
-            #get from database
-        else:
-            pass
-            
+                    if self.runobj.project and self.runobj.dataset:
+                        pass
+                    else:
+                        pass
+                #get from database
+            else:
+                pass
+                
             
 #         for key in keys:
 #             fasta_file = ""
