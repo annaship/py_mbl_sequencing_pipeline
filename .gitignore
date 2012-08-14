@@ -15,6 +15,7 @@ db_conn_ok.conf
 unique_file_counts
 illumina_files_test
 analysis
+unique_file_counts_test
 
 # Result files #
 ################
