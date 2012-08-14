@@ -49,7 +49,7 @@ class DbUloadTestCase(unittest.TestCase):
 #        print "URA"
 #
     "Run setUp to clean db and fill out run info"
-    @unittest.skip("Needs clean db")    
+#    @unittest.skip("Needs clean db")    
     def test_a_setUpCleanDb(self):
         for table_name in ["test.dataset", "test.run_key", "test.run", 
                       "test.dna_region", "test.project", "test.dataset", "test.run_info_ill", 
@@ -57,7 +57,7 @@ class DbUloadTestCase(unittest.TestCase):
             truncate_test_db_sql = "TRUNCATE %s;" % table_name
             self._connection.execute_no_fetch(truncate_test_db_sql)
     
-    @unittest.skip("Needs clean db")
+#    @unittest.skip("Needs clean db")
     def test_b_setUpRunInfo(self):
         my_read_csv = dbup.dbUpload(self._runobj)
         my_read_csv.put_run_info()
@@ -106,13 +106,8 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(run_info_ill_id, int(res[0][0]))
     
     def test_h_insert_seq(self, sequences = ['TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC']):
-        self._my_db_upload.insert_seq(sequences)
-        
-        for seq in sequences:
-            sql = "SELECT sequence_ill_id FROM sequence_ill WHERE uncompress(sequence_comp) = '%s'" % (seq)
-            res = self._connection.execute_fetch_select(sql)
-            self.assertEqual(int(res[0][0]), 1)
-            break
+        seq_id = self._my_db_upload.insert_seq(sequences)       
+        self.assertEqual(seq_id, 1)
     
     def test_i_insert_pdr_info(self):
         sql = "truncate sequence_pdr_info_ill"
@@ -134,8 +129,14 @@ class DbUloadTestCase(unittest.TestCase):
     def test_j_get_gasta_result(self):
         filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL8_3-PERFECT_reads.fa.unique"
         res       = self._my_db_upload.get_gasta_result(filename)
-        self.assertEqual(res, fake_data_object.gast_dict)
+        self.assertEqual(res, fake_data_object.gast_dict1)
         
+    def test_k_insert_taxonomy(self):
+        self.fasta.id  = "A5BCDEF3:25:Z987YXWUQ:3:1101:4387:2211 1:N:0:ATCACG|frequency:1"
+        self.fasta.seq = "TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC"       
+        tax_id         = self._my_db_upload.insert_taxonomy(self.fasta, fake_data_object.gast_dict2) 
+        
+        self.assertEqual(tax_id, 1)
 
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
@@ -163,7 +164,7 @@ get_seq_id_dict(self, sequences)
 get_id(self, table_name, value) 
 get_sequence_id(self, seq) 
     insert_pdr_info(self, fasta, run_info_ill_id) 
-get_gasta_result(self, filename) 
+    get_gasta_result(self, filename) 
 insert_taxonomy(self, fasta, gast_dict) 
 insert_sequence_uniq_info_ill(self, fasta, gast_dict) 
 put_run_info(self, content = None) 

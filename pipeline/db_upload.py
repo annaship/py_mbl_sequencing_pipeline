@@ -128,7 +128,8 @@ class dbUpload:
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
-        self.my_conn.execute_no_fetch(my_sql)
+        seq_id     = self.my_conn.execute_no_fetch(my_sql)
+        return seq_id
         
     def get_seq_id_dict(self, sequences):
         id_name    = self.sequence_table_name + "_id" 
@@ -195,6 +196,7 @@ class dbUpload:
                 my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
                 tax_id = self.my_conn.execute_no_fetch(my_sql)
                 self.tax_id_dict[taxonomy] = tax_id
+            return tax_id
             
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
