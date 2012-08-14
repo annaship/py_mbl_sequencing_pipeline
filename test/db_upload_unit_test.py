@@ -37,7 +37,7 @@ class DbUloadTestCase(unittest.TestCase):
         msql = "SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;"
 #        msql = "SET SQL_MODE=@OLD_SQL_MODE; SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS; SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;"
         cls._connection.execute_no_fetch(msql) 
-        print "Done!"
+        print "\nDone!"
         
 #    def test_1(self):
 #        print "URA"
@@ -84,7 +84,7 @@ class DbUloadTestCase(unittest.TestCase):
         "taxonomy exists, nothing inserted"
         self.assertEqual(res, 0)
     
-        "FIrst: illumina_files time = 136.972903013"
+        "FIrst do: illumina_files time = 136.972903013"
     
     def test_get_fasta_file_names(self):
         filenames = self._my_db_upload.get_fasta_file_names()
@@ -98,6 +98,17 @@ class DbUloadTestCase(unittest.TestCase):
             run_info_ill_id = self._my_db_upload.get_run_info_ill_id(filename_base)        
             self.assertEqual(run_info_ill_id, 71)
             break
+    
+    def test_insert_seq(self, sequences = ['TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC']):
+        self._my_db_upload.insert_seq(sequences)
+        
+        for seq in sequences:
+            sql = "select sequence_ill_id from sequence_ill where uncompress(sequence_comp) = '%s'" % (seq)
+            res = self._connection.execute_fetch_select(sql)
+            self.assertEqual(int(res[0][0]), 1)
+            break
+        
+
 
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
@@ -119,7 +130,7 @@ __init__(self, run = None)
     execute_fetch_select(self, sql) 
     execute_no_fetch(self, sql) 
     get_fasta_file_names(self) 
-get_run_info_ill_id(self, filename_base) 
+    get_run_info_ill_id(self, filename_base) 
 insert_seq(self, sequences) 
 get_seq_id_dict(self, sequences) 
 get_id(self, table_name, value) 
