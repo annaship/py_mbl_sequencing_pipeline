@@ -9,7 +9,7 @@ sys.path.append("/Users/ashipunova/bin/illumina-utils")
 import fastalib as u
 
 from pipeline.run import Run
-import test.run_object_factory as fake_data_object
+import test.test_factory as fake_data_object
 
 
 class DbUloadTestCase(unittest.TestCase): 
@@ -32,7 +32,8 @@ class DbUloadTestCase(unittest.TestCase):
         cls.seq_id_dict = {}
         fasta_file_path = "./test/sample_data/illumina/result/20120614/analysis/perfect_reads/SMPL53_3-PERFECT_reads.fa.unique"
         cls.fasta           = u.SequenceSource(fasta_file_path, lazy_init = False) 
-
+        cls.fasta.seq  = "TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC"
+        cls.fasta.id   = "A5BCDEF3:25:Z987YXWUQ:3:1101:4387:2211 1:N:0:ATCACG|frequency:1"
 
     @classmethod  
     def tearDownClass(cls):
@@ -119,9 +120,6 @@ class DbUloadTestCase(unittest.TestCase):
         sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = 'SMPL31_3'"
         res = self._connection.execute_fetch_select(sql)        
         run_info_ill_id = int(res[0][0])
-        
-        self.fasta.seq  = "TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC"
-        self.fasta.id   = "A5BCDEF3:25:Z987YXWUQ:3:1101:4387:2211 1:N:0:ATCACG|frequency:1"
 
         res_id = self._my_db_upload.insert_pdr_info(self.fasta, run_info_ill_id)
         self.assertEqual(res_id, 1)
@@ -132,11 +130,13 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(res, fake_data_object.gast_dict1)
         
     def test_k_insert_taxonomy(self):
-        self.fasta.id  = "A5BCDEF3:25:Z987YXWUQ:3:1101:4387:2211 1:N:0:ATCACG|frequency:1"
-        self.fasta.seq = "TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC"       
         tax_id         = self._my_db_upload.insert_taxonomy(self.fasta, fake_data_object.gast_dict2) 
         
         self.assertEqual(tax_id, 1)
+        
+    def test_l_insert_sequence_uniq_info_ill(self):
+        res_id         = self._my_db_upload.insert_sequence_uniq_info_ill(self.fasta, fake_data_object.gast_dict2) 
+        self.assertEqual(res_id, 1)
 
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
@@ -165,7 +165,7 @@ get_id(self, table_name, value)
 get_sequence_id(self, seq) 
     insert_pdr_info(self, fasta, run_info_ill_id) 
     get_gasta_result(self, filename) 
-insert_taxonomy(self, fasta, gast_dict) 
+    insert_taxonomy(self, fasta, gast_dict) 
 insert_sequence_uniq_info_ill(self, fasta, gast_dict) 
 put_run_info(self, content = None) 
 insert_bulk_data(self, key, values) 

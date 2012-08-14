@@ -217,7 +217,8 @@ class dbUpload:
                 '%s'                
                )
                """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-        self.my_conn.execute_no_fetch(my_sql)
+        res_id = self.my_conn.execute_no_fetch(my_sql)
+        return res_id
     
     def put_run_info(self, content = None):
 
