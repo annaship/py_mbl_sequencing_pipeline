@@ -581,3 +581,23 @@ file_names_list = ['./test/sample_data/illumina/Project_J_v6_30/../result/201206
 './test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL49_3-PERFECT_reads.fa.unique',
 './test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL52_3-PERFECT_reads.fa.unique']
 
+gast_dict = {'read_id': ['taxonomy',
+ 'distance',
+ 'rank',
+ 'refssu_count',
+ 'vote',
+ 'minrank',
+ 'taxa_counts',
+ 'max_pcts',
+ 'na_pcts',
+ 'refhvr_ids\n'],
+ 'A5BCDEF3:25:Z987YXWUQ:3:1101:4849:2186 1:N:0:ATCACG|frequency:1': ['Bacteria;Proteobacteria;Deltaproteobacteria',
+ '0.05',
+ 'class',
+ '1',
+ '100',
+ 'class',
+ '1;1;1;0;0;0;0;0',
+ '100;100;100;0;0;0;0;0',
+ '0;0;0;100;100;100;100;100',
+ 'v6_DS955\n']}

@@ -131,7 +131,11 @@ class DbUloadTestCase(unittest.TestCase):
         res_id = self._my_db_upload.insert_pdr_info(self.fasta, run_info_ill_id)
         self.assertEqual(res_id, 1)
 
-#    def test_get_gasta_result(self, filename):
+    def test_j_get_gasta_result(self):
+        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL8_3-PERFECT_reads.fa.unique"
+        res       = self._my_db_upload.get_gasta_result(filename)
+        self.assertEqual(res, fake_data_object.gast_dict)
+        
 
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
@@ -158,7 +162,7 @@ __init__(self, run = None)
 get_seq_id_dict(self, sequences) 
 get_id(self, table_name, value) 
 get_sequence_id(self, seq) 
-insert_pdr_info(self, fasta, run_info_ill_id) 
+    insert_pdr_info(self, fasta, run_info_ill_id) 
 get_gasta_result(self, filename) 
 insert_taxonomy(self, fasta, gast_dict) 
 insert_sequence_uniq_info_ill(self, fasta, gast_dict) 
