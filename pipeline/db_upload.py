@@ -157,7 +157,8 @@ class dbUpload:
         seq_count       = int(fasta.id.split('|')[1].split(':')[1])
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-        self.my_conn.execute_no_fetch(my_sql)
+        res_id = self.my_conn.execute_no_fetch(my_sql)
+        return res_id
  
     def get_gasta_result(self, filename):
 #        gast_file_name = self.gast_dir + filename + '.gast'

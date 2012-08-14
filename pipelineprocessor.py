@@ -319,6 +319,9 @@ def env454upload(runobj):
 #                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
                 start = time()
 #                print "Inserting pdr info"
+#                for attr in dir(fasta):
+#                  print "obj.%s = %s" % (attr, getattr(fasta, attr))
+
                 my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
                 elapsed = (time() - start)
                 insert_pdr_info_time += elapsed

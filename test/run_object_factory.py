@@ -580,3 +580,4 @@ file_names_list = ['./test/sample_data/illumina/Project_J_v6_30/../result/201206
 './test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL1_3-PERFECT_reads.fa.unique',
 './test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL49_3-PERFECT_reads.fa.unique',
 './test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL52_3-PERFECT_reads.fa.unique']
+
