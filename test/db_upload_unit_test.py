@@ -138,6 +138,13 @@ class DbUloadTestCase(unittest.TestCase):
         res_id         = self._my_db_upload.insert_sequence_uniq_info_ill(self.fasta, fake_data_object.gast_dict2) 
         self.assertEqual(res_id, 1)
 
+    def test_m_count_sequence_pdr_info_ill(self):
+        res = self._my_db_upload.count_sequence_pdr_info_ill()
+        self.assertEqual(res, 1)
+         
+ 
+
+
 "        inset test if taxonomy exists"
 "        inset test if taxonomy not exists"
 """
@@ -166,7 +173,7 @@ get_sequence_id(self, seq)
     insert_pdr_info(self, fasta, run_info_ill_id) 
     get_gasta_result(self, filename) 
     insert_taxonomy(self, fasta, gast_dict) 
-insert_sequence_uniq_info_ill(self, fasta, gast_dict) 
+    insert_sequence_uniq_info_ill(self, fasta, gast_dict) 
 put_run_info(self, content = None) 
 insert_bulk_data(self, key, values) 
 get_contact_v_info(self) 
