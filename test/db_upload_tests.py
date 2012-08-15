@@ -96,8 +96,7 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(int(res[0][0]), 192)        
         print "done with put_run_info" 
     
-        "FIrst do: illumina_files time = 136.972903013"
-    
+        "FIrst do: illumina_files time = 136.972903013"    
     def test_f_get_fasta_file_names(self):
         filenames = self._my_db_upload.get_fasta_file_names()
         file_names_list = fake_data_object.file_names_list
