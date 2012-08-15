@@ -104,11 +104,8 @@ class IlluminaFiles:
             if self.LOCAL:
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"
             call([program_name, file_name])
-#                analyze-illumina-v6-overlaps  W5_4.ini
-#                pass 
     
     def uniq_fa(self):
-        "TODO: use /bioware/bin/fastaunique"
         n = 0        
         print "Uniqueing fasta files"      
         files = self.get_all_files()

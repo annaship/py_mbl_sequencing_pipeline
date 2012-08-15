@@ -21,6 +21,7 @@ class IlluminaFilesTestCase(unittest.TestCase):
         cls._runobj = Run(data_object, pi_path)    
         cls._illumina_files = ill_f.IlluminaFiles(cls._runobj)
         cls.file_path = "test/sample_data/illumina/result/20120614/analysis"
+        cls.dataset_emails = fake_data_object.dataset_emails
 
     @classmethod  
     def tearDownClass(cls):
@@ -40,15 +41,32 @@ class IlluminaFilesTestCase(unittest.TestCase):
         res = self._illumina_files.get_all_files()
         self.assertEqual(res['test/sample_data/illumina/result/20120614/analysis/unknown.fastq'], ('test/sample_data/illumina/result/20120614/analysis/unknown', '.fastq'))
 
+    def test_04_create_inis(self):
+        self._illumina_files.dataset_emails = self.dataset_emails
+        self._illumina_files.create_inis()
+        ini_files = len([f for f in os.listdir(self.file_path) if f.endswith('.ini') and os.path.isfile(os.path.join(self.file_path, f))])
+        self.assertEqual(ini_files, 192)
+        
+        with open(os.path.join(self.file_path, "SMPL10_3.ini")) as file:
+            for line in file.readlines():
+                if line.strip() == "project_name = SMPL10_3":
+                    print "\nValid ini\n"
+
+
+#    def test_04_perfect_reads(self):
+#        self._illumina_files.dataset_emails = self.dataset_emails
+#        self._illumina_files.perfect_reads()
+#        f_path = os.path.join(self.file_path, "perfect_reads")
+#        print len([name for name in os.listdir(f_path) if os.path.isfile(name)])
 
     
 
 """
     def split_files(self, compressed = False):
-    def create_out_dir(self, dirname):
+        def create_out_dir(self, dirname):
     def open_dataset_files(self):
     def close_dataset_files(self):
-    def get_all_files(self):
+        def get_all_files(self):
     def perfect_reads(self):
     def uniq_fa(self):
     def create_inis(self):
