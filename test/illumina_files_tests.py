@@ -53,12 +53,12 @@ class IlluminaFilesTestCase(unittest.TestCase):
                     print "\nValid ini\n"
 
 
-#    def test_04_perfect_reads(self):
-#        self._illumina_files.dataset_emails = self.dataset_emails
-#        self._illumina_files.perfect_reads()
-#        f_path = os.path.join(self.file_path, "perfect_reads")
-#        print len([name for name in os.listdir(f_path) if os.path.isfile(name)])
-
+    def test_04_perfect_reads(self):
+        self._illumina_files.dataset_emails = self.dataset_emails
+        self._illumina_files.perfect_reads()
+        f_path = os.path.join(self.file_path, "perfect_reads")
+        files_amount  = len([name for name in os.listdir(f_path) if os.path.isfile(os.path.join(f_path, name))])
+        self.assertEqual(files_amount, 1344)
     
 
 """
