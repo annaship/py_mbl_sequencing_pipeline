@@ -165,7 +165,8 @@ class RunConfig:
             self.idx_keys           = general_config['idx_keys']
         except:
             self.idx_keys = ""
-            
+ 
+ 
         if self.platform == 'vamps':
             self.user           = general_config['user']           
             self.dna_region     = general_config['dna_region'] 

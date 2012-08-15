@@ -211,6 +211,7 @@ refdbs = {'unknown':'refssu_all',
         'ITS'   :'refITS'       
         }
     
+    
 ########### VAMPS UPLOAD ###########################################################################  
 ranks = ('superkingdom','phylum','class','orderx','family','genus','species','strain')
 database_tables = {

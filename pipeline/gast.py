@@ -128,6 +128,7 @@ class Gast:
                 unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
             else:
                 sys.exit("clustergast: no platform")
+
             
             counter +=1
             
@@ -499,8 +500,9 @@ class Gast:
         return ("SUCCESS","gast_cleanup")
 
     def gast2tax(self): 
-        
+        counter = 0
         for key in self.idx_keys:
+            counter += 1
             if self.runobj.platform == 'illumina':
                 output_dir = os.path.join(self.global_gast_dir,key)
                 gast_dir = os.path.join(self.global_gast_dir,key)
@@ -524,18 +526,50 @@ class Gast:
                 self.runobj.run_status_file_h.write("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 dna_region = 'unknown'
             
-            if os.path.exists(names_file) and os.path.getsize(names_file) > 0: 
-                (refdb,taxdb) = self.get_reference_databases(dna_region)
+            if self.use_cluster:
+                clusterize = C.clusterize_cmd
+                # create script - each file gets script
+                script_filename = os.path.join(gast_dir,qsub_prefix + str(counter))
+                fh = open(script_filename,'w')
+                qstat_name = "gast2tax" + key + '_' + self.run.run + "_" + str(counter)
+                fh.write("#!/bin/csh\n")
+                fh.write("#$ -j y\n" )
+                fh.write("#$ -o " + log_file + "\n")
+                fh.write("#$ -N " + qstat_name + "\n\n")
+
+                # setup environment
+                fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
+                fh.write("module load bioware\n\n")
                 
-                #print tax_file
-                max_distance = C.max_distance['default']
-                if dna_region in C.max_distance:
-                    max_distance = C.max_distance[dna_region] 
+                fh.write("gast2tax.py -dna "+dna_region+" -max "+max_distance+" -gast_dir "+gast_dir+" -names_file "+names_file+"\n" )
+                fh.close()
+                            
+                # make script executable and run it
+                os.chmod(script_filename, stat.S_IRWXU)
+                qsub_cmd = clusterize + " " + script_filename
+                
+                # on vamps and vampsdev qsub cannot be run - unless you call it from the
+                # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
+                qsub_cmd = C.qsub_cmd + " " + script_filename
+                logger.debug("qsub command: "+qsub_cmd)
+                
+                #subprocess.call(qsub_cmd, shell=True)
+                proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 
-                ref_taxa = self.load_reftaxa(taxdb)
-        
-                self.assign_taxonomy(gast_dir,dna_region,names_file, ref_taxa);
+            else:
+                if os.path.exists(names_file) and os.path.getsize(names_file) > 0: 
+                    (refdb,taxdb) = self.get_reference_databases(dna_region)
+                    
+                    #print tax_file
+                    max_distance = C.max_distance['default']
+                    if dna_region in C.max_distance:
+                        max_distance = C.max_distance[dna_region] 
+                    
+                    
+                    ref_taxa = self.load_reftaxa(taxdb)
+            
+                    self.assign_taxonomy(gast_dir,dna_region,names_file, ref_taxa);
         
         print "Finished gast2tax" 
         return ("SUCCESS","gast2tax") 
@@ -673,6 +707,7 @@ class Gast:
         from pipeline.taxonomy import Taxonomy,consensus
         #results = uc_results
         results = {}
+        
         
         #test_read='FI1U8LC02GEF7N'
         # open gast_file to get results

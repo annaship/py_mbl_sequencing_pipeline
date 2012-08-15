@@ -91,17 +91,26 @@ class Vamps:
             
             if self.runobj.platform == 'vamps':
                 unique_file = os.path.join(out_gast_dir,'unique.fa')
+                if self.runobj.fasta_file:
+                    grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
+                else:
+                    grep_cmd = ['grep','-c','>',unique_file]
             elif self.runobj.platform == 'illumina':
                 #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
                 reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
                 file_prefix = self.runobj.samples[key].file_prefix
                 unique_file = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
-                
+                grep_cmd = ['grep','-c','>',unique_file]
+            else:
+                sys.exit()
                 
             if not os.path.exists(unique_file):
-                logger("Could not find uniques file: "+unique_file)
+                logger("Could not find unique_file: "+unique_file)
+                
             # get dataset_count here from unique_file
-            grep_cmd = ['grep','-c','>',unique_file]
+            # the dataset_count should be from the non-unique file
+            # but if we don't have that must use uniques
+            
             try:
                 dataset_count = subprocess.check_output(grep_cmd).strip()
             except:
@@ -109,28 +118,31 @@ class Vamps:
             print "Dataset Count", dataset_count
             
             # to be created:
-            taxes_file = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
-            summed_taxes_file = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
-            distinct_taxes_file = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
-            sequences_file = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
-            export_file = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
-            projects_datasets_file = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
-            project_info_file = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
+            taxes_file              = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
+            summed_taxes_file       = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
+            distinct_taxes_file     = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
+            sequences_file          = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
+            export_file             = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
+            projects_datasets_file  = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
+            project_info_file       = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
-            (tax_collector,read_id_lookup) = self.taxonomy(key,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file)
+            (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, taxes_file, summed_taxes_file, distinct_taxes_file)
             
-            self.sequences(key,tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
+            self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
             
             self.exports()
-            self.projects(key,projects_datasets_file, dataset_count)
-            self.info(key,project_info_file)
+            self.projects(key, projects_datasets_file, dataset_count)
+            self.info(key, project_info_file)
             if self.runobj.load_vamps_database:
-                self.load_database(key,out_gast_dir,taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file)
-            
-            
+                self.load_database(key, out_gast_dir, taxes_file, summed_taxes_file, distinct_taxes_file, sequences_file, projects_datasets_file, project_info_file)
+                #self.load_taxonomy
+                #self.load_sequences
+                #self.load_export
+                #self.load_projects
+                
     def taxonomy(self,key,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
         """
-        fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy tables
+        fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy files
         """
         logger.info("Starting vamps_upload: taxonomy")
         # SUMMED create a look-up
@@ -300,7 +312,7 @@ class Vamps:
         
     def sequences(self,key,tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file):
         """
-        fill vamps_sequences table
+        fill vamps_sequences.txt file
         """
         
         logger.info("Starting vamps_upload: sequences")
@@ -375,7 +387,7 @@ class Vamps:
         
     def exports(self):
         """
-        fill vamps_exports table
+        fill vamps_exports.txt file
         """
         logger.info("Starting vamps_upload: exports")
         print "TODO: upload_vamps 5- exports"
@@ -383,7 +395,7 @@ class Vamps:
         
     def projects(self, key, projects_datasets_file, dataset_count):
         """
-        fill vamps_projects_datasets table
+        fill vamps_projects_datasets.txt file
         """
         logger.info("Starting vamps_upload: projects_datasets")
         if self.runobj.platform == 'vamps':
@@ -408,7 +420,7 @@ class Vamps:
         
     def info(self, key,project_info_file):
         """
-        fill vamps_project_info table
+        fill vamps_project_info.txt file
         """
         logger.info("Starting vamps_upload: projects_info")
         if self.runobj.platform == 'vamps':
