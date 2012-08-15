@@ -57,15 +57,9 @@ class DbUloadTestCase(unittest.TestCase):
                       "test.sequence_ill", "test.sequence_pdr_info_ill", "test.sequence_uniq_info_ill", "test.taxonomy"]:
             truncate_test_db_sql = "TRUNCATE %s;" % table_name
             self._connection.execute_no_fetch(truncate_test_db_sql)
-    
-#    @unittest.skip("Needs clean db")
-    def test_b_setUpRunInfo(self):
-        my_read_csv = dbup.dbUpload(self._runobj)
-        my_read_csv.put_run_info()
-        print "done with put_run_info" 
         
-    @unittest.skip("Needs clean db")
-    def test_c_execute_fetch_select(self): 
+#    @unittest.skip("Needs clean db")
+    def test_b_execute_fetch_select(self): 
         msql = 'INSERT INTO run_info_ill VALUES ("1", "1529", "2164", "8", "6951", "2411", "83", "", "", "19", "JV", "JV", "GCCTAA", "0", "230", "6_FP1BermC_6_14_10_CGCTC", "101", "23")'
         self._connection.execute_no_fetch(msql) 
         
@@ -75,21 +69,32 @@ class DbUloadTestCase(unittest.TestCase):
         res = self._connection.execute_fetch_select(sql)
         self.assertEqual(int(res[0][0]), 1)
 #        
-    @unittest.skip("Needs clean db")
-    def test_d_execute_no_fetch(self):
+#    @unittest.skip("Needs clean db")
+    def test_c_execute_no_fetch(self):
         taxonomy = "Blah; Blah; Blah"
         sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
         res = self._connection.execute_no_fetch(sql)
         "taxonomy not exists"
         self.assertEqual(res, 1)
 
-    @unittest.skip("Run after the previous one")
-    def test_e_taxonomy_exists(self):
+#    @unittest.skip("Run after the previous one")
+    def test_d_taxonomy_exists(self):
         taxonomy = "Blah; Blah; Blah"
         sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
         res = self._connection.execute_no_fetch(sql)
         "taxonomy exists, nothing inserted"
         self.assertEqual(res, 0)
+        "clean up the db again"
+        self.test_a_setUpCleanDb()
+        
+#    @unittest.skip("Needs clean db")
+    def test_e_setUpRunInfo(self):
+        my_read_csv = dbup.dbUpload(self._runobj)
+        my_read_csv.put_run_info()
+        sql = "SELECT max(run_info_ill_id) FROM run_info_ill"
+        res = self._connection.execute_fetch_select(sql)
+        self.assertEqual(int(res[0][0]), 192)        
+        print "done with put_run_info" 
     
         "FIrst do: illumina_files time = 136.972903013"
     
@@ -203,10 +208,10 @@ del_sequence_uniq_info(self)
 del_sequences(self) 
 del_sequence_pdr_info(self) 
 del_run_info(self) 
-count_sequence_pdr_info_ill(self) 
+    count_sequence_pdr_info_ill(self) 
 count_seq_from_file(self) 
 check_seq_upload(self) 
-put_seq_statistics_in_file(self, filename, seq_in_file)
+    put_seq_statistics_in_file(self, filename, seq_in_file)
 """
 
 if __name__ == '__main__':
