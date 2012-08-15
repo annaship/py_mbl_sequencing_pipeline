@@ -418,6 +418,7 @@ class Vamps:
         fh.close()
         logger.info("Finishing VAMPS projects()")
         
+        
     def info(self, key,project_info_file):
         """
         fill vamps_project_info.txt file
