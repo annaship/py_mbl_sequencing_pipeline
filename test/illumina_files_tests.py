@@ -14,11 +14,13 @@ import test.test_factory as fake_data_object
 class IlluminaFilesTestCase(unittest.TestCase): 
     @classmethod  
     def setUpClass(cls):
-        shutil.rmtree("test/sample_data/illumina/result/20120614")
+        if os.path.exists("test/sample_data/illumina/result/20120614"):
+            shutil.rmtree("test/sample_data/illumina/result/20120614")
         data_object = fake_data_object.data_object
         pi_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         cls._runobj = Run(data_object, pi_path)    
         cls._illumina_files = ill_f.IlluminaFiles(cls._runobj)
+        cls.file_path = "test/sample_data/illumina/result/20120614/analysis"
 
     @classmethod  
     def tearDownClass(cls):
@@ -28,7 +30,15 @@ class IlluminaFilesTestCase(unittest.TestCase):
         
     def test_01_create_out_dir(self):
         file_path  = self._illumina_files.create_out_dir(os.path.join(self._runobj.output_dir, "analysis"))
-        self.assertEqual(file_path, "test/sample_data/illumina/result/20120614/analysis")
+        self.assertEqual(file_path, self.file_path)
+        
+#    def test_02_open_dataset_files(self):
+#        self._illumina_files.open_dataset_files()
+#        print len([name for name in os.listdir(self.file_path) if os.path.isfile(name)])
+
+    def test_03_get_all_files(self):
+        res = self._illumina_files.get_all_files()
+        self.assertEqual(res['test/sample_data/illumina/result/20120614/analysis/unknown.fastq'], ('test/sample_data/illumina/result/20120614/analysis/unknown', '.fastq'))
 
 
     
