@@ -59,7 +59,21 @@ class IlluminaFilesTestCase(unittest.TestCase):
         f_path = os.path.join(self.file_path, "perfect_reads")
         files_amount  = len([name for name in os.listdir(f_path) if os.path.isfile(os.path.join(f_path, name))])
         self.assertEqual(files_amount, 1344)
-    
+        
+    def test_05_uniq_fa(self):
+        self._illumina_files.uniq_fa()
+        f_path = os.path.join(self.file_path, "perfect_reads")
+        files_amount  = len([name for name in os.listdir(f_path) if os.path.isfile(os.path.join(f_path, name))])
+        uniq_files = len([f for f in os.listdir(f_path) if f.endswith('-PERFECT_reads.fa.unique') and os.path.isfile(os.path.join(f_path, f))])       
+        self.assertEqual(files_amount, 1728)
+        self.assertEqual(uniq_files, 192)
+        
+    def test_06_get_fastq_file_names(self):
+        (in_files_r1, in_files_r2) = self._illumina_files.get_fastq_file_names(self._runobj.input_dir)
+        in_files_r1_compare = ['./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq', './test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R1_001.fastq']    
+        in_files_r2_compare = ['./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R2_001.fastq', './test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R2_001.fastq']    
+        self.assertEqual(in_files_r1, in_files_r1_compare)
+        self.assertEqual(in_files_r2, in_files_r2_compare)    
 
 """
     def split_files(self, compressed = False):
@@ -67,9 +81,9 @@ class IlluminaFilesTestCase(unittest.TestCase):
     def open_dataset_files(self):
     def close_dataset_files(self):
         def get_all_files(self):
-    def perfect_reads(self):
-    def uniq_fa(self):
-    def create_inis(self):
+        def create_inis(self):
+        def perfect_reads(self):
+        def uniq_fa(self):
     def open_write_close(self, ini_file_name, text):
     def get_fastq_file_names(self, f_input_file_path):
     def read1(self, files_r1, compressed):
