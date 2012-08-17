@@ -167,11 +167,12 @@ class Vamps:
                 read_id=items[0]
                 read_id_lookup[read_id]=taxa
                 
+                # the count here is the frequency of the taxon in the datasets
                 if taxa in taxa_lookup:                
                     taxa_lookup[taxa] += 1 
                 else:
                     taxa_lookup[taxa] = 1 
-                
+                      
         #  DATA CUBE TABLE
         # taxa_lookup: {'Unknown': 146, 'Bacteria': 11888, 'Bacteria;Chloroflexi': 101}
         # dataset_count is 3 (3 taxa in this dataset)
@@ -183,12 +184,15 @@ class Vamps:
                             "phylum", "class", "orderx", "family", "genus", "species", 
                             "strain", "rank", "knt", "frequency", "dataset_count", "classifier"]) + "\n")
         tax_collector={}
-        for tax,cnt in taxa_lookup.iteritems():
+        summer=0
+        for tax,knt in taxa_lookup.iteritems():
+            #print tax,cnt
+            summer += knt
             datarow = ['',project,dataset]
             
             taxes = tax.split(';')
             
-            freq = float(cnt) / int(dataset_count)
+            freq = float(knt) / int(dataset_count)
             rank = C.ranks[len(taxes)-1]
             for i in range(len(C.ranks)):                
                 if len(taxes) <= i:
@@ -200,7 +204,7 @@ class Vamps:
             datarow.append(tax)
             datarow.append("\t".join(taxes))
             datarow.append(rank)
-            datarow.append(str(cnt))
+            datarow.append(str(knt))
             datarow.append(str(freq))
             datarow.append(dataset_count)
             datarow.append("GAST")
@@ -210,10 +214,9 @@ class Vamps:
             fh1.write(w+"\n")
            
             tax_collector[tax]['rank'] = rank
-            tax_collector[tax]['cnt'] = str(cnt)
-            tax_collector[tax]['freq'] = str(freq)
-            
-            
+            tax_collector[tax]['knt'] = knt
+            tax_collector[tax]['freq'] = freq
+        
         fh1.close()
         
         #
@@ -225,51 +228,64 @@ class Vamps:
                             "project","dataset","project--dataset","classifier"] )+"\n")
         ranks_subarray = []
         rank_list_lookup = {}
-        for i in range(len(C.ranks)): 
+        for i in range(0, len(C.ranks)): 
             ranks_subarray.append(C.ranks[i])
             ranks_list = ";".join(ranks_subarray) # i.e., superkingdom, phylum, class
             # open data_cube file again
-            
+            # taxes_file: data_cube_uploads
             for line in  open(taxes_file,'r'):
-                #print 'lo',line.split()[0]
-                line = line.strip()
-                if line.split()[0] == 'HEADER':
+                line = line.strip().split("\t")
+                knt = line[12]
+                taxon = line[2]
+                if line[0] == 'HEADER':
                     continue
+                if taxon in tax_collector:
+                    knt = tax_collector[taxon]['knt']
+                else:
+                    print 'ERROR tax not found in tax_collector: assigning zero'
+                    knt = 0
                 idx = len(ranks_subarray)
                 l=[]
                 for k in range(3,idx+3):                    
-                    l.append(line.split()[k])
+                    l.append(line[k])
                 tax = ';'.join(l)
+                #print 'rl tax',ranks_list,tax
+                
+                
                 if tax in rank_list_lookup:
-                    rank_list_lookup[tax] += 1
+                    rank_list_lookup[tax] += knt
                 else:
-                    rank_list_lookup[tax] = 1
+                    rank_list_lookup[tax] = knt
+                    
                 
-                
+          
+        for tax,knt in rank_list_lookup.iteritems():
             
-            for tax,cnt in rank_list_lookup.iteritems():
-                
-                taxonomy = tax
-                sum_tax_counts = cnt
-                frequency = float(cnt) / int(dataset_count)
-                rank = i
-                #if len(taxonomy) - len(replace(taxonomy,';','')) >= i
-                #print len(taxonomy),len(''.join(taxonomy.split(';')))
-                if (len(taxonomy) - ( len(''.join( taxonomy.split(';') ) ) ) ) >= i:
-                    datarow = ['']
-                    datarow.append(taxonomy)
-                    datarow.append(str(sum_tax_counts))
-                    datarow.append(str(frequency))
-                    datarow.append(str(dataset_count))
-                    datarow.append(str(rank))
-                    datarow.append(project)
-                    datarow.append(dataset)
-                    datarow.append(project_dataset)
-                    datarow.append("GAST")
+           
+            
+            #print 'tax2',tax
+            rank = len( tax.split(';') ) -1
+            frequency = float(knt) / int(dataset_count)
+            
+            
+            if len(tax) - len(''.join(tax.split(';'))) >= rank:
+            
+                datarow = ['']
+                datarow.append(tax)
+                datarow.append(str(knt))
+                datarow.append(str(frequency))
+                datarow.append(str(dataset_count))
+                datarow.append(str(rank))
+                datarow.append(project)
+                datarow.append(dataset)
+                datarow.append(project_dataset)
+                datarow.append("GAST")
             
                 w = "\t".join(datarow)
                 #print w
                 fh2.write(w+"\n")
+                
+
         fh2.close()
         
         
@@ -357,7 +373,7 @@ class Vamps:
                 seq = f.seq
                 tax = read_id_lookup[id]
                 rank = tax_collector[tax]['rank']
-                cnt = tax_collector[tax]['cnt']
+                cnt = tax_collector[tax]['knt']
                 freq = tax_collector[tax]['freq']
                 if id in refid_collector:
                     distance = refid_collector[id]['distance']
@@ -372,8 +388,8 @@ class Vamps:
                 datarow.append(tax)
                 datarow.append(refhvr_ids)
                 datarow.append(rank)
-                datarow.append(cnt)
-                datarow.append(freq)
+                datarow.append(str(cnt))
+                datarow.append(str(freq))
                 datarow.append(distance)
                 datarow.append(id)
                 datarow.append(project_dataset)
@@ -611,9 +627,9 @@ class Vamps:
                 if line[0]=='HEADER':
                     continue
                 
-                qInfo = "insert into %s (project_name, title, description, contact, email, institution, user, env_source_id)\
+                qInfo = "insert ignore into %s (project_name, title, description, contact, email, institution, user, env_source_id)\
                             VALUES('%s','%s','%s','%s','%s','%s','%s','%s')" \
-                            % (info_table_user,
+                            % (users_info_table,
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7])
                 myconn.execute_no_fetch(qInfo) 
                 
@@ -621,7 +637,7 @@ class Vamps:
             # USERS
             #
                 
-            qUser = "insert into %s (project, user)\
+            qUser = "insert ignore into %s (project, user)\
                         VALUES('%s','%s')" \
                         % (users_table, project, user)
             myconn.execute_no_fetch(qUser) 

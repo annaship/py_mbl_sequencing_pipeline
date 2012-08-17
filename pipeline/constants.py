@@ -213,7 +213,7 @@ refdbs = {'unknown':'refssu_all',
     
     
 ########### VAMPS UPLOAD ###########################################################################  
-ranks = ('superkingdom','phylum','class','orderx','family','genus','species','strain')
+ranks = ('domain','phylum','class','orderx','family','genus','species','strain')
 database_tables = {
 'vamps_user_uploads': {
             'tax_dc_tbl'      : 'vamps_data_cube_uploads',

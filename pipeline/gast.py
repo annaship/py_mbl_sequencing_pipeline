@@ -405,6 +405,7 @@ class Gast:
             #######################################   
             # read the .gast file from clustergast            
             concat = {}
+            
             gast_fh     = open(gast_filename,'w')
             if os.path.exists(clustergast_filename_single):
                 in_gast_fh  = open(clustergast_filename_single,'r')
@@ -417,6 +418,13 @@ class Gast:
                         refhvr_id   = s[1].split('|')[0]
                         distance    = s[2]
                         alignment   = s[3]
+                        frequency   = 0
+                    elif len(s) == 5:
+                        read_id     = s[0]
+                        refhvr_id   = s[1].split('|')[0]
+                        distance    = s[2]
+                        alignment   = s[3]
+                        frequency   = s[4]
                     else:
                         logger.debug("gast_cleanup: wrong field count")
                     #print read_id,refhvr_id
@@ -435,7 +443,7 @@ class Gast:
                         
                         if id != read_id:
                             #print id,read_id,distance,refhvr_id  
-                            gast_fh.write( id + "\t" + refhvr_id + "\t" + distance + "\t" + alignment + "\n" )
+                            gast_fh.write( id + "\t" + refhvr_id + "\t" + distance + "\t" + alignment +"\t"+frequency+"\n" )
                             
                                                    
                 in_gast_fh.close()
@@ -448,7 +456,7 @@ class Gast:
                 #######################################   
                 for read in sorted(nonhits.iterkeys()):                
                     for d in copies[read]: 
-                        gast_fh.write( d+"\t0\t1\t\n")
+                        gast_fh.write( d+"\t0\t1\t0\t0\n")
                         
                         
                 gast_fh.close()
@@ -664,13 +672,17 @@ class Gast:
         grep_cmd += " -P \"^H\\t\" " + usearch_filename + " |"
         #grep_cmd += " sed -e 's/|.*\$//' |"
         # changed grep command to remove frequency from read_id
-        grep_cmd += " sed -e 's/|frequency:[0-9]*//' |"
+        #grep_cmd += " sed -e 's/|frequency:[0-9]*//' |"
+        #grep_cmd += " awk -F\"\\t\" '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
+        
+        grep_cmd += " sed -e 's/|.*\$//' |"
         grep_cmd += " awk -F\"\\t\" '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
         
         grep_cmd += " sort -k1,1b -k2,2gr |"
         # append to clustergast file:
-        grep_cmd += " clustergast_tophit "+use_full_length+" >> " + clustergast_filename
-        print grep_cmd
+        # split_defline adds frequency to gastv6 file (last field)
+        grep_cmd += " ./pipeline/clustergast_tophit -split_defline_frequency"+use_full_length+" >> " + clustergast_filename
+    
         return grep_cmd  
           
     def load_reftaxa(self,tax_file):
@@ -725,15 +737,15 @@ class Gast:
             data=line.strip().split("\t")
             if len(data) == 3:
                 data.append("")
-            # 0=id, 1=ref, 2=dist, 3=align
+            # 0=id, 1=ref, 2=dist, 3=align 4=frequency
             #if data[0]==test_read:
             #    print 'found test in gastv6 ',data[1].split('|')[0],data[2],data[3]
                 
             read = data[0]
             if read in results:
-                results[read].append( [data[1].split('|')[0], data[2], data[3]] )
+                results[read].append( [data[1].split('|')[0], data[2], data[3], data[4]] )
             else:            
-                results[read]=[ [data[1].split('|')[0], data[2], data[3]] ]
+                results[read]=[ [data[1].split('|')[0], data[2], data[3], data[4]] ]
             
         
         for line in  open(names_file,'r'):
@@ -775,11 +787,15 @@ class Gast:
                      
                     # should all be the same distance
                     distance = results[read][i][1]
+                    frequency = results[read][i][3]
                 #Lookup the consensus taxonomy for the array
                 taxReturn = consensus(taxObjects, C.majority)
                 
                 # 0=taxObj, 1=winning vote, 2=minrank, 3=rankCounts, 4=maxPcts, 5=naPcts;
                 taxon = taxReturn[0].taxstring()
+                #if taxon[-3:] = ';NA':
+                #    taxon = taxon[:-3]
+                #tax_counter[taxon]
                 rank = taxReturn[0].depth()
                 #print read,taxon,rank,taxReturn[0],taxReturn[1]
                 if not taxon: taxon = "Unknown"
@@ -795,9 +811,10 @@ class Gast:
             for d in dupes:
                # print OUT join("\t", $d, @{$results{$read}}, join(",", sort @{$refs_for{$read}})) . "\n";
                 tagtax_long_fh.write( d+"\t"+"\t".join(results[read])+"\t"+','.join(sorted(refs_for[read]))  + "\n")
-                tagtax_terse_fh.write(d+"\t"+results[read][0]+"\t"+results[read][2]+"\t"+results[read][3]+"\t"+','.join(sorted(refs_for[read]))+"\t"+results[read][1]+"\n")
+                tagtax_terse_fh.write(d+"\t"+results[read][0]+"\t"+results[read][2]+"\t"+results[read][3]+"\t"+','.join(sorted(refs_for[read]))+"\t"+results[read][1]+"\t"+str(frequency)+"\n")
                
         tagtax_terse_fh.close()
+        tagtax_long_fh.close()
         return results
 
 #    def create_uniques_from_fasta(self,fasta_file,key):
