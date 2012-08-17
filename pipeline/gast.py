@@ -151,6 +151,7 @@ class Gast:
             #print 'DBs',refdb,taxdb
             
             
+            
             if os.path.exists(unique_file) and os.path.getsize(unique_file) > 0:
                 print "\nFile:",str(counter)
                 i = 0

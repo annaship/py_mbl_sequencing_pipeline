@@ -224,7 +224,7 @@ database_tables = {
             'export_tbl'      : 'vamps_export_pipe',
             'info_tbl'        : 'vamps_upload_info',
             'datasets_tbl'    : 'vamps_projects_datasets_pipe',
-            'users_tbl'       :'vamps_users'
+            'users_tbl'       : 'vamps_users'
             },
 'vamps_mbl_origin': {
             'tax_dc_tbl'      : 'vamps_data_cube',

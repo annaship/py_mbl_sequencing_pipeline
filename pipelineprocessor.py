@@ -512,7 +512,6 @@ def get_keys(runobj):
             for h in runobj.samples:
                 logger.debug(h,runobj.samples[h])
                 ct +=1
-            print ct
         elif runobj.platform == '454':
             idx_keys = runobj.idx_keys
         elif runobj.platform == 'ion_torrent':

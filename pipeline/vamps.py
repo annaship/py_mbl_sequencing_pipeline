@@ -126,19 +126,22 @@ class Vamps:
             projects_datasets_file  = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
             project_info_file       = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
-            (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, taxes_file, summed_taxes_file, distinct_taxes_file)
-            
-            self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
-            
-            self.exports()
-            self.projects(key, projects_datasets_file, dataset_count)
-            self.info(key, project_info_file)
-            if self.runobj.load_vamps_database:
-                self.load_database(key, out_gast_dir, taxes_file, summed_taxes_file, distinct_taxes_file, sequences_file, projects_datasets_file, project_info_file)
-                #self.load_taxonomy
-                #self.load_sequences
-                #self.load_export
-                #self.load_projects
+            if os.path.exists(tagtax_file):
+                (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, taxes_file, summed_taxes_file, distinct_taxes_file)
+                
+                self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
+                
+                self.exports()
+                self.projects(key, projects_datasets_file, dataset_count)
+                self.info(key, project_info_file)
+                if self.runobj.load_vamps_database:
+                    self.load_database(key, out_gast_dir, taxes_file, summed_taxes_file, distinct_taxes_file, sequences_file, projects_datasets_file, project_info_file)
+                    #self.load_taxonomy
+                    #self.load_sequences
+                    #self.load_export
+                    #self.load_projects
+            else:
+                print "no tagtax file found -- continuing...."
                 
     def taxonomy(self,key,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
         """
@@ -160,7 +163,7 @@ class Vamps:
         if os.path.exists(tagtax_file):
             for line in  open(tagtax_file,'r'):
                 line = line.strip()
-                items = line.split()
+                items = line.split("\t")
                 taxa = items[1]
                 if taxa[-3:] == ';NA':
                     taxa = taxa[:-3]
