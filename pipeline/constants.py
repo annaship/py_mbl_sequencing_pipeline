@@ -211,6 +211,7 @@ refdbs = {'unknown':'refssu_all',
         'ITS'   :'refITS'       
         }
     
+
     
 ########### VAMPS UPLOAD ###########################################################################  
 ranks = ('domain','phylum','class','orderx','family','genus','species','strain')

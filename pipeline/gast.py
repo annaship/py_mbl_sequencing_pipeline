@@ -719,7 +719,8 @@ class Gast:
         from pipeline.taxonomy import Taxonomy,consensus
         #results = uc_results
         results = {}
-        
+ 
+ 
         
         #test_read='FI1U8LC02GEF7N'
         # open gast_file to get results

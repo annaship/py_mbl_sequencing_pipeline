@@ -289,9 +289,7 @@ class Vamps:
         fh2.close()
         
         
-        
-        
-        
+                
         #
         # DISTINCT TAXONOMY
         #
