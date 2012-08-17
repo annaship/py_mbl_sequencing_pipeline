@@ -126,7 +126,7 @@ class Vamps:
             projects_datasets_file  = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
             project_info_file       = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
-            if os.path.exists(tagtax_file):
+            if dataset_count:
                 (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, taxes_file, summed_taxes_file, distinct_taxes_file)
                 
                 self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
