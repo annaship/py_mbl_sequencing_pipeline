@@ -25,8 +25,7 @@ class Primer:
 class PrimerSuite:
     """Doc string here.."""
     Name = "PrimerSuite"
-    def __init__(self, run, domain, region, lane_key):
- 
+    def __init__(self, runobj, domain, region, lane_key):
         self.domain = domain
         self.region = region
         
@@ -51,8 +50,8 @@ class PrimerSuite:
         self.name = self.domain + ":" + self.region
 
         # now they can specify to not use the mbl primers for this lane/runkey
-        if run.samples[lane_key].use_mbl_primers == 1:
-            suite = run.primer_suites[self.name]
+        if runobj.samples[lane_key].use_mbl_primers == 1:
+            suite = runobj.primer_suites[self.name]
             if suite != None:
                 for key, value in suite.items():
                     direction = value['direction']
@@ -70,7 +69,7 @@ class PrimerSuite:
                 
         # they may have given some forward/reverse primers on a per lane/runkey basis
         direction = 'F'
-        for idx, sequence in enumerate(run.samples[lane_key].forward_primers):
+        for idx, sequence in enumerate(runobj.samples[lane_key].forward_primers):
             key = "cust_" + lane_key + "_" + direction + "_" + str(idx)
             p = Primer(key,dir,'custom','custom',sequence)
             self.primer_list[direction].append(p)
@@ -82,7 +81,7 @@ class PrimerSuite:
                 self.primer_names_by_reverse_complement[revcomp(eseq)] = key
                 
         direction = 'R'
-        for idx, sequence in enumerate(run.samples[lane_key].reverse_primers):
+        for idx, sequence in enumerate(runobj.samples[lane_key].reverse_primers):
             key = "cust_" + lane_key + "_" + direction + "_" + str(idx)
             p = Primer(key,dir,'custom','custom',sequence)
             self.primer_list[direction].append(p)

@@ -157,16 +157,16 @@ trim_lengths = {
     
 ############# defaults for CHIMERA checking #####################
 # if its not in this list chimera checking will be skipped
-regions_to_chimera_check = ['v6v4','v3v5','v4v5','v4v6','v3v1','v5v3']
+regions_to_chimera_check = ['v6v4','v3v5','v4v5','v4v6','v3v1','v1v3','v5v3']
 cluster_max_wait                = 1*60*60  # 1 hour
 cluster_check_interval          = 2
 cluster_initial_check_interval  = 10
 ################################################################################################  
 
 ############# defaults for GAST ################################################################ 
-usearch6_cmd        = '/bioware/uclust/usearch6.0.192_i86linux32'
-usearch5_cmd        = '/bioware/uclust/usearch5.0.151_i86linux32'
-usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
+usearch6_cmd        = '/bioware/uclust/usearch6'
+#usearch5_cmd        = '/bioware/uclust/usearch5.2.32_i86linux32'
+#usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
 fastasampler_cmd    = '/bioware/seqinfo/bin/fastasampler'
 calcnodes_cmd       = '/bioware/seqinfo/bin/calcnodes'
 mysqlimport_cmd     = '/usr/bin/mysqlimport'

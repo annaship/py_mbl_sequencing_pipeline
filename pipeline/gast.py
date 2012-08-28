@@ -1,5 +1,5 @@
 import subprocess
-import sys, os,stat
+import sys, os, stat
 import time
 import shutil
 from pipeline.pipelinelogging import logger
@@ -203,30 +203,30 @@ class Gast:
                             fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
                             fh.write("module load bioware\n\n")
                         
-                        cmd1 = self.get_fastasampler_cmd(unique_file, fastasamp_filename,start,end)
+                        fs_cmd = self.get_fastasampler_cmd(unique_file, fastasamp_filename,start,end)
                         
     
-                        logger.debug("fastasampler command: "+cmd1)
+                        logger.debug("fastasampler command: "+fs_cmd)
                         
                         if self.use_cluster:
-                            fh.write(cmd1 + "\n")
+                            fh.write(fs_cmd + "\n")
                         else:
-                            subprocess.call(cmd1,shell=True)
+                            subprocess.call(fs_cmd,shell=True)
                         
-                        cmd2 = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
+                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
     
-                        logger.debug("usearch command: "+cmd2)
+                        logger.debug("usearch command: "+us_cmd)
                         #print 'usearch',cmd2
                         if self.use_cluster:
-                            fh.write(cmd2 + "\n")
+                            fh.write(us_cmd + "\n")
                         else:
-                            subprocess.call(cmd2,shell=True)
+                            subprocess.call(us_cmd,shell=True)
                         
-                        cmd3 = self.get_grep_cmd(usearch_filename, clustergast_filename)
+                        grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename)
     
-                        logger.debug("grep command: "+cmd3)
+                        logger.debug("grep command: "+grep_cmd)
                         if self.use_cluster:                
-                            fh.write(cmd3 + "\n")
+                            fh.write(grep_cmd + "\n")
                             fh.close()
                             
                             # make script executable and run it
@@ -235,7 +235,7 @@ class Gast:
                             
                             # on vamps and vampsdev qsub cannot be run - unless you call it from the
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
-                            qsub_cmd = C.qsub_cmd + " " + script_filename
+                            #qsub_cmd = C.qsub_cmd + " " + script_filename
                             logger.debug("qsub command: "+qsub_cmd)
                             
                             #subprocess.call(qsub_cmd, shell=True)
@@ -245,8 +245,8 @@ class Gast:
                             #print stderr,stdout
         
                         else:
-                            subprocess.call(cmd3,shell=True)
-                            print cmd3
+                            subprocess.call(grep_cmd,shell=True)
+                            print grep_cmd
                 
                 else:
                     #fastasamp_filename = os.path.join(gast_dir, 'samp')
@@ -254,12 +254,12 @@ class Gast:
                     clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
                     print usearch_filename,clustergast_filename_single
                     
-                    cmd1 = self.get_usearch_cmd(unique_file,refdb,usearch_filename)
-                    print cmd1
-                    subprocess.call(cmd1,shell=True)
-                    cmd2 = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
-                    print cmd2
-                    subprocess.call(cmd2,shell=True)
+                    us_cmd = self.get_usearch_cmd(unique_file,refdb,usearch_filename)
+                    print us_cmd
+                    subprocess.call(us_cmd,shell=True)
+                    grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
+                    print grep_cmd
+                    subprocess.call(grep_cmd,shell=True)
                     
                 if self.use_cluster:
                     # wait here for all the clustergast scripts to finish
@@ -540,7 +540,7 @@ class Gast:
                 # create script - each file gets script
                 script_filename = os.path.join(gast_dir,qsub_prefix + str(counter))
                 fh = open(script_filename,'w')
-                qstat_name = "gast2tax" + key + '_' + self.run.run + "_" + str(counter)
+                qstat_name = "gast2tax" + key + '_' + self.runobj.run + "_" + str(counter)
                 fh.write("#!/bin/csh\n")
                 fh.write("#$ -j y\n" )
                 fh.write("#$ -o " + log_file + "\n")
@@ -628,36 +628,35 @@ class Gast:
         fastasampler_cmd += ' ' + fastasamp_filename        
         return fastasampler_cmd
         
-    def get_usearch_cmd(self,fastasamp_filename, refdb,usearch_filename  ):    
+    def get_usearch_cmd(self, fastasamp_filename, refdb, usearch_filename  ):    
         
-        if C.use_full_length:            
-            usearch6 = C.usearch64
-        else:
-            usearch6 = C.usearch6_cmd
-            
-        usearch_cmd = usearch6
+#         if C.use_full_length:            
+#             usearch6 = C.usearch64
+#         else:
+#             usearch6 = C.usearch6_cmd
+#             
+        usearch_cmd = C.usearch6_cmd
         usearch_cmd += ' -usearch_global ' + fastasamp_filename
-        #usearch_cmd += ' --iddef 3'
         usearch_cmd += ' -gapopen 6I/1E'
+        usearch_cmd += ' -uc_allhits'
         usearch_cmd += ' -db ' + refdb  
         usearch_cmd += ' -strand plus'   
-        usearch_cmd += ' -quicksort '
         usearch_cmd += ' -uc ' + usearch_filename 
         usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
         usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
         usearch_cmd += ' -id ' + str(C.pctid_threshold)
         
         
-        usearch_cmd = C.usearch5_cmd
-        usearch_cmd += ' --global '
-        usearch_cmd += ' --query ' + fastasamp_filename
-        usearch_cmd += ' --iddef 3'
-        usearch_cmd += ' --gapopen 6I/1E'
-        usearch_cmd += ' --db ' + refdb               
-        usearch_cmd += ' --uc ' + usearch_filename 
-        usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
-        usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
-        usearch_cmd += ' --id ' + str(C.pctid_threshold)
+#         usearch_cmd = C.usearch5_cmd
+#         usearch_cmd += ' --global '
+#         usearch_cmd += ' --query ' + fastasamp_filename
+#         usearch_cmd += ' --iddef 3'
+#         usearch_cmd += ' --gapopen 6I/1E'
+#         usearch_cmd += ' --db ' + refdb               
+#         usearch_cmd += ' --uc ' + usearch_filename 
+#         usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
+#         usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
+#         usearch_cmd += ' --id ' + str(C.pctid_threshold)
         
         
         

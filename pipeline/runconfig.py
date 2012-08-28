@@ -186,6 +186,7 @@ class RunConfig:
             self.database_host  = general_config['database_host'] 
             self.site           = general_config['site']
             self.load_vamps_database = general_config['load_vamps_database']
+            
         # added gast_input_source for vamps uploads
         # so when users want to gast at a later time they will
         # look in the database and not the files (which may be missing)
@@ -196,9 +197,12 @@ class RunConfig:
         if 'files_list' in general_config:
             input_file_names = general_config['files_list']
             self.input_files = ','.join(general_config['files_list'])
+            self.files_list = general_config['files_list']
         else:
             input_file_names  = [input_str.strip() for input_str in general_config['input_files'].split(',')]
-            self.input_files = general_config['input_files']
+            self.input_files = ','.join(general_config['input_files'])
+            self.files_list = general_config['input_files']
+        
 #         
 #         # for ini file:  (no plurals)
 #         # 1) if input_file_format is a comma sep list then it should match the count of input_file_name
@@ -335,6 +339,11 @@ class RunConfig:
                 sample.dna_region = lane_run_dict['dna_region'] 
             except:
                 sample.dna_region = ''
+            
+            if sample.primer_suite:
+                sample.taxonomic_domain = sample.primer_suite.split()[0]
+            else:
+                sample.taxonomic_domain = 'unknown'
                 
             sample.data_owner           = lane_run_dict['data_owner']
             sample.first_name           = lane_run_dict['first_name']
@@ -346,7 +355,7 @@ class RunConfig:
             sample.funding              = lane_run_dict['funding']
             sample.env_sample_source    = lane_run_dict['env_sample_source']
             sample.dataset_description  = lane_run_dict['dataset_description']
-                
+                 
             if self.platform == 'illumina':
                 # req specifically for illumina
                 sample.barcode_index = lane_run_dict['barcode_index'] 
@@ -354,6 +363,7 @@ class RunConfig:
                 sample.read_length = lane_run_dict['read_length'] 
                 sample.file_prefix = lane_run_dict['file_prefix'] 
                 sample.insert_size = lane_run_dict['insert_size']
+                #sample.taxonomic_domain = lane_run_dict['domain']
                 # concatenate: barcode_index and run_key and lane
                 key = lane_run_dict['barcode_index'] +'_'+ lane_run_dict['run_key'] +'_'+ lane_run_dict['lane'] 
                 #sample.key = key
@@ -362,7 +372,7 @@ class RunConfig:
             elif self.platform == '454':
                 # required for 454
                 sample.direction = lane_run_dict['direction'] 
-                sample.taxonomic_domain = lane_run_dict['domain']
+                #sample.taxonomic_domain = lane_run_dict['domain']
                 # a list of run_keys
                 # convert: change ':' to '_'
                 key = lane_run_key[:1]+'_'+lane_run_key[2:]

@@ -24,6 +24,7 @@ from types import *
 from pipeline.pipelinelogging import logger
 import constants as C
 from pipeline.db_upload import MyConnection
+import re
 #import pipeline.fastalib
 
 
@@ -208,6 +209,9 @@ class MetadataUtils:
         if error_code: error=True
         if warn_code: warn=True
         (error_code,warn_code) = self.check_project_name(self.data_object)
+        if error_code: error=True
+        if warn_code: warn=True
+        (error_code,warn_code) = self.check_dataset_name(self.data_object)
         if error_code: error=True
         if warn_code: warn=True
         (error_code,warn_code) = self.check_projects_and_datasets(self.data_object)
@@ -420,14 +424,21 @@ class MetadataUtils:
     
         
     def get_input_files(self):
-    
+        
         files_list = []
-        print self.general_config_dict['input_dir']
+        
         if os.path.isdir(self.general_config_dict['input_dir']):
             
             for infile in glob.glob( os.path.join(self.general_config_dict['input_dir'], '*') ):
                 if os.path.isdir(infile) == True:
-                    pass
+                    
+                    for infile2 in glob.glob( os.path.join( infile,'*') ):
+                        if os.path.isdir(infile2) == True:
+                            pass
+                        else:
+                            sub_dir = os.path.basename(infile)
+                            
+                            files_list.append(os.path.join(sub_dir,os.path.basename(infile2)))
                 else:
                     files_list.append(os.path.basename(infile))
         else:
@@ -569,7 +580,27 @@ class MetadataUtils:
                     logger.error("Project suffix has incorrect DNA region: "+c+" - Exiting (key: "+data[item]+")")
                     error = True
         return (error,warn)
-            
+        
+    def check_dataset_name(self,data):
+        """
+        # CHECK: dataset name can be ONLY alphanumeric and underscore 
+                    and cannot start with a number!
+        """
+        error   =False
+        warn    =False
+        for item in data:
+            if item != 'general':
+                dataset_name = data[item]['dataset']
+                if not re.match("^[A-Za-z0-9_]*$", dataset_name):
+                    logger.error("Dataset name has illeagal character(s): "+dataset_name+" (must be alphanumeric and underscore only)")
+                    error = True
+                if  re.match("^[0-9]", dataset_name):
+                    logger.error("Dataset name cannot begin with a digit: "+dataset_name)
+                    error = True
+                
+        return (error,warn)   
+        
+        
     def check_projects_and_datasets(self,data):
         self.my_conn     = MyConnection(host='newbpcdb2', db="env454")  
         project_dataset = {}

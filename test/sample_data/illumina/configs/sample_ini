@@ -4,8 +4,8 @@ platform = illumina
 input_dir = ./test/sample_data/illumina/Project_J_v6_30
 input_file_names = 
 
-
-input_file_formats = fasta
+use_cluster=True
+input_file_formats = fastq
 
 baseoutputdir=output
 

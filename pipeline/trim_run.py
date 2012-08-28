@@ -12,9 +12,8 @@
 #
 # Please read the COPYING file.
 #
-import os
+import sys, os, stat
 import shutil
-import sys
 #import hashlib
 sys.path.append("/bioware/pythonmodules/illumina-utils/")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
@@ -22,12 +21,13 @@ sys.path.append("/Users/ashipunova/bin/illumina-utils")
 from suites.primer import PrimerSuite 
 from pipeline.primer_utils import *
 from pipeline.utils import *
-#from fastalib import *
+from fastalib import *
 from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
 from pipeline.pipelinelogging import logger
 from Bio import SeqIO
 import subprocess
+from pipeline.illumina_filtering import *
 
 DELETED_RUNKEY      = 'Runkey: no key found'
 DELETED_LANEKEY     = 'Lanekey: unknown lane/key'
@@ -42,16 +42,22 @@ DELETED_MAXIMUM_LENGTH      = 'Maximum Length'
 class TrimRun( object ):
     
     """ Define here"""
-    def __init__(self, run):
+    def __init__(self, run_object = None):
     
-        self.run       = run
-        self.outdir    = run.output_dir
-        self.indir     = run.input_dir
-        # do something with 'run'.
-        self.rundate = self.run.run_date
-        logger.debug("Rundate:" + str(self.rundate))
+        self.runobj     = run_object
+        self.outdir    = self.runobj.output_dir
+        self.global_trim_dir  = os.path.join(self.outdir,"trim")
+        if not os.path.exists(self.global_trim_dir):
+            os.mkdir(self.global_trim_dir)
         
-        self.run_keys = [key[2:] for key in self.run.run_keys]
+        self.indir     = self.runobj.input_dir
+        # do something with 'run'.
+        self.run = self.runobj.run
+        logger.debug("Rundate:" + str(self.run))
+        self.use_cluster = self.runobj.use_cluster
+        
+        self.idx_keys = [key[2:] for key in self.runobj.run_keys]
+        
         self.seqDirs            = {}
         self.dna_regions        = {}
         self.taxonomic_domain   = {}
@@ -72,58 +78,169 @@ class TrimRun( object ):
         self.fa ={}
         self.statsFileName     = 'run_trim_stats'
         
-             
+        os.environ['SGE_ROOT']='/usr/local/sge'
+        os.environ['SGE_CELL']='grendel'
+        path = os.environ['PATH']
+        os.environ['PATH'] = '/usr/local/sge/bin/lx24-amd64:'+path
+        
         self.runbin={}
         #if VERBOSE: print "Run Keys from .ini file: ", run_keys
-        for lane_key in self.run.run_keys:
-            
-            sample = self.run.samples[lane_key]
-            # strip off surrounding single or double quotes
-            self.seqDirs[lane_key]          = sample.direction
-            self.dna_regions[lane_key]      = sample.dna_region
-            self.taxonomic_domain[lane_key] = sample.taxonomic_domain
-            
-            # this should be defaiult 'suite' of anchors
-            # but also in ini file: anchor=XXXXX will be added to defaults
-            self.anchor_name[lane_key]         = sample.anchor
-            self.adtnl_anchors[lane_key]         = sample.stop_sequences  #list
-           
-            self.anchors[lane_key]       = {}
-            
-            #self.id_list_all[lane_key]      = []
-            self.id_list_passed[lane_key]   = []
-            self.deleted_ids[lane_key]      = {}
-            self.deleted_ids['nokey']       = {}
-            self.trimmed_ids[lane_key]      = {}
-            self.uniques[lane_key]          = {}
-            self.names[lane_key]            = {}
-            self.fa[lane_key]       = FastaOutput(os.path.join(self.outdir,lane_key) + ".trimmed.fa")
-            
-  
-  
-            #####################
-            #
-            #  PrimerSuite Class
-            #
-            #####################
-            self.psuite[lane_key] = PrimerSuite(self.run, self.taxonomic_domain[lane_key],self.dna_regions[lane_key],lane_key)
-            #self.runbin['psuite'][lane_key]= PrimerSuite(self.taxonomic_domain[lane_key],self.dna_regions[lane_key])
+        if self.runobj.platform == '454':
+            for idx_key in self.idx_keys:
                 
-            if(self.seqDirs[lane_key] == 'F' or self.seqDirs[lane_key] == 'B'):
-                self.proximal_primers[lane_key] = self.psuite[lane_key].primer_expanded_seq_list['F']
-                self.distal_primers[lane_key]   = self.psuite[lane_key].primer_expanded_seq_list['R']
-                if self.anchor_name[lane_key]:
-                    self.anchors[lane_key] = get_anchor_list(self.run, self.anchor_name[lane_key], self.adtnl_anchors[lane_key])
- 
+                sample = self.runobj.samples[idx_key]
+                # strip off surrounding single or double quotes
+                self.seqDirs[idx_key]          = sample.direction
+                self.dna_regions[idx_key]      = sample.dna_region
+                self.taxonomic_domain[idx_key] = sample.taxonomic_domain
                 
-            if(self.seqDirs[lane_key] == 'R' or self.seqDirs[lane_key] == 'B'):
-                self.proximal_primers[lane_key] = [revcomp(primer_seq) for primer_seq in self.psuite[lane_key].primer_expanded_seq_list['R'] ]  
-                self.distal_primers[lane_key]   = [revcomp(primer_seq) for primer_seq in self.psuite[lane_key].primer_expanded_seq_list['F'] ] 
-                if self.anchor_name[lane_key]:
-                    self.anchors[lane_key] = [revcomp( anchor ) for anchor in get_anchor_list(self.run, self.anchor_name[lane_key], self.adtnl_anchors[lane_key]) ]
+                # this should be defaiult 'suite' of anchors
+                # but also in ini file: anchor=XXXXX will be added to defaults
+                self.anchor_name[idx_key]         = sample.anchor
+                self.adtnl_anchors[idx_key]         = sample.stop_sequences  #list
+               
+                self.anchors[idx_key]           = {}
+                
+                #self.id_list_all[idx_key]      = []
+                self.id_list_passed[idx_key]    = []
+                self.deleted_ids[idx_key]       = {}
+                self.deleted_ids['nokey']       = {}
+                self.trimmed_ids[idx_key]       = {}
+                self.uniques[idx_key]           = {}
+                self.names[idx_key]             = {}
+                self.fa[idx_key]       = FastaOutput(os.path.join(self.outdir,idx_key) + ".trimmed.fa")
+                
+      
+      
+                #####################
+                #
+                #  PrimerSuite Class
+                #
+                #####################
+                self.psuite[idx_key] = PrimerSuite(self.runobj, self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key)
+                #self.runbin['psuite'][idx_key]= PrimerSuite(self.taxonomic_domain[idx_key],self.dna_regions[idx_key])
+                
+                if(self.seqDirs[idx_key] == 'F' or self.seqDirs[idx_key] == 'B'):
+                    self.proximal_primers[idx_key] = self.psuite[idx_key].primer_expanded_seq_list['F']
+                    self.distal_primers[idx_key]   = self.psuite[idx_key].primer_expanded_seq_list['R']
+                    if self.anchor_name[idx_key]:
+                        self.anchors[idx_key] = get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key])
+     
+                    
+                if(self.seqDirs[idx_key] == 'R' or self.seqDirs[idx_key] == 'B'):
+                    self.proximal_primers[idx_key] = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
+                    self.distal_primers[idx_key]   = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
+                    if self.anchor_name[idx_key]:
+                        self.anchors[idx_key] = [revcomp( anchor ) for anchor in get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key]) ]
+                
+                if len(self.proximal_primers[idx_key]) == 0 and len(self.distal_primers[idx_key]) == 0:
+                    logger.debug("**** Didn't find any primers that match any of the domain/regions in the lane/key sections")
+        elif self.runobj.platform == 'illumina':
+            # create our directories for each key
+            pass
+#             for key in self.idx_keys:
+#                 output_dir = os.path.join(self.global_trim_dir,key)
+#                 if not os.path.exists(output_dir):
+#                     os.mkdir(output_dir)
+                    
+                    
+    def trimrun_ion_torrent(self, write_files = False):
+        pass
+        
+    def trimrun_illumina(self, write_files = False):
+
+        iFilter = IlluminaFiltering(self.runobj)
+        for file in self.runobj.files_list.split(','):
+            iFilter.chastity_filter(file)
             
-            if len(self.proximal_primers[lane_key]) == 0 and len(self.distal_primers[lane_key]) == 0:
-                logger.debug("**** Didn't find any primers that match any of the domain/regions in the lane/key sections")
+            
+        sys.exit()
+#         qsub_prefix = 'trim_illumina_'
+#         i = 0
+#         #for file in files:
+#         #print self.runobj.input_files
+#         #print self.runobj.files_list
+#         for file in self.runobj.files_list.split(','):
+#             print file
+#             i += 1
+#             
+#             script_filename = os.path.join(self.global_trim_dir,qsub_prefix + str(i))
+#             # this doesn't seem to work
+#             log_file = os.path.join(os.getcwd(),self.global_trim_dir, 'trim.log_' + str(i))
+#             
+#             outdir          = self.global_trim_dir
+#             filebase        = file.split('/')[1].split('.')[0]
+#             
+#             chaste_in       = os.path.join(self.indir,file)
+#             chaste_out      =os.path.join(outdir,filebase+'.chaste.N.f50.fastq')
+#             chaste_fail     =os.path.join(outdir,filebase+'.chaste.N.f50.failed')
+#             
+#             btails_in       = chaste_out
+#             btails_out      = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.fastq')
+#             btails_fail     = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.failed')
+#             
+#             len_in          = btails_out
+#             len_out         = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.len75.fastq')
+#             len_fail        = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.len75.failed')
+#             
+#             if_cmd1 = "/bioware/seqinfo/bin/illumina_filtering -chastity -N -f50 -in "+chaste_in+" -out "+chaste_out+" -failed "+chaste_fail
+#             if_cmd2 = "/bioware/seqinfo/bin/illumina_filtering -Btail -in "+btails_in+" -out "+btails_out+" -failed "+btails_fail
+#             if_cmd3 = "/bioware/seqinfo/bin/illumina_filtering -len 75 -clip 10 -in "+len_in+" -out "+len_out+" -failed "+len_fail
+#                 
+#             if self.use_cluster:
+#                 fh = open(script_filename,'w')
+#                 qstat_name = "trim" +str(i)+ '_' + self.runobj.run
+#                 fh.write("#!/bin/csh\n")
+#                 fh.write("#$ -j y\n" )
+#                 fh.write("#$ -o " + log_file + "\n")
+#                 fh.write("#$ -N " + qstat_name + "\n\n")
+# 
+#                 # setup environment
+#                 fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
+#                 fh.write("module load bioware\n\n")
+#                 fh.write(if_cmd1+"\n")
+#                 fh.write(if_cmd2+"\n")
+#                 fh.write(if_cmd3+"\n")
+#                 
+#                 fh.close()
+#                 
+#                 os.chmod(script_filename, stat.S_IRWXU)
+#                 #qsub_cmd = C.qsub_cmd + " " + script_filename
+#                 qsub_cmd = C.clusterize_cmd + " " + script_filename
+#                 logger.debug("qsub command: "+qsub_cmd)
+#                 
+#                 proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#     
+#             else:
+#                 
+#                 subprocess.call(if_cmd1,shell=True)
+#                 
+#                 subprocess.call(if_cmd2,shell=True)
+#                 
+#                 subprocess.call(if_cmd3,shell=True)
+    
+                #logger.debug("fastasampler command: "+fs_cmd)
+                
+                #if self.use_cluster:
+                #    fh.write(fs_cmd + "\n")
+                #else:
+                #    subprocess.call(fs_cmd,shell=True)
+       
+    #illumina_filtering -chastity -N -f50 -in $1.fastq -out $1.chaste.N.f50.fastq -failed $1.chaste.N.f50.failed.fastq
+
+        #
+        # Remove Btails
+        #
+    #illumina_filtering -Btail -in $1.chaste.N.f50.fastq -out $1.chaste.N.f50.Btails.fastq -failed $1.chaste.N.f50.Btails.failed
+        
+        #
+        # Remove reads shortened by Btails
+        #
+        #illumina_filtering -len 75 -clip 10 -in $1.chaste.N.f50.Btails.fastq -out $1.chaste.N.f50.Btails.len75.c10.fastq -failed $1.chaste.N.f50.Btails.len75.c10.failed.fastq
+    #illumina_filtering -len 75 -in $1.chaste.N.f50.Btails.fastq -out $1.chaste.N.f50.Btails.len75.fastq -failed $1.chaste.N.f50.Btails.len75.failed.fastq
+
+        return ('SUCCESS','Needs Completion','Needs Completion')
+    
     #
     #  initialize counters for deletes and open stats file
     #    for each input file
@@ -149,7 +266,7 @@ class TrimRun( object ):
         # need to figure out how if to get quality data with fasta    
         # save a list of read_ids: all_ids, passed_ids
         
-        for file_info in self.run.input_file_info.values():  # usually just one file: a list of one?    
+        for file_info in self.runobj.input_file_info.values():  # usually just one file: a list of one?    
             file_format = file_info["format"]     
             # the illumina fastq format needs to be parsed as fastq format then specially
             # post processed :(
@@ -210,7 +327,7 @@ class TrimRun( object ):
                 
 
                 deleted         = trim_data.get('deleted',None)
-                lane_tag        = trim_data.get('lane_key',None)
+                lane_tag        = trim_data.get('idx_key',None)
                 seq             = trim_data.get('trimmed_sequence',None)        
                 delete_reason   = trim_data.get('delete_reason',None)
                 
@@ -240,14 +357,14 @@ class TrimRun( object ):
                         
         # count up some things
         count_uniques = 0
-        good_lane_keys = []
-        for lane_key in self.run.run_keys:
-            count = len(self.uniques[lane_key])
+        good_idx_keys = []
+        for idx_key in self.runobj.run_keys:
+            count = len(self.uniques[idx_key])
             if count > 0:
-                good_lane_keys.append(lane_key)
+                good_idx_keys.append(idx_key)
             count_uniques = count_uniques + count               
 
-        return ('SUCCESS','',good_lane_keys)
+        return ('SUCCESS','',good_idx_keys)
  
     ###################################################################
     #
@@ -275,8 +392,8 @@ class TrimRun( object ):
         tag      = ''
         lane_tag = ''
         # try to locate and remove the runkey
-        if self.run.force_runkey != None:
-            tag = self.run.force_runkey
+        if self.runobj.force_runkey != None:
+            tag = self.runobj.force_runkey
             trimmed_sequence = raw_sequence[len(tag):]
         else:
             tag, trimmed_sequence = remove_runkey(raw_sequence, self.run_keys)
@@ -291,7 +408,7 @@ class TrimRun( object ):
         else:            
             lane_tag = lane + '_' + tag
             # is there a run_key with this tag?  Samples are keyed by this
-            if self.run.samples.get(lane_tag,None)==None:
+            if self.runobj.samples.get(lane_tag,None)==None:
                 # bad lane_runkey 
                 delete_reason = DELETED_LANEKEY
                 self.deleted_count_for_unknown_lane_runkey += 1
@@ -346,7 +463,7 @@ class TrimRun( object ):
                 self.deleted_count_for_proximal += 1
                                        
         # try to trim the anchor if we have enough sequence left at this point 
-        if len(trimmed_sequence) < self.run.minimumLength:
+        if len(trimmed_sequence) < self.runobj.minimumLength:
             delete_reason = DELETED_MINIMUM_LENGTH
             self.deleted_count_for_minimum_length += 1
         else:
@@ -355,12 +472,12 @@ class TrimRun( object ):
                 anchor_name = self.anchor_name[lane_tag]
                 logger.debug( 'Have Anchor name: ' + anchor_name)                    
                 exactRight, exactTrimmedOff, trimmed_sequence \
-                            = trim_anchor(anchor_name, self.anchors[lane_tag], self.run.anchors[anchor_name], trimmed_sequence)
+                            = trim_anchor(anchor_name, self.anchors[lane_tag], self.runobj.anchors[anchor_name], trimmed_sequence)
                 if exactRight: 
                     anchor_found = True 
                     logger.debug( 'found exactRight-anchor: ' + exactRight)
                     logger.debug('after anchor trimming seq: ' + trimmed_sequence)
-                    if len(trimmed_sequence) < self.run.minimumLength:
+                    if len(trimmed_sequence) < self.runobj.minimumLength:
                         delete_reason = DELETED_MINIMUM_LENGTH
                         self.deleted_count_for_minimum_length += 1
                     
@@ -373,7 +490,7 @@ class TrimRun( object ):
                     logger.debug( 'found distal-primer: ' + exactRight)
                     logger.debug('after distal primer trimming seq: ' + trimmed_sequence)
             
-            if not exactRight and self.run.require_distal == True:
+            if not exactRight and self.runobj.require_distal == True:
                 logger.debug('deleted: no distal found')                        
                 delete_reason = DELETED_DISTAL
                 self.deleted_count_for_distal += 1
@@ -387,7 +504,7 @@ class TrimRun( object ):
         if( delete_reason != DELETED_RUNKEY and not trimmed_sequence ):
             delete_reason = DELETED_NO_INSERT
             self.deleted_count_for_no_insert += 1
-        elif( delete_reason != DELETED_RUNKEY and len(trimmed_sequence) < self.run.minimumLength):
+        elif( delete_reason != DELETED_RUNKEY and len(trimmed_sequence) < self.runobj.minimumLength):
             delete_reason = DELETED_MINIMUM_LENGTH
             self.deleted_count_for_minimum_length += 1
         
@@ -410,7 +527,7 @@ class TrimRun( object ):
         ###################################################################
         if(quality_scores and not delete_reason):
             average_score = check_for_quality(raw_sequence, trimmed_sequence, quality_scores)
-            if average_score < self.run.minAvgQual:
+            if average_score < self.runobj.minAvgQual:
                 delete_reason = DELETED_QUALITY
                 self.deleted_count_for_quality += 1
                 
@@ -429,13 +546,13 @@ class TrimRun( object ):
         trim_collector['deleted']           = False if (not delete_reason)  else True
         trim_collector['delete_reason']     = delete_reason
         trim_collector['primer_name']       = primer_name
-        trim_collector['lane_key']          = lane_tag
+        trim_collector['idx_key']          = lane_tag
         trim_collector['orientation']       = orientation
        
         return trim_collector
 
                 
-    def write_data_files(self, lane_keys): 
+    def write_data_files(self, idx_keys): 
     
         ###################################################################
         #
@@ -456,20 +573,20 @@ class TrimRun( object ):
         #trimseqFileName = self.outdir + '/trimseq_file.txt'
         #f_rawseq  = open(rawseqFileName, "w")
         #f_trimseq = open(trimseqFileName,"w")
-        for lane_key in self.run.run_keys:
-            self.fa[lane_key].close()  
-            base_file_name = os.path.join(self.outdir,lane_key)
+        for idx_key in self.runobj.run_keys:
+            self.fa[idx_key].close()  
+            base_file_name = os.path.join(self.outdir,idx_key)
             uniquesFileName = base_file_name + ".unique.fa"
             abundFileName   = base_file_name + ".abund.fa"
             namesFileName   = base_file_name + ".names"
             delFileName     = base_file_name + ".deleted.txt"
             f_names = open(namesFileName,"w") 
-            #  if we order the uniques by length of self.uniques[lane_key][seq] then we have abundance file
+            #  if we order the uniques by length of self.uniques[idx_key][seq] then we have abundance file
             
             # Write abund.fa file
             # mysort returns a list of tuples: (read_id, count, seq) sorted highest to lowest freq
             try:
-                sorted_uniques = mysort( self.uniques[lane_key], self.names[lane_key] )
+                sorted_uniques = mysort( self.uniques[idx_key], self.names[idx_key] )
                 for item in sorted_uniques:
                     read_id = item[0]
                     count = item[1]
@@ -481,43 +598,43 @@ class TrimRun( object ):
 
             except:
                 print "**********fail abund **************"
-                success_code = ('FAIL','abund',lane_key)
+                success_code = ('FAIL','abund',idx_key)
                
             # Write uniques.fa file
             try:
-                for seq in self.uniques[lane_key]:
-                    read_id = self.uniques[lane_key][seq]
+                for seq in self.uniques[idx_key]:
+                    read_id = self.uniques[idx_key][seq]
                     uniquefa = sfasta(read_id, seq)
                     uniquefa.write(uniquesFileName,'a')
                 logger.debug("\nwrote uniques file " + uniquesFileName)
  
             except:
-                success_code = ('FAIL','unique',lane_key)    
+                success_code = ('FAIL','unique',idx_key)    
                 
             # Write names file
             try:
-                for id in self.names[lane_key]:
-                    others = ','.join(self.names[lane_key][id])                
+                for id in self.names[idx_key]:
+                    others = ','.join(self.names[idx_key][id])                
                     f_names.write(id+"\t"+others+"\n")
                 f_names.close()
                 logger.debug("wrote names file " + namesFileName)
             except:
-                success_code = ('FAIL','names',lane_key) 
+                success_code = ('FAIL','names',idx_key) 
                 
             # Write deleted.txt file   
-            if lane_key in self.deleted_ids and self.deleted_ids[lane_key]:
+            if idx_key in self.deleted_ids and self.deleted_ids[idx_key]:
                 f_del   = open(delFileName,  "w") 
                 reason_counts = {}
-                for id in self.deleted_ids[lane_key]:
-                    reason = self.deleted_ids[lane_key][id]                
+                for id in self.deleted_ids[idx_key]:
+                    reason = self.deleted_ids[idx_key][id]                
                     f_del.write(id+"\t"+reason+"\n")
                     current_count = reason_counts.get(reason, 0)
                     reason_counts[reason] = current_count + 1
                 # now write out some stats
-                f_del.write("\nTotal Passed Reads in this lane/key: " + str(len(self.names[lane_key])) + "\n")
-                if(len(self.names[lane_key]) > 0):
+                f_del.write("\nTotal Passed Reads in this lane/key: " + str(len(self.names[idx_key])) + "\n")
+                if(len(self.names[idx_key]) > 0):
                     for key,value in reason_counts.items():
-                        f_del.write(" " + key + ": " + str(value) + " " + str(float(value*100.0)/float(len(self.names[lane_key]))) + "% of total \n")                
+                        f_del.write(" " + key + ": " + str(value) + " " + str(float(value*100.0)/float(len(self.names[idx_key]))) + "% of total \n")                
                 else:
                     pass
                 f_del.close()
@@ -541,13 +658,13 @@ class TrimRun( object ):
             print self.number_of_good_sequences, "sequences passed" ,pct+'%'
             print "Unique Counts:"
             count_uniques = 0
-            good_lane_keys = []
-            for lane_key in self.run.run_keys:
-                count = len(self.uniques[lane_key])
+            good_idx_keys = []
+            for idx_key in self.runobj.run_keys:
+                count = len(self.uniques[idx_key])
                 if count > 0:
-                    good_lane_keys.append(lane_key)
+                    good_idx_keys.append(idx_key)
                 count_uniques = count_uniques + count
-                print "   ",lane_key,self.dna_regions[lane_key],count
+                print "   ",idx_key,self.dna_regions[idx_key],count
             print "   Total Uniques:",count_uniques
  
  
@@ -555,14 +672,14 @@ class TrimRun( object ):
         #
         #  Write to stats file for this run
         #
-        self.stats_fp.write("Run: "+self.rundate+"\n")
+        self.stats_fp.write("Run: "+self.run+"\n")
         self.stats_fp.write("Unique Counts:\n")
-        #stats_fp.write("Run: "+self.rundate)
+        #stats_fp.write("Run: "+self.run)
         count_uniques = 0
-        for lane_key in self.run.run_keys:
-            count = len(self.uniques[lane_key])
+        for idx_key in self.runobj.run_keys:
+            count = len(self.uniques[idx_key])
             count_uniques = count_uniques + count
-            self.stats_fp.write("   " + str(count)+"\t"+lane_key+"\n")
+            self.stats_fp.write("   " + str(count)+"\t"+idx_key+"\n")
         
         self.stats_fp.write("Total Uniques: "+str(count_uniques)+"\n")
         self.stats_fp.write("\nDeleted Counts (before chimera check):\n")
@@ -580,7 +697,7 @@ class TrimRun( object ):
         
         success_code=''
         if not success_code:
-            success_code = ('SUCCESS ' + str(good_lane_keys))
+            success_code = ('SUCCESS ' + str(good_idx_keys))
         return success_code
         
 
