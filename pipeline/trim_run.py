@@ -145,16 +145,27 @@ class TrimRun( object ):
                     
                     
     def trimrun_ion_torrent(self, write_files = False):
-        pass
-        
+        return ('TODO','Needs Completion','Needs Completion')
     def trimrun_illumina(self, write_files = False):
+        return ('TODO','Needs Completion','Needs Completion')
+        
+    def filter_illumina(self, write_files = False):
 
+        # setup illumina filtering
         iFilter = IlluminaFiltering(self.runobj)
         for file in self.runobj.files_list.split(','):
-            iFilter.chastity_filter(file)
+            # these are available in fastq_trimmer_by_quality.py
+            #   infile=None,            outfile=None, 
+            #   format='sanger',        wsize=1,        wstep=1,            trim_ends='53', 
+            #   agg_action='min',       exc_count=0,    score_comp='>=',    qual_score=0,   
+            #   filter_first50=False,   filter_Ns=False,filter_Nx=0,        failed_fastq=False,
+            #   length=0,               trim=0,         clip=0,             keep_zero_length=False
+            #
+            f2 = iFilter.btails_filter(infile = file, length=75, trim=0, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True)
             
+            #f3 = iFilter.length_filter(infile = f2, length=75, trim=0, clip=0, failed_fastq=False)
             
-        sys.exit()
+        
 #         qsub_prefix = 'trim_illumina_'
 #         i = 0
 #         #for file in files:

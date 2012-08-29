@@ -105,6 +105,7 @@ def trim(runobj):
     # pass True to write out the straight fasta file of all trimmed non-deleted seqs
     # Remember: this is before chimera checking
     if runobj.platform == 'illumina':
+        trim_codes = mytrim.filter_illumina(True)
         trim_codes = mytrim.trimrun_illumina(True)
     elif runobj.platform == '454':
         trim_codes = mytrim.trimrun_454(True)

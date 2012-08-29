@@ -249,7 +249,9 @@ class MetadataUtils:
         elif warn: 
             msg = """\n\tTHERE WERE NON-FATAL PROBLEMS WITH THE CONFIG FILE THAT MAY OR MAY NOT CAUSE PROBLEMS.\n
                 To view the warnings add ' --loglevel warning' to the command line.\n"""
-        
+            print "CSV File Passed Vaidation."
+        else:
+            print "CSV File Passed Vaidation!"
         return msg
         
     def validate_dictionary(self, config_info):
