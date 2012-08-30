@@ -7,7 +7,7 @@
 
 import sys, os, stat
 import subprocess
-#from optparse import OptionParser
+from pipeline.pipelinelogging import logger
 from pipeline.galaxy.fastq import fastqReader, fastqWriter
 
 def mean( score_list ):
@@ -16,7 +16,9 @@ def mean( score_list ):
 ACTION_METHODS = { 'min':min, 'max':max, 'sum':sum, 'mean':mean }
 
 class IlluminaFiltering:
-    """reads an Illumina fastq file and outputs a new filtered file
+    """From Sue's original perl script called illumina_filtering:
+    
+    reads an Illumina fastq file and outputs a new filtered file
          Filtering can be on chastity, Ns, mate exists, B-tails, etc.
          Based partially on minoche_filtering_pipeline.pl, but with more controls
          /bioware/illumina_scripts/minoche_filtering_pipeline.pl
@@ -100,15 +102,15 @@ class IlluminaFiltering:
         trim_length         = trim
         clip_length         = clip
         if not infile:
-            sys.exit( "fastq_trimmer: Need to specify an input file" )
+            sys.exit( "illumina_fastq_trimmer: Need to specify an input file" )
         
         if window_size < 1:
-            sys.exit( 'fastq_trimmer: You must specify a strictly positive window size' )
+            sys.exit( 'illumina_fastq_trimmer: You must specify a strictly positive window size' )
         
         if window_step < 1:
-            sys.exit( 'fastq_trimmer: You must specify a strictly positive step size' )
+            sys.exit( 'illumina_fastq_trimmer: You must specify a strictly positive step size' )
             
-        print "Running illumina Filter"
+        print "\nRunning illumina Filtering"
         
         in_filepath = os.path.join(self.indir,infile)
         try:
@@ -150,8 +152,18 @@ class IlluminaFiltering:
         count_of_trimmed  = 0
         count_of_first50  = 0
         count_of_Ns  = 0
-        for num_reads, fastq_read in enumerate( fastqReader( open( in_filepath ), format = format ) ):
-            
+        if self.runobj.compressed:
+            import gzip
+            try:
+                logger.info( "illumina_filtering: opening compressed file: "+in_filepath)
+                fp = gzip.open( in_filepath )
+            except:
+                logger.info( "illumina_filtering: opening uncompressed file: "+in_filepath)
+                fp = open( in_filepath )
+        else:
+            logger.info(  "illumina_filtering: opening uncompressed file: "+in_filepath)
+            fp = open( in_filepath )
+        for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
             ############################################################################################
             # Put chastity code here
             #print fastq_read.identifier
@@ -167,8 +179,7 @@ class IlluminaFiltering:
                 continue
             
             # Filter reads with ambiguous bases
-            if filter_Ns:
-                
+            if filter_Ns:                
                 countN = seq.count('N')
                 if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
                     #print 'failed Ns',infile
@@ -180,8 +191,7 @@ class IlluminaFiltering:
             
             
             # Filter reads below first 50 base quality
-            if filter_first50:
-                
+            if filter_first50:                
                 first50 = 50
                 first50_maxQ = 30
                 first50_maxQ_count = 34
@@ -264,10 +274,11 @@ class IlluminaFiltering:
         out.close()
         if failed_fastq:
             fail.close()
-        print 'count_of_trimmed', count_of_trimmed
-        print 'count_of_first50', count_of_first50
-        print 'count_of_unchaste', count_of_unchaste
-        print 'count_of_Ns', count_of_Ns
+        print "file:",infile
+        print 'count_of_trimmed             (for length):', count_of_trimmed
+        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
+        print "count_of_unchaste             ('Y' in id):", count_of_unchaste
+        print 'count_of_Ns                (reads with N):', count_of_Ns
         if num_reads is None:
             print "No valid FASTQ reads could be processed."
         else:
@@ -275,5 +286,7 @@ class IlluminaFiltering:
         if num_reads_excluded:
             print "%i reads of zero length were excluded from the output." % num_reads_excluded
 
-
+        return out_filename
+        
+        
 if __name__ == "__main__": trim_by_quality()

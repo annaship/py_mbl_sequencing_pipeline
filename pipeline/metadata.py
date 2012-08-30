@@ -863,12 +863,12 @@ class MetadataUtils:
             collector= self.get_values( self.args )
             
         if self.args.platform == 'illumina':
-            print "Illumina Pipeline"
+            print "Starting Illumina Pipeline"
             if not self.args.csvPath:
                 sys.exit("illumina requires a csv file - Exiting")
             
         elif self.args.platform == 'vamps':
-            print "VAMPS Pipeline:"
+            print "Starting VAMPS Pipeline:"
             
             if 'project' not in collector or collector['project'] == '':    
                 collector['project'] = collector['project'][:1].capitalize() + collector['project'][1:]
@@ -878,10 +878,10 @@ class MetadataUtils:
                 collector['project'] = self.args.fasta_file
                 collector['from_fasta'] = True
         elif self.args.platform == '454':
-            print "454 Pipeline"
+            print "Starting 454 Pipeline"
             
         elif self.args.platform == 'ion_torrent':
-            print "Ion Torrent Pipeline"
+            print "Starting Ion Torrent Pipeline"
             
         else:
             sys.exit("Validate args: Unknown Platform")
@@ -907,6 +907,6 @@ class MetadataUtils:
              collector['input_dir'] = self.args.input_dir
 
         collector['date'] = str(datetime.date.today())
-        print collector
+        #print collector
         return collector
             

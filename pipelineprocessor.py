@@ -98,15 +98,16 @@ def trim(runobj):
     #open_zipped_directory(runobj.run_date, runobj.output_dir)
     # (re) create the trim status file
     runobj.trim_status_file_h = open(runobj.trim_status_file_name, "w")
+    idx_keys = get_keys(runobj)
     
     # do the trim work
-    mytrim = TrimRun(runobj) 
+    mytrim = TrimRun(runobj, idx_keys) 
     
     # pass True to write out the straight fasta file of all trimmed non-deleted seqs
     # Remember: this is before chimera checking
     if runobj.platform == 'illumina':
-        trim_codes = mytrim.filter_illumina(True)
-        trim_codes = mytrim.trimrun_illumina(True)
+        trim_codes = mytrim.filter_illumina()
+        trim_codes = mytrim.trim_illumina(file_list = trim_codes[2])
     elif runobj.platform == '454':
         trim_codes = mytrim.trimrun_454(True)
     elif runobj.platform == 'ion-torrent':
@@ -122,6 +123,7 @@ def trim(runobj):
         trim_results_dict['new_lane_keys'] = new_lane_keys
         logger.debug("Trimming finished successfully")
         # write the data files
+        
         mytrim.write_data_files(new_lane_keys)
         runobj.trim_status_file_h.write(json.dumps(trim_results_dict))
         runobj.trim_status_file_h.close()

@@ -42,19 +42,19 @@ DELETED_MAXIMUM_LENGTH      = 'Maximum Length'
 class TrimRun( object ):
     
     """ Define here"""
-    def __init__(self, run_object = None):
+    def __init__(self, run_object = None, idx_keys=None):
     
         self.runobj     = run_object
-        self.outdir    = self.runobj.output_dir
+        self.outdir     = self.runobj.output_dir
         
         self.indir     = self.runobj.input_dir
         # do something with 'run'.
         self.run = self.runobj.run
         logger.debug("Rundate:" + str(self.run))
         self.use_cluster = self.runobj.use_cluster
+        self.idx_keys = idx_keys
         
-        self.idx_keys = [key[2:] for key in self.runobj.run_keys]
-        
+            
         self.seqDirs            = {}
         self.dna_regions        = {}
         self.taxonomic_domain   = {}
@@ -147,7 +147,7 @@ class TrimRun( object ):
         
     def filter_illumina(self, write_files = False):
         from pipeline.illumina_filtering import IlluminaFiltering
-
+        file_list = []
         # setup illumina filtering
         iFilter = IlluminaFiltering(self.runobj)
         for file in self.runobj.files_list.split(','):
@@ -161,12 +161,79 @@ class TrimRun( object ):
             # Enter any parameter from the list above or the default (shown) will be used
             #f2 = iFilter.btails_filter(infile = file, length=75, trim=10, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True)
             # output file is created by the infile name
-            iFilter.trim_by_quality(infile = file, length=75, trim=0, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True)
+            file_list.append( iFilter.trim_by_quality(infile = file, length=75, trim=0, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True) )
 
-        return ('SUCCESS','Needs Completion','Needs Completion')
+        return ('SUCCESS','TODO',file_list)
         
-    def trimrun_illumina(self, write_files = False):
-        return ('TODO','Needs Completion','Needs Completion')
+    def trim_illumina(self, write_files = False, file_list = []):
+        import pipeline.analyze_illumina_v6_overlaps as illumina_trimmer
+        
+        
+        #probj = PerfectReads(self.runobj)
+        #create a configDict
+        # that looks like Merens from analyze-illumina-v6-overlap:
+        #-------8<-------8<-------8<-------8<-------8<-------8<-------8<-------8<-------8<------------
+        #    [general]
+        #    project_name = (project name)
+        #    researcher_email = (your e-mail address)
+        #    input_directory = (directory from which the input files will be read from)
+        #    output_directory = (directory to store output)
+        #    
+        #    
+        #    [files]
+        #    pair_1 = (pair 1 files, comma separated)
+        #    pair_2 = (pair 2 files, comma separated. must be ordered based on pair 1 files)
+        #-------8<-------8<-------8<-------8<-------8<-------8<-------8<-------8<-------8<------------
+        class expando(object):pass
+        config = expando()
+        config.input_directory = os.path.join(self.runobj.output_dir,"illumina_filtered")
+        # project should come from csv file but they are per dataset using idx_keys
+        # self.runobj.samples[key].project
+        config.project_name = "myproject"
+        trim_dir = os.path.join(self.runobj.output_dir,"trim")
+        if not os.path.exists(trim_dir):
+            os.mkdir(trim_dir)
+        config.output_directory = trim_dir
+        config.pair_1 = []
+        config.pair_2 = []
+        projects = []
+        # FILE SET:
+        # v6_Amplicon_IDX4_TGACCA_L003_R1_001.fastq.gz
+        # v6_Amplicon_IDX4_TGACCA_L003_R2_001.fastq.gz
+        # file_prefix = v6_Amplicon_IDX4_TGACCA_L003
+        file_prefixes=[]
+        for key in self.idx_keys:
+            project = self.runobj.samples[key].project
+            file_prefixes.append(self.runobj.samples[key].file_prefix)
+        print file_prefixes
+        for p in sorted(file_prefixes):
+            if p.find('_R1_') > 0:
+                #print 'R1 ',os.path.join(config.input_directory,file)
+                file = p+".filtered.fastq"
+                config.pair_1.append(os.path.join(config.input_directory,file))
+            if p.find('_R2_') > 0:
+                #print 'R2 ',os.path.join(config.input_directory,file)
+                file = p+".filtered.fastq"
+                config.pair_2.append(os.path.join(config.input_directory,file))
+                
+                
+        sys.exit()
+        
+        
+        for file in sorted(file_list):
+            if file.find('_R1_') > 0:
+                #print 'R1 ',os.path.join(config.input_directory,file)
+                config.pair_1.append(os.path.join(config.input_directory,file))
+            if file.find('_R2_') > 0:
+                #print 'R2 ',os.path.join(config.input_directory,file)
+                config.pair_2.append(os.path.join(config.input_directory,file))
+        
+        illumina_trimmer.main(config) 
+        
+        return ('SUCCESS','TODO',self.idx_keys)
+        
+        
+        
     #
     #  initialize counters for deletes and open stats file
     #    for each input file
@@ -499,6 +566,9 @@ class TrimRun( object ):
         #trimseqFileName = self.outdir + '/trimseq_file.txt'
         #f_rawseq  = open(rawseqFileName, "w")
         #f_trimseq = open(trimseqFileName,"w")
+        if self.runobj.platform == 'illumina':
+            return
+            
         for idx_key in self.runobj.run_keys:
             self.fa[idx_key].close()  
             base_file_name = os.path.join(self.outdir,idx_key)
