@@ -3,11 +3,10 @@ run_date = 20120601
 platform = illumina
 input_dir = ./test/sample_data/illumina/Project_J_v6_30
 input_file_names = 
+compressed = False
 
 use_cluster=True
 input_file_formats = fastq
-
-baseoutputdir=output
 
 [illumina]
 compressed = False
