@@ -27,7 +27,7 @@ from pipeline.anchortrimming_mbl import *
 from pipeline.pipelinelogging import logger
 from Bio import SeqIO
 import subprocess
-from pipeline.illumina_filtering import *
+
 
 DELETED_RUNKEY      = 'Runkey: no key found'
 DELETED_LANEKEY     = 'Lanekey: unknown lane/key'
@@ -46,9 +46,6 @@ class TrimRun( object ):
     
         self.runobj     = run_object
         self.outdir    = self.runobj.output_dir
-        self.global_trim_dir  = os.path.join(self.outdir,"trim")
-        if not os.path.exists(self.global_trim_dir):
-            os.mkdir(self.global_trim_dir)
         
         self.indir     = self.runobj.input_dir
         # do something with 'run'.
@@ -146,10 +143,10 @@ class TrimRun( object ):
                     
     def trimrun_ion_torrent(self, write_files = False):
         return ('TODO','Needs Completion','Needs Completion')
-    def trimrun_illumina(self, write_files = False):
-        return ('TODO','Needs Completion','Needs Completion')
+
         
     def filter_illumina(self, write_files = False):
+        from pipeline.illumina_filtering import IlluminaFiltering
 
         # setup illumina filtering
         iFilter = IlluminaFiltering(self.runobj)
@@ -161,97 +158,15 @@ class TrimRun( object ):
             #   filter_first50=False,   filter_Ns=False,filter_Nx=0,        failed_fastq=False,
             #   length=0,               trim=0,         clip=0,             keep_zero_length=False
             #
-            f2 = iFilter.btails_filter(infile = file, length=75, trim=0, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True)
-            
-            #f3 = iFilter.length_filter(infile = f2, length=75, trim=0, clip=0, failed_fastq=False)
-            
-        
-#         qsub_prefix = 'trim_illumina_'
-#         i = 0
-#         #for file in files:
-#         #print self.runobj.input_files
-#         #print self.runobj.files_list
-#         for file in self.runobj.files_list.split(','):
-#             print file
-#             i += 1
-#             
-#             script_filename = os.path.join(self.global_trim_dir,qsub_prefix + str(i))
-#             # this doesn't seem to work
-#             log_file = os.path.join(os.getcwd(),self.global_trim_dir, 'trim.log_' + str(i))
-#             
-#             outdir          = self.global_trim_dir
-#             filebase        = file.split('/')[1].split('.')[0]
-#             
-#             chaste_in       = os.path.join(self.indir,file)
-#             chaste_out      =os.path.join(outdir,filebase+'.chaste.N.f50.fastq')
-#             chaste_fail     =os.path.join(outdir,filebase+'.chaste.N.f50.failed')
-#             
-#             btails_in       = chaste_out
-#             btails_out      = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.fastq')
-#             btails_fail     = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.failed')
-#             
-#             len_in          = btails_out
-#             len_out         = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.len75.fastq')
-#             len_fail        = os.path.join(outdir,filebase+'.chaste.N.f50.Btails.len75.failed')
-#             
-#             if_cmd1 = "/bioware/seqinfo/bin/illumina_filtering -chastity -N -f50 -in "+chaste_in+" -out "+chaste_out+" -failed "+chaste_fail
-#             if_cmd2 = "/bioware/seqinfo/bin/illumina_filtering -Btail -in "+btails_in+" -out "+btails_out+" -failed "+btails_fail
-#             if_cmd3 = "/bioware/seqinfo/bin/illumina_filtering -len 75 -clip 10 -in "+len_in+" -out "+len_out+" -failed "+len_fail
-#                 
-#             if self.use_cluster:
-#                 fh = open(script_filename,'w')
-#                 qstat_name = "trim" +str(i)+ '_' + self.runobj.run
-#                 fh.write("#!/bin/csh\n")
-#                 fh.write("#$ -j y\n" )
-#                 fh.write("#$ -o " + log_file + "\n")
-#                 fh.write("#$ -N " + qstat_name + "\n\n")
-# 
-#                 # setup environment
-#                 fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
-#                 fh.write("module load bioware\n\n")
-#                 fh.write(if_cmd1+"\n")
-#                 fh.write(if_cmd2+"\n")
-#                 fh.write(if_cmd3+"\n")
-#                 
-#                 fh.close()
-#                 
-#                 os.chmod(script_filename, stat.S_IRWXU)
-#                 #qsub_cmd = C.qsub_cmd + " " + script_filename
-#                 qsub_cmd = C.clusterize_cmd + " " + script_filename
-#                 logger.debug("qsub command: "+qsub_cmd)
-#                 
-#                 proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     
-#             else:
-#                 
-#                 subprocess.call(if_cmd1,shell=True)
-#                 
-#                 subprocess.call(if_cmd2,shell=True)
-#                 
-#                 subprocess.call(if_cmd3,shell=True)
-    
-                #logger.debug("fastasampler command: "+fs_cmd)
-                
-                #if self.use_cluster:
-                #    fh.write(fs_cmd + "\n")
-                #else:
-                #    subprocess.call(fs_cmd,shell=True)
-       
-    #illumina_filtering -chastity -N -f50 -in $1.fastq -out $1.chaste.N.f50.fastq -failed $1.chaste.N.f50.failed.fastq
-
-        #
-        # Remove Btails
-        #
-    #illumina_filtering -Btail -in $1.chaste.N.f50.fastq -out $1.chaste.N.f50.Btails.fastq -failed $1.chaste.N.f50.Btails.failed
-        
-        #
-        # Remove reads shortened by Btails
-        #
-        #illumina_filtering -len 75 -clip 10 -in $1.chaste.N.f50.Btails.fastq -out $1.chaste.N.f50.Btails.len75.c10.fastq -failed $1.chaste.N.f50.Btails.len75.c10.failed.fastq
-    #illumina_filtering -len 75 -in $1.chaste.N.f50.Btails.fastq -out $1.chaste.N.f50.Btails.len75.fastq -failed $1.chaste.N.f50.Btails.len75.failed.fastq
+            # Enter any parameter from the list above or the default (shown) will be used
+            #f2 = iFilter.btails_filter(infile = file, length=75, trim=10, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True)
+            # output file is created by the infile name
+            iFilter.trim_by_quality(infile = file, length=75, trim=0, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True)
 
         return ('SUCCESS','Needs Completion','Needs Completion')
-    
+        
+    def trimrun_illumina(self, write_files = False):
+        return ('TODO','Needs Completion','Needs Completion')
     #
     #  initialize counters for deletes and open stats file
     #    for each input file
