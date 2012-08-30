@@ -56,7 +56,7 @@ class MetadataUtils:
             
     def convert_and_save_ini(self):
         
-        new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'] + '.ini')
+        new_ini_file = os.path.join(self.general_config_dict['output_dir'], self.general_config_dict['run'] + '.ini')
         #new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'],self.general_config_dict['run'] + '.ini')
         # converts csv to ini and saves to output_dir
         if self.general_config_dict['platform'] == 'vamps':
@@ -249,9 +249,9 @@ class MetadataUtils:
         elif warn: 
             msg = """\n\tTHERE WERE NON-FATAL PROBLEMS WITH THE CONFIG FILE THAT MAY OR MAY NOT CAUSE PROBLEMS.\n
                 To view the warnings add ' --loglevel warning' to the command line.\n"""
-            print "CSV File Passed Vaidation."
+            print "CSV File Passed Validation."
         else:
-            print "CSV File Passed Vaidation!"
+            print "CSV File Passed Validation!"
         return msg
         
     def validate_dictionary(self, config_info):
@@ -444,8 +444,8 @@ class MetadataUtils:
                 else:
                     files_list.append(os.path.basename(infile))
         else:
-            if fasta_file:
-                pass
+#            if fasta_file:
+#                pass
             logger.warning("No input directory or directory permissions problem: "+self.general_config_dict['input_dir'])
             
         return files_list

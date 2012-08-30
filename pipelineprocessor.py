@@ -107,7 +107,7 @@ def trim(runobj):
     # Remember: this is before chimera checking
     if runobj.platform == 'illumina':
         trim_codes = mytrim.filter_illumina()
-        trim_codes = mytrim.trim_illumina(file_list = trim_codes[2])
+#        trim_codes = mytrim.trim_illumina(file_list = trim_codes[2])
     elif runobj.platform == '454':
         trim_codes = mytrim.trimrun_454(True)
     elif runobj.platform == 'ion-torrent':
