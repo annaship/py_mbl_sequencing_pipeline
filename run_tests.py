@@ -1,6 +1,5 @@
+#aaa
 #!/usr/bin/env python
-
-##!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2011, Marine Biological Laboratory
@@ -12,15 +11,18 @@
 #
 # Please read the COPYING file.
 #
-import unittest
 
-from test.test_pipeline import TestPipeline
+from unittest import TestLoader, TextTestRunner, TestSuite
+import test.illumina_files_tests as ill_f
+import test.db_upload_tests as db_up
 
+if __name__ == "__main__":
 
+    loader = TestLoader()
+    suite = TestSuite((
+        loader.loadTestsFromTestCase(ill_f.IlluminaFilesTestCase),
+        loader.loadTestsFromTestCase(db_up.DbUloadTestCase),
+        ))
 
-if __name__ == '__main__':
-
-    testSuite = TestPipeline()
-    testSuite.test_all()
-
-#text_runner = unittest.TextTestRunner().run(testSuite)
+    runner = TextTestRunner(verbosity = 2)
+    runner.run(suite)

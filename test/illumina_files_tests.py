@@ -85,7 +85,7 @@ class IlluminaFilesTestCase(unittest.TestCase):
         def perfect_reads(self):
         def uniq_fa(self):
     def open_write_close(self, ini_file_name, text):
-    def get_fastq_file_names(self, f_input_file_path):
+        def get_fastq_file_names(self, f_input_file_path):
     def read1(self, files_r1, compressed):
     def read2(self, files_r2, compressed):
 """
