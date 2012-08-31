@@ -56,7 +56,7 @@ class MetadataUtils:
             
     def convert_and_save_ini(self):
         
-        new_ini_file = os.path.join(self.general_config_dict['output_dir'], self.general_config_dict['run'] + '.ini')
+        new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'] + '.ini')
         #new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'],self.general_config_dict['run'] + '.ini')
         # converts csv to ini and saves to output_dir
         if self.general_config_dict['platform'] == 'vamps':
@@ -188,6 +188,8 @@ class MetadataUtils:
         """
         
         print "Validating ini type Config File (may have been converted from csv)"
+        new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'] + '.ini')
+        print "New ini file location: "+new_ini_file
         return_code = False
         error_code  = False
         warn_code   = False
@@ -197,7 +199,7 @@ class MetadataUtils:
         #print 'configpath',self.general_config_dict['configPath']
         # configPath here is the new configPath
         self.data_object = self.configDictionaryFromFile_ini(self.general_config_dict['configPath'])
-        
+
         
         (error_code,warn_code) = self.check_for_missing_values(self.data_object)  
         if error_code: error=True
@@ -219,7 +221,8 @@ class MetadataUtils:
         if warn_code: warn=True
         #print self.data_object['input_dir']
         #print self.data_object['input_files']
-        
+ 
+ 
         if 'input_dir' not in self.data_object['general'] and 'input_files' not in self.data_object['general']:
             logger.warning("No input directory and no input files")        
             warn=True
@@ -243,15 +246,15 @@ class MetadataUtils:
             error=True
                         
         if error:
-            sys.exit( """\n\tTHERE WERE SEVERE PROBLEMS WITH THE CONFIG FILE - EXITING 
-            PLEASE CORRECT THEM AND START OVER.\n
+            sys.exit( """\n\t\033[91mTHERE WERE SEVERE PROBLEMS WITH THE CSV and/or CONFIG FILE - EXITING 
+            PLEASE CORRECT THEM AND START OVER.\033[0m\n
             To view the errors add ' --loglevel info' to the command line.\n""")
         elif warn: 
-            msg = """\n\tTHERE WERE NON-FATAL PROBLEMS WITH THE CONFIG FILE THAT MAY OR MAY NOT CAUSE PROBLEMS.\n
+            msg = """\n\t\033[93mTHERE WERE NON-FATAL PROBLEMS WITH THE CSV and/or CONFIG FILE THAT MAY OR MAY NOT CAUSE PROBLEMS.\033[0m\n
                 To view the warnings add ' --loglevel warning' to the command line.\n"""
-            print "CSV File Passed Validation."
+            print "\033[92mCSV File Passed Vaidation! (with warnings)\033[0m"
         else:
-            print "CSV File Passed Validation!"
+            print "\033[92mCSV File Passed Vaidation!\033[0m"
         return msg
         
     def validate_dictionary(self, config_info):
@@ -269,21 +272,6 @@ class MetadataUtils:
 
         return configDict   
         
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         
@@ -309,121 +297,7 @@ class MetadataUtils:
         return data['general']
 
     
-#     def populate_data_object_illumina(self, args, my_csv):
-#         data = {}
-#         data['general'] = {}
-#         test_datasets = {}
-#         dataset_counter = {}
-#         headers = ''
-#         if self.run:
-#             infile = self.run.configPath
-#             data['general']['input_dir'] = self.run.input_dir
-#             #megadata['general']['output_dir'] = self.args.output_dir
-#             data['general']['platform'] = self.run.platform
-#             data['general']['run'] = self.run.run_date
-#             #data['general']['run_date'] = self.run.run_date
-#             #megadata['general']['run'] = self.args.run
-#             data['general']["input_file_format"] = self.run.input_file_format
-#             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-#             data['general']["input_file_suffix"] = self.run.input_file_suffix
-#         else:            
-#             infile = args.configPath
-#             data['general']['input_dir'] = args.input_dir
-#             #data['general']['output_dir'] = os.path.join(args.output_dir,args.run)
-#             data['general']['output_dir'] = args.output_dir
-#             data['general']['platform'] = args.platform
-#             data['general']['run'] = args.run
-#             #data['general']['run_date'] = args.run
-#             #megadata['general']['run'] = self.args.run
-#             data['general']["input_file_format"] = args.input_file_format
-#             #input_dir,"/xraid2-2/sequencing/Illumina/20120525_recalled/Project_Sandra_v6/analysis/"
-#             data['general']["input_file_suffix"] = args.input_file_suffix
-#             
-#         print "Validating csv type ConfigFile"
-#         
-#         # changes spaces to '_' and all lowercase
-# 
-#         temp = {}   
-# 
-#         
-# #        my_read_csv = readCSV(file_path = infile)
-# #        my_read_csv.put_run_info()
-# #        print "content[1].keys(): "
-# #        print content[1].keys()
-# #        # To see the list of statistics available for each line
-# #        for k, v in content.items():
-# #            print k, v['dataset'], v 
-#         content     = my_csv.read_csv()
-#         headers     = content[1].keys()
-#         headers_clean = [x.strip('"').replace(" ", "_").lower() for x in headers]
-#         projects = {}
-#         if self.check_headers(headers_clean):
-# 
-# #
-# #                try:
-# #                    temp[headers[n]] = lst[n]
-# #                except:
-# #                    sys.exit("ERROR:It looks like the header count and the data column count are different.")
-#             for k, v in content.items():
-#                 run_key = v['run_key'].replace('N','').upper()
-#                 temp['file_prefix'] = v['dataset']+'_'+ run_key
-# #                print "v = %s\n" % v
-# #                v = {'barcode_index': 'ATCACG', 'project': 'JCR_SPO_Bv6', 'lane': '3', 'run': '20120613', 'dna_region': 'v6', 'adaptor': '', 
-# #                      'barcode': '', 'seq_operator': 'JV', 'overlap': 'complete', 'dataset': 'H40', 'run_key': 'NNNNACGCA', 'read_length': '101', 
-# #                       'file_prefix': 'H40', 'data_owner': 'jreveillaud', 'primer_suite': 'Bacterial v6 Suite', 'tubelabel': 'H40', 'amp_operator': 'JR', 'insert_size': '230'}; 
-# #                        temp['file_prefix'] = H40_
-#                 unique_identifier   = v['barcode_index']+'_'+run_key+'_'+v['lane']
-#                 data[unique_identifier] = {}
-#                 if unique_identifier in test_datasets:
-#                     sys.exit("ERROR: duplicate run_key:barcode_index:lane: "+unique_identifier+" - Exiting")
-#                 else:
-#                     test_datasets[unique_identifier] = 1
-# #                print "test_datasets = %s;\ntemp['file_prefix'] = %s\nunique_identifier = %s" % (test_datasets,temp['file_prefix'], unique_identifier)
-#                 
-#                 data[unique_identifier]['dataset'] = v['dataset']
-#                 data[unique_identifier]['project'] = v['project']
-#                 
-#                 if v['project'] in dataset_counter:
-#                     dataset_counter[v['project']] += 1
-#                 else:
-#                     dataset_counter[v['project']] = 1
-#                 
-#                 #megadata[unique_identifier]['ds_count'] = 1
-#                 data[unique_identifier]['project']              = v['project']
-#                 data[unique_identifier]['run_key']              = v['run_key']
-#                 data[unique_identifier]['lane']                 = v['lane']
-#                 data[unique_identifier]['tubelabel']            = v['tubelabel']
-#                 data[unique_identifier]['barcode']              = v['barcode']
-#                 data[unique_identifier]['adaptor']              = v['adaptor']
-#                 data[unique_identifier]['dna_region']           = v['dna_region']
-#                 data[unique_identifier]['amp_operator']         = v['amp_operator']
-#                 data[unique_identifier]['seq_operator']         = v['seq_operator']
-#                 data[unique_identifier]['barcode_index']        = v['barcode_index']
-#                 data[unique_identifier]['overlap']              = v['overlap']
-#                 data[unique_identifier]['insert_size']          = v['insert_size']
-#                 data[unique_identifier]['file_prefix']          = v['file_prefix']
-#                 data[unique_identifier]['read_length']          = v['read_length']
-#                 data[unique_identifier]['primer_suite']         = v['primer_suite']
-#                 data[unique_identifier]['first_name']           = v['first_name']
-#                 data[unique_identifier]['last_name']            = v['last_name']
-#                 data[unique_identifier]['email']                = v['email']
-#                 data[unique_identifier]['institution']          = v['institution']
-#                 data[unique_identifier]['project_title']        = v['project_title']
-#                 data[unique_identifier]['project_description']  = v['project_description']
-#                 data[unique_identifier]['funding']              = v['funding']
-#                 data[unique_identifier]['env_sample_source']    = v['env_sample_source']
-#                 data[unique_identifier]['dataset_description']  = v['dataset_description']
-#         for item in data:
-#             if item != 'general':
-#                 data[item]['primer_suite']  = data[item]['primer_suite'].lower().replace(" ", "_")
-#                 data[item]['dna_region']    = data[item]['dna_region'].lower().replace(" ", "_")
-#                 data[item]['barcode']       = data[item]['barcode'].upper()
-#                 data[item]['barcode_index'] = data[item]['barcode_index'].upper()
-#                 data[item]['ds_count']      = str(dataset_counter[data[item]['project']])
-#         
-#              
-#         return data
-    
+
         
     def get_input_files(self):
         
@@ -444,8 +318,8 @@ class MetadataUtils:
                 else:
                     files_list.append(os.path.basename(infile))
         else:
-#            if fasta_file:
-#                pass
+            if fasta_file:
+                pass
             logger.warning("No input directory or directory permissions problem: "+self.general_config_dict['input_dir'])
             
         return files_list
@@ -505,7 +379,7 @@ class MetadataUtils:
                         #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
                         logger.warning("(key: "+item+") key for: '"+v+"' is missing or corrupt - Continuing")
                         warn=True
-                    if not v:                        
+                    if v == '':                        
                         logger.warning("(key: "+item+") value of: '"+k+"' is missing or corrupt - Continuing")
                         warn=True
                             
@@ -651,10 +525,10 @@ class MetadataUtils:
             #print len(value)
             if type(value) != bool and len(value) > 80:
                 tmp = value.split(',')
-                print "%20s = %s .. %s" % (item,tmp[0],tmp[-1])
+                print "%-20s = %s .. %s" % (item,tmp[0],tmp[-1])
             else:
-                print "%20s = %-20s" % (item,value)
-        print "\nStep(s) to be performed: ",steps
+                print "%-20s = %-20s" % (item,value)
+        print "\nStep(s) to be performed: \033[1;36m",steps,'\033[0m'
         print "\n"+self.warn_msg+"\n"
         if 'validate' in steps.split(','):
             # print we are done
