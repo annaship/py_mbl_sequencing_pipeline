@@ -163,7 +163,6 @@ class IlluminaFiltering:
                 if failed_fastq:
                     fail.write( fastq_read )
                 continue
-           
 
 #            (count_of_Ns, fail) = self.filter_by_ambiguous_bases(, seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
 
@@ -187,9 +186,6 @@ class IlluminaFiltering:
                         fail.write( fastq_read )
                     continue
             
-#            print "222: seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail   = %s, %s, %s, %s, %s, %s" % (seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
-            
-            
             # Filter reads below first 50 base quality
             if filter_first50:                
                 first50 = 50
@@ -197,14 +193,20 @@ class IlluminaFiltering:
                 first50_maxQ_count = 34
                 
                 quals = fastq_read.get_decimal_quality_scores()[:first50]
-                count_lt30 = 0
-                
+#                count_lt30 = 0
+#                a = [(x, i) for i, x in enumerate(quals, 1) if x < 30]
+#                if a:
+#                    print a
+#                    print seq
+#                    print quals
+
 #                count_lt30 = len([i for i, x in enumerate(quals, 1) if x < first50_maxQ])
 #                for q in quals:
 #                    if q < first50_maxQ:
 #                        count_lt30 += 1
                 if len([i for i, x in enumerate(quals, 1) if x < first50_maxQ]) >= first50_maxQ_count:
-                    #print 'failed first50'
+                    print 'failed first50'
+                    print quals
                     if failed_fastq:
                         fail.write( fastq_read )
                     count_of_first50 += 1
