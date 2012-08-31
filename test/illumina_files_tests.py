@@ -9,7 +9,9 @@ import pipeline.illumina_files as ill_f
 from pipeline.run import Run
 import test.test_factory as fake_data_object
 
-
+"""
+to run: python pipeline/test/illumina_files_tests.py -v
+"""
 
 class IlluminaFilesTestCase(unittest.TestCase): 
     @classmethod  

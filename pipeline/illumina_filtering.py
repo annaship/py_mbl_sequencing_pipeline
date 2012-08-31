@@ -46,27 +46,32 @@ class IlluminaFiltering:
                -clip        clip N bases from the start of remaining reads (for R2)
                -Nx          ignore ambiguous base at position X (seems to be in the v6 primer)
     """
+    """
+        to test: pipeline/pipeline-ui.py -csv test/sample_data/illumina/configs/sample_metadata.csv -s trim -r 123001 -p illumina -c test/sample_data/illumina/configs/sample_ini -o ./results/illumina_filtering
+    """
     Name = "IlluminaFiltering"
-    def __init__(self, run_object ):
+    def __init__(self, run_object):
         self.runobj         = run_object
         self.indir          = self.runobj.input_dir
         self.outdir         = os.path.join(self.runobj.output_dir,"illumina_filtered")
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
             
+#    def compare( self, aggregated_value, operator, threshold_value ):
+#        if operator == '>':
+#            return aggregated_value > threshold_value
+#        elif operator == '>=':
+#            return aggregated_value >= threshold_value
+#        elif operator == '==':
+#            return aggregated_value == threshold_value
+#        elif operator == '<':
+#            return aggregated_value < threshold_value
+#        elif operator == '<=':
+#            return aggregated_value <= threshold_value
+#        elif operator == '!=':
+#            return aggregated_value != threshold_value
     def compare( self, aggregated_value, operator, threshold_value ):
-        if operator == '>':
-            return aggregated_value > threshold_value
-        elif operator == '>=':
-            return aggregated_value >= threshold_value
-        elif operator == '==':
-            return aggregated_value == threshold_value
-        elif operator == '<':
-            return aggregated_value < threshold_value
-        elif operator == '<=':
-            return aggregated_value <= threshold_value
-        elif operator == '!=':
-            return aggregated_value != threshold_value
+        return eval("%s %s %s" % (int(aggregated_value), operator, int(threshold_value)))
 
     def exclude( self, value_list, exclude_indexes ):
         rval = []
@@ -112,36 +117,18 @@ class IlluminaFiltering:
             
         print "\nRunning illumina Filtering"
         
-        in_filepath = os.path.join(self.indir,infile)
+        in_filepath  = os.path.join(self.indir, infile)
         try:
-            filebase    = infile.split('/')[1].split('.')[0]
+            filebase = infile.split('/')[1].split('.')[0]
         except:
-            filebase    = infile.split('.')[0]
+            filebase = infile.split('.')[0]
             
-        out_filename    = filebase+".filtered.fastq"
-        out_filepath    = os.path.join(self.outdir, out_filename)
+        out_filename = filebase+".filtered.fastq"
+        out_filepath = os.path.join(self.outdir, out_filename)
         
-        
-        
-            
         #determine an exhaustive list of window indexes that can be excluded from aggregation
-        exclude_window_indexes = []
-        last_exclude_indexes = []
-        for exclude_count in range( min( exclude_count, window_size ) ):
-            if last_exclude_indexes:
-                new_exclude_indexes = []
-                for exclude_list in last_exclude_indexes:
-                    for window_index in range( window_size ):
-                        if window_index not in exclude_list:
-                            new_exclude = sorted( exclude_list + [ window_index ] )
-                            if new_exclude not in exclude_window_indexes + new_exclude_indexes:
-                                new_exclude_indexes.append( new_exclude )
-                exclude_window_indexes += new_exclude_indexes
-                last_exclude_indexes = new_exclude_indexes
-            else:
-                for window_index in range( window_size ):
-                    last_exclude_indexes.append( [ window_index ] )
-                exclude_window_indexes = list( last_exclude_indexes )
+        exclude_window_indexes = self.get_window_indexes(exclude_count, window_size)
+        
         out = fastqWriter( open( out_filepath, 'wb' ), format = format )
         action = ACTION_METHODS[ aggregation_action ]
         if failed_fastq:
@@ -152,17 +139,9 @@ class IlluminaFiltering:
         count_of_trimmed  = 0
         count_of_first50  = 0
         count_of_Ns  = 0
-        if self.runobj.compressed:
-            import gzip
-            try:
-                logger.info( "illumina_filtering: opening compressed file: "+in_filepath)
-                fp = gzip.open( in_filepath )
-            except:
-                logger.info( "illumina_filtering: opening uncompressed file: "+in_filepath)
-                fp = open( in_filepath )
-        else:
-            logger.info(  "illumina_filtering: opening uncompressed file: "+in_filepath)
-            fp = open( in_filepath )
+        
+        fp = self.open_in_file(in_filepath)
+        
         for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
             ############################################################################################
             # Put chastity code here
@@ -287,6 +266,40 @@ class IlluminaFiltering:
             print "%i reads of zero length were excluded from the output." % num_reads_excluded
 
         return out_filename
-        
+
+    def get_window_indexes(self, exclude_count, window_size):
+        #determine an exhaustive list of window indexes that can be excluded from aggregation
+        exclude_window_indexes = []
+        last_exclude_indexes = []
+        for exclude_count in range( min( exclude_count, window_size ) ):
+            if last_exclude_indexes:
+                new_exclude_indexes = []
+                for exclude_list in last_exclude_indexes:
+                    for window_index in range( window_size ):
+                        if window_index not in exclude_list:
+                            new_exclude = sorted( exclude_list + [ window_index ] )
+                            if new_exclude not in exclude_window_indexes + new_exclude_indexes:
+                                new_exclude_indexes.append( new_exclude )
+                exclude_window_indexes += new_exclude_indexes
+                last_exclude_indexes = new_exclude_indexes
+            else:
+                for window_index in range( window_size ):
+                    last_exclude_indexes.append( [ window_index ] )
+                exclude_window_indexes = list( last_exclude_indexes )        
+        return exclude_window_indexes
+
+    def open_in_file(self, in_filepath):
+        if self.runobj.compressed:
+            import gzip
+            try:
+                logger.info( "illumina_filtering: opening compressed file: "+in_filepath)
+                fp = gzip.open( in_filepath )
+            except:
+                logger.info( "illumina_filtering: opening uncompressed file: "+in_filepath)
+                fp = open( in_filepath )
+        else:
+            logger.info(  "illumina_filtering: opening uncompressed file: "+in_filepath)
+            fp = open( in_filepath )
+        return fp
         
 if __name__ == "__main__": trim_by_quality()
