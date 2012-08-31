@@ -9,6 +9,7 @@ import sys, os, stat
 import subprocess
 from pipeline.pipelinelogging import logger
 from pipeline.galaxy.fastq import fastqReader, fastqWriter
+import pprint
 
 def mean( score_list ):
     return float( sum( score_list ) ) / float( len( score_list ) )
@@ -146,10 +147,10 @@ class IlluminaFiltering:
             ############################################################################################
             # Put chastity code here
             #print fastq_read.identifier
-            seq = fastq_read.get_sequence()
-            
+            seq        = fastq_read.get_sequence()            
             desc_items = fastq_read.identifier.split(':')
                 
+#            self.check_chastity(desc_items)
             if desc_items[7] == 'Y':
                 count_of_unchaste += 1
                 #print 'failed chastity'
@@ -158,6 +159,7 @@ class IlluminaFiltering:
                 continue
             
             # Filter reads with ambiguous bases
+#                count_of_Ns = self.filter_by_ambiguous_bases(self, seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail):
             if filter_Ns:                
                 countN = seq.count('N')
                 if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
@@ -301,5 +303,18 @@ class IlluminaFiltering:
             logger.info(  "illumina_filtering: opening uncompressed file: "+in_filepath)
             fp = open( in_filepath )
         return fp
+
+    def filter_by_ambiguous_bases(self, seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail):
+        # Filter reads with ambiguous bases
+        countN = seq.count('N')
+        if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
+            #print 'failed Ns', infile
+            count_of_Ns += 1
+            if failed_fastq:
+                fail.write( fastq_read )
+#                continue
+        return count_of_Ns
+#        return (count_of_Ns, fail)
+
         
 if __name__ == "__main__": trim_by_quality()
