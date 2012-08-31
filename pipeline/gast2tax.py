@@ -22,15 +22,7 @@ import types
 
 from pipeline.utils import *
 
-
-
-
 from pipeline.gast import Gast
-
-
-
-
-
 
 import argparse
 

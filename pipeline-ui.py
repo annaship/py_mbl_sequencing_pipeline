@@ -186,14 +186,7 @@ if __name__ == '__main__':
 #    for attr in dir(data_object):
 #        print "obj.%s = %s" % (attr, getattr(data_object, attr))
 
-    if 'commandline' in data_object and data_object['commandline'] == True:
-        answer = raw_input("\n\tDoes this look okay? ('c' to continue; 'q' to quit) ")
-        if answer == 'q':
-            sys.exit()
-        elif answer == 'c':
-            pass
-        else:
-            sys.exit()
+
             
     # set logging
 

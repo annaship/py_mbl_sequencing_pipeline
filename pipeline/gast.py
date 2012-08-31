@@ -30,7 +30,7 @@ class Gast:
         self.refdb_dir = C.ref_database_dir
         
         # for testing
-        self.limit = 3
+        self.limit = 400
 
        
         # If we are here from a vamps gast process
@@ -510,6 +510,9 @@ class Gast:
 
     def gast2tax(self): 
         counter = 0
+        qsub_prefix = 'gast2tax_sub_'
+        #print tax_file
+        
         for key in self.idx_keys:
             counter += 1
             if self.runobj.platform == 'illumina':
@@ -534,13 +537,16 @@ class Gast:
                 logger.error("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 self.runobj.run_status_file_h.write("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 dna_region = 'unknown'
-            
+            max_distance = C.max_distance['default']
+            if dna_region in C.max_distance:
+                max_distance = C.max_distance[dna_region] 
             if self.use_cluster:
                 clusterize = C.clusterize_cmd
                 # create script - each file gets script
                 script_filename = os.path.join(gast_dir,qsub_prefix + str(counter))
                 fh = open(script_filename,'w')
                 qstat_name = "gast2tax" + key + '_' + self.runobj.run + "_" + str(counter)
+                log_file = os.path.join(gast_dir, 'gast2tax.log_' + str(counter))
                 fh.write("#!/bin/csh\n")
                 fh.write("#$ -j y\n" )
                 fh.write("#$ -o " + log_file + "\n")
@@ -550,7 +556,7 @@ class Gast:
                 fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
                 fh.write("module load bioware\n\n")
                 
-                fh.write("gast2tax.py -dna "+dna_region+" -max "+max_distance+" -gast_dir "+gast_dir+" -names_file "+names_file+"\n" )
+                fh.write("gast2tax.py -dna "+dna_region+" -max "+str(max_distance)+" -gast_dir "+gast_dir+" -names_file "+names_file+"\n" )
                 fh.close()
                             
                 # make script executable and run it
@@ -569,12 +575,6 @@ class Gast:
             else:
                 if os.path.exists(names_file) and os.path.getsize(names_file) > 0: 
                     (refdb,taxdb) = self.get_reference_databases(dna_region)
-                    
-                    #print tax_file
-                    max_distance = C.max_distance['default']
-                    if dna_region in C.max_distance:
-                        max_distance = C.max_distance[dna_region] 
-                    
                     
                     ref_taxa = self.load_reftaxa(taxdb)
             
@@ -834,11 +834,11 @@ class Gast:
                 unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
                 if os.path.exists(unique_file):
                     if os.path.getsize(unique_file) > 0:
-                        logger.debug( "Found uniques file: "+unique_file)
+                        logger.debug( "GAST: Found uniques file: "+unique_file)
                     else:
-                        logger.warning( "Found uniques file BUT zero size "+unique_file)
+                        logger.warning( "GAST: Found uniques file BUT zero size "+unique_file)
                 else:
-                    logger.debug( "NO uniques file found "+unique_file)
+                    logger.error( "GAST: NO uniques file found "+unique_file)
                     
                     
             if self.runobj.platform == 'vamps':

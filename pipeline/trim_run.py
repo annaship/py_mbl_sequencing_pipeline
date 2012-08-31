@@ -159,7 +159,6 @@ class TrimRun( object ):
             #   length=0,               trim=0,         clip=0,             keep_zero_length=False
             #
             # Enter any parameter from the list above or the default (shown) will be used
-            #f2 = iFilter.btails_filter(infile = file, length=75, trim=10, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True)
             # output file is created by the infile name
             file_list.append( iFilter.trim_by_quality(infile = file, length=75, trim=0, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True) )
 

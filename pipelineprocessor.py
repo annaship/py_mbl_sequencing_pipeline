@@ -113,7 +113,7 @@ def trim(runobj):
     elif runobj.platform == 'ion-torrent':
         trim_codes = mytrim.trimrun_ion_torrent(True)
     else:
-        trim_codes = ['ERROR','No Platform Found']
+        trim_codes = ('ERROR','No Platform Found','')
         
     trim_results_dict = {}
     if trim_codes[0] == 'SUCCESS':
