@@ -54,6 +54,9 @@ class IlluminaFilesTestCase(unittest.TestCase):
             self.assertEqual(res, 3)           
             break
 
+#                    first50_maxQ = 30
+#                first50_maxQ_count = 34
+
 
 if __name__ == '__main__':
     unittest.main()
