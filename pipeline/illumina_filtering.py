@@ -57,6 +57,7 @@ class IlluminaFiltering:
         self.outdir         = os.path.join(self.runobj.output_dir,"illumina_filtered")
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
+        self.count_of_unchaste = 0
             
 #    def compare( self, aggregated_value, operator, threshold_value ):
 #        if operator == '>':
@@ -136,12 +137,20 @@ class IlluminaFiltering:
             fail = fastqWriter( open( out_filepath+'.failed', 'wb' ), format = format )
         num_reads = None
         num_reads_excluded = 0
-        count_of_unchaste = 0
+        self.count_of_unchaste = 0
         count_of_trimmed  = 0
         count_of_first50  = 0
-        count_of_Ns  = 0
-        
+        count_of_Ns       = 0
         fp = self.open_in_file(in_filepath)
+
+        "1) chastity filter"
+        "2) N filter"
+        "3) quality treshhold filter"   
+        "4) Btails trimming"     
+        "5) length filter"
+        
+        "6) remove from the end"
+        "7) remove from the end"
         
         for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
             ############################################################################################
@@ -149,17 +158,26 @@ class IlluminaFiltering:
             #print fastq_read.identifier
             seq        = fastq_read.get_sequence()            
             desc_items = fastq_read.identifier.split(':')
-                
-#            self.check_chastity(desc_items)
-            if desc_items[7] == 'Y':
-                count_of_unchaste += 1
-                #print 'failed chastity'
+            "1) chastity filter"
+            if self.check_chastity(desc_items):
                 if failed_fastq:
                     fail.write( fastq_read )
                 continue
+           
+
+#            (count_of_Ns, fail) = self.filter_by_ambiguous_bases(, seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
+
+##            self.check_chastity(desc_items)
+#            if desc_items[7] == 'Y':
+#                count_of_unchaste += 1
+#                #print 'failed chastity'
+#                if failed_fastq:
+#                    fail.write( fastq_read )
+#                continue
+
+#            print "111: seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail = %s, %s, %s, %s, %s, %s" % (seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
             
             # Filter reads with ambiguous bases
-#                count_of_Ns = self.filter_by_ambiguous_bases(self, seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail):
             if filter_Ns:                
                 countN = seq.count('N')
                 if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
@@ -169,6 +187,7 @@ class IlluminaFiltering:
                         fail.write( fastq_read )
                     continue
             
+#            print "222: seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail   = %s, %s, %s, %s, %s, %s" % (seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
             
             
             # Filter reads below first 50 base quality
@@ -180,16 +199,18 @@ class IlluminaFiltering:
                 quals = fastq_read.get_decimal_quality_scores()[:first50]
                 count_lt30 = 0
                 
-                for q in quals:
-                    if q < first50_maxQ:
-                        count_lt30 += 1
-                if count_lt30 >= first50_maxQ_count:
+#                count_lt30 = len([i for i, x in enumerate(quals, 1) if x < first50_maxQ])
+#                for q in quals:
+#                    if q < first50_maxQ:
+#                        count_lt30 += 1
+                if len([i for i, x in enumerate(quals, 1) if x < first50_maxQ]) >= first50_maxQ_count:
                     #print 'failed first50'
                     if failed_fastq:
                         fail.write( fastq_read )
                     count_of_first50 += 1
                     continue
-                    
+ 
+                   
             ##### END CHASTITY #####################
             ############################################################################################
             ##### START Btails CODE ################
@@ -255,10 +276,10 @@ class IlluminaFiltering:
         out.close()
         if failed_fastq:
             fail.close()
-        print "file:",infile
+        print "file:", infile
         print 'count_of_trimmed             (for length):', count_of_trimmed
         print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
-        print "count_of_unchaste             ('Y' in id):", count_of_unchaste
+        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
         print 'count_of_Ns                (reads with N):', count_of_Ns
         if num_reads is None:
             print "No valid FASTQ reads could be processed."
@@ -304,17 +325,9 @@ class IlluminaFiltering:
             fp = open( in_filepath )
         return fp
 
-    def filter_by_ambiguous_bases(self, seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail):
-        # Filter reads with ambiguous bases
-        countN = seq.count('N')
-        if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
-            #print 'failed Ns', infile
-            count_of_Ns += 1
-            if failed_fastq:
-                fail.write( fastq_read )
-#                continue
-        return count_of_Ns
-#        return (count_of_Ns, fail)
-
+    def check_chastity(self, desc_items):
+        if desc_items[7] == 'Y':
+            self.count_of_unchaste += 1
+            #print 'failed chastity'
         
 if __name__ == "__main__": trim_by_quality()
