@@ -45,35 +45,38 @@ class IlluminaFilesTestCase(unittest.TestCase):
         self._illumina_files.dataset_emails = self.dataset_emails
         self._illumina_files.create_inis()
         ini_files = len([f for f in os.listdir(self.file_path) if f.endswith('.ini') and os.path.isfile(os.path.join(self.file_path, f))])
-        self.assertEqual(ini_files, 192)
+        self.assertEqual(ini_files, 10)
         
-        with open(os.path.join(self.file_path, "SMPL10_3.ini")) as file:
+        with open(os.path.join(self.file_path, "SMPL90_3.ini")) as file:
             for line in file.readlines():
-                if line.strip() == "project_name = SMPL10_3":
+                if line.strip() == "project_name = SMPL90_3":
                     print "\nValid ini\n"
-
 
     def test_04_perfect_reads(self):
         self._illumina_files.dataset_emails = self.dataset_emails
         self._illumina_files.perfect_reads()
         f_path = os.path.join(self.file_path, "perfect_reads")
         files_amount  = len([name for name in os.listdir(f_path) if os.path.isfile(os.path.join(f_path, name))])
-        self.assertEqual(files_amount, 1344)
+        self.assertEqual(files_amount, 70)
         
     def test_05_uniq_fa(self):
         self._illumina_files.uniq_fa()
         f_path = os.path.join(self.file_path, "perfect_reads")
         files_amount  = len([name for name in os.listdir(f_path) if os.path.isfile(os.path.join(f_path, name))])
         uniq_files = len([f for f in os.listdir(f_path) if f.endswith('-PERFECT_reads.fa.unique') and os.path.isfile(os.path.join(f_path, f))])       
-        self.assertEqual(files_amount, 1728)
-        self.assertEqual(uniq_files, 192)
+        self.assertEqual(files_amount, 90)
+        self.assertEqual(uniq_files, 10)
         
     def test_06_get_fastq_file_names(self):
         (in_files_r1, in_files_r2) = self._illumina_files.get_fastq_file_names(self._runobj.input_dir)
-        in_files_r1_compare = ['./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq', './test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R1_001.fastq']    
-        in_files_r2_compare = ['./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R2_001.fastq', './test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R2_001.fastq']    
-        self.assertEqual(in_files_r1, in_files_r1_compare)
-        self.assertEqual(in_files_r2, in_files_r2_compare)    
+#        in_files_r1 = ['./results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq', './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq.failed', './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX2_CGATGT_L003_R1_001.filtered.fastq', './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX2_CGATGT_L003_R1_001.filtered.fastq.failed']
+
+        in_files_r1_compare = './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq' in in_files_r1
+#        ['./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq', './test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R1_001.fastq']    
+        in_files_r2_compare = ('./results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R2_001.filtered.fastq' in in_files_r2) or ('./results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R2_001.fastq' in in_files_r2)
+
+        self.assertTrue(in_files_r1_compare)
+        self.assertTrue(in_files_r2_compare)    
 
 """
     def split_files(self, compressed = False):
