@@ -164,24 +164,10 @@ class IlluminaFiltering:
                     fail.write( fastq_read )
                 continue
 
-#            (count_of_Ns, fail) = self.filter_by_ambiguous_bases(, seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
-
-##            self.check_chastity(desc_items)
-#            if desc_items[7] == 'Y':
-#                count_of_unchaste += 1
-#                #print 'failed chastity'
-#                if failed_fastq:
-#                    fail.write( fastq_read )
-#                continue
-
-#            print "111: seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail = %s, %s, %s, %s, %s, %s" % (seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
-            
-            # Filter reads with ambiguous bases
+            "2) N filter: Filter reads with ambiguous bases"
             if filter_Ns:                
-                countN = seq.count('N')
-                if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
-                    #print 'failed Ns',infile
-                    count_of_Ns += 1
+                count_of_Ns = self.filter_ns(seq, filter_Nx, count_of_Ns)
+                if count_of_Ns:
                     if failed_fastq:
                         fail.write( fastq_read )
                     continue
@@ -331,5 +317,13 @@ class IlluminaFiltering:
         if desc_items[7] == 'Y':
             self.count_of_unchaste += 1
             #print 'failed chastity'
+            
+    def filter_ns(self, seq, filter_Nx, count_of_Ns):
+        countN = seq.count('N')
+        if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
+            #print 'failed Ns', infile
+            count_of_Ns += 1
+        return count_of_Ns
+                        
         
 if __name__ == "__main__": trim_by_quality()

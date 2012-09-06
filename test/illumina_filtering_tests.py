@@ -25,6 +25,10 @@ class IlluminaFilteringTestCase(unittest.TestCase):
         if not os.path.exists(cls._runobj.output_dir):
             os.mkdir(cls._runobj.output_dir)
         cls._illumina_filtering = ill_f.IlluminaFiltering(cls._runobj)
+        in_filepath  = "./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq"    
+        cls._fp      = cls._illumina_filtering.open_in_file(in_filepath)      
+        cls._format  = 'sanger'  
+
 
     @classmethod  
     def tearDownClass(cls):
@@ -39,7 +43,16 @@ class IlluminaFilteringTestCase(unittest.TestCase):
         self.assertEqual(result_false, False)
         
     def test_02_count_of_Ns(self):
-        pass
+        count_of_Ns  = 0    
+        filter_Nx    = True
+        "Seq has no Ns"
+        seq          = "CGACGGCCATGGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
+        self.assertEqual(count_of_Ns, 0)
+        "Seq has Ns"
+        seq          = "CGACGGCCATGNNGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
+        count_of_Ns  = self._illumina_filtering.filter_ns(seq, filter_Nx, count_of_Ns)
+        self.assertEqual(count_of_Ns, 1)
+        
 #        seq          = "CGACGGCCATGNNGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
 #        count_of_Ns  = 2    
 #        filter_Nx    = 0    
@@ -57,10 +70,7 @@ class IlluminaFilteringTestCase(unittest.TestCase):
     
     def test_03_check_chastity(self):
         self.assertEqual(self._illumina_filtering.count_of_unchaste, 0)           
-        format       = 'sanger'  
-        in_filepath  = "./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq"    
-        fp           = self._illumina_filtering.open_in_file(in_filepath)              
-        for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
+        for num_reads, fastq_read in enumerate( fastqReader(self._fp, format = self._format)):
             desc_items = fastq_read.identifier.split(':')
             self._illumina_filtering.check_chastity(desc_items)
         self.assertEqual(self._illumina_filtering.count_of_unchaste, 1)           
