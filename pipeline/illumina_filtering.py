@@ -174,28 +174,34 @@ class IlluminaFiltering:
             
             # Filter reads below first 50 base quality
             if filter_first50:                
-                first50 = 50
-                first50_maxQ = 30
-                first50_maxQ_count = 34
-                
-                quals = fastq_read.get_decimal_quality_scores()[:first50]
-#                count_lt30 = 0
-#                a = [(x, i) for i, x in enumerate(quals, 1) if x < 30]
-#                if a:
-#                    print a
-#                    print seq
+                count_of_first50 = self.check_qual(fastq_read, count_of_first50)
+#                first50 = 50
+#                first50_qual_threshold = 40
+#                first50_lowQ_count = 4
+#                
+##                first50_qual_threshold = 30
+##                first50_lowQ_count = 34
+#                
+#                quals = fastq_read.get_decimal_quality_scores()[:first50]
+##                count_lt30 = 0
+##                a = [(x, i) for i, x in enumerate(quals, 1) if x < 30]
+##                if a:
+##                    print a
+##                    print seq
+##                    print quals
+#
+##                count_lt30 = len([i for i, x in enumerate(quals, 1) if x < first50_qual_threshold])
+##                for q in quals:
+##                    if q < first50_qual_threshold:
+##                        count_lt30 += 1
+#                if len([i for i, x in enumerate(quals, 1) if x < first50_qual_threshold]) >= first50_lowQ_count:
+#                    print 'failed first50'
 #                    print quals
-
-#                count_lt30 = len([i for i, x in enumerate(quals, 1) if x < first50_maxQ])
-#                for q in quals:
-#                    if q < first50_maxQ:
-#                        count_lt30 += 1
-                if len([i for i, x in enumerate(quals, 1) if x < first50_maxQ]) >= first50_maxQ_count:
-                    print 'failed first50'
-                    print quals
+#                    count_of_first50 += 1
+                print count_of_first50
+                if count_of_first50:
                     if failed_fastq:
                         fail.write( fastq_read )
-                    count_of_first50 += 1
                     continue
  
                    
@@ -318,12 +324,19 @@ class IlluminaFiltering:
             self.count_of_unchaste += 1
             #print 'failed chastity'
             
-    def filter_ns(self, seq, filter_Nx, count_of_Ns):
+    def filter_ns(self, seq, filter_Nx, count_of_N_seq):
         countN = seq.count('N')
         if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
             #print 'failed Ns', infile
-            count_of_Ns += 1
-        return count_of_Ns
-                        
+            count_of_N_seq += 1
+        return count_of_N_seq
+
+    def check_qual(self, fastq_read, count_of_first50, first50 = 50, first50_qual_threshold = 30, first50_lowQ_count = 34):
+        quals = fastq_read.get_decimal_quality_scores()[:first50]
+        if len([i for i, x in enumerate(quals, 1) if x < first50_qual_threshold]) >= first50_lowQ_count:
+#            print 'failed first50'
+            count_of_first50 += 1
+        return count_of_first50
+
         
 if __name__ == "__main__": trim_by_quality()

@@ -53,32 +53,22 @@ class IlluminaFilteringTestCase(unittest.TestCase):
         count_of_Ns  = self._illumina_filtering.filter_ns(seq, filter_Nx, count_of_Ns)
         self.assertEqual(count_of_Ns, 1)
         
-#        seq          = "CGACGGCCATGNNGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
-#        count_of_Ns  = 2    
-#        filter_Nx    = 0    
-#        failed_fastq = True    
-#        out_filepath = "results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq"    
-#        in_filepath  = "./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq"    
-#        fp           = self._illumina_filtering.open_in_file(in_filepath)      
-#        format       = 'sanger'  
-#        fail         = fastqWriter( open( out_filepath+'.failed', 'wb' ), format = format )        
-#        self._illumina_filtering.desc_items = ['@D4ZHLFP1', '25', 'B022DACXX', '3', '1101', '5090', '2177 2', 'N', '0', 'ATCACG']    
-#        for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
-#            res = self._illumina_filtering.filter_by_ambiguous_bases(seq, count_of_Ns, filter_Nx, failed_fastq, fastq_read, fail)
-#            self.assertEqual(res, 3)           
-#            break
-    
     def test_03_check_chastity(self):
         self.assertEqual(self._illumina_filtering.count_of_unchaste, 0)           
-        for num_reads, fastq_read in enumerate( fastqReader(self._fp, format = self._format)):
+        for num_reads, fastq_read in enumerate(fastqReader(self._fp, format = self._format)):
             desc_items = fastq_read.identifier.split(':')
             self._illumina_filtering.check_chastity(desc_items)
         self.assertEqual(self._illumina_filtering.count_of_unchaste, 1)           
     
+    def test_04_check_qual(self):
+        count_of_first50 = 0
+        self._fp.seek( 0 )
 
-#                    first50_maxQ = 30
-#                first50_maxQ_count = 34
-
+        for num_reads, fastq_read in enumerate(fastqReader(self._fp, format = self._format)):
+            self.assertEqual(count_of_first50, 0)           
+            count_of_first50 = self._illumina_filtering.check_qual(fastq_read, count_of_first50, 50, 40, 4)
+            self.assertEqual(count_of_first50, 1)           
+            break
 
 if __name__ == '__main__':
     unittest.main()
