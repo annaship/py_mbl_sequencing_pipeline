@@ -65,7 +65,14 @@ class IlluminaFilteringTestCase(unittest.TestCase):
         self._fp.seek( 0 )
 
         for num_reads, fastq_read in enumerate(fastqReader(self._fp, format = self._format)):
+            self._illumina_filtering.quality_list = [31, 31, 31, 37, 35, 35, 35, 35, 37, 39, 37, 35, 39, 40, 38, 38, 40, 40, 40, 38, 38, 40, 38, 36, 39, 40, 38, 41, 39, 39, 40, 40, 41, 41, 41, 38, 38, 38, 38, 40, 41, 41, 40, 40, 40, 41, 40, 37, 39, 37, 35, 28, 33, 35, 35, 20, 22, 20, 22, 27, 30, 34, 34, 35, 26, 33, 33, 33, 29, 34, 31, 34, 35, 35, 34, 34, 34, 33, 35, 29, 33, 33, 29, 35, 35, 35, 35, 33, 29, 33, 27, 31, 34, 34, 35, 32, 31, 31, 31, 34, 34]
+            "standard: qual treshold = 30, amount of allowed bad scores = 33%"
+            count_of_first50 = self._illumina_filtering.check_qual(fastq_read, count_of_first50, 50, 30, 33)
             self.assertEqual(count_of_first50, 0)           
+            "higher qual treshold = 40, amount of allowed bad scores = 100%"
+            count_of_first50 = self._illumina_filtering.check_qual(fastq_read, count_of_first50, 50, 40, 101)
+            self.assertEqual(count_of_first50, 0)           
+            "higher qual treshold = 40, low amount of allowed bad scores = 4"
             count_of_first50 = self._illumina_filtering.check_qual(fastq_read, count_of_first50, 50, 40, 4)
             self.assertEqual(count_of_first50, 1)           
             break

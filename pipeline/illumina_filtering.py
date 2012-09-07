@@ -58,6 +58,7 @@ class IlluminaFiltering:
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
         self.count_of_unchaste = 0
+        self.quality_list   = []
             
 #    def compare( self, aggregated_value, operator, threshold_value ):
 #        if operator == '>':
@@ -108,6 +109,8 @@ class IlluminaFiltering:
         filter_length       = length
         trim_length         = trim
         clip_length         = clip
+        filter_comp_length  = True #TODO: add as parameter
+        
         if not infile:
             sys.exit( "illumina_fastq_trimmer: Need to specify an input file" )
         
@@ -156,8 +159,10 @@ class IlluminaFiltering:
             ############################################################################################
             # Put chastity code here
             #print fastq_read.identifier
-            seq        = fastq_read.get_sequence()            
-            desc_items = fastq_read.identifier.split(':')
+            seq               = fastq_read.get_sequence()            
+            desc_items        = fastq_read.identifier.split(':')
+            self.quality_list = fastq_read.get_decimal_quality_scores()
+
             "1) chastity filter"
             if self.check_chastity(desc_items):
                 if failed_fastq:
@@ -172,9 +177,12 @@ class IlluminaFiltering:
                         fail.write( fastq_read )
                     continue
             
-            # Filter reads below first 50 base quality
+            "3) quality treshold filter"   
+            # Filter reads by quality
+            # Filter sequences with < 66% of bases in first half of read having Q >= 30
+
             if filter_first50:                
-                count_of_first50 = self.check_qual(fastq_read, count_of_first50)
+                count_of_first50 = self.check_qual(fastq_read, count_of_first50, int(len(seq)/2), 30, int(len(seq)/3))
                 if count_of_first50:
                     if failed_fastq:
                         fail.write( fastq_read )
@@ -184,31 +192,31 @@ class IlluminaFiltering:
             ##### END CHASTITY #####################
             ############################################################################################
             ##### START Btails CODE ################
-            quality_list = fastq_read.get_decimal_quality_scores()
-            
+            "4) Btails trimming"     
+#            quality_list = fastq_read.get_decimal_quality_scores()
+
             for trim_end in trim_ends:
-                
                 
                 if trim_end == '5':
                     lwindow_position = 0 #left position of window
                     while True:
-                        if lwindow_position >= len( quality_list ):
+                        if lwindow_position >= len( self.quality_list ):
                             fastq_read.sequence = ''
                             fastq_read.quality = ''
                             break
-                        if self.exclude_and_compare( action, quality_list[ lwindow_position:lwindow_position + window_size ], score_comparison, quality_score, exclude_window_indexes ):
+                        if self.exclude_and_compare( action, self.quality_list[ lwindow_position:lwindow_position + window_size ], score_comparison, quality_score, exclude_window_indexes ):
                             fastq_read = fastq_read.slice( lwindow_position, None )
                             break
                         lwindow_position += window_step
                 else:
-                    rwindow_position = len( quality_list ) #right position of window
+                    rwindow_position = len( self.quality_list ) #right position of window
                     while True:
                         lwindow_position = rwindow_position - window_size #left position of window
                         if rwindow_position <= 0 or lwindow_position < 0:
                             fastq_read.sequence = ''
                             fastq_read.quality = ''
                             break
-                        if self.exclude_and_compare( action, quality_list[ lwindow_position:rwindow_position ], score_comparison, quality_score, exclude_window_indexes ):
+                        if self.exclude_and_compare( action, self.quality_list[ lwindow_position:rwindow_position ], score_comparison, quality_score, exclude_window_indexes ):
                             fastq_read = fastq_read.slice( None, rwindow_position )
                             break
                         rwindow_position -= window_step
@@ -216,10 +224,18 @@ class IlluminaFiltering:
             ######## END Btails CODE ###############################            
             ############################################################################################
             # put  length/trim/clip code here
-            quality_list = fastq_read.get_decimal_quality_scores()
+#            quality_list = fastq_read.get_decimal_quality_scores()
+            
+            "compare qual length and seq length"
+            if filter_comp_length:
+                if len(self.quality_list) != len(seq):
+                    print 'different lengths for sequence string and quality string'
+                    if failed_fastq:
+                        fail.write( fastq_read )
+                    continue
             
             if filter_length:
-                if len(quality_list) < filter_length:
+                if len(self.quality_list) < filter_length:
                     print 'failed length'
                     if failed_fastq:
                         fail.write( fastq_read )
@@ -233,7 +249,7 @@ class IlluminaFiltering:
                 
             # Trim to max length -- read 2 trim to 90.
             if trim_length:
-                if len(quality_list) > trim_length:
+                if len(self.quality_list) > trim_length:
                     # remove from the end:
                     fastq_read = fastq_read.slice( None, len(fastq_read.get_sequence()) - trim_length )
                     count_of_trimmed += 1
@@ -306,9 +322,10 @@ class IlluminaFiltering:
             #print 'failed Ns', infile
             count_of_N_seq += 1
         return count_of_N_seq
-
+        
     def check_qual(self, fastq_read, count_of_first50, first50 = 50, first50_qual_threshold = 30, first50_lowQ_count = 34):
-        quals = fastq_read.get_decimal_quality_scores()[:first50]
+        # retain sequences with > 66% of bases in first half of read having Q >= 30
+        quals = self.quality_list[:first50]
         if len([i for i, x in enumerate(quals, 1) if x < first50_qual_threshold]) >= first50_lowQ_count:
 #            print 'failed first50'
             count_of_first50 += 1
