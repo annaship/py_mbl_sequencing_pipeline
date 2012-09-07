@@ -182,7 +182,8 @@ class IlluminaFiltering:
             # Filter sequences with < 66% of bases in first half of read having Q >= 30
 
             if filter_first50:                
-                count_of_first50 = self.check_qual(fastq_read, count_of_first50, int(len(seq)/2), 30, int(len(seq)/3))
+                first_half = int(len(seq)/2)
+                count_of_first50 = self.check_qual(fastq_read, count_of_first50, first_half, 30, int(first_half/3))
                 if count_of_first50:
                     if failed_fastq:
                         fail.write( fastq_read )
@@ -262,17 +263,21 @@ class IlluminaFiltering:
         out.close()
         if failed_fastq:
             fail.close()
-        print "file:", infile
-        print 'count_of_trimmed             (for length):', count_of_trimmed
-        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
-        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
-        print 'count_of_Ns                (reads with N):', count_of_Ns
-        if num_reads is None:
-            print "No valid FASTQ reads could be processed."
-        else:
-            print "%i FASTQ reads were processed." % ( num_reads + 1 )
-        if num_reads_excluded:
-            print "%i reads of zero length were excluded from the output." % num_reads_excluded
+            
+        report_message = self.create_report_msg(infile, count_of_trimmed, count_of_first50, count_of_Ns, num_reads, num_reads_excluded)
+        self.print_report(filebase, report_message)
+            
+#        print "file:", infile
+#        print 'count_of_trimmed             (for length):', count_of_trimmed
+#        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
+#        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
+#        print 'count_of_Ns                (reads with N):', count_of_Ns
+#        if num_reads is None:
+#            print "No valid FASTQ reads could be processed."
+#        else:
+#            print "%i FASTQ reads were processed." % ( num_reads + 1 )
+#        if num_reads_excluded:
+#            print "%i reads of zero length were excluded from the output." % num_reads_excluded
 
         return out_filename
 
@@ -331,5 +336,52 @@ class IlluminaFiltering:
             count_of_first50 += 1
         return count_of_first50
 
+    def print_report(self, filebase, report_message):
+        
+        report_file_name = os.path.join(self.runobj.output_dir, filebase + ".report")
+        report_file = open( report_file_name, 'w' )
+        report_file.write(report_message)
+        report_file.close()
+        print report_message
+
+
+#       open 
+#        print $rfh " # of raw sequences: $origreadtotal\n
+# of sequences in B-trimmed file $outfile1: $totalcount\n
+ # of sequences failing Illumina chastity filter: $chastitycount\n
+# of sequences removed because they contained uncalled bases: $ncount\n
+# of sequences removed because they failed C33 quality filtering: $lowqualcount\n
+# of sequences removed because they had length < $ARGV[1]: $shortcount\n
+# of sequences output to $outfile2: $printseq
+#% of raw sequences retained after quality filtering: ",sprintf('%3d', 100* $printseq/$origreadtotal), "\n";
+#
+#        print "file:", infile
+#        print 'count_of_trimmed             (for length):', count_of_trimmed
+#        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
+#        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
+#        print 'count_of_Ns                (reads with N):', count_of_Ns
+#        if num_reads is None:
+#            print "No valid FASTQ reads could be processed."
+#        else:
+#            print "%i FASTQ reads were processed." % ( num_reads + 1 )
+#        if num_reads_excluded:
+#            print "%i reads of zero length were excluded from the output." % num_reads_excluded
+
+    def create_report_msg(self, infile, count_of_trimmed, count_of_first50, count_of_Ns, num_reads, num_reads_excluded):
+        report_message = """
+            file: %s
+            count_of_trimmed             (for length): %s
+            count_of_first50      (avg first50 quals): %s
+            count_of_unchaste             ('Y' in id): %s
+            count_of_Ns                (reads with N): %s
+        """ % (infile, count_of_trimmed, count_of_first50, self.count_of_unchaste, count_of_Ns)
+        
+        if num_reads is None:
+            report_message += "No valid FASTQ reads could be processed."
+        else:
+            report_message += "%i FASTQ reads were processed." % ( num_reads + 1 )
+        if num_reads_excluded:
+            report_message += "%i reads of zero length were excluded from the output." % num_reads_excluded        
+        return report_message
         
 if __name__ == "__main__": trim_by_quality()
