@@ -155,6 +155,15 @@ class IlluminaFiltering:
         "6) remove from the end"
         "7) remove from the end"
         
+        """TODO: add?
+        create fasta first
+            print "Running fastx_artifacts_filter on $outfile2 to remove any reads with all but 3 identical bases...\n";
+            print $rfh "Output from fastx_artifacts_filter to remove reads with all but 3 identical bases:\n";
+            my $afh = File::Temp->new();
+            my $aname = $afh->filename;
+            system("fastx_artifacts_filter -i $outfile2 -o $aname -v -Q33 >> $reportfile");
+        """
+        
         for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
             ############################################################################################
             # Put chastity code here
@@ -266,18 +275,6 @@ class IlluminaFiltering:
             
         report_message = self.create_report_msg(infile, count_of_trimmed, count_of_first50, count_of_Ns, num_reads, num_reads_excluded)
         self.print_report(filebase, report_message)
-            
-#        print "file:", infile
-#        print 'count_of_trimmed             (for length):', count_of_trimmed
-#        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
-#        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
-#        print 'count_of_Ns                (reads with N):', count_of_Ns
-#        if num_reads is None:
-#            print "No valid FASTQ reads could be processed."
-#        else:
-#            print "%i FASTQ reads were processed." % ( num_reads + 1 )
-#        if num_reads_excluded:
-#            print "%i reads of zero length were excluded from the output." % num_reads_excluded
 
         return out_filename
 
@@ -336,16 +333,12 @@ class IlluminaFiltering:
             count_of_first50 += 1
         return count_of_first50
 
-    def print_report(self, filebase, report_message):
-        
-        report_file_name = os.path.join(self.runobj.output_dir, filebase + ".report")
-        report_file = open( report_file_name, 'w' )
+    def print_report(self, filebase, report_message):        
+        report_file = open( os.path.join(self.runobj.output_dir, filebase + ".report"), 'w' )
         report_file.write(report_message)
         report_file.close()
         print report_message
 
-
-#       open 
 #        print $rfh " # of raw sequences: $origreadtotal\n
 # of sequences in B-trimmed file $outfile1: $totalcount\n
  # of sequences failing Illumina chastity filter: $chastitycount\n
@@ -354,22 +347,10 @@ class IlluminaFiltering:
 # of sequences removed because they had length < $ARGV[1]: $shortcount\n
 # of sequences output to $outfile2: $printseq
 #% of raw sequences retained after quality filtering: ",sprintf('%3d', 100* $printseq/$origreadtotal), "\n";
-#
-#        print "file:", infile
-#        print 'count_of_trimmed             (for length):', count_of_trimmed
-#        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
-#        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
-#        print 'count_of_Ns                (reads with N):', count_of_Ns
-#        if num_reads is None:
-#            print "No valid FASTQ reads could be processed."
-#        else:
-#            print "%i FASTQ reads were processed." % ( num_reads + 1 )
-#        if num_reads_excluded:
-#            print "%i reads of zero length were excluded from the output." % num_reads_excluded
 
     def create_report_msg(self, infile, count_of_trimmed, count_of_first50, count_of_Ns, num_reads, num_reads_excluded):
-        report_message = """
-            file: %s
+        "TODO: add report from minoch_filtering pipelne (see above)? ask Andy"
+        report_message = """file: %s            
             count_of_trimmed             (for length): %s
             count_of_first50      (avg first50 quals): %s
             count_of_unchaste             ('Y' in id): %s
@@ -384,4 +365,4 @@ class IlluminaFiltering:
             report_message += "%i reads of zero length were excluded from the output." % num_reads_excluded        
         return report_message
         
-if __name__ == "__main__": trim_by_quality()
+if __name__ == "__main__": IlluminaFiltering.trim_by_quality()
