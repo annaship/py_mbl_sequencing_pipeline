@@ -188,6 +188,8 @@ class IlluminaFiltering:
             # Filter reads below first 50 base quality
             if filter_first50:                
                 first50 = 50
+#                first50_maxQ = 35
+#                first50_maxQ_count = 4                
                 first50_maxQ = 30
                 first50_maxQ_count = 34
                 
@@ -331,6 +333,7 @@ class IlluminaFiltering:
             count_of_first50      (avg first50 quals): %s
             count_of_unchaste             ('Y' in id): %s
             count_of_Ns                (reads with N): %s
+            ---------------------------------------------
             count of good reads                      : %s
             count of removed reads                   : %s
         """ % (infile, count_of_trimmed, count_of_first50, count_of_unchaste, count_of_Ns, self.read_good, self.read_failed)
