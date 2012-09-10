@@ -42,16 +42,17 @@ class IlluminaFilteringTestCase(unittest.TestCase):
         result_false = self._illumina_filtering.compare(1, ">", 2)
         self.assertEqual(result_false, False)
         
-#    def test_02_count_of_Ns(self):
-#        count_of_Ns  = 0    
-#        filter_Nx    = True
-#        "Seq has no Ns"
-#        seq          = "CGACGGCCATGGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
-#        self.assertEqual(count_of_Ns, 0)
-#        "Seq has Ns"
-#        seq          = "CGACGGCCATGNNGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
-#        count_of_Ns  = self._illumina_filtering.filter_ns(seq, filter_Nx, count_of_Ns)
-#        self.assertEqual(count_of_Ns, 1)
+    def test_02_count_of_Ns(self):
+        self._illumina_filtering.count_of_Ns  = 0 
+        res = self._illumina_filtering.count_of_Ns
+        filter_Nx    = True
+        "Seq has no Ns"
+        seq          = "CGACGGCCATGGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
+        self.assertEqual(res, 0)
+        "Seq has Ns"
+        seq          = "CGACGGCCATGNNGCACCTGTATAGGCGTCCCGAAAGAGGGACCTGTTTCCAGGTCTTGCGCCTATATGTCAAACCCGGGTAAGGTTCGTCGGTTAGGATA"    
+        res  = self._illumina_filtering.has_ns(seq, filter_Nx)
+        self.assertEqual(res, 1)
         
 #    def test_03_check_chastity(self):
 #        self.assertEqual(self._illumina_filtering.count_of_unchaste, 0)           
