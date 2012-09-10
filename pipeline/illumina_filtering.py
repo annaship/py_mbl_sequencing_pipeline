@@ -186,12 +186,12 @@ class IlluminaFiltering:
                
             "3) quality treshhold filter"   
             # Filter reads below first 50 base quality
+            # Filter sequences with < 66% of bases in first half of read having Q >= 30
+
             if filter_first50:                
-                first50 = 50
-#                first50_maxQ = 35
-#                first50_maxQ_count = 4                
+                first50 = int(len(seq)/2) #50
                 first50_maxQ = 30
-                first50_maxQ_count = 34
+                first50_maxQ_count = int(len(seq)/3) #34                
                 
                 quals = fastq_read.get_decimal_quality_scores()[:first50]
 
