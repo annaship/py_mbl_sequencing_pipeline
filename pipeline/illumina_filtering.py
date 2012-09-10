@@ -59,6 +59,7 @@ class IlluminaFiltering:
             os.mkdir(self.outdir)
         self.read_good      = 0
         self.read_failed    = 0
+        self.count_of_first50 = 0
             
 #    def compare( self, aggregated_value, operator, threshold_value ):
 #        if operator == '>':
@@ -98,6 +99,8 @@ class IlluminaFiltering:
                         agg_action='min',       exc_count=0,    score_comp='>=',    qual_score=0,   
                         filter_first50=False,   filter_Ns=False,filter_Nx=0,        failed_fastq=False,
                         length=0,               trim=0,         clip=0,             keep_zero_length=False):
+        "Runs for each file"
+        
         #format
         window_size         = wsize
         window_step         = wstep
@@ -112,6 +115,8 @@ class IlluminaFiltering:
         
         self.read_good      = 0
         self.read_failed    = 0
+        self.count_of_first50 = 0
+        
         if not infile:
             sys.exit( "illumina_fastq_trimmer: Need to specify an input file" )
         
@@ -142,7 +147,6 @@ class IlluminaFiltering:
         num_reads = None
         num_reads_excluded = 0
         count_of_trimmed  = 0
-        count_of_first50  = 0
         count_of_Ns       = 0
         count_of_unchaste = 0
         fp = self.open_in_file(in_filepath)
@@ -157,6 +161,7 @@ class IlluminaFiltering:
         "7) remove from the end"
         
         for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
+            "Runs for each sequence in the file"
             ############################################################################################
             # Put chastity code here
             #print fastq_read.identifier
@@ -187,25 +192,11 @@ class IlluminaFiltering:
             "3) quality treshhold filter"   
             # Filter reads below first 50 base quality
             # Filter sequences with < 66% of bases in first half of read having Q >= 30
-
-            if filter_first50:                
-                first50 = int(len(seq)/2) #50
-                first50_maxQ = 30
-                first50_maxQ_count = int(len(seq)/3) #34                
-                
-                quals = fastq_read.get_decimal_quality_scores()[:first50]
-
-                if len([i for i, x in enumerate(quals, 1) if x < first50_maxQ]) >= first50_maxQ_count:
-                    print 'failed first50'
-                    print quals
-                    if failed_fastq:
-                        fail.write( fastq_read )
-                    count_of_first50 += 1
-                    self.read_failed += 1
+            
+            if filter_first50 and self.check_qual(fastq_read, int(len(seq)/2), 30, int(len(seq)/3)):
+                    if failed_fastq: fail.write( fastq_read )
                     continue
-    
- 
-                   
+
             ##### END CHASTITY #####################
             ############################################################################################
             ##### START Btails CODE ################
@@ -280,7 +271,7 @@ class IlluminaFiltering:
         if failed_fastq:
             fail.close()
             
-        report_message = self.create_report_msg(infile, count_of_trimmed, count_of_first50, count_of_unchaste, count_of_Ns, num_reads, num_reads_excluded)
+        report_message = self.create_report_msg(infile, count_of_trimmed, count_of_unchaste, count_of_Ns, num_reads, num_reads_excluded)
         self.print_report(filebase, report_message)
 
         return out_filename
@@ -325,8 +316,20 @@ class IlluminaFiltering:
             count_of_unchaste += 1
             #print 'failed chastity'
         return count_of_unchaste
+    
+    def check_qual(self, fastq_read, first50 = 50, first50_qual_threshold = 30, first50_lowQ_count = 34):
+        quals = fastq_read.get_decimal_quality_scores()[:first50]
+    
+        if len([i for i, x in enumerate(quals, 1) if x < first50_qual_threshold]) >= first50_lowQ_count:
+            print 'failed first50'
+            print quals
+            self.count_of_first50 += 1
+            self.read_failed += 1
+            return True
+        else: return False
+
             
-    def create_report_msg(self, infile, count_of_trimmed, count_of_first50, count_of_unchaste, count_of_Ns, num_reads, num_reads_excluded):
+    def create_report_msg(self, infile, count_of_trimmed, count_of_unchaste, count_of_Ns, num_reads, num_reads_excluded):
         report_message = """
             in file: %s
             count_of_trimmed             (for length): %s
@@ -336,7 +339,7 @@ class IlluminaFiltering:
             ---------------------------------------------
             count of good reads                      : %s
             count of removed reads                   : %s
-        """ % (infile, count_of_trimmed, count_of_first50, count_of_unchaste, count_of_Ns, self.read_good, self.read_failed)
+        """ % (infile, count_of_trimmed, self.count_of_first50, count_of_unchaste, count_of_Ns, self.read_good, self.read_failed)
 
         if num_reads is None:
             report_message += "No valid FASTQ reads could be processed."
