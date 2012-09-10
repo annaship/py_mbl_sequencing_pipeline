@@ -61,6 +61,8 @@ class IlluminaFiltering:
         self.read_failed    = 0
         self.count_of_first50 = 0
         self.count_of_Ns    = 0
+        self.count_of_unchaste = 0
+
 #    def compare( self, aggregated_value, operator, threshold_value ):
 #        if operator == '>':
 #            return aggregated_value > threshold_value
@@ -112,12 +114,13 @@ class IlluminaFiltering:
         filter_length       = length
         trim_length         = trim
         clip_length         = clip
+        default_Q_treshold  = 40 #TODO: make an argument
         
         self.read_good      = 0
         self.read_failed    = 0
-        self.count_of_first50 = 0
         self.count_of_Ns    = 0
-        default_Q_treshold  = 40 #TODO: make an argument
+        self.count_of_first50  = 0
+        self.count_of_unchaste = 0
         
         if not infile:
             sys.exit( "illumina_fastq_trimmer: Need to specify an input file" )
@@ -149,7 +152,6 @@ class IlluminaFiltering:
         num_reads = None
         num_reads_excluded = 0
         count_of_trimmed  = 0
-        count_of_unchaste = 0
         fp = self.open_in_file(in_filepath)
 
         "1) chastity filter"
@@ -170,12 +172,8 @@ class IlluminaFiltering:
             desc_items = fastq_read.identifier.split(':')
             
             "1) chastity filter"
-            if desc_items[7] == 'Y':
-                count_of_unchaste += 1
-                #print 'failed chastity'
-                if failed_fastq:
-                    fail.write( fastq_read )
-                self.read_failed += 1
+            if self.check_chastity(desc_items):
+                if failed_fastq: fail.write( fastq_read )
                 continue
             
             "2) N filter"
@@ -265,7 +263,7 @@ class IlluminaFiltering:
         if failed_fastq:
             fail.close()
             
-        report_message = self.create_report_msg(infile, count_of_trimmed, count_of_unchaste, num_reads, num_reads_excluded)
+        report_message = self.create_report_msg(infile, count_of_trimmed, num_reads, num_reads_excluded)
         self.print_report(filebase, report_message)
 
         return out_filename
@@ -305,11 +303,13 @@ class IlluminaFiltering:
             fp = open( in_filepath )
         return fp
 
-    def check_chastity(self, desc_items, count_of_unchaste):
+    def check_chastity(self, desc_items):
         if desc_items[7] == 'Y':
-            count_of_unchaste += 1
+            self.count_of_unchaste += 1
             #print 'failed chastity'
-        return count_of_unchaste
+            self.read_failed += 1
+            return True
+        else: return False
     
     def has_ns(self, seq, filter_Nx):                
         countN = seq.count('N')
@@ -330,9 +330,8 @@ class IlluminaFiltering:
             self.read_failed += 1
             return True
         else: return False
-
             
-    def create_report_msg(self, infile, count_of_trimmed, count_of_unchaste, num_reads, num_reads_excluded):
+    def create_report_msg(self, infile, count_of_trimmed, num_reads, num_reads_excluded):
         report_message = """
             in file: %s
             count_of_trimmed             (for length): %s
@@ -342,7 +341,7 @@ class IlluminaFiltering:
             ---------------------------------------------
             count of good reads                      : %s
             count of removed reads                   : %s
-        """ % (infile, count_of_trimmed, self.count_of_first50, count_of_unchaste, self.count_of_Ns, self.read_good, self.read_failed)
+        """ % (infile, count_of_trimmed, self.count_of_first50, self.count_of_unchaste, self.count_of_Ns, self.read_good, self.read_failed)
 
         if num_reads is None:
             report_message += "No valid FASTQ reads could be processed."
