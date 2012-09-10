@@ -57,8 +57,8 @@ class IlluminaFiltering:
         self.outdir         = os.path.join(self.runobj.output_dir,"illumina_filtered")
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
-        self.count_of_unchaste = 0
-        self.quality_list   = []
+        self.read_good      = 0
+        self.read_failed    = 0
             
 #    def compare( self, aggregated_value, operator, threshold_value ):
 #        if operator == '>':
@@ -109,8 +109,9 @@ class IlluminaFiltering:
         filter_length       = length
         trim_length         = trim
         clip_length         = clip
-        filter_comp_length  = True #TODO: add as parameter
         
+        self.read_good      = 0
+        self.read_failed    = 0
         if not infile:
             sys.exit( "illumina_fastq_trimmer: Need to specify an input file" )
         
@@ -140,10 +141,10 @@ class IlluminaFiltering:
             fail = fastqWriter( open( out_filepath+'.failed', 'wb' ), format = format )
         num_reads = None
         num_reads_excluded = 0
-        self.count_of_unchaste = 0
         count_of_trimmed  = 0
         count_of_first50  = 0
         count_of_Ns       = 0
+        count_of_unchaste = 0
         fp = self.open_in_file(in_filepath)
 
         "1) chastity filter"
@@ -159,89 +160,99 @@ class IlluminaFiltering:
             ############################################################################################
             # Put chastity code here
             #print fastq_read.identifier
-            seq               = fastq_read.get_sequence()            
-            desc_items        = fastq_read.identifier.split(':')
-            self.quality_list = fastq_read.get_decimal_quality_scores()
-
+            seq        = fastq_read.get_sequence()            
+            desc_items = fastq_read.identifier.split(':')
+            
             "1) chastity filter"
-            if self.check_chastity(desc_items):
+            if desc_items[7] == 'Y':
+                count_of_unchaste += 1
+                #print 'failed chastity'
                 if failed_fastq:
                     fail.write( fastq_read )
+                self.read_failed += 1
                 continue
-
-            "2) N filter: Filter reads with ambiguous bases"
-            if filter_Ns:                
-                count_of_Ns = self.filter_ns(seq, filter_Nx, count_of_Ns)
-                if count_of_Ns:
-                    if failed_fastq:
-                        fail.write( fastq_read )
-                    continue
             
-            "3) quality treshold filter"   
-            # Filter reads by quality
-            # Filter sequences with < 66% of bases in first half of read having Q >= 30
-
-            if filter_first50:                
-                first_half = int(len(seq)/2)
-                count_of_first50 = self.check_qual(fastq_read, count_of_first50, first_half, 30, int(first_half/3))
-                if count_of_first50:
+            "2) N filter"
+            # Filter reads with ambiguous bases
+            if filter_Ns:                
+                countN = seq.count('N')
+                if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
+                    #print 'failed Ns',infile
+                    count_of_Ns += 1
                     if failed_fastq:
                         fail.write( fastq_read )
+                    self.read_failed += 1
                     continue
+               
+            "3) quality treshhold filter"   
+            # Filter reads below first 50 base quality
+            if filter_first50:                
+                first50 = 50
+                first50_maxQ = 30
+                first50_maxQ_count = 34
+                
+                quals = fastq_read.get_decimal_quality_scores()[:first50]
+
+                if len([i for i, x in enumerate(quals, 1) if x < first50_maxQ]) >= first50_maxQ_count:
+                    print 'failed first50'
+                    print quals
+                    if failed_fastq:
+                        fail.write( fastq_read )
+                    count_of_first50 += 1
+                    self.read_failed += 1
+                    continue
+    
  
                    
             ##### END CHASTITY #####################
             ############################################################################################
             ##### START Btails CODE ################
             "4) Btails trimming"     
-#            quality_list = fastq_read.get_decimal_quality_scores()
-
+            quality_list = fastq_read.get_decimal_quality_scores()
+            
             for trim_end in trim_ends:
+                
                 
                 if trim_end == '5':
                     lwindow_position = 0 #left position of window
                     while True:
-                        if lwindow_position >= len( self.quality_list ):
+                        if lwindow_position >= len( quality_list ):
                             fastq_read.sequence = ''
                             fastq_read.quality = ''
                             break
-                        if self.exclude_and_compare( action, self.quality_list[ lwindow_position:lwindow_position + window_size ], score_comparison, quality_score, exclude_window_indexes ):
+                        if self.exclude_and_compare( action, quality_list[ lwindow_position:lwindow_position + window_size ], score_comparison, quality_score, exclude_window_indexes ):
                             fastq_read = fastq_read.slice( lwindow_position, None )
                             break
                         lwindow_position += window_step
                 else:
-                    rwindow_position = len( self.quality_list ) #right position of window
+                    rwindow_position = len( quality_list ) #right position of window
                     while True:
                         lwindow_position = rwindow_position - window_size #left position of window
                         if rwindow_position <= 0 or lwindow_position < 0:
                             fastq_read.sequence = ''
                             fastq_read.quality = ''
                             break
-                        if self.exclude_and_compare( action, self.quality_list[ lwindow_position:rwindow_position ], score_comparison, quality_score, exclude_window_indexes ):
+                        if self.exclude_and_compare( action, quality_list[ lwindow_position:rwindow_position ], score_comparison, quality_score, exclude_window_indexes ):
                             fastq_read = fastq_read.slice( None, rwindow_position )
                             break
                         rwindow_position -= window_step
-                        
+#???
             ######## END Btails CODE ###############################            
             ############################################################################################
             # put  length/trim/clip code here
-#            quality_list = fastq_read.get_decimal_quality_scores()
+            quality_list = fastq_read.get_decimal_quality_scores()
             
-            "compare qual length and seq length"
-            if filter_comp_length:
-                if len(self.quality_list) != len(seq):
-                    print 'different lengths for sequence string and quality string'
-                    if failed_fastq:
-                        fail.write( fastq_read )
-                    continue
-            
+            "5) length filter"
             if filter_length:
-                if len(self.quality_list) < filter_length:
+                if len(quality_list) < filter_length:
                     print 'failed length'
                     if failed_fastq:
                         fail.write( fastq_read )
+                    self.read_failed += 1
                     continue
-            
+    
+            "6) remove from the end"
+            "7) remove from the end"            
             # Trim initial bases -- remove first 10 bases from read 2   
             if clip_length:
                 # remove from the front:
@@ -250,7 +261,7 @@ class IlluminaFiltering:
                 
             # Trim to max length -- read 2 trim to 90.
             if trim_length:
-                if len(self.quality_list) > trim_length:
+                if len(quality_list) > trim_length:
                     # remove from the end:
                     fastq_read = fastq_read.slice( None, len(fastq_read.get_sequence()) - trim_length )
                     count_of_trimmed += 1
@@ -258,26 +269,17 @@ class IlluminaFiltering:
             
             if keep_zero_length or len( fastq_read ):
                 out.write( fastq_read )
+                self.read_good += 1
             else:
                 num_reads_excluded += 1
+                self.read_failed += 1
+
         out.close()
         if failed_fastq:
             fail.close()
             
-        report_message = self.create_report_msg(infile, count_of_trimmed, count_of_first50, count_of_Ns, num_reads, num_reads_excluded)
+        report_message = self.create_report_msg(infile, count_of_trimmed, count_of_first50, count_of_unchaste, count_of_Ns, num_reads, num_reads_excluded)
         self.print_report(filebase, report_message)
-            
-#        print "file:", infile
-#        print 'count_of_trimmed             (for length):', count_of_trimmed
-#        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
-#        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
-#        print 'count_of_Ns                (reads with N):', count_of_Ns
-#        if num_reads is None:
-#            print "No valid FASTQ reads could be processed."
-#        else:
-#            print "%i FASTQ reads were processed." % ( num_reads + 1 )
-#        if num_reads_excluded:
-#            print "%i reads of zero length were excluded from the output." % num_reads_excluded
 
         return out_filename
 
@@ -316,25 +318,30 @@ class IlluminaFiltering:
             fp = open( in_filepath )
         return fp
 
-    def check_chastity(self, desc_items):
+    def check_chastity(self, desc_items, count_of_unchaste):
         if desc_items[7] == 'Y':
-            self.count_of_unchaste += 1
+            count_of_unchaste += 1
             #print 'failed chastity'
+        return count_of_unchaste
             
-    def filter_ns(self, seq, filter_Nx, count_of_N_seq):
-        countN = seq.count('N')
-        if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
-            #print 'failed Ns', infile
-            count_of_N_seq += 1
-        return count_of_N_seq
-        
-    def check_qual(self, fastq_read, count_of_first50, first50 = 50, first50_qual_threshold = 30, first50_lowQ_count = 34):
-        # retain sequences with > 66% of bases in first half of read having Q >= 30
-        quals = self.quality_list[:first50]
-        if len([i for i, x in enumerate(quals, 1) if x < first50_qual_threshold]) >= first50_lowQ_count:
-#            print 'failed first50'
-            count_of_first50 += 1
-        return count_of_first50
+    def create_report_msg(self, infile, count_of_trimmed, count_of_first50, count_of_unchaste, count_of_Ns, num_reads, num_reads_excluded):
+        report_message = """
+            in file: %s
+            count_of_trimmed             (for length): %s
+            count_of_first50      (avg first50 quals): %s
+            count_of_unchaste             ('Y' in id): %s
+            count_of_Ns                (reads with N): %s
+            count of good reads                      : %s
+            count of removed reads                   : %s
+        """ % (infile, count_of_trimmed, count_of_first50, count_of_unchaste, count_of_Ns, self.read_good, self.read_failed)
+
+        if num_reads is None:
+            report_message += "No valid FASTQ reads could be processed."
+        else:
+            report_message += "%i FASTQ reads were processed." % ( num_reads + 1 )
+        if num_reads_excluded:
+            report_message += "%i reads of zero length were excluded from the output." % num_reads_excluded        
+        return report_message
 
     def print_report(self, filebase, report_message):
         
@@ -344,44 +351,5 @@ class IlluminaFiltering:
         report_file.close()
         print report_message
 
-
-#       open 
-#        print $rfh " # of raw sequences: $origreadtotal\n
-# of sequences in B-trimmed file $outfile1: $totalcount\n
- # of sequences failing Illumina chastity filter: $chastitycount\n
-# of sequences removed because they contained uncalled bases: $ncount\n
-# of sequences removed because they failed C33 quality filtering: $lowqualcount\n
-# of sequences removed because they had length < $ARGV[1]: $shortcount\n
-# of sequences output to $outfile2: $printseq
-#% of raw sequences retained after quality filtering: ",sprintf('%3d', 100* $printseq/$origreadtotal), "\n";
-#
-#        print "file:", infile
-#        print 'count_of_trimmed             (for length):', count_of_trimmed
-#        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
-#        print "count_of_unchaste             ('Y' in id):", self.count_of_unchaste
-#        print 'count_of_Ns                (reads with N):', count_of_Ns
-#        if num_reads is None:
-#            print "No valid FASTQ reads could be processed."
-#        else:
-#            print "%i FASTQ reads were processed." % ( num_reads + 1 )
-#        if num_reads_excluded:
-#            print "%i reads of zero length were excluded from the output." % num_reads_excluded
-
-    def create_report_msg(self, infile, count_of_trimmed, count_of_first50, count_of_Ns, num_reads, num_reads_excluded):
-        report_message = """
-            file: %s
-            count_of_trimmed             (for length): %s
-            count_of_first50      (avg first50 quals): %s
-            count_of_unchaste             ('Y' in id): %s
-            count_of_Ns                (reads with N): %s
-        """ % (infile, count_of_trimmed, count_of_first50, self.count_of_unchaste, count_of_Ns)
         
-        if num_reads is None:
-            report_message += "No valid FASTQ reads could be processed."
-        else:
-            report_message += "%i FASTQ reads were processed." % ( num_reads + 1 )
-        if num_reads_excluded:
-            report_message += "%i reads of zero length were excluded from the output." % num_reads_excluded        
-        return report_message
-        
-if __name__ == "__main__": trim_by_quality()
+if __name__ == "__main__": IlluminaFiltering.trim_by_quality()
