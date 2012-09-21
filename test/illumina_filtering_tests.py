@@ -79,6 +79,17 @@ class IlluminaFilteringTestCase(unittest.TestCase):
             count_of_first50 = self._illumina_filtering.check_qual(quality_list, 50, 40, 4)
             self.assertEqual(count_of_first50, 1)           
             break
+        
+#    def test_05_filter_length(self):
+#        filter_length = 200
+#        if filter_length:
+#            if len(quality_list) < filter_length:
+#                print 'failed length'
+#                if failed_fastq:
+#                    fail.write( fastq_read )
+#                self.read_failed += 1
+#                continue
+    
 
 if __name__ == '__main__':
     unittest.main()

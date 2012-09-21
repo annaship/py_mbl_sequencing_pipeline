@@ -114,7 +114,7 @@ class IlluminaFiltering:
         filter_length       = length
         trim_length         = trim
         clip_length         = clip
-        default_Q_treshold  = 40 #TODO: make an argument
+        default_Q_treshold  = 30 #TODO: make an argument, test with 40
         
         self.read_good      = 0
         self.read_failed    = 0
@@ -145,13 +145,13 @@ class IlluminaFiltering:
         #determine an exhaustive list of window indexes that can be excluded from aggregation
         exclude_window_indexes = self.get_window_indexes(exclude_count, window_size)
         
-        out = fastqWriter( open( out_filepath, 'wb' ), format = format )
+        out    = fastqWriter( open( out_filepath, 'wb' ), format = format )
         action = ACTION_METHODS[ aggregation_action ]
         if failed_fastq:
             fail = fastqWriter( open( out_filepath+'.failed', 'wb' ), format = format )
         num_reads = None
         num_reads_excluded = 0
-        count_of_trimmed  = 0
+        count_of_trimmed   = 0
         fp = self.open_in_file(in_filepath)
 
         "1) chastity filter"
@@ -194,7 +194,7 @@ class IlluminaFiltering:
             ############################################################################################
             ##### START Btails CODE ################
             "4) Btails trimming"     
-
+            "TODO: ASK Andy how to test"
             for trim_end in trim_ends:
                 
                 if trim_end == '5':
@@ -226,12 +226,13 @@ class IlluminaFiltering:
             # put  length/trim/clip code here
 
             "5) length filter"
-            if filter_length:
-                if len(quality_list) < filter_length:
+            "get quality_list again, in case it's trimmed"
+            quality_list = fastq_read.get_decimal_quality_scores()
+#            filter_length = 101
+            if filter_length and (len(quality_list) < filter_length):
                     print 'failed length'
-                    if failed_fastq:
-                        fail.write( fastq_read )
                     self.read_failed += 1
+                    if failed_fastq: fail.write( fastq_read )
                     continue
     
             "6) remove from the end"
