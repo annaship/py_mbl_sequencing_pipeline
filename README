@@ -1,9 +1,28 @@
-This is a toy project to re-implement MBL's sequencing pipeline and well-tested
-QA/QC procedures from scratch in Python programming language.
+2012-09-21
+The pipeline should:
+I)  work for 454 and Illumina platforms
+II) work for MBL upload and user's upload
+III) upload data on env454 and on VAMPS
 
-Since this is something we are going to be working on as a side effort, probably
-it will take some time to get to a point where people can start using it.
+1) filter data by quality ("trimming") + chimera checking
+2) gast (assign taxonomy)
+3) convert each Illumina pair end result into single sequence.
+4) upload project/dataset/run info onto env454
+5) upload raw data onto env454
+6) upload trimmed data onto env454
+7) upload trimmed data on VAMPS
+8) upload taxonomy related data onto env454
+9) upload taxonomy related data on VAMPS
+10) upload all count information on VAMPS
 
+---------------
+The illumina quality filtering (not used for now) is ready.
+python pipleine-ui.py -csv test/sample_data/illumina/configs/sample_metadata.csv -s trim -r
+123001 -p illumina -c test/sample_data/illumina/configs/sample_ini -o
+./results/illumina_filtering
+
+====================
+2012-08-10
 1)
 The illumina processing step is finished up to creating fasta unique files. You can try it with:
 python pipleine-ui.py -csv ./test/sample_data/illumina/configs/sample_metadata.csv -s illumina_files -l debug -p illumina -r 20120614 -ft fastq -i ./test/sample_data/illumina/Project_J_v6_30 -o ./test/sample_data/illumina/result -cp False
@@ -13,3 +32,11 @@ a) -csv ./test/sample_data/illumina/configs/sample_metadata.csv -s env454run_inf
 b) -csv ./test/sample_data/illumina/configs/sample_metadata.csv -s env454upload -l debug -p illumina -r 20120614 -ft fastq -i ./test/sample_data/illumina/Project_J_v6_30 -o ./test/sample_data/illumina/result -cp False
 
 To run it the results from illumina_files (the previous step) should be in the directory which it's created: "test/sample_data/illumina/result/20120614/analysis/perfect_reads" and it needs "gast" files. For now they are in test/sample_data/illumina/ready_gast_results.zip. Unzip them into the "perfect_reads" directory.
+
+====================
+2012-05-31
+This is a toy project to re-implement MBL's sequencing pipeline and well-tested
+QA/QC procedures from scratch in Python programming language.
+
+Since this is something we are going to be working on as a side effort, probably
+it will take some time to get to a point where people can start using it.
