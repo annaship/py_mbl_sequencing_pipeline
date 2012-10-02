@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#!/usr/local/www/vamps/software/python/bin/python
+
 
 ##!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -20,24 +20,28 @@ import sys
 import shutil
 import types
 
-from pipeline.utils import *
-
-from pipeline.gast import Gast
-
-import argparse
-
-
-
-
-
-import pipeline.constants as C
 
 
 def run_gast2tax(args):
-    import pipeline.gast
+
+    sys.path.append("/xraid2-2/vampsweb/"+args.site+"/")
+    #from pipeline.utils import *
+    from pipeline.gast import Gast
+    import pipeline.constants as C
 
     if os.path.exists(args.names_file) and os.path.getsize(args.names_file) > 0:
-        mygast = Gast()
+        
+        class expando(object):pass
+        runobj = expando()
+        runobj.output_dir = ''
+        runobj.use_cluster = True
+        runobj.user = ''
+        runobj.run = ''
+        # for vamps this has to be 'vamps' and empty list
+        runobj.platform = 'vamps'
+        runobj.datasets = []
+        
+        mygast = Gast(run_object = runobj)
         
         ( refdb, taxdb ) = mygast.get_reference_databases(args.dna_region)
         
@@ -55,8 +59,9 @@ def run_gast2tax(args):
         
         
 if __name__ == '__main__':
+    import argparse
     usage = """
-        usage: ./pipeline-ui.py [options]
+        usage: ./gast2tax.py [options]
         
             options:
                 -c/--configuration      configuration file with path  [required]
@@ -73,16 +78,8 @@ if __name__ == '__main__':
     if  len(sys.argv) == 1:
         print usage
         sys.exit()
-    #THE_DEFAULT_BASE_OUTPUT = '.'
 
-    # required items: configuration file, run and platform only
-    # NO DEFAULTS HERE: DO Not give items defaults here as the script needs to look in the ini file as well
-    # except steps (status) and loglevel (error) and 
-    # see metadata.py and constants.py:  get_command_line_items()
-    # BUT general section of ini file must have important things not supplied on command line
-    # which means that csv file will require more commandline parameters.
-    # NOTE: do not store any of the command line item as store_true or store_false or they
-    # may not be able to be overridden buy the config file (ini).
+    
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline: gast2tax')
     parser.add_argument('-dna', '--dna', required=True,                         dest = "dna_region",
                                                  help = 'Configuration parameters (.ini file) of the run. See README File')
@@ -96,7 +93,8 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--names_file",     required=True,  action="store",         dest = "names_file", 
                                                     help="Names file path ")                                              
    
-     
+    parser.add_argument("-site", "--site",     required=True,  action="store",         dest = "site", 
+                                                    help="vamps or vampsdev")  
     
    
     

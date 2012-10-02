@@ -11,7 +11,7 @@ from types import *
 class Gast:
     """Doc string here.."""
     Name = "GAST"
-    def __init__(self, run_object = None, idx_keys=None):
+    def __init__(self, run_object = None, idx_keys=[]):
 
         self.runobj     = run_object
         
@@ -20,14 +20,21 @@ class Gast:
         self.basedir = self.runobj.output_dir
         
         self.use_cluster = self.runobj.use_cluster
-        self.idx_keys = idx_keys
+        if self.runobj.platform == 'vamps':
+            self.idx_keys = [self.runobj.user+self.runobj.run]
+            self.refdb_dir = C.vamps_ref_database_dir
+            self.iterator = self.runobj.datasets
+        else:
+            self.idx_keys = idx_keys
+            self.iterator = self.idx_keys
+            self.refdb_dir = C.ref_database_dir
         
         os.environ['SGE_ROOT']='/usr/local/sge'
         os.environ['SGE_CELL']='grendel'
         path = os.environ['PATH']
         os.environ['PATH'] = '/usr/local/sge/bin/lx24-amd64:'+path
         
-        self.refdb_dir = C.ref_database_dir
+        
         
         # for testing
         self.limit = 400
@@ -39,13 +46,16 @@ class Gast:
         self.analysis_dir = os.path.join(self.basedir,C.analysis_dir)
         if not os.path.exists(self.analysis_dir):
             os.mkdir(self.analysis_dir)
-        self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
-        if os.path.exists(self.global_gast_dir):
-            # delete gast directory and recreate
-            shutil.rmtree(self.global_gast_dir)
-            os.mkdir(self.global_gast_dir)
+        if self.runobj.platform == 'vamps':
+            self.global_gast_dir = self.basedir
         else:
-            os.mkdir(self.global_gast_dir)
+            self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
+            if os.path.exists(self.global_gast_dir):
+                # delete gast directory and recreate
+                shutil.rmtree(self.global_gast_dir, True)
+                os.mkdir(self.global_gast_dir)
+            else:
+                os.mkdir(self.global_gast_dir)
             
         if self.runobj.platform == 'illumina':
             reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
@@ -55,9 +65,12 @@ class Gast:
                 self.input_dir = self.runobj.input_dir
             
         # create our directories for each key
-        for key in self.idx_keys:
+        # 
+        
+        
+        for key in self.iterator:
             output_dir = os.path.join(self.global_gast_dir,key)
-            if not os.path.exists(output_dir):
+            if output_dir and not os.path.exists(output_dir):
                 os.mkdir(output_dir)
 #                 gast_dir = output_dir
 #                 if os.path.exists(gast_dir):
@@ -113,9 +126,12 @@ class Gast:
             logger.info("Using cluster for clustergast")
         else:
             logger.info("Not using cluster")
-        counter=0
-        for key in self.idx_keys:
             
+            
+        counter=0
+        gast_file_list = []
+        for key in self.iterator:
+            counter += 1
             if self.runobj.platform == 'illumina':
                 output_dir = os.path.join(self.global_gast_dir,key)
                 gast_dir = os.path.join(self.global_gast_dir,key)
@@ -125,12 +141,17 @@ class Gast:
             elif self.runobj.platform == 'vamps':
                 output_dir = os.path.join(self.global_gast_dir,key)
                 gast_dir = os.path.join(self.global_gast_dir,key)
-                unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
+                fasta_file = os.path.join(output_dir,  'fasta.fa')
+                unique_file = os.path.join(output_dir,  'unique.fa')
+                names_file = os.path.join(output_dir, 'names')
+                #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
+                print 'gast_dir',gast_dir
+                print 'unique_file',unique_file
             else:
                 sys.exit("clustergast: no platform")
 
             
-            counter +=1
+            
             
             if counter >= self.limit:
                 pass
@@ -148,12 +169,12 @@ class Gast:
                 dna_region = 'unknown'
                 
             (refdb,taxdb) = self.get_reference_databases(dna_region)
-            #print 'DBs',refdb,taxdb
             
             
-            
+            print "\nFile",str(counter),key
+            print 'use_cluster:',self.use_cluster
             if os.path.exists(unique_file) and os.path.getsize(unique_file) > 0:
-                print "\nFile:",str(counter)
+                
                 i = 0
                 if cluster_nodes:
                     grep_cmd = ['grep','-c','>',unique_file]
@@ -169,7 +190,7 @@ class Gast:
                     # node=2 start=2 end=2 rows=1
                     # node=3 start=3 end=3 rows=1           
                     lines = calcout.split("\n")
-                    gast_file_list = []
+                    #gast_file_list = []
                     for line in lines:
                         i += 1
                         if i >= cluster_nodes:
@@ -192,12 +213,12 @@ class Gast:
                         if self.use_cluster:
                             fh = open(script_filename,'w')
                             qstat_name = "gast" + key + '_' + self.runobj.run + "_" + str(i)
-                            fh.write("#!/bin/csh\n")
-                            fh.write("#$ -j y\n" )
-                            fh.write("#$ -o " + log_file + "\n")
-                            fh.write("#$ -N " + qstat_name + "\n\n")
-                            #fh.write("source /xraid/bioware/Modules/etc/profile.modules\n");
-                            #fh.write("module load bioware\n\n");
+                            fh.write("#!/bin/sh\n\n")
+                            
+                            # don't need these commands unless running qsub directly
+                            #fh.write("#$ -j y\n" )
+                            #fh.write("#$ -o " + log_file + "\n")
+                            #fh.write("#$ -N " + qstat_name + "\n\n")
         
                             # setup environment
                             fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
@@ -250,8 +271,10 @@ class Gast:
                 
                 else:
                     #fastasamp_filename = os.path.join(gast_dir, 'samp')
+                    # no nodes means that just one file will be run by clusterize
                     usearch_filename= os.path.join(gast_dir, "uc")
                     clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
+                    gast_file_list = [clustergast_filename_single]
                     print usearch_filename,clustergast_filename_single
                     
                     us_cmd = self.get_usearch_cmd(unique_file,refdb,usearch_filename)
@@ -260,52 +283,64 @@ class Gast:
                     grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
                     print grep_cmd
                     subprocess.call(grep_cmd,shell=True)
-                    
-                if self.use_cluster:
-                    # wait here for all the clustergast scripts to finish
-                    temp_file_list = gast_file_list
-                
-                    c = False
-                    maxwaittime = C.maxwaittime  # seconds
-                    sleeptime   = C.sleeptime    # seconds
-                    counter = 0
-                    while c == False:
-                        counter += 1
-                        if counter >= maxwaittime / sleeptime:
-                            raise Exception("Max wait time exceeded in gast.py")
-                        for index, file in enumerate(temp_file_list):
-                            #print temp_file_list
-                            if os.path.exists(file) and os.path.getsize(file) > 0:
-                                # remove from tmp list
-                                logger.debug("Found file now removing from list: "+file)
-                                temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
-                        
-                        if temp_file_list:
-                            logger.info("waiting for clustergast files to fill...")
-                            logger.debug(' '.join(temp_file_list))
-                            logger.info("\ttime: "+str(counter * sleeptime)+" | files left: "+str(len(temp_file_list)))
-                            time.sleep(sleeptime)
-                        else:
-                            c = True
-                        
-                # now concatenate all the clustergast_files into one file (if they were split)
-                if cluster_nodes:
-                    # gast file
-                    clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
-                    clustergast_fh = open(clustergast_filename_single,'w')
-                    # have to turn off cluster above to be able to 'find' these files for concatenation
-                    for n in range(1,i-1):
-                        #cmd = "cat "+ gast_dir + key+".gast_" + str(n) + " >> " + gast_dir + key+".gast"
-                        file = os.path.join(gast_dir, key+".gast_" + str(n))
-                        if(os.path.exists(file)):                    
-                            shutil.copyfileobj(open(file,'rb'), clustergast_fh)
-                        else:
-                            logger.info( "Could not find file: "+os.path.basename(file)+" Skipping")
-    
-                    clustergast_fh.flush()
-                    clustergast_fh.close()
             else:
                 logger.warning( "unique_file not found or zero size: "+unique_file)
+                
+        if self.use_cluster:
+            # wait here for all the clustergast scripts to finish
+            temp_file_list = gast_file_list
+        
+            c = False
+            maxwaittime = C.maxwaittime  # seconds
+            sleeptime   = C.sleeptime    # seconds
+            counter2 = 0
+            while c == False:
+                counter2 += 1
+                if counter2 >= maxwaittime / sleeptime:
+                    raise Exception("Max wait time exceeded in gast.py: "+maxwaittime+" seconds")
+                for index, file in enumerate(temp_file_list):
+                    #print temp_file_list
+                    if os.path.exists(file):
+                        # remove from tmp list
+                        logger.debug("Found file now removing from list: "+file)
+                        temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
+                
+                if temp_file_list:
+                    logger.info("waiting for clustergast files to fill...")
+                    logger.debug(' '.join(temp_file_list))
+                    logger.info("\ttime: "+str(counter2 * sleeptime)+" | files left: "+str(len(temp_file_list)))
+                    time.sleep(sleeptime)
+                else:
+                    c = True
+                  
+                  
+                  
+                  
+        for key in self.iterator:         
+            if self.runobj.platform == 'illumina':
+                gast_dir = os.path.join(self.global_gast_dir,key)
+            elif self.runobj.platform == 'vamps':
+                gast_dir = os.path.join(self.global_gast_dir,key)
+            else:
+                sys.exit("clustergast: no platform")
+      
+            # now concatenate all the clustergast_files into one file (if they were split)
+            if cluster_nodes:
+                # gast file
+                clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
+                clustergast_fh = open(clustergast_filename_single,'w')
+                # have to turn off cluster above to be able to 'find' these files for concatenation
+                for n in range(1,i-1):
+                    #cmd = "cat "+ gast_dir + key+".gast_" + str(n) + " >> " + gast_dir + key+".gast"
+                    file = os.path.join(gast_dir, key+".gast_" + str(n))
+                    if(os.path.exists(file)):                    
+                        shutil.copyfileobj(open(file,'rb'), clustergast_fh)
+                    else:
+                        logger.info( "Could not find file: "+os.path.basename(file)+" Skipping")
+
+                clustergast_fh.flush()
+                clustergast_fh.close()
+            
                 
         if not self.test:    
             # remove tmp files
@@ -336,7 +371,7 @@ class Gast:
         gast_cleanup - follows clustergast, explodes the data and copies to gast_concat and gast files
         """
         self.runobj.run_status_file_h.write("Starting gast_cleanup\n")
-        for key in self.idx_keys:
+        for key in self.iterator:
             if self.runobj.platform == 'illumina':
                 output_dir = os.path.join(self.global_gast_dir,key)
                 gast_dir = os.path.join(self.global_gast_dir,key)
@@ -346,8 +381,10 @@ class Gast:
             elif self.runobj.platform == 'vamps':
                 output_dir = os.path.join(self.global_gast_dir,key)
                 gast_dir = os.path.join(self.global_gast_dir,key)
-                unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
-                names_file = os.path.join(self.global_gast_dir,key,'names')
+                fasta_file = os.path.join(output_dir,  'fasta.fa')
+                unique_file = os.path.join(output_dir,  'unique.fa')
+                names_file = os.path.join(output_dir, 'names')
+                #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
             else:
                 sys.exit("gast_cleanup: no platform")
                 
@@ -508,12 +545,15 @@ class Gast:
         logger.info("Finished gast_cleanup")
         return ("SUCCESS","gast_cleanup")
 
-    def gast2tax(self): 
+    def gast2tax(self):
+        """
+        Creates taxtax files
+        """
         counter = 0
         qsub_prefix = 'gast2tax_sub_'
         #print tax_file
-        
-        for key in self.idx_keys:
+        tax_files = []
+        for key in self.iterator:
             counter += 1
             if self.runobj.platform == 'illumina':
                 output_dir = os.path.join(self.global_gast_dir,key)
@@ -524,8 +564,13 @@ class Gast:
             elif self.runobj.platform == 'vamps':
                 output_dir = os.path.join(self.global_gast_dir,key)
                 gast_dir = os.path.join(self.global_gast_dir,key)
-                unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
-                names_file = os.path.join(self.global_gast_dir,key,'names')
+                fasta_file = os.path.join(output_dir,  'fasta.fa')
+                unique_file = os.path.join(output_dir,  'unique.fa')
+                names_file = os.path.join(output_dir, 'names')
+                tagtax_file = os.path.join(output_dir, 'tagtax_terse')
+                if os.path.exists(unique_file) and os.path.getsize(unique_file)>0:
+                    tax_files.append(tagtax_file)
+                #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
             else:
                 sys.exit("gast2tax: no platform")
                 
@@ -541,35 +586,37 @@ class Gast:
             if dna_region in C.max_distance:
                 max_distance = C.max_distance[dna_region] 
             if self.use_cluster:
+                
                 clusterize = C.clusterize_cmd
                 # create script - each file gets script
                 script_filename = os.path.join(gast_dir,qsub_prefix + str(counter))
                 fh = open(script_filename,'w')
                 qstat_name = "gast2tax" + key + '_' + self.runobj.run + "_" + str(counter)
                 log_file = os.path.join(gast_dir, 'gast2tax.log_' + str(counter))
-                fh.write("#!/bin/csh\n")
-                fh.write("#$ -j y\n" )
-                fh.write("#$ -o " + log_file + "\n")
-                fh.write("#$ -N " + qstat_name + "\n\n")
+                fh.write("#!/bin/sh\n\n")
+                #fh.write("#$ -j y\n" )
+                #fh.write("#$ -o " + log_file + "\n")
+                #fh.write("#$ -N " + qstat_name + "\n\n")
 
                 # setup environment
                 fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
-                fh.write("module load bioware\n\n")
-                
-                fh.write("gast2tax.py -dna "+dna_region+" -max "+str(max_distance)+" -gast_dir "+gast_dir+" -names_file "+names_file+"\n" )
+                fh.write("module load bioware\n")
+                fh.write("export PYTHONPATH=/xraid2-2/vampsweb/"+self.runobj.site+"/:$PYTHONPATH\n\n")
+                fh.write("/xraid2-2/vampsweb/"+self.runobj.site+"/pipeline/gast2tax.py -dna "+dna_region+" -max "+str(max_distance)+" -o "+gast_dir+" -n "+names_file+" -site "+self.runobj.site+"\n" )
                 fh.close()
                             
                 # make script executable and run it
                 os.chmod(script_filename, stat.S_IRWXU)
-                qsub_cmd = clusterize + " " + script_filename
-                
+                qsub_cmd = clusterize + " -log /xraid2-2/vampsweb/"+self.runobj.site+"/clusterize.log " + script_filename
+                print qsub_cmd
                 # on vamps and vampsdev qsub cannot be run - unless you call it from the
                 # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
-                qsub_cmd = C.qsub_cmd + " " + script_filename
+                #qsub_cmd = C.qsub_cmd + " " + script_filename
+                #qsub_cmd = C.clusterize_cmd + " " + script_filename
                 logger.debug("qsub command: "+qsub_cmd)
                 
-                #subprocess.call(qsub_cmd, shell=True)
-                proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.call(qsub_cmd, shell=True)
+                #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 
             else:
@@ -579,7 +626,54 @@ class Gast:
                     ref_taxa = self.load_reftaxa(taxdb)
             
                     self.assign_taxonomy(gast_dir,dna_region,names_file, ref_taxa);
-        
+                    
+                    
+        if self.use_cluster:
+            # wait here for tagtax files to finish
+            temp_file_list = tax_files
+            tagtax_terse_filename     = os.path.join(gast_dir,"tagtax_terse")
+            tagtax_long_filename     = os.path.join(gast_dir,"tagtax_long")
+            c = False
+            maxwaittime = C.maxwaittime  # seconds
+            sleeptime   = C.sleeptime    # seconds
+            counter3 = 0
+            while c == False:
+                print 'temp_file_list:',temp_file_list
+                counter3 += 1
+                if counter3 >= maxwaittime / sleeptime:
+                    raise Exception("Max wait time exceeded in gast.py")
+                for index, file in enumerate(temp_file_list):
+                    #print temp_file_list
+                    if os.path.exists(file):
+                        # remove from tmp list
+                        logger.debug("Found file now removing from list: "+file)
+                        temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
+                
+                if temp_file_list:
+                    logger.info("waiting for tagtax files to fill...")
+                    logger.debug(' '.join(temp_file_list))
+                    logger.info("\ttime: "+str(counter3 * sleeptime)+" | files left: "+str(len(temp_file_list)))
+                    time.sleep(sleeptime)
+                else:
+                    c = True
+            
+            
+            
+#                 counter3 += 1
+#                 if counter3 >= maxwaittime / sleeptime:
+#                     raise Exception("Max wait time exceeded in gast.py: gast2tax")
+#                 
+#                 #print temp_file_list
+#                 if os.path.exists(tagtax_long_filename) and os.path.getsize(tagtax_long_filename) > 100:
+#                     # remove from tmp list
+#                     logger.debug("Found file: "+tagtax_long_filename+" - Continuing")
+#                     c = True
+#                 else:
+#                     logger.info("waiting for tagtax files to fill...")
+#                     logger.info("\ttime: "+str(counter3 * sleeptime))
+#                     time.sleep(sleeptime)
+                    
+                    
         print "Finished gast2tax" 
         return ("SUCCESS","gast2tax") 
         
@@ -592,6 +686,7 @@ class Gast:
             dna_region = 'v4v6'
         if dna_region == 'v6v4a':
             dna_region = 'v4v6a'
+            
         if C.use_full_length or dna_region == 'unknown':
             if os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
                 refdb = os.path.join(self.refdb_dir, 'refssu.udb')
@@ -613,7 +708,7 @@ class Gast:
                 refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
             else:
-                logger.error("Could not find reference database "+refdb+" Exiting")
+                logger.error("Could not find reference database in "+self.refdb_dir+" Exiting")
                 sys.exit()  
         
         logger.info('tax_file '+taxdb)
@@ -681,7 +776,7 @@ class Gast:
         grep_cmd += " sort -k1,1b -k2,2gr |"
         # append to clustergast file:
         # split_defline adds frequency to gastv6 file (last field)
-        grep_cmd += " ./pipeline/clustergast_tophit -split_defline_frequency"+use_full_length+" >> " + clustergast_filename
+        grep_cmd += " /xraid2-2/vampsweb/"+self.runobj.site+"/pipeline/clustergast_tophit -split_defline_frequency"+use_full_length+" >> " + clustergast_filename
     
         return grep_cmd  
           
@@ -843,7 +938,9 @@ class Gast:
                     
             if self.runobj.platform == 'vamps':
                 # one fasta file or (one project and dataset from db)
-                if os.path.exists(self.runobj.fasta_file):
+                # if self.runobj.fasta_file is not None then we should have multiple datasets
+                # which have already been uniqued
+                if self.runobj.fasta_file and os.path.exists(self.runobj.fasta_file):
                     #output_dir = os.path.join(self.basedir,keys[0])
                     unique_file = os.path.join(self.global_gast_dir,key,'unique.fa')
                     names_file = os.path.join(self.global_gast_dir,key,'names')
