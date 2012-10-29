@@ -1,7 +1,7 @@
 2012-09-21
 The pipeline should:
-I)  work for 454 and Illumina platforms
-II) work for MBL upload and user's upload
+I)   work for 454 and Illumina platforms
+II)  work for MBL upload and user's upload
 III) upload data on env454 and on VAMPS
 
 0) create ini file out of VAMPS submission tables
