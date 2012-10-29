@@ -18,7 +18,7 @@ class IlluminaFiles:
     3) process them through Meren's script
     4) result - files dataset_lane-PERFECT_reads.fa.unique with frequencies - to process with env454upload()
     
-    to test from command line: python pipeline_ui.py -csv ./test/sample_data/illumina/configs/sample_metadata.csv -s illumina_files -l debug -p illumina -r 20120614 -ft fastq -i ./test/data/fastq/illumina_files_test/input/illumina_files_test/Project_Julie_v6_30 -o ./test/sample_data/illumina/result -cp False
+    
     """
     def __init__(self, runobj):
         if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == "as-macbook.home" or os.uname()[1] == "as-macbook.local":

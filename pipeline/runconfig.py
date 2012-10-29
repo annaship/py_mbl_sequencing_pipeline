@@ -169,12 +169,14 @@ class RunConfig:
  
         if self.platform == 'vamps':
             self.user           = general_config['user']           
-            self.dna_region     = general_config['dna_region'] 
+            
             self.input_files    = general_config['input_files'] 
-            self.project        = general_config['project'] 
-            self.dataset        = general_config['dataset']
+            #self.project        = general_config['project'] 
+            #self.dataset        = general_config['dataset']
+            #self.dna_region     = general_config['dna_region']
+            #self.env_source_id  = general_config['envsource']
             self.site           = general_config['site']
-            self.env_source_id  = general_config['envsource']
+            
             self.load_vamps_database = general_config['load_vamps_database']
             try:
                 self.fasta_file    = general_config['fasta_file'] 
@@ -191,9 +193,11 @@ class RunConfig:
         # so when users want to gast at a later time they will
         # look in the database and not the files (which may be missing)
         # see /xraid2-2/vampsweb/vampsdev/vamps_trim.py
-        self.gast_input_source = 'files' # for regular gast pipeline
+        
         if 'gast_input_source' in general_config: 
             self.gast_input_source = general_config['gast_input_source']
+        
+        print    'General Config:',general_config
         if 'files_list' in general_config:
             input_file_names = general_config['files_list']
             self.input_files = ','.join(general_config['files_list'])
@@ -203,51 +207,12 @@ class RunConfig:
             self.input_files = ','.join(general_config['input_files'])
             self.files_list = general_config['input_files']
         
-#         
-#         # for ini file:  (no plurals)
-#         # 1) if input_file_format is a comma sep list then it should match the count of input_file_name
-#         #       The same with input_file_lane
-#         # 2) if input_file_format is supplied and is a single item it will apply to all the input files
-#         #       either in input_dir or the list (or single) of input_file_name
-#         # 3) EITHER input_dir OR input_file_name will be supplied (but not both)
-#         #
-#         if self.platform == '454':
-#             
-#             if 'input_file_format' in general_config and general_config['input_file_format'] != '':
-#                 input_file_types = general_config['input_file_format']
-#             elif 'file_formats_list' in general_config:    
-#                 input_file_types = general_config['file_formats_list']
-#             else:
-#                 input_file_types  = [input_str.strip() for input_str in general_config['input_file_formats'].split(',')]
-#             
-#             print 'input_file_types= ',input_file_types
-#             if len(input_file_names) != len(input_file_types):
-#                 raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and input_file_types(" + str(len(input_file_types)) + ") in configuration information")
-#             
-#             if 'lanes_list' in general_config: 
-#                 input_file_lanes = general_config['lanes_list']
-#             else:        
-#                 lane_info = general_config['input_file_lanes'].strip()
-#                 input_file_lanes  = [] if lane_info == '' else [input_str.strip() for input_str in lane_info.split(',')]
-#     
-#             # no lane info? better by our custom fasta-mbl format then
-#             if len(input_file_lanes) == 0 and len([  type for type in input_file_types if type != 'fasta-mbl' ]) > 0:
-#                 raise Exception("Only fasta-mbl formatted sequence files are allowed to not provide a value for input_file_lanes")
-#     
-#             # if they give any lane information it then needs to either be 1 value (for all files) or match them exactly
-#             if len(input_file_lanes) > 1 and (len(input_file_names) != len(input_file_lanes)):
-#                 raise Exception("Mismatch between the number of input_file_names(" + str(len(input_file_names)) + ") and lanes(" + str(len(input_file_lanes)) + ") in configuration information")
-#         else:
-#             input_file_types = []   
-#             input_file_lanes = []
-#         
-#         
-#         
-#         
+
  
- 
+        
+        
         self.input_file_info = {}
-#        print general_config
+        print general_config
         for idx,input_file in enumerate(input_file_names):
             
             if "input_file_format" in general_config:
@@ -278,8 +243,15 @@ class RunConfig:
         # now deal with each lane_runkey combo (Sample) that is misnamed though
         # populate sample information for every run_key
         for lane_run_key in [s for s in configDict.keys() if s != 'general']:
+        	# change ':' to '_'
+        	# key = lane_run_key[:1]+'_'+lane_run_key[2:]
+        	
             lane_run_dict = configDict[lane_run_key]
+            #print 'CD ',configDict
+            
             sample = Sample(lane_run_key)
+            #print 'sample',sample
+            
             # has defaults -not required
             try:
                 sample.forward_primers = lane_run_dict['forward_primers'].split(',')
@@ -345,19 +317,23 @@ class RunConfig:
             else:
                 sample.taxonomic_domain = 'unknown'
                 
-            sample.data_owner           = lane_run_dict['data_owner']
-            sample.first_name           = lane_run_dict['first_name']
-            sample.last_name            = lane_run_dict['last_name']
-            sample.email                = lane_run_dict['email']
-            sample.institution          = lane_run_dict['institution']
+            
             sample.project_title        = lane_run_dict['project_title']
             sample.project_description  = lane_run_dict['project_description']
-            sample.funding              = lane_run_dict['funding']
-            sample.env_sample_source    = lane_run_dict['env_sample_source']
+            
+            sample.env_sample_source_id    = lane_run_dict['env_sample_source_id']
             sample.dataset_description  = lane_run_dict['dataset_description']
-                 
+            sample.project              = lane_run_dict['project']
+            sample.dataset              = lane_run_dict['dataset']
+            
             if self.platform == 'illumina':
                 # req specifically for illumina
+                sample.data_owner           = lane_run_dict['data_owner']
+                sample.first_name           = lane_run_dict['first_name']
+                sample.last_name            = lane_run_dict['last_name']
+                sample.email                = lane_run_dict['email']
+                sample.institution          = lane_run_dict['institution']
+                sample.funding              = lane_run_dict['funding']
                 sample.barcode_index = lane_run_dict['barcode_index'] 
                 sample.overlap = lane_run_dict['overlap'] 
                 sample.read_length = lane_run_dict['read_length'] 
@@ -368,22 +344,42 @@ class RunConfig:
                 key = lane_run_dict['barcode_index'] +'_'+ lane_run_dict['run_key'] +'_'+ lane_run_dict['lane'] 
                 #sample.key = key
                 self.run_keys.append(key)  
-                
+                # a dictionary of samples
+            	self.samples[lane_run_key] = sample
+            	
             elif self.platform == '454':
                 # required for 454
                 sample.direction = lane_run_dict['direction'] 
+                sample.data_owner           = lane_run_dict['data_owner']
+                sample.first_name           = lane_run_dict['first_name']
+                sample.last_name            = lane_run_dict['last_name']
+                sample.email                = lane_run_dict['email']
+                sample.institution          = lane_run_dict['institution']
+                sample.funding              = lane_run_dict['funding']
                 #sample.taxonomic_domain = lane_run_dict['domain']
                 # a list of run_keys
                 # convert: change ':' to '_'
                 key = lane_run_key[:1]+'_'+lane_run_key[2:]
                 #sample.key = key
                 self.run_keys.append(key)
+                # a dictionary of samples
+            	self.samples[lane_run_key] = sample
                 
-            sample.project = lane_run_dict['project']
-            sample.dataset = lane_run_dict['dataset']
-                      
+            elif self.platform == 'vamps':
+                # required for 454
+                sample.direction = lane_run_dict['direction'] 
+                sample.taxonomic_domain = lane_run_dict['taxonomic_domain']
+                # a list of run_keys
+                # convert: change ':' to '_'
+                #lane_run_key = '_'.join(lane_run_key.split(':'))
+                key = lane_run_key[:1]+'_'+lane_run_key[2:]
+                #sample.key = key
+                self.run_keys.append(key)
+                # a dictionary of samples
+            	self.samples[key] = sample
+
+            	
 
             
-            # a dictionary of samples
-            self.samples[key] = sample
+            
         

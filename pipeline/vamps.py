@@ -4,7 +4,8 @@ import time
 import shutil
 from pipeline.pipelinelogging import logger
 import constants as C
-from pipeline.db_upload import MyConnection
+#from pipeline.db_upload import MyConnection
+import ConMySQL
 
 class FastaReader:
     def __init__(self,file_name=None):
@@ -56,8 +57,13 @@ class Vamps:
         self.basedir = self.runobj.output_dir
         #self.outdir  = os.path.join(self.runobj.output_dir,self.prefix)
         self.idx_keys = idx_keys
-
-        self.use_cluster = 1
+        if self.runobj.platform == 'vamps':
+            self.idx_keys = [self.runobj.user+self.runobj.run]
+            self.iterator = self.runobj.datasets
+        else:
+            self.idx_keys = idx_keys
+            self.iterator = self.idx_keys
+        self.use_cluster = self.runobj.use_cluster
         
         
         os.environ['SGE_ROOT']='/usr/local/sge'
@@ -75,37 +81,64 @@ class Vamps:
         # 3) gast2tax
         
         # already present:
-        self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
+        if self.runobj.platform == 'vamps':
+            self.global_gast_dir = self.basedir
+        else:
+            self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
+            
+        
         if not os.path.exists(self.global_gast_dir):
             sys.exit("Could not find global gast dir: "+self.global_gast_dir)
         
-        for key in self.idx_keys:
-            out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
-            gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
-            if not os.path.exists(gast_concat_file):
-                logger.warning("Could not find gast_concat_file file: "+gast_concat_file)
-            #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
-            tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
-            if not os.path.exists(tagtax_file):
-                logger.warning("Could not find tagtax_file file: "+tagtax_file)
+        if self.runobj.site == 'vamps':
+            db_host    = 'vampsdb'
+            db_name    = 'vamps'
+            db_home = '/xraid2-2/vampsweb/vamps/'
+        else:
+            db_host    = 'vampsdev'
+            db_name    = 'vamps'
+            db_home = '/xraid2-2/vampsweb/vampsdev/'
+        obj=ConMySQL.New(db_host, db_name, db_home)
+        self.conn = obj.get_conn()    
+        
+        for key in self.iterator:
             
+            #print key,self.runobj.platform
             if self.runobj.platform == 'vamps':
+                out_gast_dir = os.path.join(self.global_gast_dir,key)
                 unique_file = os.path.join(out_gast_dir,'unique.fa')
+                
+                gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
+                
+                if not os.path.exists(gast_concat_file):
+                    logger.warning("Could not find gast_concat_file file: "+gast_concat_file)
+                #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
+                tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
+                if not os.path.exists(tagtax_file):
+                    logger.warning("Could not find tagtax_file file: "+tagtax_file)
                 if self.runobj.fasta_file:
                     grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
                 else:
                     grep_cmd = ['grep','-c','>',unique_file]
             elif self.runobj.platform == 'illumina':
+                out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
+                gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
+                if not os.path.exists(gast_concat_file):
+                    logger.warning("Could not find gast_concat_file file: "+gast_concat_file)
+                #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
+                tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
+                if not os.path.exists(tagtax_file):
+                    logger.warning("Could not find tagtax_file file: "+tagtax_file)
                 #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
                 reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
                 file_prefix = self.runobj.samples[key].file_prefix
                 unique_file = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
                 grep_cmd = ['grep','-c','>',unique_file]
             else:
-                sys.exit()
+                sys.exit("no usable platform found")
                 
             if not os.path.exists(unique_file):
-                logger("Could not find unique_file: "+unique_file)
+                logger.error("Could not find unique_file: "+unique_file)
                 
             # get dataset_count here from unique_file
             # the dataset_count should be from the non-unique file
@@ -126,9 +159,12 @@ class Vamps:
             projects_datasets_file  = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
             project_info_file       = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
+            
+            
             if dataset_count:
                 (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, taxes_file, summed_taxes_file, distinct_taxes_file)
-                
+                #sys.exit()
+                print read_id_lookup
                 self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
                 
                 self.exports()
@@ -148,16 +184,17 @@ class Vamps:
         fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy files
         """
         logger.info("Starting vamps_upload: taxonomy")
+        print "Starting vamps_upload: taxonomy"
         # SUMMED create a look-up
         if self.runobj.platform == 'vamps':
             project = self.runobj.project
-            dataset = self.runobj.dataset
-            project_dataset = project+'--'+dataset
+            dataset = key
         elif self.runobj.platform == 'illumina':
             project = self.runobj.samples[key].project
             dataset = self.runobj.samples[key].dataset
-            project_dataset = project+'--'+dataset
             
+        project = project[0].capitalize() + project[1:]
+        project_dataset = project+'--'+dataset
         taxa_lookup = {}
         read_id_lookup={}
         if os.path.exists(tagtax_file):
@@ -333,15 +370,17 @@ class Vamps:
         """
         
         logger.info("Starting vamps_upload: sequences")
+        print "Starting vamps_upload: sequences"
         if self.runobj.platform == 'vamps':
             project = self.runobj.project
-            dataset = self.runobj.dataset
-            project_dataset = project+'--'+dataset
+            dataset = key
         elif self.runobj.platform == 'illumina':
             project = self.runobj.samples[key].project
             dataset = self.runobj.samples[key].dataset
-            project_dataset = project+'--'+dataset
             
+        
+        project = project[0].capitalize() + project[1:]
+        project_dataset = project+'--'+dataset
         # open gast_concat table to get the distances and the ferids
         refid_collector={}
         #if os.path.exists(gast_concat_file):
@@ -417,12 +456,13 @@ class Vamps:
         logger.info("Starting vamps_upload: projects_datasets")
         if self.runobj.platform == 'vamps':
             project = self.runobj.project
-            dataset = self.runobj.dataset
-            project_dataset = project+'--'+dataset
+            dataset = key
         elif self.runobj.platform == 'illumina':
             project = self.runobj.samples[key].project
             dataset = self.runobj.samples[key].dataset
-            project_dataset = project+'--'+dataset
+            
+        project = project[0].capitalize() + project[1:]
+        project_dataset = project+'--'+dataset
         date_trimmed = 'unknown'
         dataset_description = dataset
         dataset_count = str(dataset_count)
@@ -441,39 +481,40 @@ class Vamps:
         fill vamps_project_info.txt file
         """
         logger.info("Starting vamps_upload: projects_info")
+        print "Starting vamps_upload: projects_info"
         if self.runobj.platform == 'vamps':
             user = self.runobj.user
             project = self.runobj.project
-            sample_source = self.runobj.env_source_id
+            sample_source_id = self.runobj.env_source_id
         elif self.runobj.platform == 'illumina':
             user = self.runobj.samples[key].data_owner
             project = self.runobj.samples[key].project
-            sample_source = self.runobj.samples[key].env_sample_source
-        if self.runobj.site == 'vamps':
-            db_host    = 'vampsdb'
-            db_name    = 'vamps'
-        else:
-            db_host    = 'vampsdev'
-            db_name    = 'vamps'
-        myconn = MyConnection(host=db_host, db=db_name)
+            sample_source_id = self.runobj.samples[key].env_sample_source_id
+            
+        project = project[0].capitalize() + project[1:]
+        cursor = self.conn.cursor()
+        
         query = "SELECT last_name,first_name,email,institution from vamps_auth where user='%s'" % (user)
-        data = myconn.execute_fetch_select(query)
-
+        #data = myconn.execute_fetch_select(query)
+        cursor.execute(query)
+        data = cursor.fetchone()
         
         fh = open(project_info_file,'w')
-         
         title="title"
         description='description'
-        contact= data[0][1]+' '+data[0][0]
-        email= data[0][2]
-        institution= data[0][3]
+        contact= data[1]+' '+data[0]
+        email= data[2]
+        institution= data[3]
         
         fh.write("\t".join(["HEADER","project","title","description","contact", "email","institution","user","env_source_id"] )+"\n")
-        fh.write("\t"+"\t".join([project, title, description, contact, email, institution, user, sample_source] )+"\n")
+        fh.write("\t"+"\t".join([project, title, description, contact, email, institution, user, sample_source_id] )+"\n")
         # if this project already exists in the db???
         # the next step should update the table rather than add new to the db
         
         fh.close()
+        self.conn.commit()
+        cursor.close()
+        
         logger.info("Finishing VAMPS info()")
 
     def load_database(self,key,out_gast_dir,taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file):
@@ -481,13 +522,8 @@ class Vamps:
         
         """
         logger.info("Starting load VAMPS data")
-#         self.taxes_file = os.path.join(self.outdir,'vamps_data_cube_uploads.txt')
-#         self.summed_taxes_file = os.path.join(self.outdir,'vamps_junk_data_cube_pipe.txt')
-#         self.distinct_taxes_file = os.path.join(self.outdir,'vamps_taxonomy_pipe.txt')
-#         self.sequences_file = os.path.join(self.outdir,'vamps_sequences_pipe.txt')
-#         self.export_file = os.path.join(self.outdir,'vamps_export_pipe.txt')
-#         self.projects_datasets_file = os.path.join(self.outdir,'vamps_projects_datasets_pipe.txt')
-#         self.projects_info_file = os.path.join(self.outdir,'vamps_projects_info_pipe.txt')
+        print "Starting load VAMPS data"
+
         # USER: vamps_db_tables
         if self.runobj.platform == 'vamps':
             user = self.runobj.user
@@ -513,140 +549,130 @@ class Vamps:
             
         info_table          = C.database_tables['vamps_mbl_origin']['info_tbl']
         users_info_table    = C.database_tables['vamps_user_uploads']['info_tbl']    
-        # We only have a single project and dataset here:
-        # if the project is new  then we add the data to the upload_info and projects_datasets_pipe table
-        # but if the project is not new:
-        #   check if the existing project belongs to the user
-        #   if it does then UPDATE the line in upload_info table and add line to projects_datasets_pipe table
-        #       (maybe check if dataset already exists and die if yes)
-        #   if the existing project doesn't belong to the owner then die with a warning to change project name
-        #      (or maybe change the name by adding _user)
-
         
-        if self.runobj.site == 'vamps':
-            db_host    = 'vampsdb'
-            db_name    = 'vamps'
-        else:
-            db_host    = 'vampsdev'
-            db_name    = 'vamps'
-            
-        myconn = MyConnection(host=db_host, db=db_name)
-        query = "SELECT project_name from %s where project_name='%s' \
-                    UNION \
-                 SELECT project_name from %s where project_name='%s' \
-                 " % (users_info_table, project, info_table, project)
-                 
-        data = myconn.execute_fetch_select(query)
-        if data:
-            logger.info("found this project "+data[0][0]+" Exiting")
-            sys.exit("Duplicate project name found; Canceling upload to database but your GASTed data are here: "+ out_gast_dir)
-        else:
-            # project is unknown in database - continue
- 
- 
-            #
-            #  DATA_CUBE
-            #
-            for line in open(taxes_file,'r'):
-                line = line.strip().split("\t")
-                if line[0]=='HEADER':
-                    continue
-                #line = line[1:] # remove leading empty tab
-                
-                qDataCube = "insert ignore into %s (project, dataset, taxon_string,superkingdom,phylum,class,\
-                                            orderx,family,genus,species,strain,rank,knt,frequency,dataset_count,classifier)\
-                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                            % (data_cube_table,
-                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7],
-                            line[8],line[9],line[10],line[11],line[12],line[13],line[14],line[15])
-                myconn.execute_no_fetch(qDataCube)
-                
-            #
-            # SUMMED (JUNK) DATA_CUBE
-            #
-            for line in open(summed_taxes_file,'r'):
-                line = line.strip().split("\t")
-                if line[0]=='HEADER':
-                    continue
-                #line = line[1:] # remove leading empty tab
-                #taxonomy        sum_tax_counts  frequency	dataset_count   rank    project dataset project--dataset        classifier
-                qSummedCube = "insert ignore into %s (taxon_string,knt, frequency, dataset_count, rank, project, dataset, project_dataset, classifier)\
-                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                            % (summed_cube_table,
-                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
-                myconn.execute_no_fetch(qSummedCube)    
-                    
-                    
-            #
-            #  TAXONOMY
-            #
-            for line in open(distinct_taxes_file,'r'):
-                line = line.strip().split("\t")
-                if line[0]=='HEADER':
-                    continue
-                #line = line[1:] # remove leading empty tab    
-                qTaxonomy = "insert ignore into %s (taxon_string,rank,num_kids)\
-                            VALUES('%s','%s','%s')" \
-                            % (taxonomy_table, line[0],line[1],line[2])
-                myconn.execute_no_fetch(qTaxonomy)        
-            
-            #
-            #  SEQUENCES
-            #
-            for line in open(sequences_file,'r'):
-                line = line.strip().split("\t")
-                if line[0]=='HEADER':
-                    continue
-                #line = line[1:] # remove leading empty tab
-                # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
-                qSequences = "insert ignore into %s (sequence,project, dataset, taxonomy,refhvr_ids,rank,seq_count,frequency,distance,rep_id, project_dataset)\
-                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                            % (sequences_table,
-                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8],line[9],line[10])
-                myconn.execute_no_fetch(qSequences)        
-            #
-            #  PROJECTS_DATASETS
-            #
-            for line in open(projects_datasets_file,'r'):
-                line = line.strip().split("\t")
-                # [1:]  # split and remove the leading 'zero'
-                if line[0]=='HEADER':
-                    continue
-                
-                qDatasets = "insert ignore into %s (project, dataset, dataset_count,has_tax,date_trimmed,dataset_info)\
-                            VALUES('%s','%s','%s','%s','%s','%s')" \
-                            % (datasets_table,
-                            line[0],line[1],line[2],line[3],line[4],line[5])
-                myconn.execute_no_fetch(qDatasets) 
-            
-            #
-            # INFO
-            #
-            for line in open(project_info_file,'r'):
-                line = line.strip().split("\t")
-                #[1:]  # split on tab and remove the leading 'zero'
-                if line[0]=='HEADER':
-                    continue
-                
-                qInfo = "insert ignore into %s (project_name, title, description, contact, email, institution, user, env_source_id)\
-                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s')" \
-                            % (users_info_table,
-                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7])
-                myconn.execute_no_fetch(qInfo) 
-                
-            #
-            # USERS
-            #
-                
-            qUser = "insert ignore into %s (project, user)\
-                        VALUES('%s','%s')" \
-                        % (users_table, project, user)
-            myconn.execute_no_fetch(qUser) 
-            
-            
         
+        cursor = self.conn.cursor()
+        
+        
+ 
+        #
+        #  DATA_CUBE
+        #
+        for line in open(taxes_file,'r'):
+            line = line.strip().split("\t")
+            if line[0]=='HEADER':
+                continue
+            qDataCube = "insert ignore into %s (project, dataset, taxon_string,superkingdom,phylum,class, orderx,family,genus,species,strain,\
+                        rank,knt,frequency,dataset_count,classifier)\
+                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                        % (data_cube_table,
+                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7],
+                        line[8],line[9],line[10],line[11],line[12],line[13],line[14],line[15])
+            #myconn.execute_no_fetch(qDataCube)
+            rows_affected = cursor.execute(qDataCube)
+            
+            
+            
+        #
+        # SUMMED (JUNK) DATA_CUBE
+        #
+        for line in open(summed_taxes_file,'r'):
+            line = line.strip().split("\t")
+            if line[0]=='HEADER':
+                continue
+            #line = line[1:] # remove leading empty tab
+            #taxonomy        sum_tax_counts  frequency	dataset_count   rank    project dataset project--dataset        classifier
+            qSummedCube = "insert ignore into %s (taxon_string,knt, frequency, dataset_count, rank, project, dataset, project_dataset, classifier)\
+                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                        % (summed_cube_table,
+                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
+            #myconn.execute_no_fetch(qSummedCube) 
+            #print qSummedCube 
+            cursor.execute(qSummedCube)
+                
+                
+        #
+        #  TAXONOMY
+        #
+        for line in open(distinct_taxes_file,'r'):
+            line = line.strip().split("\t")
+            if line[0]=='HEADER':
+                continue
+            #line = line[1:] # remove leading empty tab    
+            qTaxonomy = "insert ignore into %s (taxon_string,rank,num_kids)\
+                        VALUES('%s','%s','%s')" \
+                        % (taxonomy_table, line[0],line[1],line[2])
+            #myconn.execute_no_fetch(qTaxonomy)
+            cursor.execute(qTaxonomy)
+        
+        #
+        #  SEQUENCES
+        #
+        for line in open(sequences_file,'r'):
+            line = line.strip().split("\t")
+            if line[0]=='HEADER':
+                continue
+            #line = line[1:] # remove leading empty tab
+            # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
+            qSequences = "insert ignore into %s (sequence,project, dataset, taxonomy,refhvr_ids,rank,seq_count,frequency,distance,rep_id, project_dataset)\
+                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                        % (sequences_table,
+                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8],line[9],line[10])
+            #myconn.execute_no_fetch(qSequences) 
+            cursor.execute(qSequences)
+        #
+        #  PROJECTS_DATASETS
+        #
+        for line in open(projects_datasets_file,'r'):
+            line = line.strip().split("\t")
+            # [1:]  # split and remove the leading 'zero'
+            if line[0]=='HEADER':
+                continue
+            
+            qDatasets = "insert ignore into %s (project, dataset, dataset_count,has_tax,date_trimmed,dataset_info)\
+                        VALUES('%s','%s','%s','%s','%s','%s')" \
+                        % (datasets_table,
+                        line[0],line[1],line[2],line[3],line[4],line[5])
+            #myconn.execute_no_fetch(qDatasets) 
+            cursor.execute(qDatasets)
+            
+            qDatasets = "update %s set has_tax='1' where project='%s'" \
+                        % (datasets_table, line[0])
+            #myconn.execute_no_fetch(qDatasets)
+            cursor.execute(qDatasets)
+        #
+        # INFO
+        #
+        for line in open(project_info_file,'r'):
+            line = line.strip().split("\t")
+            #[1:]  # split on tab and remove the leading 'zero'
+            if line[0]=='HEADER':
+                continue
+            
+            qInfo = "insert ignore into %s (project_name, title, description, contact, email, institution, user, env_source_id)\
+                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s')" \
+                        % (users_info_table,
+                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7])
+            #myconn.execute_no_fetch(qInfo) 
+            cursor.execute(qInfo)
+            
+            qInfo = "update %s set has_tax='1' where project_name='%s'" \
+                        % (users_info_table, line[0])
+            #myconn.execute_no_fetch(qInfo) 
+            cursor.execute(qInfo)
+            
+        #
+        # USERS
+        #
+            
+        qUser = "insert ignore into %s (project, user)\
+                    VALUES('%s','%s')" \
+                    % (users_table, project, user)
+        #myconn.execute_no_fetch(qUser) 
+        cursor.execute(qUser)
         
         logger.info("Finished load VAMPS data")
         
-        
+        self.conn.commit()
+        cursor.close()
         

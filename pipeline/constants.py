@@ -9,13 +9,13 @@
 #"run","data_owner","run_key","lane","dataset","project","tubelabel","barcode","adaptor",
 #"dna_region","amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix",
 #"read_length","primer_suite","first_name","last_name","email","institution","project_title",
-#"project_description","funding","env_sample_source","dataset_description"
+#"project_description","funding","env_sample_source_id","dataset_description"
 csv_header_list = {
 'illumina' :    ["run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",      
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator", "seq_operator",     
                             "barcode_index","overlap",          "insert_size",  "file_prefix",  "read_length",  "primer_suite", 
                             "first_name",   "last_name",        "email",        "institution",  "project_title","project_description",
-                            "funding",      "env_sample_source","dataset_description" ],
+                            "funding",      "env_sample_source_id","dataset_description" ],
                             
 '454' :         [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
@@ -24,7 +24,7 @@ csv_header_list = {
                             "primer_suite",   "pool",                            
                             
                             "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
-                            "funding",          "env_sample_source","dataset_description" ],
+                            "funding",          "env_sample_source_id","dataset_description" ],
 
 'ion_torrent' : [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
@@ -33,7 +33,7 @@ csv_header_list = {
                             "primer_suite",   "pool",                            
                             
                             "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
-                            "funding",          "env_sample_source","dataset_description" ]
+                            "funding",          "env_sample_source_id","dataset_description" ]
 }
 
 known_platforms = ('illumina','454','ion_torrent','vamps')
@@ -173,9 +173,12 @@ mysqlimport_cmd     = '/usr/bin/mysqlimport'
 qsub_cmd            = '/usr/local/sge/bin/lx24-amd64/qsub'
 clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #mothur_cmd          = '/bioware/mothur/mothur'
-fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
+#fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
+fastaunique_cmd     = '/bioware/bin/fastaunique'
 ref_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 tax_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
+vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
+vamps_tax_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
 analysis_dir        = 'analysis'
 gast_dir            = 'analysis/gast'
 illumina_reads_dir  = 'analysis/perfect_reads'
@@ -184,13 +187,13 @@ max_accepts = 10
 max_rejects = 0
 pctid_threshold = 0.70
 majority = 66
-cluster_nodes = 0
+cluster_nodes = 100
 use_full_length = 0
 ignore_terminal_gaps = 0
 ignore_all_gaps = 0
 max_distance = {'default': 0.30, 'v6': 0.30, 'v6a': 0.30, 'v6v4': 0.25, 'v3v5': 0.25}
 #cluster wait
-maxwaittime = 1000  # seconds
+maxwaittime = 50000  # seconds
 sleeptime = 5      # seconds
 refdbs = {'unknown':'refssu_all',
         'v1v3':'refv1v3',

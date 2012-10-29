@@ -112,6 +112,8 @@ def trim(runobj):
         trim_codes = mytrim.trimrun_454(True)
     elif runobj.platform == 'ion-torrent':
         trim_codes = mytrim.trimrun_ion_torrent(True)
+    elif runobj.platform == 'vamps':
+        trim_codes = mytrim.trimrun_vamps(True)
     else:
         trim_codes = ('ERROR','No Platform Found','')
         
@@ -460,12 +462,19 @@ def vampsupload(runobj):
     # for illumina:
     # a unique idx_key is a concatenation of barcode_index and run_key
     idx_keys = get_keys(runobj)
-
+    
 #     if(runobj.vamps_user_upload):
 #         idx_keys = [runobj.user+runobj.runcode]        
 #     else:
 #         idx_keys = convert_unicode_dictionary_to_str(json.loads(open(runobj.trim_status_file_name,"r").read()))["new_lane_keys"]
-                
+     
+     # NOT NEEDED HERE Find duplicate project names
+     # if vamps user uploads this has already been done and this project is
+     # already in vamps_upload_info table
+     # if data from a csv file (illumina and 454) this also is not needed
+     # as data is checked in metadata.py
+    
+     
     myvamps = Vamps(runobj, idx_keys)
     
         
@@ -520,7 +529,9 @@ def get_keys(runobj):
         elif runobj.platform == 'ion_torrent':
             idx_keys = runobj.idx_keys
         elif runobj.platform == 'vamps':
-            idx_keys = [runobj.user+runobj.run]  
+        	#idx_keys=runobj.idx_keys
+        	idx_keys=runobj.samples.keys()
+            #idx_keys = [runobj.user+runobj.run]  
         else:
             logger.debug("GAST: No keys found - Exiting")
             runobj.run_status_file_h.write("GAST: No keys found - Exiting\n")

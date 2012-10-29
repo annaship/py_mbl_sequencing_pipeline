@@ -53,7 +53,6 @@ class TrimRun( object ):
         logger.debug("Rundate:" + str(self.run))
         self.use_cluster = self.runobj.use_cluster
         self.idx_keys = idx_keys
-        
             
         self.seqDirs            = {}
         self.dna_regions        = {}
@@ -82,7 +81,60 @@ class TrimRun( object ):
         
         self.runbin={}
         #if VERBOSE: print "Run Keys from .ini file: ", run_keys
-        if self.runobj.platform == '454':
+        if self.runobj.platform == 'vamps':
+            for idx_key in self.runobj.samples:
+                sample = self.runobj.samples[idx_key]
+                # strip off surrounding single or double quotes
+                self.seqDirs[idx_key]          = sample.direction
+                self.dna_regions[idx_key]      = sample.dna_region
+                self.taxonomic_domain[idx_key] = sample.taxonomic_domain
+                
+                # this should be defaiult 'suite' of anchors
+                # but also in ini file: anchor=XXXXX will be added to defaults
+                self.anchor_name[idx_key]         = sample.anchor
+                self.adtnl_anchors[idx_key]         = sample.stop_sequences  #list
+               
+                self.anchors[idx_key]           = {}
+                
+                #self.id_list_all[idx_key]      = []
+                self.id_list_passed[idx_key]    = []
+                self.deleted_ids[idx_key]       = {}
+                self.deleted_ids['nokey']       = {}
+                self.trimmed_ids[idx_key]       = {}
+                self.uniques[idx_key]           = {}
+                self.names[idx_key]             = {}
+                self.fa[idx_key]       = FastaOutput(os.path.join(self.outdir,idx_key) + ".trimmed.fa")
+                
+      
+      
+                #####################
+                #
+                #  PrimerSuite Class
+                #
+                #####################
+                print self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key
+                
+                self.psuite[idx_key] = PrimerSuite(self.runobj, self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key)
+                #self.runbin['psuite'][idx_key]= PrimerSuite(self.taxonomic_domain[idx_key],self.dna_regions[idx_key])
+                
+                if(self.seqDirs[idx_key] == 'F' or self.seqDirs[idx_key] == 'B'):
+                    self.proximal_primers[idx_key] = self.psuite[idx_key].primer_expanded_seq_list['F']
+                    self.distal_primers[idx_key]   = self.psuite[idx_key].primer_expanded_seq_list['R']
+                    if self.anchor_name[idx_key]:
+                        self.anchors[idx_key] = get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key])
+     
+                    
+                if(self.seqDirs[idx_key] == 'R' or self.seqDirs[idx_key] == 'B'):
+                    self.proximal_primers[idx_key] = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
+                    self.distal_primers[idx_key]   = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
+                    if self.anchor_name[idx_key]:
+                        self.anchors[idx_key] = [revcomp( anchor ) for anchor in get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key]) ]
+                
+                    if len(self.proximal_primers[idx_key]) == 0 and len(self.distal_primers[idx_key]) == 0:
+                        logger.debug("**** Didn't find any primers that match any of the domain/regions in the lane/key sections")
+                
+                    
+        elif self.runobj.platform == '454':
             for idx_key in self.idx_keys:
                 
                 sample = self.runobj.samples[idx_key]
@@ -143,7 +195,133 @@ class TrimRun( object ):
                     
     def trimrun_ion_torrent(self, write_files = False):
         return ('TODO','Needs Completion','Needs Completion')
+        
+    def trimrun_vamps(self, write_files = False):
+        
+        self.stats_fp = open( os.path.join(self.outdir, self.statsFileName),"w" )
+        self.number_of_raw_sequences  = 0
+        self.number_of_good_sequences = 0
+        success_code = ()
+        self.deleted_count_for_nokey =0
+        self.deleted_count_for_proximal =0
+        self.deleted_count_for_distal =0
+        self.deleted_count_for_n =0
+        self.deleted_count_for_quality =0
+        self.deleted_count_for_no_insert =0
+        self.deleted_count_for_minimum_length =0
+        self.deleted_count_for_unknown_lane_runkey = 0
 
+        # input type is defined in the config file and can be sff, fasta, fasta-mbl or fastq
+        # need to figure out how if to get quality data with fasta    
+        # save a list of read_ids: all_ids, passed_ids
+        
+        for file_info in self.runobj.input_file_info.values():  # usually just one file: a list of one?    
+            file_format = file_info["format"]     
+            # the illumina fastq format needs to be parsed as fastq format then specially
+            # post processed :(
+            if file_format == "fastq-illumina":
+                parsing_format = "fastq"
+            elif file_format == "fastq-sanger":
+                parsing_format = "fastq"
+            elif file_format == "sff":
+                parsing_format = "sff-trim"
+            elif file_format == "fasta-mbl":
+                parsing_format = "fasta"
+            else:
+                parsing_format = file_format
+            file_path = os.path.join(self.indir,file_info["name"])
+            print 'FILE',file_path
+            logger.debug(file_info["name"]+' '+parsing_format)
+            # sff and fasta (non-mbl) get their lane info from this .ini field
+            lane = file_info["lane"]   
+            for record in SeqIO.parse(file_path, parsing_format):            
+                self.number_of_raw_sequences += 1
+                
+                # get ids
+                if file_format == "fasta-mbl":
+                    id_line_parts = record.description.split(' ')
+                    id = id_line_parts[0]
+                    lane = id_line_parts[2]
+                elif file_format == "fastq-sanger":                    
+                    id = record.id
+                elif file_format == "fastq-illumina":
+                	# will need lots of other stuff here for fastq-illumina
+                	id = record.id
+                else:
+                	id = record.id
+                # should merge these with above if/else
+                
+                if file_format == "fasta" or file_format == "fasta-mbl":
+                    q_scores = ''
+                    # for vamps user upload:
+                    if os.path.exists(self.indir + "/qualfile_qual_clean"):
+                        # for vamps uploads use '_clean' file 
+                        # format is on one line ( created from reg fasta in upload_file.php: 
+                        #  >FRZPY5Q02G73IH	37 37 37 37 37 37 37 37 37 37
+                        q_scores = subprocess.check_output("grep "+ id +" " + self.indir + "/qualfile_qual_clean", shell=True).strip().split("\t")[1].split()                    
+                        q_scores = [int(q) for q in q_scores]
+                        
+                    else:
+                        logger.debug("No qual file found")
+                elif file_format == "fastq-sanger":
+                    q_scores = record.letter_annotations["phred_quality"]  
+                elif file_format == "fastq-illumina":
+                    q_scores = record.letter_annotations["phred_quality"]  
+                else:
+                    q_scores = record.letter_annotations["phred_quality"]  
+                
+                ########################################################
+                #
+                # DO TRIM: Trim Each Sequence
+                #
+                #
+                seq = record.seq.tostring().upper()
+                
+                trim_data = self.do_trim(id, lane, seq, q_scores)
+                #
+                #
+                #
+                ########################################################
+
+                deleted         = trim_data.get('deleted',None)
+                lane_tag        = trim_data.get('idx_key',None)
+                seq             = trim_data.get('trimmed_sequence',None)        
+                delete_reason   = trim_data.get('delete_reason',None)
+                
+                # print out a fasta file for each lane_tag                
+                if(lane_tag and not deleted):
+                    # should have all this data
+                    exact_left      = trim_data.get('exact_left',None)   
+                    exact_right     = trim_data.get('exact_right',None)        
+                    primer_name     = trim_data.get('primer_name',None)
+                    # for the names file of unique ids
+                    first_id_for_seq = self.uniques[lane_tag].get(seq, None)
+                    if first_id_for_seq == None:
+                        self.uniques[lane_tag][seq] = first_id_for_seq = id
+                    try:
+                        self.names[lane_tag][first_id_for_seq].append(id)
+                    except KeyError:
+                        self.names[lane_tag][id] = [id]
+                    
+                    if write_files:        
+                        self.fa[lane_tag].write_id(id)
+                        self.fa[lane_tag].write_seq(seq) 
+
+                    self.number_of_good_sequences += 1
+                    logger.debug(record.id + "Passed")
+                else:
+                    logger.debug(id + " 2-Deleted:" + delete_reason)
+                        
+        # count up some things
+        count_uniques = 0
+        good_idx_keys = []
+        for idx_key in self.runobj.run_keys:
+            count = len(self.uniques[idx_key])
+            if count > 0:
+                good_idx_keys.append(idx_key)
+            count_uniques = count_uniques + count               
+
+        return ('SUCCESS','',good_idx_keys)
         
     def filter_illumina(self, write_files = False):
         from pipeline.illumina_filtering import IlluminaFiltering
@@ -389,7 +567,11 @@ class TrimRun( object ):
             tag = self.runobj.force_runkey
             trimmed_sequence = raw_sequence[len(tag):]
         else:
-            tag, trimmed_sequence = remove_runkey(raw_sequence, self.run_keys)
+            if self.runobj.platform == 'vamps':
+                keys = [i.split('_')[1] for i in self.idx_keys]
+                tag, trimmed_sequence = remove_runkey(raw_sequence, keys)
+            else:
+                tag, trimmed_sequence = remove_runkey(raw_sequence, self.idx_keys)
 
         # did we find a run key
         if( not tag ):
@@ -456,7 +638,8 @@ class TrimRun( object ):
                 self.deleted_count_for_proximal += 1
                                        
         # try to trim the anchor if we have enough sequence left at this point 
-        if len(trimmed_sequence) < self.runobj.minimumLength:
+        
+        if len(trimmed_sequence) < int(self.runobj.minimumLength):
             delete_reason = DELETED_MINIMUM_LENGTH
             self.deleted_count_for_minimum_length += 1
         else:
@@ -470,7 +653,7 @@ class TrimRun( object ):
                     anchor_found = True 
                     logger.debug( 'found exactRight-anchor: ' + exactRight)
                     logger.debug('after anchor trimming seq: ' + trimmed_sequence)
-                    if len(trimmed_sequence) < self.runobj.minimumLength:
+                    if len(trimmed_sequence) < int(self.runobj.minimumLength):
                         delete_reason = DELETED_MINIMUM_LENGTH
                         self.deleted_count_for_minimum_length += 1
                     
@@ -497,7 +680,7 @@ class TrimRun( object ):
         if( delete_reason != DELETED_RUNKEY and not trimmed_sequence ):
             delete_reason = DELETED_NO_INSERT
             self.deleted_count_for_no_insert += 1
-        elif( delete_reason != DELETED_RUNKEY and len(trimmed_sequence) < self.runobj.minimumLength):
+        elif( delete_reason != DELETED_RUNKEY and len(trimmed_sequence) < int(self.runobj.minimumLength)):
             delete_reason = DELETED_MINIMUM_LENGTH
             self.deleted_count_for_minimum_length += 1
         
@@ -546,7 +729,7 @@ class TrimRun( object ):
 
                 
     def write_data_files(self, idx_keys): 
-    
+        
         ###################################################################
         #
         #   10-print out files of unique trimmed sequence
@@ -568,7 +751,8 @@ class TrimRun( object ):
         #f_trimseq = open(trimseqFileName,"w")
         if self.runobj.platform == 'illumina':
             return
-            
+        
+
         for idx_key in self.runobj.run_keys:
             self.fa[idx_key].close()  
             base_file_name = os.path.join(self.outdir,idx_key)
@@ -576,6 +760,11 @@ class TrimRun( object ):
             abundFileName   = base_file_name + ".abund.fa"
             namesFileName   = base_file_name + ".names"
             delFileName     = base_file_name + ".deleted.txt"
+            # clean out old files if they exists
+            remove_file(uniquesFileName)
+            remove_file(abundFileName)
+            remove_file(namesFileName)
+            remove_file(delFileName)
             f_names = open(namesFileName,"w") 
             #  if we order the uniques by length of self.uniques[idx_key][seq] then we have abundance file
             
@@ -597,9 +786,11 @@ class TrimRun( object ):
                 success_code = ('FAIL','abund',idx_key)
                
             # Write uniques.fa file
+            #print 'UNIQUES',self.uniques
             try:
                 for seq in self.uniques[idx_key]:
                     read_id = self.uniques[idx_key][seq]
+                    print uniquesFileName,read_id,seq
                     uniquefa = sfasta(read_id, seq)
                     uniquefa.write(uniquesFileName,'a')
                 logger.debug("\nwrote uniques file " + uniquesFileName)
@@ -696,6 +887,9 @@ class TrimRun( object ):
             success_code = ('SUCCESS ' + str(good_idx_keys))
         return success_code
         
+def remove_file(file):
+    if os.path.exists(file):
+        os.remove(file)
 
 # eventually parse the id line for illumina data
 # this is scooped from meren's code!!!

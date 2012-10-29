@@ -279,7 +279,7 @@ class dbUpload:
         ('%s', '%s', '%s', reverse('%s'), '%s', 
         (SELECT env_sample_source_id FROM env_sample_source WHERE env_source_name = '%s'), 
         %s)
-        """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source, contact_id)
+        """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
 
         self.my_conn.execute_no_fetch(my_sql)
 
