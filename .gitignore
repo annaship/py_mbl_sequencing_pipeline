@@ -28,6 +28,7 @@ run_trim_stats
 trim_status.txt
 STATUS.txt
 results
+temp_data
 
 # Packages #
 ############

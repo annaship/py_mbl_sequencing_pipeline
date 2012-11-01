@@ -14,7 +14,7 @@ class IlluminaFiles:
     """
     0) from run create all dataset_lines names files in output dir
     1) split fastq files from casava into files with dataset_names
-    2) create in files 
+    2) create ini files 
     3) process them through Meren's script
     4) result - files dataset_lane-PERFECT_reads.fa.unique with frequencies - to process with env454upload()
     
