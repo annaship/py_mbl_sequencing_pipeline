@@ -418,12 +418,12 @@ class MetadataUtils:
             
             if item != 'general':
                 # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
-                if data[item]['primer_suite'] not in self.primer_suites:
+                if data[item]['primer_suite'].lower() not in self.primer_suites:
                     logger.error("Primer Suite not found: "+data[item]['primer_suite']+" - Exiting (key: "+item+")")
                     error=True
                 #if dataset_items['domain'] not in domains:
                 #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
-                if data[item]['dna_region'] not in self.dna_regions:
+                if data[item]['dna_region'].lower() not in self.dna_regions:
                     logger.error("DNA Region not found: "+data[item]['dna_region']+" - Exiting (key: "+item+")")
                     error=True
                 # "Bacterial v6","BacterialV6Suite","v6"
@@ -431,10 +431,10 @@ class MetadataUtils:
                 #    sys.exit("ERROR: Domain ("+dataset_items['domain']+") -- Primer Suite ("+dataset_items['primer_suite']+") mismatch.")
                 #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
                 #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
-                if data[item]['dna_region'] not in data[item]['primer_suite']:
+                if data[item]['dna_region'].lower() not in data[item]['primer_suite'].lower():
                     logger.error("DNA Region ("+data[item]['dna_region']+") not found in Primer Suite ("+data[item]['primer_suite']+") - Exiting (key: "+item+")")
                     error=True
-        return (error,warn)
+        return (error, warn)
         
     def check_project_name(self,data):
         """
@@ -470,9 +470,9 @@ class MetadataUtils:
                 if not re.match("^[A-Za-z0-9_]*$", dataset_name):
                     logger.error("Dataset name has illeagal character(s): "+dataset_name+" (must be alphanumeric and underscore only)")
                     error = True
-                if  re.match("^[0-9]", dataset_name):
-                    logger.error("Dataset name cannot begin with a digit: "+dataset_name)
-                    error = True
+                #if  re.match("^[0-9]", dataset_name):
+                 #   logger.error("Dataset name cannot begin with a digit: "+dataset_name)
+                  #  error = True
                 
         return (error,warn)   
         
@@ -673,6 +673,8 @@ class MetadataUtils:
             sys.exit("ERROR : unknown or missing headers\n")
         else:
             return True
+        
+    "TODO: add function to convert env_sample_source to env_sample_source_id"
 
     def configDictionaryFromFile_ini(self,config_file_path):
         import ConfigParser
