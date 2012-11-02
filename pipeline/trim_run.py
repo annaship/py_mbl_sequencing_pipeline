@@ -17,7 +17,7 @@ import shutil
 #import hashlib
 sys.path.append("/bioware/pythonmodules/illumina-utils/")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
-
+sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
 from suites.primer import PrimerSuite 
 from pipeline.primer_utils import *
 from pipeline.utils import *
@@ -80,8 +80,8 @@ class TrimRun( object ):
         os.environ['PATH'] = '/usr/local/sge/bin/lx24-amd64:'+path
         
         self.runbin={}
-        #if VERBOSE: print "Run Keys from .ini file: ", run_keys
-        if self.runobj.platform == 'vamps':
+        
+        if self.runobj.vamps_user_upload:
             for idx_key in self.runobj.samples:
                 sample = self.runobj.samples[idx_key]
                 # strip off surrounding single or double quotes
@@ -133,64 +133,61 @@ class TrimRun( object ):
                     if len(self.proximal_primers[idx_key]) == 0 and len(self.distal_primers[idx_key]) == 0:
                         logger.debug("**** Didn't find any primers that match any of the domain/regions in the lane/key sections")
                 
+        else:            
+            if self.runobj.platform == '454':
+                for idx_key in self.idx_keys:
                     
-        elif self.runobj.platform == '454':
-            for idx_key in self.idx_keys:
-                
-                sample = self.runobj.samples[idx_key]
-                # strip off surrounding single or double quotes
-                self.seqDirs[idx_key]          = sample.direction
-                self.dna_regions[idx_key]      = sample.dna_region
-                self.taxonomic_domain[idx_key] = sample.taxonomic_domain
-                
-                # this should be defaiult 'suite' of anchors
-                # but also in ini file: anchor=XXXXX will be added to defaults
-                self.anchor_name[idx_key]         = sample.anchor
-                self.adtnl_anchors[idx_key]         = sample.stop_sequences  #list
-               
-                self.anchors[idx_key]           = {}
-                
-                #self.id_list_all[idx_key]      = []
-                self.id_list_passed[idx_key]    = []
-                self.deleted_ids[idx_key]       = {}
-                self.deleted_ids['nokey']       = {}
-                self.trimmed_ids[idx_key]       = {}
-                self.uniques[idx_key]           = {}
-                self.names[idx_key]             = {}
-                self.fa[idx_key]       = FastaOutput(os.path.join(self.outdir,idx_key) + ".trimmed.fa")
-                
-      
-      
-                #####################
-                #
-                #  PrimerSuite Class
-                #
-                #####################
-                self.psuite[idx_key] = PrimerSuite(self.runobj, self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key)
-                #self.runbin['psuite'][idx_key]= PrimerSuite(self.taxonomic_domain[idx_key],self.dna_regions[idx_key])
-                
-                if(self.seqDirs[idx_key] == 'F' or self.seqDirs[idx_key] == 'B'):
-                    self.proximal_primers[idx_key] = self.psuite[idx_key].primer_expanded_seq_list['F']
-                    self.distal_primers[idx_key]   = self.psuite[idx_key].primer_expanded_seq_list['R']
-                    if self.anchor_name[idx_key]:
-                        self.anchors[idx_key] = get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key])
-     
+                    sample = self.runobj.samples[idx_key]
+                    # strip off surrounding single or double quotes
+                    self.seqDirs[idx_key]          = sample.direction
+                    self.dna_regions[idx_key]      = sample.dna_region
+                    self.taxonomic_domain[idx_key] = sample.taxonomic_domain
                     
-                if(self.seqDirs[idx_key] == 'R' or self.seqDirs[idx_key] == 'B'):
-                    self.proximal_primers[idx_key] = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
-                    self.distal_primers[idx_key]   = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
-                    if self.anchor_name[idx_key]:
-                        self.anchors[idx_key] = [revcomp( anchor ) for anchor in get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key]) ]
-                
-                if len(self.proximal_primers[idx_key]) == 0 and len(self.distal_primers[idx_key]) == 0:
-                    logger.debug("**** Didn't find any primers that match any of the domain/regions in the lane/key sections")
-        elif self.runobj.platform == 'illumina':
-            # create our directories for each key
-            pass
-#             for key in self.idx_keys:
-#                 output_dir = os.path.join(self.global_trim_dir,key)
-#                 if not os.path.exists(output_dir):
-#                     os.mkdir(output_dir)
+                    # this should be defaiult 'suite' of anchors
+                    # but also in ini file: anchor=XXXXX will be added to defaults
+                    self.anchor_name[idx_key]         = sample.anchor
+                    self.adtnl_anchors[idx_key]         = sample.stop_sequences  #list
+                   
+                    self.anchors[idx_key]           = {}
+                    
+                    #self.id_list_all[idx_key]      = []
+                    self.id_list_passed[idx_key]    = []
+                    self.deleted_ids[idx_key]       = {}
+                    self.deleted_ids['nokey']       = {}
+                    self.trimmed_ids[idx_key]       = {}
+                    self.uniques[idx_key]           = {}
+                    self.names[idx_key]             = {}
+                    self.fa[idx_key]       = FastaOutput(os.path.join(self.outdir,idx_key) + ".trimmed.fa")
+                    
+          
+          
+                    #####################
+                    #
+                    #  PrimerSuite Class
+                    #
+                    #####################
+                    self.psuite[idx_key] = PrimerSuite(self.runobj, self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key)
+                    #self.runbin['psuite'][idx_key]= PrimerSuite(self.taxonomic_domain[idx_key],self.dna_regions[idx_key])
+                    
+                    if(self.seqDirs[idx_key] == 'F' or self.seqDirs[idx_key] == 'B'):
+                        self.proximal_primers[idx_key] = self.psuite[idx_key].primer_expanded_seq_list['F']
+                        self.distal_primers[idx_key]   = self.psuite[idx_key].primer_expanded_seq_list['R']
+                        if self.anchor_name[idx_key]:
+                            self.anchors[idx_key] = get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key])
+         
+                        
+                    if(self.seqDirs[idx_key] == 'R' or self.seqDirs[idx_key] == 'B'):
+                        self.proximal_primers[idx_key] = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
+                        self.distal_primers[idx_key]   = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
+                        if self.anchor_name[idx_key]:
+                            self.anchors[idx_key] = [revcomp( anchor ) for anchor in get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key]) ]
+                    
+                    if len(self.proximal_primers[idx_key]) == 0 and len(self.distal_primers[idx_key]) == 0:
+                        logger.debug("**** Didn't find any primers that match any of the domain/regions in the lane/key sections")
+            elif self.runobj.platform == 'illumina':
+                # create our directories for each key
+                pass
+
                     
                     
     def trimrun_ion_torrent(self, write_files = False):
@@ -216,7 +213,8 @@ class TrimRun( object ):
         # save a list of read_ids: all_ids, passed_ids
         
         for file_info in self.runobj.input_file_info.values():  # usually just one file: a list of one?    
-            file_format = file_info["format"]     
+            file_format = file_info["format"]  
+            
             # the illumina fastq format needs to be parsed as fastq format then specially
             # post processed :(
             if file_format == "fastq-illumina":
@@ -308,7 +306,7 @@ class TrimRun( object ):
                         self.fa[lane_tag].write_seq(seq) 
 
                     self.number_of_good_sequences += 1
-                    logger.debug(record.id + "Passed")
+                    logger.debug(record.id + " Passed")
                 else:
                     logger.debug(id + " 2-Deleted:" + delete_reason)
                         
@@ -320,8 +318,8 @@ class TrimRun( object ):
             if count > 0:
                 good_idx_keys.append(idx_key)
             count_uniques = count_uniques + count               
-
-        return ('SUCCESS','',good_idx_keys)
+        print 'Seqs Passed: ',self.number_of_good_sequences
+        return ('SUCCESS',self.number_of_good_sequences,good_idx_keys)
         
     def filter_illumina(self, write_files = False):
         from pipeline.illumina_filtering import IlluminaFiltering
@@ -340,7 +338,7 @@ class TrimRun( object ):
             # output file is created by the infile name
             file_list.append( iFilter.trim_by_quality(infile = file, length=75, trim=0, clip=0, filter_first50=True, filter_Ns=True, failed_fastq=True) )
 
-        return ('SUCCESS','TODO',file_list)
+        return ('SUCCESS','',file_list)
         
     def trim_illumina(self, write_files = False, file_list = []):
         pass
@@ -522,7 +520,7 @@ class TrimRun( object ):
                         self.fa[lane_tag].write_seq(seq) 
 
                     self.number_of_good_sequences += 1
-                    logger.debug(record.id + "Passed")
+                    logger.debug(record.id + " Passed")
                 else:
                     logger.debug(id + " 2-Deleted:" + delete_reason)
                         
@@ -535,7 +533,7 @@ class TrimRun( object ):
                 good_idx_keys.append(idx_key)
             count_uniques = count_uniques + count               
 
-        return ('SUCCESS','',good_idx_keys)
+        return ('SUCCESS',self.number_of_good_sequences,good_idx_keys)
  
     ###################################################################
     #
@@ -567,7 +565,7 @@ class TrimRun( object ):
             tag = self.runobj.force_runkey
             trimmed_sequence = raw_sequence[len(tag):]
         else:
-            if self.runobj.platform == 'vamps':
+            if self.runobj.vamps_user_upload:
                 keys = [i.split('_')[1] for i in self.idx_keys]
                 tag, trimmed_sequence = remove_runkey(raw_sequence, keys)
             else:
