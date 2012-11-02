@@ -808,7 +808,8 @@ class Gast:
         grep_cmd += " sort -k1,1b -k2,2gr |"
         # append to clustergast file:
         # split_defline adds frequency to gastv6 file (last field)
-        grep_cmd += " /xraid2-2/vampsweb/"+self.runobj.site+"/pipeline/clustergast_tophit -split_defline_frequency "+use_full_length+" >> " + clustergast_filename
+        tophit_cmd = "/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline/pipeline/clustergast_tophit"
+        grep_cmd += " "+tophit_cmd + " -split_defline_frequency "+use_full_length+" >> " + clustergast_filename
     
         return grep_cmd  
           

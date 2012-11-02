@@ -9,6 +9,7 @@
 #
 # Please read the COPYING file.
 #
+import sys
 sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
 from pipeline.runconfig import RunConfig
 
