@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append("/bioware/pythonmodules/illumina-utils/")
+sys.path.append("/xraid/bioware/linux/seqinfo/bin")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
 import fastqlib as fq
 import fastalib as fa
@@ -175,7 +175,8 @@ pair_2 = %s
             f_input  = fq.FastQSource(file_r1, compressed)
             while f_input.next():
                 e = f_input.entry
-                ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number
+#                ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
+                ini_run_key  = e.index_sequence + "_" + e.sequence[4:9] + "_" + e.lane_number
                 if ini_run_key in self.runobj.samples.keys() and int(e.pair_no) == 1:
                     sample = self.runobj.samples[ini_run_key] 
                     dataset_file_name = sample.dataset + "_R1"
