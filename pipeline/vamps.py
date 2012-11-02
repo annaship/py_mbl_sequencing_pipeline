@@ -2,6 +2,7 @@ import subprocess
 import sys, os,stat
 import time
 import shutil
+import datetime
 from pipeline.pipelinelogging import logger
 import constants as C
 #from pipeline.db_upload import MyConnection
@@ -57,7 +58,7 @@ class Vamps:
         self.basedir = self.runobj.output_dir
         #self.outdir  = os.path.join(self.runobj.output_dir,self.prefix)
         self.idx_keys = idx_keys
-        if self.runobj.platform == 'vamps':
+        if self.runobj.vamps_user_upload:
             self.idx_keys = [self.runobj.user+self.runobj.run]
             self.iterator = self.runobj.datasets
         else:
@@ -81,7 +82,7 @@ class Vamps:
         # 3) gast2tax
         
         # already present:
-        if self.runobj.platform == 'vamps':
+        if self.runobj.vamps_user_upload:
             self.global_gast_dir = self.basedir
         else:
             self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
@@ -102,40 +103,37 @@ class Vamps:
         self.conn = obj.get_conn()    
         
         for key in self.iterator:
-            
-            #print key,self.runobj.platform
-            if self.runobj.platform == 'vamps':
-                out_gast_dir = os.path.join(self.global_gast_dir,key)
-                unique_file = os.path.join(out_gast_dir,'unique.fa')
-                
-                gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
-                
-                if not os.path.exists(gast_concat_file):
+            out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
+            gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
+            tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
+            if not os.path.exists(gast_concat_file):
                     logger.warning("Could not find gast_concat_file file: "+gast_concat_file)
-                #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
-                tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
-                if not os.path.exists(tagtax_file):
-                    logger.warning("Could not find tagtax_file file: "+tagtax_file)
+                     
+            if not os.path.exists(tagtax_file):
+                logger.warning("Could not find tagtax_file file: "+tagtax_file)
+            #print key,self.runobj.platform
+            
+            if self.runobj.vamps_user_upload:
+                
+                unique_file = os.path.join(out_gast_dir,'unique.fa')
+                original_fa_file = os.path.join(out_gast_dir,'fasta.fa')
+                
                 if self.runobj.fasta_file:
                     grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
                 else:
                     grep_cmd = ['grep','-c','>',unique_file]
-            elif self.runobj.platform == 'illumina':
-                out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
-                gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
-                if not os.path.exists(gast_concat_file):
-                    logger.warning("Could not find gast_concat_file file: "+gast_concat_file)
-                #self.gast_file = os.path.join(self.out_gast_dir,self.prefix+'.gast')
-                tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
-                if not os.path.exists(tagtax_file):
-                    logger.warning("Could not find tagtax_file file: "+tagtax_file)
-                #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
-                reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
-                file_prefix = self.runobj.samples[key].file_prefix
-                unique_file = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
-                grep_cmd = ['grep','-c','>',unique_file]
             else:
-                sys.exit("no usable platform found")
+                if self.runobj.platform == 'illumina':
+                    
+                    #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
+                    reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
+                    file_prefix = self.runobj.samples[key].file_prefix
+                    unique_file = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                    grep_cmd = ['grep','-c','>',unique_file]
+                elif self.runobj.platform == '454':
+                    pass
+                else:
+                    sys.exit("no usable platform found")
                 
             if not os.path.exists(unique_file):
                 logger.error("Could not find unique_file: "+unique_file)
@@ -148,30 +146,33 @@ class Vamps:
                 dataset_count = subprocess.check_output(grep_cmd).strip()
             except:
                 dataset_count = 0
-            print "Dataset Count", dataset_count
+            print key,": Sequence Count", dataset_count
             
             # to be created:
-            taxes_file              = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
-            summed_taxes_file       = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
-            distinct_taxes_file     = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
-            sequences_file          = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
-            export_file             = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
-            projects_datasets_file  = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
-            project_info_file       = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
+            file_collector={}
+            
+            file_collector['taxes_file']                = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
+            file_collector['summed_taxes_file']       = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
+            file_collector['distinct_taxes_file']     = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
+            file_collector['sequences_file']          = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
+            file_collector['export_file']             = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
+            file_collector['projects_datasets_file']  = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
+            file_collector['project_info_file']       = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
             
             
             
             if dataset_count:
-                (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, taxes_file, summed_taxes_file, distinct_taxes_file)
+                (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, file_collector)
                 #sys.exit()
-                print read_id_lookup
-                self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file)   
                 
-                self.exports()
-                self.projects(key, projects_datasets_file, dataset_count)
-                self.info(key, project_info_file)
+                refid_collector = self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, file_collector)   
+                
+                self.exports(key, refid_collector, tax_collector, read_id_lookup, original_fa_file, gast_concat_file, file_collector)
+                
+                self.projects(key, dataset_count, file_collector)
+                self.info(key, file_collector)
                 if self.runobj.load_vamps_database:
-                    self.load_database(key, out_gast_dir, taxes_file, summed_taxes_file, distinct_taxes_file, sequences_file, projects_datasets_file, project_info_file)
+                    self.load_database(key, out_gast_dir, file_collector)
                     #self.load_taxonomy
                     #self.load_sequences
                     #self.load_export
@@ -179,19 +180,24 @@ class Vamps:
             else:
                 print "no tagtax file found -- continuing...."
                 
-    def taxonomy(self,key,tagtax_file,dataset_count,taxes_file,summed_taxes_file,distinct_taxes_file):
+    def taxonomy(self,key,tagtax_file,dataset_count, file_collector):
         """
         fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy files
         """
         logger.info("Starting vamps_upload: taxonomy")
         print "Starting vamps_upload: taxonomy"
         # SUMMED create a look-up
-        if self.runobj.platform == 'vamps':
+        if self.runobj.vamps_user_upload:
             project = self.runobj.project
             dataset = key
-        elif self.runobj.platform == 'illumina':
-            project = self.runobj.samples[key].project
-            dataset = self.runobj.samples[key].dataset
+        else:
+            if self.runobj.platform == 'illumina':
+                project = self.runobj.samples[key].project
+                dataset = self.runobj.samples[key].dataset
+            elif self.runobj.platform == '454':
+                pass
+            else:
+                pass
             
         project = project[0].capitalize() + project[1:]
         project_dataset = project+'--'+dataset
@@ -217,7 +223,7 @@ class Vamps:
         # taxa_lookup: {'Unknown': 146, 'Bacteria': 11888, 'Bacteria;Chloroflexi': 101}
         # dataset_count is 3 (3 taxa in this dataset)
         # frequency is 3/144
-        fh1 = open(taxes_file,'w')
+        fh1 = open(file_collector['taxes_file'],'w')
         
         
         fh1.write("\t".join( ["HEADER","project", "dataset", "taxonomy", "superkingdom", 
@@ -262,7 +268,7 @@ class Vamps:
         #
         # SUMMED DATA CUBE TABLE
         #
-        fh2 = open(summed_taxes_file,'w')
+        fh2 = open(file_collector['summed_taxes_file'],'w')
         
         fh2.write("\t".join(["HEADER","taxonomy", "sum_tax_counts", "frequency", "dataset_count","rank", 
                             "project","dataset","project--dataset","classifier"] )+"\n")
@@ -273,7 +279,7 @@ class Vamps:
             ranks_list = ";".join(ranks_subarray) # i.e., superkingdom, phylum, class
             # open data_cube file again
             # taxes_file: data_cube_uploads
-            for line in  open(taxes_file,'r'):
+            for line in  open(file_collector['taxes_file'],'r'):
                 line = line.strip().split("\t")
                 knt = line[12]
                 taxon = line[2]
@@ -333,10 +339,10 @@ class Vamps:
         #
         # DISTINCT TAXONOMY
         #
-        fh3 = open(distinct_taxes_file,'w')
+        fh3 = open(file_collector['distinct_taxes_file'],'w')
         fh3.write("\t".join(["HEADER","taxon_string", "rank", "num_kids"] )+"\n")
         taxon_string_lookup={}
-        for line in  open(summed_taxes_file,'r'):
+        for line in  open(file_collector['summed_taxes_file'],'r'):
             if line.split()[0] == 'HEADER':
                 continue
             items = line.strip().split()            
@@ -364,20 +370,24 @@ class Vamps:
         
         return (tax_collector,read_id_lookup)
         
-    def sequences(self,key,tax_collector, read_id_lookup, unique_file, gast_concat_file, sequences_file):
+    def sequences(self,key,tax_collector, read_id_lookup, unique_file, gast_concat_file, file_collector):
         """
         fill vamps_sequences.txt file
         """
         
         logger.info("Starting vamps_upload: sequences")
         print "Starting vamps_upload: sequences"
-        if self.runobj.platform == 'vamps':
+        if self.runobj.vamps_user_upload:
             project = self.runobj.project
             dataset = key
-        elif self.runobj.platform == 'illumina':
-            project = self.runobj.samples[key].project
-            dataset = self.runobj.samples[key].dataset
-            
+        else:
+            if self.runobj.platform == 'illumina':
+                project = self.runobj.samples[key].project
+                dataset = self.runobj.samples[key].dataset
+            elif self.runobj.platform == '454':
+                pass
+            else:
+                pass
         
         project = project[0].capitalize() + project[1:]
         project_dataset = project+'--'+dataset
@@ -397,7 +407,7 @@ class Vamps:
             
         
         
-        fh = open(sequences_file,'w')
+        fh = open(file_collector['sequences_file'],'w')
         fh.write("\t".join(["HEADER","project","dataset","taxonomy","refhvr_ids", "rank",
                             "seq_count","frequency","distance","read_id","project_dataset"] )+"\n")
         
@@ -440,34 +450,92 @@ class Vamps:
                 
             fh.close()
         logger.info("")
+        return refid_collector
         
-    def exports(self):
+    def exports(self, key, refid_collector, tax_collector, read_id_lookup, original_fa_file, gast_concat_file, file_collector):
         """
         fill vamps_exports.txt file
         """
         logger.info("Starting vamps_upload: exports")
-        print "TODO: upload_vamps 5- exports"
+        print "Starting vamps_upload: exports"
+        if self.runobj.vamps_user_upload:
+            project = self.runobj.project
+            dataset = key
+        else:
+            if self.runobj.platform == 'illumina':
+                project = self.runobj.samples[key].project
+                dataset = self.runobj.samples[key].dataset
+            elif self.runobj.platform == '454':
+                pass
+            else:
+                pass
+        project = project[0].capitalize() + project[1:]
+        project_dataset = project+'--'+dataset
+        date_trimmed = 'unknown'
+        dataset_description = dataset    
+        
+        fh = open(file_collector['export_file'],'w')
+        # t.read_id, t.project, t.dataset, g.refhvr_ids, x.distance, x.taxonomy, t.sequence, x.rank," " t.entry_date
+        fh.write("\t".join(["HEADER","read_id","project","dataset","refhvr_ids","distance","taxonomy","sequence", "rank","entry_date"] )+"\n")
+        today     = str(datetime.date.today())
+        # open original fasta file
+        if os.path.exists(original_fa_file) and os.path.getsize(original_fa_file) > 0:
+            f = FastaReader(original_fa_file)
+            while f.next():
+                datarow = ['']
+                id = f.id.split('|')[0]
+                seq = f.seq
+                tax = read_id_lookup[id]
+                rank = tax_collector[tax]['rank']
+                if id in refid_collector:
+                    distance = refid_collector[id]['distance']
+                    refhvr_ids = refid_collector[id]['refhvr_ids']
+                else:
+                    distance = '1.0'
+                    refhvr_ids = '0'
+                datarow.append(id)
+                datarow.append(project)
+                datarow.append(dataset)
+                datarow.append(refhvr_ids)
+                datarow.append(distance)
+                datarow.append(tax)
+                datarow.append(seq)
+                
+                datarow.append(rank)
+                datarow.append(today)
+                          
+                
+                
+                w = "\t".join(datarow)
+                #print 'w',w
+                fh.write(w+"\n")
+                
+            fh.close()    
         logger.info("Finishing VAMPS exports()")
         
-    def projects(self, key, projects_datasets_file, dataset_count):
+    def projects(self, key, dataset_count, file_collector):
         """
         fill vamps_projects_datasets.txt file
         """
         logger.info("Starting vamps_upload: projects_datasets")
-        if self.runobj.platform == 'vamps':
+        if self.runobj.vamps_user_upload:
             project = self.runobj.project
             dataset = key
-        elif self.runobj.platform == 'illumina':
-            project = self.runobj.samples[key].project
-            dataset = self.runobj.samples[key].dataset
-            
+        else:
+            if self.runobj.platform == 'illumina':
+                project = self.runobj.samples[key].project
+                dataset = self.runobj.samples[key].dataset
+            elif self.runobj.platform == '454':
+                pass
+            else:
+                pass
         project = project[0].capitalize() + project[1:]
         project_dataset = project+'--'+dataset
         date_trimmed = 'unknown'
         dataset_description = dataset
         dataset_count = str(dataset_count)
         has_tax = '1' # true
-        fh = open(projects_datasets_file,'w')
+        fh = open(file_collector['projects_datasets_file'],'w')
         
         fh.write("\t".join(["HEADER","project","dataset","dataset_count","has_tax", "date_trimmed","dataset_info"] )+"\n")
         fh.write("\t"+"\t".join([project, dataset, dataset_count, has_tax, date_trimmed, dataset_description] )+"\n")
@@ -476,21 +544,25 @@ class Vamps:
         logger.info("Finishing VAMPS projects()")
         
         
-    def info(self, key,project_info_file):
+    def info(self, key, file_collector):
         """
         fill vamps_project_info.txt file
         """
         logger.info("Starting vamps_upload: projects_info")
         print "Starting vamps_upload: projects_info"
-        if self.runobj.platform == 'vamps':
+        if self.runobj.vamps_user_upload:
             user = self.runobj.user
             project = self.runobj.project
             sample_source_id = self.runobj.env_source_id
-        elif self.runobj.platform == 'illumina':
-            user = self.runobj.samples[key].data_owner
-            project = self.runobj.samples[key].project
-            sample_source_id = self.runobj.samples[key].env_sample_source_id
-            
+        else:
+            if self.runobj.platform == 'illumina':
+                user = self.runobj.samples[key].data_owner
+                project = self.runobj.samples[key].project
+                sample_source_id = self.runobj.samples[key].env_sample_source_id
+            elif self.runobj.platform == '454':
+                pass
+            else:
+                pass
         project = project[0].capitalize() + project[1:]
         cursor = self.conn.cursor()
         
@@ -499,7 +571,7 @@ class Vamps:
         cursor.execute(query)
         data = cursor.fetchone()
         
-        fh = open(project_info_file,'w')
+        fh = open(file_collector['project_info_file'],'w')
         title="title"
         description='description'
         contact= data[1]+' '+data[0]
@@ -517,7 +589,7 @@ class Vamps:
         
         logger.info("Finishing VAMPS info()")
 
-    def load_database(self,key,out_gast_dir,taxes_file,summed_taxes_file,distinct_taxes_file,sequences_file,projects_datasets_file,project_info_file):
+    def load_database(self,key,out_gast_dir, file_collector):
         """
         
         """
@@ -525,7 +597,7 @@ class Vamps:
         print "Starting load VAMPS data"
 
         # USER: vamps_db_tables
-        if self.runobj.platform == 'vamps':
+        if self.runobj.vamps_user_upload:
             user = self.runobj.user
             project = self.runobj.project
             data_cube_table     = C.database_tables['vamps_user_uploads']['tax_dc_tbl']
@@ -535,18 +607,21 @@ class Vamps:
             export_table        = C.database_tables['vamps_user_uploads']['export_tbl']
             datasets_table      = C.database_tables['vamps_user_uploads']['datasets_tbl']
             users_table         = C.database_tables['vamps_user_uploads']['users_tbl']
-            
-        elif self.runobj.platform == 'illumina':
-            user = self.runobj[key].data_owner
-            project = self.runobj.samples[key].project
-            data_cube_table     = C.database_tables['vamps_mbl_origin']['tax_dc_tbl']
-            summed_cube_table   = C.database_tables['vamps_mbl_origin']['tax_summed_tbl']
-            taxonomy_table      = C.database_tables['vamps_mbl_origin']['tax_tbl']
-            sequences_table     = C.database_tables['vamps_mbl_origin']['sequences_tbl']
-            export_table        = C.database_tables['vamps_mbl_origin']['export_tbl']
-            datasets_table      = C.database_tables['vamps_mbl_origin']['datasets_tbl']
-            users_table         = C.database_tables['vamps_mbl_origin']['users_tbl']
-            
+        else:    
+            if self.runobj.platform == 'illumina':
+                user = self.runobj[key].data_owner
+                project = self.runobj.samples[key].project
+                data_cube_table     = C.database_tables['vamps_mbl_origin']['tax_dc_tbl']
+                summed_cube_table   = C.database_tables['vamps_mbl_origin']['tax_summed_tbl']
+                taxonomy_table      = C.database_tables['vamps_mbl_origin']['tax_tbl']
+                sequences_table     = C.database_tables['vamps_mbl_origin']['sequences_tbl']
+                export_table        = C.database_tables['vamps_mbl_origin']['export_tbl']
+                datasets_table      = C.database_tables['vamps_mbl_origin']['datasets_tbl']
+                users_table         = C.database_tables['vamps_mbl_origin']['users_tbl']
+            elif self.runobj.platform == '454':
+                pass
+            else:
+                pass
         info_table          = C.database_tables['vamps_mbl_origin']['info_tbl']
         users_info_table    = C.database_tables['vamps_user_uploads']['info_tbl']    
         
@@ -558,119 +633,162 @@ class Vamps:
         #
         #  DATA_CUBE
         #
-        for line in open(taxes_file,'r'):
-            line = line.strip().split("\t")
-            if line[0]=='HEADER':
-                continue
-            qDataCube = "insert ignore into %s (project, dataset, taxon_string,superkingdom,phylum,class, orderx,family,genus,species,strain,\
-                        rank,knt,frequency,dataset_count,classifier)\
-                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                        % (data_cube_table,
-                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7],
-                        line[8],line[9],line[10],line[11],line[12],line[13],line[14],line[15])
-            #myconn.execute_no_fetch(qDataCube)
-            rows_affected = cursor.execute(qDataCube)
-            
+        print "loading "+key+": data_cube"
+        if os.path.exists(file_collector['taxes_file']):
+            for line in open(file_collector['taxes_file'],'r'):
+                line = line.strip().split("\t")
+                if line[0]=='HEADER':
+                    continue
+                qDataCube = "insert ignore into %s (project, dataset, taxon_string,superkingdom,phylum,class, orderx,family,genus,species,strain,\
+                            rank,knt,frequency,dataset_count,classifier)\
+                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                            % (data_cube_table,
+                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7],
+                            line[8],line[9],line[10],line[11],line[12],line[13],line[14],line[15])
+                #myconn.execute_no_fetch(qDataCube)
+                #print qDataCube
+                rows_affected = cursor.execute(qDataCube)
+        else:
+            print "taxes file not found for dataset "+key
             
             
         #
         # SUMMED (JUNK) DATA_CUBE
         #
-        for line in open(summed_taxes_file,'r'):
-            line = line.strip().split("\t")
-            if line[0]=='HEADER':
-                continue
-            #line = line[1:] # remove leading empty tab
-            #taxonomy        sum_tax_counts  frequency	dataset_count   rank    project dataset project--dataset        classifier
-            qSummedCube = "insert ignore into %s (taxon_string,knt, frequency, dataset_count, rank, project, dataset, project_dataset, classifier)\
-                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                        % (summed_cube_table,
-                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
-            #myconn.execute_no_fetch(qSummedCube) 
-            #print qSummedCube 
-            cursor.execute(qSummedCube)
-                
+        print "loading "+key+": junk_data_cube"
+        if os.path.exists(file_collector['summed_taxes_file']):
+            for line in open(file_collector['summed_taxes_file'],'r'):
+                line = line.strip().split("\t")
+                if line[0]=='HEADER':
+                    continue
+                #line = line[1:] # remove leading empty tab
+                #taxonomy        sum_tax_counts  frequency	dataset_count   rank    project dataset project--dataset        classifier
+                qSummedCube = "insert ignore into %s (taxon_string,knt, frequency, dataset_count, rank, project, dataset, project_dataset, classifier)\
+                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                            % (summed_cube_table,
+                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
+                #myconn.execute_no_fetch(qSummedCube) 
+                #print qSummedCube 
+                cursor.execute(qSummedCube)
+        else:
+            print "summed taxes file not found for dataset "+key
                 
         #
         #  TAXONOMY
         #
-        for line in open(distinct_taxes_file,'r'):
-            line = line.strip().split("\t")
-            if line[0]=='HEADER':
-                continue
-            #line = line[1:] # remove leading empty tab    
-            qTaxonomy = "insert ignore into %s (taxon_string,rank,num_kids)\
-                        VALUES('%s','%s','%s')" \
-                        % (taxonomy_table, line[0],line[1],line[2])
-            #myconn.execute_no_fetch(qTaxonomy)
-            cursor.execute(qTaxonomy)
-        
+        print "loading "+key+": taxonomy"
+        if os.path.exists(file_collector['distinct_taxes_file']):
+            for line in open(file_collector['distinct_taxes_file'],'r'):
+                line = line.strip().split("\t")
+                if line[0]=='HEADER':
+                    continue
+                #line = line[1:] # remove leading empty tab    
+                qTaxonomy = "insert ignore into %s (taxon_string,rank,num_kids)\
+                            VALUES('%s','%s','%s')" \
+                            % (taxonomy_table, line[0],line[1],line[2])
+                #myconn.execute_no_fetch(qTaxonomy)
+                cursor.execute(qTaxonomy)
+        else:
+            print "distinct taxes file not found for dataset "+key
         #
         #  SEQUENCES
         #
-        for line in open(sequences_file,'r'):
-            line = line.strip().split("\t")
-            if line[0]=='HEADER':
-                continue
-            #line = line[1:] # remove leading empty tab
-            # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
-            qSequences = "insert ignore into %s (sequence,project, dataset, taxonomy,refhvr_ids,rank,seq_count,frequency,distance,rep_id, project_dataset)\
-                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                        % (sequences_table,
-                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8],line[9],line[10])
-            #myconn.execute_no_fetch(qSequences) 
-            cursor.execute(qSequences)
+        print "loading "+key+": sequences"
+        if os.path.exists(file_collector['sequences_file']):
+            for line in open(file_collector['sequences_file'],'r'):
+                line = line.strip().split("\t")
+                if line[0]=='HEADER':
+                    continue
+                #line = line[1:] # remove leading empty tab
+                # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
+                qSequences = "insert ignore into %s (sequence,project, dataset, taxonomy,refhvr_ids,rank,seq_count,frequency,distance,rep_id, project_dataset)\
+                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                            % (sequences_table,
+                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8],line[9],line[10])
+                #myconn.execute_no_fetch(qSequences) 
+                cursor.execute(qSequences)
+        else:
+            print "sequences file not found for dataset "+key    
+        #
+        #  EXPORT
+        #
+        print "loading "+key+": export"
+        if os.path.exists(file_collector['export_file']):
+            for line in open(file_collector['export_file'],'r'):
+                line = line.strip().split("\t")
+                if line[0]=='HEADER':
+                    continue
+                #line = line[1:] # remove leading empty tab
+                # t.read_id, t.project, t.dataset, g.refhvr_ids, x.distance, x.taxonomy, t.sequence, x.rank," " t.entry_date
+                # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
+                qSequences = "insert ignore into %s (read_id, project, dataset, refhvr_ids, distance, taxonomy, sequence, rank, date_trimmed)\
+                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                            % (export_table,
+                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
+                #myconn.execute_no_fetch(qSequences) 
+                cursor.execute(qSequences)
+        else:
+            print "export file not found for dataset "+key      
         #
         #  PROJECTS_DATASETS
         #
-        for line in open(projects_datasets_file,'r'):
-            line = line.strip().split("\t")
-            # [1:]  # split and remove the leading 'zero'
-            if line[0]=='HEADER':
-                continue
-            
-            qDatasets = "insert ignore into %s (project, dataset, dataset_count,has_tax,date_trimmed,dataset_info)\
-                        VALUES('%s','%s','%s','%s','%s','%s')" \
-                        % (datasets_table,
-                        line[0],line[1],line[2],line[3],line[4],line[5])
-            #myconn.execute_no_fetch(qDatasets) 
-            cursor.execute(qDatasets)
-            
-            qDatasets = "update %s set has_tax='1' where project='%s'" \
-                        % (datasets_table, line[0])
-            #myconn.execute_no_fetch(qDatasets)
-            cursor.execute(qDatasets)
+        print "loading "+key+": projects_datasets"
+        if os.path.exists(file_collector['projects_datasets_file']):
+            for line in open(file_collector['projects_datasets_file'],'r'):
+                line = line.strip().split("\t")
+                # [1:]  # split and remove the leading 'zero'
+                if line[0]=='HEADER':
+                    continue
+                
+                qDatasets = "insert ignore into %s (project, dataset, dataset_count,has_tax,date_trimmed,dataset_info)\
+                            VALUES('%s','%s','%s','%s','%s','%s')" \
+                            % (datasets_table,
+                            line[0],line[1],line[2],line[3],line[4],line[5])
+                #myconn.execute_no_fetch(qDatasets) 
+                cursor.execute(qDatasets)
+                
+                qDatasets = "update %s set has_tax='1' where project='%s'" \
+                            % (datasets_table, line[0])
+                #myconn.execute_no_fetch(qDatasets)
+                cursor.execute(qDatasets)
+        else:
+            print "project_datasets file not found for dataset "+key      
         #
         # INFO
         #
-        for line in open(project_info_file,'r'):
-            line = line.strip().split("\t")
-            #[1:]  # split on tab and remove the leading 'zero'
-            if line[0]=='HEADER':
-                continue
-            
-            qInfo = "insert ignore into %s (project_name, title, description, contact, email, institution, user, env_source_id)\
-                        VALUES('%s','%s','%s','%s','%s','%s','%s','%s')" \
-                        % (users_info_table,
-                        line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7])
-            #myconn.execute_no_fetch(qInfo) 
-            cursor.execute(qInfo)
-            
-            qInfo = "update %s set has_tax='1' where project_name='%s'" \
-                        % (users_info_table, line[0])
-            #myconn.execute_no_fetch(qInfo) 
-            cursor.execute(qInfo)
-            
+        print "loading "+key+": info"
+        if os.path.exists(file_collector['project_info_file']):
+            for line in open(file_collector['project_info_file'],'r'):
+                line = line.strip().split("\t")
+                #[1:]  # split on tab and remove the leading 'zero'
+                if line[0]=='HEADER':
+                    continue
+                
+                qInfo = "insert ignore into %s (project_name, title, description, contact, email, institution, user, env_source_id)\
+                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s')" \
+                            % (users_info_table,
+                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7])
+                #myconn.execute_no_fetch(qInfo) 
+                cursor.execute(qInfo)
+                
+                qInfo = "update %s set has_tax='1' where project_name='%s'" \
+                            % (users_info_table, line[0])
+                #myconn.execute_no_fetch(qInfo) 
+                cursor.execute(qInfo)
+        else:
+            print "upload_info file not found for dataset "+key          
         #
         # USERS
         #
-            
+        print "loading users:"+key
+        
         qUser = "insert ignore into %s (project, user)\
                     VALUES('%s','%s')" \
                     % (users_table, project, user)
         #myconn.execute_no_fetch(qUser) 
         cursor.execute(qUser)
-        
+             
+            
         logger.info("Finished load VAMPS data")
         
         self.conn.commit()

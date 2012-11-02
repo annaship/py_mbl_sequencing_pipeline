@@ -35,7 +35,7 @@ from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
-from pipeline.metadata import MetadataUtils
+from pipeline.validate import MetadataUtils
 from pipeline.illumina_files import IlluminaFiles
 from inspect import currentframe, getframeinfo
 
@@ -88,7 +88,7 @@ def validate(runobj):
 
 ##########################################################################################
 # perform trim step
-# Trimrunobj.trimrun() does all the work of looping over each input file and sequence in each file
+# TrimRun.trimrun() does all the work of looping over each input file and sequence in each file
 # all the stats are kept in the trimrun object
 #
 # when complete...write out the datafiles for the most part on a lane/runkey basis
@@ -105,38 +105,48 @@ def trim(runobj):
     
     # pass True to write out the straight fasta file of all trimmed non-deleted seqs
     # Remember: this is before chimera checking
-    if runobj.platform == 'illumina':
-        trim_codes = mytrim.filter_illumina()
-#        trim_codes = mytrim.trim_illumina(file_list = trim_codes[2])
-    elif runobj.platform == '454':
-        trim_codes = mytrim.trimrun_454(True)
-    elif runobj.platform == 'ion-torrent':
-        trim_codes = mytrim.trimrun_ion_torrent(True)
-    elif runobj.platform == 'vamps':
+    # trim_codes should alwas be a tuple with 3 elements!
+    if runobj.vamps_user_upload:
         trim_codes = mytrim.trimrun_vamps(True)
     else:
-        trim_codes = ('ERROR','No Platform Found','')
+        if runobj.platform == 'illumina':
+            trim_codes = mytrim.filter_illumina()
+    #        trim_codes = mytrim.trim_illumina(file_list = trim_codes[2])
+        elif runobj.platform == '454':
+            trim_codes = mytrim.trimrun_454(True)
+        elif runobj.platform == 'ion-torrent':
+            trim_codes = mytrim.trimrun_ion_torrent(True)        
+        else:
+            trim_codes = ('ERROR','No Platform Found','')
         
     trim_results_dict = {}
     if trim_codes[0] == 'SUCCESS':
         # setup to write the status
         new_lane_keys = trim_codes[2]
-        trim_results_dict['status'] = "success"
+        trimmed_seq_count = trim_codes[1]
+        if trimmed_seq_count == 0 or trimmed_seq_count == '0':
+            trim_results_dict['status'] = "ERROR"
+            logger.debug("Trimming finished: ERROR: no seqs passed trim")
+        else:
+            trim_results_dict['status'] = "success"
+            logger.debug("Trimming finished successfully")
+        
         trim_results_dict['new_lane_keys'] = new_lane_keys
-        logger.debug("Trimming finished successfully")
+        trim_results_dict['trimmed_seq_count'] = trimmed_seq_count
+        
         # write the data files
         
         mytrim.write_data_files(new_lane_keys)
-        runobj.trim_status_file_h.write(json.dumps(trim_results_dict))
+        runobj.trim_status_file_h.write(json.dumps(trim_results_dict)+"\n")
         runobj.trim_status_file_h.close()
         runobj.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
         runobj.run_status_file_h.close()
     else:
         logger.debug("Trimming finished ERROR")
-        trim_results_dict['status'] = "error"
+        trim_results_dict['status'] = "ERROR"
         trim_results_dict['code1'] = trim_codes[1]
         trim_results_dict['code2'] = trim_codes[2]
-        runobj.trim_status_file_h.write(json.dumps(trim_results_dict))
+        runobj.trim_status_file_h.write(json.dumps(trim_results_dict)+"\n")
         runobj.trim_status_file_h.close()
         runobj.run_status_file_h.write(json.dumps(trim_results_dict)+"\n")
         runobj.run_status_file_h.close()
@@ -272,6 +282,7 @@ def env454run_info_upload(runobj):
     
 def env454upload(runobj):  
     """
+    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
     TODO: 
         2) Upload env454 data into raw, trim, gast etc tables from files
@@ -366,7 +377,7 @@ def env454upload(runobj):
             print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
-    print "total_seq = %s" % total_seq
+#    print "total_seq = %s" % total_seq
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time() - whole_start)
@@ -413,7 +424,7 @@ def gast(runobj):
     # Check for unique files and create them if not there
     result_code = mygast.check_for_unique_files(idx_keys)
     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
-    if result_code[0] == 'ERROR':
+    if result_code['status'] == 'ERROR':
         logger.error("uniques not found failed")
         sys.exit("uniques not found failed")
     sleep(5)
@@ -421,7 +432,7 @@ def gast(runobj):
     # CLUSTERGAST
     result_code = mygast.clustergast()
     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
-    if result_code[0] == 'ERROR':
+    if result_code['status'] == 'ERROR':
         logger.error("clutergast failed")
         sys.exit("clustergast failed")
     sleep(5)
@@ -429,7 +440,7 @@ def gast(runobj):
     # GAST_CLEANUP
     result_code = mygast.gast_cleanup()
     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
-    if result_code[0] == 'ERROR':
+    if result_code['status'] == 'ERROR':
         logger.error("gast_cleanup failed")        
         sys.exit("gast_cleanup failed")
     sleep(5)
@@ -437,7 +448,7 @@ def gast(runobj):
     # GAST2TAX
     result_code = mygast.gast2tax()
     runobj.run_status_file_h.write(json.dumps(result_code)+"\n")
-    if result_code[0] == 'ERROR':
+    if result_code['status'] == 'ERROR':
         logger.error("gast2tax failed") 
         sys.exit("gast2tax failed")
         
@@ -518,24 +529,23 @@ def get_keys(runobj):
         # here we have no idx_keys - must create them from run
         # if illumina they are index_runkey_lane concatenation
         # if 454 the are lane_key
-        if runobj.platform == 'illumina':  
-            idx_keys = runobj.idx_keys
-            ct = 0
-            for h in runobj.samples:
-                logger.debug(h,runobj.samples[h])
-                ct +=1
-        elif runobj.platform == '454':
-            idx_keys = runobj.idx_keys
-        elif runobj.platform == 'ion_torrent':
-            idx_keys = runobj.idx_keys
-        elif runobj.platform == 'vamps':
-        	#idx_keys=runobj.idx_keys
-        	idx_keys=runobj.samples.keys()
-            #idx_keys = [runobj.user+runobj.run]  
+        if runobj.vamps_user_upload:
+            idx_keys=runobj.samples.keys()
         else:
-            logger.debug("GAST: No keys found - Exiting")
-            runobj.run_status_file_h.write("GAST: No keys found - Exiting\n")
-            sys.exit()
+            if runobj.platform == 'illumina':  
+                idx_keys = runobj.idx_keys
+                ct = 0
+                for h in runobj.samples:
+                    logger.debug(h,runobj.samples[h])
+                    ct +=1
+            elif runobj.platform == '454':
+                idx_keys = runobj.idx_keys
+            elif runobj.platform == 'ion_torrent':
+                idx_keys = runobj.idx_keys
+            else:
+                logger.debug("GAST: No keys found - Exiting")
+                runobj.run_status_file_h.write("GAST: No keys found - Exiting\n")
+                sys.exit()
     if type(idx_keys) is types.StringType:
         return idx_keys.split(',')
     elif type(idx_keys) is types.ListType:
