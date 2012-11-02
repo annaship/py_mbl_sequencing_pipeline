@@ -96,15 +96,15 @@ class RunConfig:
         # now extract it all from the dictionary form
         #
         #
-        
-        self.initializeFromDictionary(config_dict)
-
-         
-         
-        if type(config_info)==dict and 'vamps_user_upload' in config_info['general'] and config_info['general']['vamps_user_upload'] == True:
-            self.vamps_user_upload = True            
+        if 'vamps_user_upload' in config_info['general']:
+            self.vamps_user_upload = config_info['general']['vamps_user_upload']            
         else:
             self.vamps_user_upload = False
+        
+        self.initializeFromDictionary(config_dict)
+        
+    
+        if not self.vamps_user_upload:
     
             # primers should be in json format in a file and that file should be specified in the general section
             # print "curr dir: " + os.getcwd()
@@ -168,13 +168,14 @@ class RunConfig:
             self.idx_keys = ""
  
  
-        if self.platform == 'vamps':
+        if self.vamps_user_upload:
             self.user           = general_config['user']           
             
             self.input_files    = general_config['input_files'] 
             #self.project        = general_config['project'] 
             #self.dataset        = general_config['dataset']
-            #self.dna_region     = general_config['dna_region']
+            self.dna_region     = general_config['dna_region']
+            self.domain         = general_config['domain']
             #self.env_source_id  = general_config['envsource']
             self.site           = general_config['site']
             
@@ -183,13 +184,21 @@ class RunConfig:
                 self.fasta_file    = general_config['fasta_file'] 
             except:
                 self.fasta_file    = None
-        if self.platform == 'illumina':
-            self.compressed     = general_config['compressed'] 
-            self.database_name  = general_config['database_name'] 
-            self.database_host  = general_config['database_host'] 
-            self.site           = general_config['site']
-            self.load_vamps_database = general_config['load_vamps_database']
-            
+        else:
+            if self.platform == 'illumina':
+                self.compressed     = general_config['compressed'] 
+                self.database_name  = general_config['database_name'] 
+                self.database_host  = general_config['database_host'] 
+                self.site           = general_config['site']
+                self.load_vamps_database = general_config['load_vamps_database']
+            elif self.platform == '454':
+                self.compressed     = general_config['compressed'] 
+                self.database_name  = general_config['database_name'] 
+                self.database_host  = general_config['database_host'] 
+                self.site           = general_config['site']
+                self.load_vamps_database = general_config['load_vamps_database']
+            else:
+                pass
         # added gast_input_source for vamps uploads
         # so when users want to gast at a later time they will
         # look in the database and not the files (which may be missing)
@@ -327,49 +336,10 @@ class RunConfig:
             sample.project              = lane_run_dict['project']
             sample.dataset              = lane_run_dict['dataset']
             
-            if self.platform == 'illumina':
-                # req specifically for illumina
-                sample.data_owner           = lane_run_dict['data_owner']
-                sample.first_name           = lane_run_dict['first_name']
-                sample.last_name            = lane_run_dict['last_name']
-                sample.email                = lane_run_dict['email']
-                sample.institution          = lane_run_dict['institution']
-                sample.funding              = lane_run_dict['funding']
-                sample.barcode_index = lane_run_dict['barcode_index'] 
-                sample.overlap = lane_run_dict['overlap'] 
-                sample.read_length = lane_run_dict['read_length'] 
-                sample.file_prefix = lane_run_dict['file_prefix'] 
-                sample.insert_size = lane_run_dict['insert_size']
-                #sample.taxonomic_domain = lane_run_dict['domain']
-                # concatenate: barcode_index and run_key and lane
-                key = lane_run_dict['barcode_index'] +'_'+ lane_run_dict['run_key'] +'_'+ lane_run_dict['lane'] 
-                #sample.key = key
-                self.run_keys.append(key)  
-                # a dictionary of samples
-            	self.samples[lane_run_key] = sample
-            	
-            elif self.platform == '454':
+            if self.vamps_user_upload:
                 # required for 454
                 sample.direction = lane_run_dict['direction'] 
-                sample.data_owner           = lane_run_dict['data_owner']
-                sample.first_name           = lane_run_dict['first_name']
-                sample.last_name            = lane_run_dict['last_name']
-                sample.email                = lane_run_dict['email']
-                sample.institution          = lane_run_dict['institution']
-                sample.funding              = lane_run_dict['funding']
-                #sample.taxonomic_domain = lane_run_dict['domain']
-                # a list of run_keys
-                # convert: change ':' to '_'
-                key = lane_run_key[:1]+'_'+lane_run_key[2:]
-                #sample.key = key
-                self.run_keys.append(key)
-                # a dictionary of samples
-            	self.samples[lane_run_key] = sample
-                
-            elif self.platform == 'vamps':
-                # required for 454
-                sample.direction = lane_run_dict['direction'] 
-                sample.taxonomic_domain = lane_run_dict['taxonomic_domain']
+                #sample.taxonomic_domain = lane_run_dict['taxonomic_domain']
                 # a list of run_keys
                 # convert: change ':' to '_'
                 #lane_run_key = '_'.join(lane_run_key.split(':'))
@@ -378,6 +348,47 @@ class RunConfig:
                 self.run_keys.append(key)
                 # a dictionary of samples
             	self.samples[key] = sample
+            else:
+                if self.platform == 'illumina':
+                    # req specifically for illumina
+                    sample.data_owner           = lane_run_dict['data_owner']
+                    sample.first_name           = lane_run_dict['first_name']
+                    sample.last_name            = lane_run_dict['last_name']
+                    sample.email                = lane_run_dict['email']
+                    sample.institution          = lane_run_dict['institution']
+                    sample.funding              = lane_run_dict['funding']
+                    sample.barcode_index = lane_run_dict['barcode_index'] 
+                    sample.overlap = lane_run_dict['overlap'] 
+                    sample.read_length = lane_run_dict['read_length'] 
+                    sample.file_prefix = lane_run_dict['file_prefix'] 
+                    sample.insert_size = lane_run_dict['insert_size']
+                    #sample.taxonomic_domain = lane_run_dict['domain']
+                    # concatenate: barcode_index and run_key and lane
+                    key = lane_run_dict['barcode_index'] +'_'+ lane_run_dict['run_key'] +'_'+ lane_run_dict['lane'] 
+                    #sample.key = key
+                    self.run_keys.append(key)  
+                    # a dictionary of samples
+                    self.samples[lane_run_key] = sample
+                    
+                elif self.platform == '454':
+                    # required for 454
+                    sample.direction = lane_run_dict['direction'] 
+                    sample.data_owner           = lane_run_dict['data_owner']
+                    sample.first_name           = lane_run_dict['first_name']
+                    sample.last_name            = lane_run_dict['last_name']
+                    sample.email                = lane_run_dict['email']
+                    sample.institution          = lane_run_dict['institution']
+                    sample.funding              = lane_run_dict['funding']
+                    #sample.taxonomic_domain = lane_run_dict['domain']
+                    # a list of run_keys
+                    # convert: change ':' to '_'
+                    key = lane_run_key[:1]+'_'+lane_run_key[2:]
+                    #sample.key = key
+                    self.run_keys.append(key)
+                    # a dictionary of samples
+                    self.samples[lane_run_key] = sample
+                
+           
 
             	
 
