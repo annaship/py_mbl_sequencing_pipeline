@@ -21,7 +21,7 @@ class IlluminaFiles:
     
     """
     def __init__(self, runobj):
-        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == "as-macbook.home" or os.uname()[1] == "as-macbook.local":
+        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == "as-macbook.home" or os.uname()[1] == "as-macbook.local" or os.uname()[1] == "Ashipunova.local":
             self.LOCAL = True
         else:
             self.LOCAL = False
