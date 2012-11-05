@@ -27,9 +27,6 @@ from pipeline.db_upload import MyConnection
 import re
 #import pipeline.fastalib
 
-
-  
-    
 class MetadataUtils:
     """
     Class to read metadata files (csv and ini style)
@@ -51,9 +48,9 @@ class MetadataUtils:
         self.data_object['general'] = {}
         self.warn_msg = """\n\tThe config File seems to be okay. If the items above look correct
         then press 'c' to continue the pipeline\n"""
-        
-        
-            
+        self.res_headers = []
+        self.env = {}
+                  
     def convert_and_save_ini(self):
         
         new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'] + '.ini')
@@ -595,16 +592,19 @@ class MetadataUtils:
             fh.write("input_files = \n") 
         #fh.write(getattr(args,'force_runkey', ""))        
  
- 
-        for k,values in content.iteritems():
+        for k, values in content.iteritems():
             fh.write("\n")
             if self.general_config_dict['platform'] == 'illumina':
                 fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
             elif self.general_config_dict['platform'] == '454':
                 fh.write("["+values['lane']+"_"+values['run_key']+"]\n")
-                
+            
             for v in values:
-                fh.write(v+" = "+values[v]+"\n")
+                if v == "env_sample_source":
+                    new_val = [str(j[0]) for j in self.env if j[1] == values[v]][0]
+                    fh.write("env_sample_source_id = "+new_val+"\n")
+                else:
+                    fh.write(v+" = "+values[v]+"\n")
                 
         fh.close()
         
@@ -644,10 +644,8 @@ class MetadataUtils:
         else:
             out_fh.write("input_files = \n") 
         out_fh.close()
-
-
             
-    def check_headers(self,headers):
+    def check_headers(self, headers):
         if self.general_config_dict['platform']=='illumina':
             known_header_list= self.known_header_list['illumina']
         elif self.general_config_dict['platform'] == '454':
@@ -656,8 +654,12 @@ class MetadataUtils:
             logger.error("in utils: check_headers - unknown platform")
         #print   sorted(known_header_list)
         #print sorted(headers)
-        if sorted(known_header_list) != sorted(headers):
-            print "="*40
+        self.res_headers = headers
+        if "env_sample_source" in headers:
+            self.env_source_to_id(headers)
+            
+        if sorted(known_header_list) != sorted(self.res_headers):
+            print "=" * 40
             print "csv file header problem"
             print "%-20s %-20s" % ("REQUIRED", "YOUR CSV")
             for i in sorted(known_header_list):
@@ -669,14 +671,18 @@ class MetadataUtils:
                 
                 if i not in known_header_list:
                     print "%-20s%-20s" % (" ",i+" <--- extra")
-            print "="*40
+            print "=" * 40
             sys.exit("ERROR : unknown or missing headers\n")
         else:
             return True
         
-    "TODO: add function to convert env_sample_source to env_sample_source_id"
-
-    def configDictionaryFromFile_ini(self,config_file_path):
+    def env_source_to_id(self, headers):
+        self.my_conn = MyConnection(host='newbpcdb2', db="env454")  
+        my_sql       = """SELECT * FROM env_sample_source"""
+        self.env     = self.my_conn.execute_fetch_select(my_sql)
+        self.res_headers = ["env_sample_source_id" if x=="env_sample_source" else x for x in headers]
+        
+    def configDictionaryFromFile_ini(self, config_file_path):
         import ConfigParser
         
         configDict = {}
@@ -780,7 +786,7 @@ class MetadataUtils:
         #collector['steps'] = self.args.steps
         collector['platform'] = self.args.platform
         if self.args.input_dir:       
-             collector['input_dir'] = self.args.input_dir
+            collector['input_dir'] = self.args.input_dir
 
         collector['date'] = str(datetime.date.today())
         #print collector
