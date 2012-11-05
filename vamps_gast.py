@@ -24,6 +24,7 @@ import csv
 from time import sleep
 
 sys.path.append( '/bioware/python/lib/python2.7/site-packages/' )
+sys.path.append("/xraid/bioware/linux/seqinfo/bin")
 
 import datetime
 import subprocess
@@ -200,7 +201,8 @@ def start_gast(myobject):
     run.dna_region = dna_region
     
     #run.basedir = file_base
-    fastaunique_cmd = '/bioware/bin/fastaunique'
+#    fastaunique_cmd = '/bioware/bin/fastaunique'
+    fastaunique_cmd = 'fastaunique'
     if run.from_fasta:
         print run.from_fasta
         # copy file to
