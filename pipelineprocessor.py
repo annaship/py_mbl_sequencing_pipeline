@@ -19,7 +19,8 @@
 import os
 from stat import * # ST_SIZE etc
 import sys
-sys.path.append("/bioware/pythonmodules/illumina-utils/")
+#sys.path.append("/bioware/pythonmodules/illumina-utils/")
+sys.path.append("/xraid/bioware/linux/seqinfo/bin")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
 
 import shutil
@@ -35,7 +36,7 @@ from pipeline.vamps import Vamps
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
-from pipeline.validate import MetadataUtils
+from pipeline.metadata import MetadataUtils
 from pipeline.illumina_files import IlluminaFiles
 from inspect import currentframe, getframeinfo
 
@@ -536,7 +537,8 @@ def get_keys(runobj):
                 idx_keys = runobj.idx_keys
                 ct = 0
                 for h in runobj.samples:
-                    logger.debug(h,runobj.samples[h])
+                    logger.debug(h)
+#                    logger.debug(h,runobj.samples[h]) #TypeError: not all arguments converted during string formatting
                     ct +=1
             elif runobj.platform == '454':
                 idx_keys = runobj.idx_keys
