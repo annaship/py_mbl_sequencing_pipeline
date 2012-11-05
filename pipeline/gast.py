@@ -980,10 +980,10 @@ class Gast:
                 #get from database
             else:
                 if self.runobj.platform == 'illumina':
-                    reads_dir = os.path.join(self.analysis_dir,'perfect_reads')
+                    reads_dir = os.path.join(self.analysis_dir, 'perfect_reads')
                     
                     file_prefix = self.runobj.samples[key].file_prefix
-                    unique_file = os.path.join(self.input_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                    unique_file = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique")
                     if os.path.exists(unique_file):
                         if os.path.getsize(unique_file) > 0:
                             logger.debug( "GAST: Found uniques file: "+unique_file)
