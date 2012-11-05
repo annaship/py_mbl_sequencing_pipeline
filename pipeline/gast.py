@@ -44,21 +44,20 @@ class Gast:
         # If we are here from a vamps gast process
         # then there should be just one dataset to gast
         # but if MBL/illumina pipe then many datasets are probably involved.
-        self.analysis_dir = os.path.join(self.basedir,C.analysis_dir)
+        self.analysis_dir = os.path.join(self.basedir, C.analysis_dir)
         if not os.path.exists(self.analysis_dir):
             os.mkdir(self.analysis_dir)
         if self.runobj.vamps_user_upload:
             self.global_gast_dir = self.basedir
         else:
-            self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
+            self.global_gast_dir = os.path.join(self.basedir, C.gast_dir)
             if os.path.exists(self.global_gast_dir):
                 # delete gast directory and recreate
                 shutil.rmtree(self.global_gast_dir, True)
                 os.mkdir(self.global_gast_dir)
             else:
                 os.mkdir(self.global_gast_dir)
-        
-        
+                
         if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
             reads_dir = os.path.join(self.basedir, C.illumina_reads_dir)
             if os.path.exists(reads_dir):
@@ -720,7 +719,7 @@ class Gast:
                     refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region])
                     taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
                 else:
-                    print 'could not find refdb '+os.path.join(self.refdb_dir, C.refdbs[dna_region])+" - Using full length"
+                    print 'could not find refdb '+os.path.join(self.refdb_dir, C.refdbs[dna_region])+".udb - Using full length"
                     refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                     taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
             elif os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')):
