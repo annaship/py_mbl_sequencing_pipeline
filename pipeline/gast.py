@@ -75,10 +75,10 @@ class Gast:
         # 
         
         
-#        for key in self.iterator:
-#            output_dir = os.path.join(self.global_gast_dir, key)
-#            if output_dir and not os.path.exists(output_dir):
-#                os.mkdir(output_dir)
+        for key in self.iterator:
+            output_dir = os.path.join(self.global_gast_dir, key)
+            if output_dir and not os.path.exists(output_dir):
+                os.mkdir(output_dir)
 #                 gast_dir = output_dir
 #                 if os.path.exists(gast_dir):
 #                     # empty then recreate directory
@@ -153,10 +153,10 @@ class Gast:
                 print 'unique_file', unique_file
             else:
                 if self.runobj.platform == 'illumina':
-#                    output_dir  = os.path.join(self.global_gast_dir, key)
-#                    gast_dir    = os.path.join(self.global_gast_dir, key)
-                    output_dir  = os.path.join(self.global_gast_dir)
-                    gast_dir    = os.path.join(self.global_gast_dir)
+                    output_dir  = os.path.join(self.global_gast_dir, key)
+                    gast_dir    = os.path.join(self.global_gast_dir, key)
+#                    output_dir  = os.path.join(self.global_gast_dir)
+#                    gast_dir    = os.path.join(self.global_gast_dir)
                     file_prefix = self.runobj.samples[key].file_prefix
                     unique_file = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique")
                     names_file  = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique.names")
