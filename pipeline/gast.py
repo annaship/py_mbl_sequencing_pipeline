@@ -883,7 +883,7 @@ class Gast:
                 results[read]=[ [data[1].split('|')[0], data[2], data[3], data[4]] ]
             
         
-        for line in  open(names_file, 'r'):
+        for line in open(names_file, 'r'):
             data=line.strip().split("\t")
             dupes = data[1].split(", ")
             read  = data[0]
