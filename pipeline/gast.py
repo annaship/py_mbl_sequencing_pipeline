@@ -106,7 +106,7 @@ class Gast:
         #   /bioware/seqinfo/bin/fastasampler -n $start, $end ${gastDir}/${fasta_uniqs_filename} $tmp_fasta_filename
         #   $usearch_binary --global --query $tmp_fasta_filename --iddef 3 --gapopen 6I/1E --db $refhvr_fa --uc $tmp_usearch_filename --maxaccepts $max_accepts --maxrejects $max_rejects --id $pctid_threshold
         #   # sort the results for valid hits, saving only the ids and pct identity
-        #   grep -P \"^H\\t\" $tmp_usearch_filename | sed -e 's/|.*\$//' | awk '{print \$9 \"\\t\" \$4 \"\\t\" \$10 \"\\t\" \$8}' | sort -k1, 1b -k2, 2gr | clustergast_tophit > $gast_filename
+        #   grep -P \"^H\\t\" $tmp_usearch_filename | sed -e 's/|.*\$//' | awk '{print \$9 \"\\t\" \$4 \"\\t\" \$10 \"\\t\" \$8}' | sort -k1,1b -k2,2gr | clustergast_tophit > $gast_filename
         #   Submit the script
         #   /usr/local/sge/bin/lx24-amd64/qsub $qsub_priority $script_filename
  
@@ -811,7 +811,7 @@ class Gast:
         grep_cmd += " sed -e 's/|.*\$//' |"
         grep_cmd += " awk -F\"\\t\" '{print $9 \"\\t\" $4 \"\\t\" $10 \"\\t\" $8}' |"
         
-        grep_cmd += " sort -k1, 1b -k2, 2gr |"
+        grep_cmd += " sort -k1,1b -k2,2gr |"
         # append to clustergast file:
         # split_defline adds frequency to gastv6 file (last field)
         tophit_cmd = "/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline/pipeline/clustergast_tophit"
