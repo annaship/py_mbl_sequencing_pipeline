@@ -93,17 +93,17 @@ class DbUloadTestCase(unittest.TestCase):
         my_read_csv.put_run_info()
         sql = "SELECT max(run_info_ill_id) FROM run_info_ill"
         res = self._connection.execute_fetch_select(sql)
-        self.assertEqual(int(res[0][0]), 192)        
+        self.assertEqual(int(res[0][0]), 10)        
         print "done with put_run_info" 
     
         "FIrst do: illumina_files time = 136.972903013"    
     def test_f_get_fasta_file_names(self):
         filenames = self._my_db_upload.get_fasta_file_names()
         file_names_list = fake_data_object.file_names_list
-        self.assertEqual(filenames, file_names_list)
+        self.assertEqual(sorted(filenames), sorted(file_names_list))
     
     def test_g_get_run_info_ill_id(self):
-        filename_base   = "SMPL31_3"
+        filename_base   = "SMPL53_3"
         run_info_ill_id = self._my_db_upload.get_run_info_ill_id(filename_base)        
         
         sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'" % (filename_base)
@@ -121,7 +121,7 @@ class DbUloadTestCase(unittest.TestCase):
         
         self._my_db_upload.seq_id_dict = {'TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC': 1}
         
-        sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = 'SMPL31_3'"
+        sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = 'SMPL53_3'"
         res = self._connection.execute_fetch_select(sql)        
         run_info_ill_id = int(res[0][0])
 
@@ -129,9 +129,10 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(res_id, 1)
 
     def test_j_get_gasta_result(self):
-        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL8_3-PERFECT_reads.fa.unique"
+        self.maxDiff = None
+        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL53_3-PERFECT_reads.fa.unique"
         res       = self._my_db_upload.get_gasta_result(filename)
-        self.assertEqual(res, fake_data_object.gast_dict1)
+        self.assertEqual(res, fake_data_object.gast_dict)
         
     def test_k_insert_taxonomy(self):
         tax_id         = self._my_db_upload.insert_taxonomy(self.fasta, fake_data_object.gast_dict2) 
