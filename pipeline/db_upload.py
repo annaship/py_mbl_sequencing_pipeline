@@ -87,6 +87,7 @@ class dbUpload:
 #        /test/sample_data/illumina/result/20120614/analysis
         "TODO: have all directory names in one place for gast, db_upload etc, using run_obj.input_dir and run_obj.output_dir"
         res_path = "../result/" + self.rundate + "/analysis/perfect_reads"
+        "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/sample_data/illumina/result/20120614/analysis/perfect_reads"
         self.in_file_path = os.path.join(self.runobj.input_dir, res_path)
         host_name = runobj.database_host
         database_name = runobj.database_name
@@ -156,6 +157,7 @@ class dbUpload:
         # ------- insert sequence info per run/project/dataset --------
         sequence_ill_id = self.seq_id_dict[fasta.seq]
         seq_count       = int(fasta.id.split('|')[1].split(':')[1])
+        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
         res_id = self.my_conn.execute_no_fetch(my_sql)
@@ -311,7 +313,7 @@ class dbUpload:
                                                     '%s', %s, %s)
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, overlap, content_row.insert_size,
-                                                    content_row.file_prefix, content_row.read_length, primer_suite_id)
+                                                    content_row.dataset, content_row.read_length, primer_suite_id)
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_primer(self):

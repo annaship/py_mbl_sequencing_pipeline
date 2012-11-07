@@ -360,7 +360,7 @@ class RunConfig:
                     sample.barcode_index = lane_run_dict['barcode_index'] 
                     sample.overlap = lane_run_dict['overlap'] 
                     sample.read_length = lane_run_dict['read_length'] 
-                    sample.file_prefix = lane_run_dict['file_prefix'] 
+#                    sample.file_prefix = lane_run_dict['file_prefix'] 
                     sample.insert_size = lane_run_dict['insert_size']
                     #sample.taxonomic_domain = lane_run_dict['domain']
                     # concatenate: barcode_index and run_key and lane
