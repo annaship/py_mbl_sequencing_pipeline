@@ -70,12 +70,12 @@ class IlluminaFilesTestCase(unittest.TestCase):
         self.assertEqual(uniq_files, 10)
         
     def test_06_get_fastq_file_names(self):
+        self.maxDiff = None
         (in_files_r1, in_files_r2) = self._illumina_files.get_fastq_file_names(self._runobj.input_dir)
-#        in_files_r1 = ['./results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq', './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq.failed', './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX2_CGATGT_L003_R1_001.filtered.fastq', './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX2_CGATGT_L003_R1_001.filtered.fastq.failed']
 
-        in_files_r1_compare = './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq' in in_files_r1
-#        ['./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq', './test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R1_001.fastq']    
-        in_files_r2_compare = ('./results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R2_001.filtered.fastq' in in_files_r2) or ('./results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R2_001.fastq' in in_files_r2)
+#        in_files_r1_compare = './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq' in in_files_r1
+        in_files_r1_compare = "./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq.gz" in in_files_r1
+        in_files_r2_compare = ('./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R2_001.fastq.gz' in in_files_r2) or ('./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R2_001.fastq' in in_files_r2)
 
         self.assertTrue(in_files_r1_compare)
         self.assertTrue(in_files_r2_compare)    

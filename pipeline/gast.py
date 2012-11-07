@@ -20,6 +20,9 @@ class Gast:
                         
         self.runobj = run_object       
         self.test   = True
+        
+        # Create and move all from below
+        # self.set_directories()
        
         self.basedir = self.runobj.output_dir
         if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
@@ -72,9 +75,6 @@ class Gast:
                 self.input_dir = self.runobj.input_dir
             
         # create our directories for each key
-        # 
-        
-        
         for key in self.iterator:
             output_dir = os.path.join(self.global_gast_dir, key)
             if output_dir and not os.path.exists(output_dir):
@@ -93,7 +93,7 @@ class Gast:
                GAST uses UClust to identify the best matches of a read sequence
                to references sequences in a reference database.
                VAMPS: The uniques and names files have previously been created in trim_run.py.
-               Illumina :
+               Illumina: The uniques and names files have been created by illumina_files.py
         """
         logger.info("Starting Clustergast")
         
@@ -109,15 +109,11 @@ class Gast:
         #   grep -P \"^H\\t\" $tmp_usearch_filename | sed -e 's/|.*\$//' | awk '{print \$9 \"\\t\" \$4 \"\\t\" \$10 \"\\t\" \$8}' | sort -k1,1b -k2,2gr | clustergast_tophit > $gast_filename
         #   Submit the script
         #   /usr/local/sge/bin/lx24-amd64/qsub $qsub_priority $script_filename
- 
-        
         
         calcnodes = C.calcnodes_cmd
         sqlImportCommand = C.mysqlimport_cmd
         #qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
         clusterize = C.clusterize_cmd
-        
-
 
         ###################################################################
         # use fasta.uniques file

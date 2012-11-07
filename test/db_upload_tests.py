@@ -132,6 +132,8 @@ class DbUloadTestCase(unittest.TestCase):
         self.maxDiff = None
         filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL53_3-PERFECT_reads.fa.unique"
         res       = self._my_db_upload.get_gasta_result(filename)
+        print res
+        print fake_data_object.gast_dict
         self.assertEqual(res, fake_data_object.gast_dict)
         
     def test_k_insert_taxonomy(self):

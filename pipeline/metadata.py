@@ -314,10 +314,10 @@ class MetadataUtils:
                             files_list.append(os.path.join(sub_dir,os.path.basename(infile2)))
                 else:
                     files_list.append(os.path.basename(infile))
-        else:
-            if fasta_file:
-                pass
-            logger.warning("No input directory or directory permissions problem: "+self.general_config_dict['input_dir'])
+#        else:
+#            if fasta_file:
+#                pass
+#            logger.warning("No input directory or directory permissions problem: "+self.general_config_dict['input_dir'])
             
         return files_list
         
