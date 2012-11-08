@@ -113,6 +113,8 @@ class dbUpload:
     def get_fasta_file_names(self):
         fa_files = []
         pipelne_utils   = PipelneUtils()
+        print "FFF1:"
+        print self.in_file_path
         files = pipelne_utils.get_all_files(self.in_file_path)
         for full_name in files.keys():    
             if (files[full_name][1] == ".unique") and (files[full_name][0].split(".")[-1].strip() == "fa"):

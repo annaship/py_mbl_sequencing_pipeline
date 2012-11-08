@@ -301,7 +301,6 @@ def env454upload(runobj):
     print ")_)_)_)_)"
     print filenames
     for filename in filenames:
-        print "FFF: filename = " % filename
         try:
             logger.debug("\n----------------\nfilename = %s" % filename)
             fasta_file_path = filename
