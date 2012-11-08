@@ -369,6 +369,7 @@ class dbUpload:
     def count_seq_from_file(self):
         print "UUU: self.unique_file_counts = "
         print self.unique_file_counts
+        open('self.unique_file_counts', 'w').close()
         try:
             with open(self.unique_file_counts) as fd:
                 file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
