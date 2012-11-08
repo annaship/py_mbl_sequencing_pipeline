@@ -157,7 +157,7 @@ class dbUpload:
         # ------- insert sequence info per run/project/dataset --------
         sequence_ill_id = self.seq_id_dict[fasta.seq]
         seq_count       = int(fasta.id.split('|')[1].split(':')[1])
-        print run_info_ill_id, sequence_ill_id, seq_count
+#        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
         res_id = self.my_conn.execute_no_fetch(my_sql)
@@ -367,7 +367,6 @@ class dbUpload:
             return int(res[0][0])              
 
     def count_seq_from_file(self):
-        open(self.unique_file_counts, 'w').close()
         try:
             with open(self.unique_file_counts) as fd:
                 file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
