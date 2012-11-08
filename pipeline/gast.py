@@ -149,10 +149,8 @@ class Gast:
                 print 'unique_file', unique_file
             else:
                 if self.runobj.platform == 'illumina':
-                    output_dir  = os.path.join(self.global_gast_dir, key)
-                    gast_dir    = os.path.join(self.global_gast_dir, key)
-#                    output_dir  = os.path.join(self.global_gast_dir)
-#                    gast_dir    = os.path.join(self.global_gast_dir)
+                    output_dir = os.path.join(self.global_gast_dir,key)
+                    gast_dir = os.path.join(self.global_gast_dir,key)
                     file_prefix = self.runobj.samples[key].file_prefix
                     unique_file = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique")
                     names_file  = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique.names")
@@ -181,7 +179,7 @@ class Gast:
             if os.path.exists(unique_file) and (os.path.getsize(unique_file) > 0):
                 
                 i = 0
-                if self.use_cluster and cluster_nodes:
+                if cluster_nodes:
                     grep_cmd = ['grep', '-c', '>', unique_file]
                     logger.debug( ' '.join(grep_cmd) )
                     facount = subprocess.check_output(grep_cmd).strip()
@@ -433,7 +431,7 @@ class Gast:
                     s = line.strip().split("\t")
                     
                     index_read = s[0]                
-                    copies[index_read] = s[1].split(', ')
+                    copies[index_read] = s[1].split(',')
                     
                     if index_read in nonhits:
                         nonhits[index_read] += 1
@@ -709,7 +707,7 @@ class Gast:
                 refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
         else:
-            print  'dna_region2 ', dna_region 
+            
             # try udb first
             if dna_region in C.refdbs:
                 if os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region]+".udb")):
@@ -749,7 +747,7 @@ class Gast:
     def get_fastasampler_cmd(self, unique_file, fastasamp_filename, start, end):
         fastasampler = C.fastasampler_cmd
         fastasampler_cmd = fastasampler
-        fastasampler_cmd += ' -n '+ str(start)+', '+ str(end)
+        fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
         fastasampler_cmd += ' ' + unique_file
         fastasampler_cmd += ' ' + fastasamp_filename        
         return fastasampler_cmd
@@ -881,7 +879,7 @@ class Gast:
         
         for line in open(names_file, 'r'):
             data=line.strip().split("\t")
-            dupes = data[1].split(", ")
+            dupes = data[1].split(",")
             read  = data[0]
             taxObjects  = []
             distance    = 0
@@ -942,6 +940,7 @@ class Gast:
             # Replace hash with final taxonomy results, for each copy of the sequence
             for d in dupes:
                # print OUT join("\t", $d, @{$results{$read}}, join(", ", sort @{$refs_for{$read}})) . "\n";
+                d = d.strip()
                 tagtax_long_fh.write( d+"\t"+"\t".join(results[read])+"\t"+', '.join(sorted(refs_for[read]))  + "\n")
                 tagtax_terse_fh.write(d+"\t"+results[read][0]+"\t"+results[read][2]+"\t"+results[read][3]+"\t"+', '.join(sorted(refs_for[read]))+"\t"+results[read][1]+"\t"+str(frequency)+"\n")
                
@@ -993,7 +992,7 @@ class Gast:
                             logger.debug( "GAST: Found uniques file: "+unique_file)
                         else:
                             logger.warning( "GAST: Found uniques file BUT zero size "+unique_file)
-                            next
+                            continue
                     else:
                         logger.error( "GAST: NO uniques file found "+unique_file)
                         
