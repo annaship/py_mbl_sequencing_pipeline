@@ -278,9 +278,7 @@ class dbUpload:
         
     def insert_project(self, content_row, contact_id):
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
-        ('%s', '%s', '%s', reverse('%s'), '%s', 
-        (SELECT env_sample_source_id FROM env_sample_source WHERE env_source_name = '%s'), 
-        %s)
+        ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
 
         self.my_conn.execute_no_fetch(my_sql)
