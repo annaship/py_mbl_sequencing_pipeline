@@ -298,7 +298,10 @@ def env454upload(runobj):
     filenames   = my_env454upload.get_fasta_file_names()
     seq_in_file = 0
     total_seq   = 0
+    print ")_)_)_)_)"
+    print filenames
     for filename in filenames:
+        print "FFF: filename = " % filename
         try:
             logger.debug("\n----------------\nfilename = %s" % filename)
             fasta_file_path = filename
