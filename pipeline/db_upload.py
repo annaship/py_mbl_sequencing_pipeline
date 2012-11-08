@@ -367,10 +367,16 @@ class dbUpload:
             return int(res[0][0])              
 
     def count_seq_from_file(self):
-        with open(self.unique_file_counts) as fd:
-            file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
-        file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
-        return file_seq_orig_count
+        try:
+            with open(self.unique_file_counts) as fd:
+                file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
+            file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
+            return file_seq_orig_count
+        except Exception:
+            print "Unexpected error:", sys.exc_info()[0]
+            raise
+
+
 
     def check_seq_upload(self):
         """
