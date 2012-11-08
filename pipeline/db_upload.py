@@ -367,6 +367,8 @@ class dbUpload:
             return int(res[0][0])              
 
     def count_seq_from_file(self):
+        print "UUU: self.unique_file_counts = "
+        print self.unique_file_counts
         try:
             with open(self.unique_file_counts) as fd:
                 file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
@@ -375,8 +377,6 @@ class dbUpload:
         except Exception:
             print "Unexpected error:", sys.exc_info()[0]
             raise
-
-
 
     def check_seq_upload(self):
         """

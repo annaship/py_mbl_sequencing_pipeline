@@ -367,13 +367,6 @@ def env454upload(runobj):
             logger.debug("insert_taxonomy_time() took %s time to finish" % insert_taxonomy_time)
             logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
 
-            
-#        except Exception, e:          # catch all deriving from Exception (instance e)
-##            sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
-#            frameinfo = getframeinfo(currentframe())
-#            print frameinfo.filename, frameinfo.lineno
-#            print "\r[pipelineprocessor] Exception: ", e.__str__()      # address the instance, print e.__str__()
-##            raise                       # re-throw caught exception   
         except:                       # catch everything
             print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
