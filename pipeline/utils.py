@@ -280,8 +280,11 @@ class PipelneUtils:
         pass
 
     def write_seq_frequencies_in_file(self, out_file, fa_file_name, seq_in_file):
-        with open(out_file, "a") as myfile:
-            myfile.write(str(fa_file_name) + ": " + str(seq_in_file) + "\n")
+        try: 
+            with open(out_file, "a") as myfile:
+                myfile.write(str(fa_file_name) + ": " + str(seq_in_file) + "\n")
+        except Exception:
+            print Exception            
     
     def get_all_files(self, out_file_path):
         files = {}
