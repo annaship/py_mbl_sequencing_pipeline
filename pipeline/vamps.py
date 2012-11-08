@@ -421,10 +421,18 @@ class Vamps:
                 datarow = ['']
                 id = f.id.split('|')[0]
                 seq = f.seq
-                tax = read_id_lookup[id]
-                rank = tax_collector[tax]['rank']
-                cnt = tax_collector[tax]['knt']
-                freq = tax_collector[tax]['freq']
+                if id in read_id_lookup:
+                    tax = read_id_lookup[id]
+                else: 
+                    tax = ''
+                if tax in tax_collector:
+                    rank = tax_collector[tax]['rank']
+                    cnt = tax_collector[tax]['knt']
+                    freq = tax_collector[tax]['freq']
+                else:
+                    rank = 'NA'
+                    cnt  = 0
+                    freq = 0
                 if id in refid_collector:
                     distance = refid_collector[id]['distance']
                     refhvr_ids = refid_collector[id]['refhvr_ids']
@@ -485,8 +493,15 @@ class Vamps:
                 datarow = ['']
                 id = f.id.split('|')[0]
                 seq = f.seq
-                tax = read_id_lookup[id]
-                rank = tax_collector[tax]['rank']
+                if id in read_id_lookup:
+                    tax = read_id_lookup[id]
+                else: 
+                    tax = ''
+                if tax in tax_collector:
+                    rank = tax_collector[tax]['rank']
+                else:
+                    rank = 'NA'
+                
                 if id in refid_collector:
                     distance = refid_collector[id]['distance']
                     refhvr_ids = refid_collector[id]['refhvr_ids']

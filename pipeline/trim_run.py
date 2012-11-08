@@ -22,6 +22,7 @@ from suites.primer import PrimerSuite
 from pipeline.primer_utils import *
 from pipeline.utils import *
 from fastalib import *
+from fastqlib import *
 from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
 from pipeline.pipelinelogging import logger
@@ -227,11 +228,17 @@ class TrimRun( object ):
                 parsing_format = "fasta"
             else:
                 parsing_format = file_format
+                
+            
+            
+            
             file_path = os.path.join(self.indir,file_info["name"])
             print 'FILE',file_path
-            logger.debug(file_info["name"]+' '+parsing_format)
+            logger.debug(file_info["name"]+' parsing format: '+parsing_format)
             # sff and fasta (non-mbl) get their lane info from this .ini field
-            lane = file_info["lane"]   
+            lane = file_info["lane"] 
+                
+                
             for record in SeqIO.parse(file_path, parsing_format):            
                 self.number_of_raw_sequences += 1
                 
@@ -243,16 +250,16 @@ class TrimRun( object ):
                 elif file_format == "fastq-sanger":                    
                     id = record.id
                 elif file_format == "fastq-illumina":
-                	# will need lots of other stuff here for fastq-illumina
-                	id = record.id
+                    # will need lots of other stuff here for fastq-illumina
+                    id = record.id
                 else:
-                	id = record.id
+                    id = record.id
                 # should merge these with above if/else
                 
                 if file_format == "fasta" or file_format == "fasta-mbl":
                     q_scores = ''
                     # for vamps user upload:
-                    if os.path.exists(self.indir + "/qualfile_qual_clean"):
+                    if os.path.exists(self.indir + "/qualfile_qual_clean") and os.path.getsize(self.indir + "/qualfile_qual_clean") > 0:
                         # for vamps uploads use '_clean' file 
                         # format is on one line ( created from reg fasta in upload_file.php: 
                         #  >FRZPY5Q02G73IH	37 37 37 37 37 37 37 37 37 37
@@ -260,7 +267,7 @@ class TrimRun( object ):
                         q_scores = [int(q) for q in q_scores]
                         
                     else:
-                        logger.debug("No qual file found")
+                        logger.debug("No usable qual file found")
                 elif file_format == "fastq-sanger":
                     q_scores = record.letter_annotations["phred_quality"]  
                 elif file_format == "fastq-illumina":
@@ -272,11 +279,11 @@ class TrimRun( object ):
                 #
                 # DO TRIM: Trim Each Sequence
                 #
-                #
+                ######################################
                 seq = record.seq.tostring().upper()
                 
                 trim_data = self.do_trim(id, lane, seq, q_scores)
-                #
+                ######################################
                 #
                 #
                 ########################################################

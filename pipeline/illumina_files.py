@@ -103,7 +103,7 @@ class IlluminaFiles:
             program_name = "analyze-illumina-v6-overlaps"
             if self.LOCAL:
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"
-            call([program_name, file_name])
+            call([program_name, file_name, "--archaea"])
     
     def uniq_fa(self):
         n = 0        

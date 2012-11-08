@@ -884,8 +884,9 @@ class Gast:
             dupes = data[1].split(", ")
             read  = data[0]
             taxObjects  = []
-            distance    =0
-            refs_for    ={}
+            distance    = 0
+            frequency   = 0
+            refs_for    = {}
             
             #print 'read', read
             if read not in results:
