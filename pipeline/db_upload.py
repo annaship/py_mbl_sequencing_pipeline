@@ -387,3 +387,4 @@ class dbUpload:
 #        if os.path.exists(file_full):
 #            os.remove(file_full)
         pipelne_utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)       
+        
