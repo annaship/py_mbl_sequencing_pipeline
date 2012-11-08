@@ -102,8 +102,16 @@ class IlluminaFiles:
 #            print "%s ini file: %s" % (n, file_name)
             program_name = "analyze-illumina-v6-overlaps"
             if self.LOCAL:
+<<<<<<< HEAD
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"
             call([program_name, file_name, "--archaea"])
+=======
+                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"           
+            if self.archaea:
+                call([program_name, file_name, "--archaea"]) 
+            else: 
+                call([program_name, file_name])
+>>>>>>> add archaea as arg for illumina
     
     def uniq_fa(self):
         n = 0        

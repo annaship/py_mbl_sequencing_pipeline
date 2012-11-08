@@ -65,8 +65,9 @@ if __name__ == '__main__':
                 -fs/--seq_file_suffix   File suffix - useful when there are additional files
                                             in the input directory that you don't want to include. [optional (default: fa.unique)]
                                             
-                -b/--baseouputdir       Base output directory where the run directory will be found.
+                -b/--baseoutputdir       Base output directory where the run directory will be found.
                                             The run directory will be created if it is not found.  [optional (default: ./)]
+                -archaea/--archaea               For illumina only [optional (default: "")]
                                             
                 -s/--steps              Steps to be performed by this pipeline (comma separated list)
                                             Choices:    validate        - validates your metadata file
@@ -94,6 +95,11 @@ if __name__ == '__main__':
     # which means that csv file will require more commandline parameters.
     # NOTE: do not store any of the command line item as store_true or store_false or they
     # may not be able to be overridden buy the config file (ini).
+    """TO add a new argument: 
+        1) add it here
+        2) add it to constants.pipeline_run_items()
+        3) add it to runconfig.initializeFromDictionary()
+    """
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline')
     parser.add_argument('-c', '--configuration', required=False,                         dest = "configPath",
                                                  help = 'Configuration parameters (.ini file) of the run. See README File')
@@ -120,7 +126,10 @@ if __name__ == '__main__':
     # Illumina and 454 Specific
     parser.add_argument('-csv', '--csv',            required=False,                         dest = "csvPath",
                                                         help = 'CSV file path. See README File')
-                                                     
+    
+    parser.add_argument('-archaea', '--archaea',    required=False,   action="store",       dest = "archaea",
+                                                        help = 'Use for Archaea perfect overlap')
+                                                       
     parser.add_argument('-f', '--config_format',  required=False,   action="store",     dest = "config_file_type",  
                                                  help = 'ini or csv') 
     

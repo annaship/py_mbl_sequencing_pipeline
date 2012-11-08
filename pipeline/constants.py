@@ -109,7 +109,8 @@ pipeline_run_items = {
                 'baseoutputdir':'output',
                 'input_dir':'.',
                 'primer_file':'',
-                'require_distal':True
+                'require_distal':True,
+                'archaea':''
 			},
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',

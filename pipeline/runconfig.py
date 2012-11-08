@@ -191,6 +191,8 @@ class RunConfig:
                 self.database_host  = general_config['database_host'] 
                 self.site           = general_config['site']
                 self.load_vamps_database = general_config['load_vamps_database']
+                if general_config.has_key("archaea"):
+                    self.archaea    = general_config['archaea'] 
             elif self.platform == '454':
                 self.compressed     = general_config['compressed'] 
                 self.database_name  = general_config['database_name'] 
