@@ -325,7 +325,7 @@ def env454upload(runobj):
             insert_seq_time = elapsed
             logger.debug("seq_in_file = %s" % seq_in_file)
             logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
-#            print "insert_seq() took ", elapsed, " time to finish"
+            print "insert_seq() took ", elapsed, " time to finish"
             start = time()
             my_env454upload.get_seq_id_dict(sequences)
             elapsed = (time() - start)
@@ -335,9 +335,9 @@ def env454upload(runobj):
             while fasta.next():
 #                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
                 start = time()
-#                print "Inserting pdr info"
-#                for attr in dir(fasta):
-#                  print "obj.%s = %s" % (attr, getattr(fasta, attr))
+                print "Inserting pdr info"
+                for attr in dir(fasta):
+                    print "obj.%s = %s" % (attr, getattr(fasta, attr))
 
                 my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
                 elapsed = (time() - start)
@@ -345,7 +345,7 @@ def env454upload(runobj):
 #                print "insert_pdr_info() took ", elapsed, " time to finish"                
 
                 start = time()
-#                print "Inserting taxonomy"
+                print "Inserting taxonomy"
                 my_env454upload.insert_taxonomy(fasta, gast_dict)
 
                 elapsed = (time() - start)
@@ -355,7 +355,7 @@ def env454upload(runobj):
 #                print "tax_id = ", tax_id            
 
                 start = time()
-#                print "Inserting sequence_uniq_info_ill"
+                print "Inserting sequence_uniq_info_ill"
                 my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
                 elapsed = (time() - start)
                 insert_sequence_uniq_info_ill_time += elapsed
