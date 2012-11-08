@@ -186,41 +186,43 @@ class dbUpload:
     1    1529    2164    8    6951    2411    83            19    JV    JV    GCCTAA    0    230    6_FP1BermC_6_14_10_CGCTC    101    23
     """
     def insert_taxonomy(self, fasta, gast_dict):
-        (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-        "if we already had this taxonomy in this run, just skip it"
-        if taxonomy in self.tax_id_dict:
-            next
-        else:
-            tax_id = self.get_id("taxonomy", taxonomy)
-            if tax_id:
-                self.tax_id_dict[taxonomy] = tax_id
+        if gast_dict:
+            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+            "if we already had this taxonomy in this run, just skip it"
+            if taxonomy in self.tax_id_dict:
+                next
             else:
-                my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-                tax_id = self.my_conn.execute_no_fetch(my_sql)
-                self.tax_id_dict[taxonomy] = tax_id
-            return tax_id
+                tax_id = self.get_id("taxonomy", taxonomy)
+                if tax_id:
+                    self.tax_id_dict[taxonomy] = tax_id
+                else:
+                    my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
+                    tax_id = self.my_conn.execute_no_fetch(my_sql)
+                    self.tax_id_dict[taxonomy] = tax_id
+                return tax_id
             
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
-        (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-        sequence_ill_id = self.seq_id_dict[fasta.seq]
-        if taxonomy in self.tax_id_dict:
-            try:
-                taxonomy_id = self.tax_id_dict[taxonomy] 
-            except Exception, e:
-                logger.debug("Error = %s" % e)
-                raise
-        my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
-               (
-                %s,
-                %s,
-                '%s',
-                '%s',
-                (SELECT rank_id FROM rank WHERE rank = '%s'),
-                '%s'                
-               )
-               """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-        res_id = self.my_conn.execute_no_fetch(my_sql)
-        return res_id
+        if gast_dict:
+            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+            sequence_ill_id = self.seq_id_dict[fasta.seq]
+            if taxonomy in self.tax_id_dict:
+                try:
+                    taxonomy_id = self.tax_id_dict[taxonomy] 
+                except Exception, e:
+                    logger.debug("Error = %s" % e)
+                    raise
+            my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+                   (
+                    %s,
+                    %s,
+                    '%s',
+                    '%s',
+                    (SELECT rank_id FROM rank WHERE rank = '%s'),
+                    '%s'                
+                   )
+                   """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+            res_id = self.my_conn.execute_no_fetch(my_sql)
+            return res_id
     
     def put_run_info(self, content = None):
 
