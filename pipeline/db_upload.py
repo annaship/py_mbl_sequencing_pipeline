@@ -357,14 +357,21 @@ class dbUpload:
 #        self.del_sequence_pdr_info(self.rundate)
 
     def count_sequence_pdr_info_ill(self):
+        projects = self.get_project_names()
+        "TODO: add query by dataset names from actual files?"
         my_sql = """SELECT count(sequence_pdr_info_ill_id) 
                     FROM sequence_pdr_info_ill 
                       JOIN run_info_ill USING(run_info_ill_id) 
                       JOIN run USING(run_id) 
-                    WHERE run = '%s'""" % (self.rundate)
+                      join project using(project_id)
+                    WHERE run = '%s' and project in (\"%s\")""" % (self.rundate, projects)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])              
+
+    def get_project_names(self):
+        projects = [v.project for v in self.runobj.samples.itervalues()]
+        return '", "'.join(set(projects))
 
     def count_seq_from_file(self):
         try:
