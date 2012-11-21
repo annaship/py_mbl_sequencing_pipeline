@@ -109,8 +109,7 @@ pipeline_run_items = {
                 'baseoutputdir':'output',
                 'input_dir':'.',
                 'primer_file':'',
-                'require_distal':True,
-                'archaea':''
+                'require_distal':True
 			},
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',
@@ -174,7 +173,7 @@ qsub_cmd            = '/usr/local/sge/bin/lx24-amd64/qsub'
 clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #mothur_cmd          = '/bioware/mothur/mothur'
 #fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
-fastaunique_cmd     = '/bioware/linux/seqinfo/bin/fastaunique'
+fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
 ref_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 tax_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
