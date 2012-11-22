@@ -120,6 +120,7 @@ class dbUpload:
         return fa_files
         
     def get_run_info_ill_id(self, filename_base):
+        
         my_sql = """SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'""" % (filename_base)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
@@ -302,6 +303,7 @@ class dbUpload:
         project_id      = self.get_id('project',      content_row.project)
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
         primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
+        file_prefix     = content_row.dataset + "_" + content_row.barcode_index
         if (content_row.overlap == 'complete'):
             overlap = 0
         
@@ -313,7 +315,7 @@ class dbUpload:
                                                     '%s', %s, %s)
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, overlap, content_row.insert_size,
-                                                    content_row.dataset, content_row.read_length, primer_suite_id)
+                                                    file_prefix, content_row.read_length, primer_suite_id)
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_primer(self):
