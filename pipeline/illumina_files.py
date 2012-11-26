@@ -28,8 +28,9 @@ class IlluminaFiles:
         self.runobj         = runobj
         self.out_files      = {} 
         self.id_dataset_idx = {}
-        self.dataset_emails = dict((self.runobj.samples[key].dataset, self.runobj.samples[key].email) for key in self.runobj.samples)
-        self.dataset_index  = dict((self.runobj.samples[key].dataset + "_" + self.runobj.samples[key].barcode_index, self.runobj.samples[key].dataset) for key in self.runobj.samples)
+#        self.dataset_emails = dict((self.runobj.samples[key].dataset, self.runobj.samples[key].email) for key in self.runobj.samples)
+#        self.file_name_base = [i + "_R1" for i in self.runobj.samples.keys()] + [i + "_R2" for i in self.runobj.samples.keys()]
+#        self.dataset_index  = dict((self.runobj.samples[key].dataset + "_" + self.runobj.samples[key].barcode_index, self.runobj.samples[key].dataset) for key in self.runobj.samples)
         self.in_file_path   = self.runobj.input_dir
         self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
 #        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
@@ -64,14 +65,19 @@ class IlluminaFiles:
         return dirname
 
     def open_dataset_files(self):
-        n = 0
-        for dataset_idx in self.dataset_index.keys():
-            for read_n in ["_R1", "_R2"]:
-                n += 1
-                dataset_idx_base = dataset_idx + read_n
-                output_file = os.path.join(self.out_file_path, dataset_idx_base + ".fastq")
-                self.out_files[dataset_idx_base] = fq.FastQOutput(output_file)
+        file_name_base = [i + "_R1" for i in self.runobj.samples.keys()] + [i + "_R2" for i in self.runobj.samples.keys()]
+        for f_name in file_name_base:
+            output_file = os.path.join(self.out_file_path, f_name + ".fastq")
+            self.out_files[f_name] = fq.FastQOutput(output_file)
         self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))
+#        n = 0
+#        for dataset_idx in self.dataset_index.keys():
+#            for read_n in ["_R1", "_R2"]:
+#                n += 1
+#                dataset_idx_base = dataset_idx + read_n
+#                output_file = os.path.join(self.out_file_path, dataset_idx_base + ".fastq")
+#                self.out_files[dataset_idx_base] = fq.FastQOutput(output_file)
+#        self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))
         
 
     def close_dataset_files(self): 
@@ -97,19 +103,14 @@ class IlluminaFiles:
     
     "TODO: made one method out of the next two"
     def perfect_reads(self):
-        n = 0
+#        n = 0
         print "Extract perfect V6 reads:"
-        for dataset_idx in self.dataset_index.keys():
-            file_name = os.path.join(self.out_file_path, dataset_idx + ".ini")
-            n +=1
-#            print "%s ini file: %s" % (n, file_name)
+        for idx_key in self.runobj.samples.keys():
+            file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "analyze-illumina-v6-overlaps"
             if self.LOCAL:
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"           
-            "TODO: get as parameter!"
-#            self.archaea = True
-            self.archaea = False
-            if self.archaea:
+            if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
                 call([program_name, file_name, "--archaea"]) 
             else: 
                 call([program_name, file_name])
@@ -138,8 +139,8 @@ class IlluminaFiles:
 #                self.out_files["W5_4-PERFECT_reads.fa.unique"].store_entry(e)
 
     def create_inis(self):
-        for dataset_idx in self.dataset_index.keys():
-            email = self.dataset_emails[self.dataset_index[dataset_idx]]
+        for idx_key in self.runobj.samples.keys():
+            email = self.runobj.samples[idx_key].email
 #        for dataset in self.dataset_emails.keys():
 #            dataset_idx_base = dataset + "_" + self.dataset_index[dataset]
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
@@ -153,8 +154,8 @@ output_directory = %s
 [files]
 pair_1 = %s
 pair_2 = %s
-            """ % (dataset_idx, email, self.out_file_path, self.results_path, dataset_idx + "_R1.fastq", dataset_idx + "_R2.fastq")
-            ini_file_name = os.path.join(self.out_file_path,  dataset_idx + ".ini")
+            """ % (idx_key, email, self.out_file_path, self.results_path, idx_key + "_R1.fastq", idx_key + "_R2.fastq")
+            ini_file_name = os.path.join(self.out_file_path,  idx_key + ".ini")
             self.open_write_close(ini_file_name, text)
 
     def open_write_close(self, ini_file_name, text):
@@ -190,8 +191,8 @@ pair_2 = %s
 #                ini_run_key  = e.index_sequence + "_" + e.sequence[4:9] + "_" + e.lane_number
                 if ini_run_key in self.runobj.samples.keys() and int(e.pair_no) == 1:
                     sample = self.runobj.samples[ini_run_key] 
-                    dataset_file_name_base = sample.dataset + "_" + sample.barcode_index
-                    dataset_file_name_base_r1 = dataset_file_name_base + "_R1"
+#                    dataset_file_name_base = sample.dataset + "_" + sample.barcode_index
+                    dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
                         self.out_files[dataset_file_name_base_r1].store_entry(e)
     #                    print "id = %s,\nseq = %s" % (e.id, e.sequence)
@@ -199,7 +200,7 @@ pair_2 = %s
                         short_id1 = e.header_line.split()[0]
                         short_id2 = ":".join(e.header_line.split()[1].split(":")[1:])
                         id2 = short_id1 + " 2:" + short_id2
-                        self.id_dataset_idx[id2] = dataset_file_name_base
+                        self.id_dataset_idx[id2] = ini_run_key
                 else:
                     self.out_files["unknown"].store_entry(e)
                     
