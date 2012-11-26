@@ -139,7 +139,7 @@ if __name__ == '__main__':
     parser.add_argument("-fs", "--seq_file_suffix",     required=False,  action="store",dest = "input_file_suffix",
                                                     help="Sequence file suffix [optional] ") 
      
-    parser.add_argument('-cp', '--compressed',  required=False,   action="store",       dest = "compressed",              
+    parser.add_argument('-cp', '--compressed',  required=True,   action="store",       dest = "compressed",              
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
     parser.add_argument('-db_host', '--database_host',  required=False,   action="store",  dest = "database_host",          
                                                  help = 'Database host') 

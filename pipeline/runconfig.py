@@ -47,10 +47,12 @@ class RunConfig:
         self.output_dir = None
         #self.config_file_type = config_info['config_file_type']  # ini, csv or dict
         self.sff_files  = []
-        self.run_keys = []
+        self.run_keys   = []
         self.run_key_lane_dict = {}
-        self.samples = {}
+        self.samples    = {}
         self.base_python_dir = os.path.normpath(basepythondir)
+        self.compressed = None # True/False
+
         #self.configFile = config_info
         #
         # IMPORTANT to get a dictionary here from whatever the input is:
