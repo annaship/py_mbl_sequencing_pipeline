@@ -303,7 +303,7 @@ class dbUpload:
         project_id      = self.get_id('project',      content_row.project)
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
         primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
-        file_prefix     = content_row.dataset + "_" + content_row.barcode_index
+        file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
         if (content_row.overlap == 'complete'):
             overlap = 0
         
