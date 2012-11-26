@@ -532,7 +532,7 @@ class MetadataUtils:
             sys.exit()
         print os.uname()
         print os.uname()[1]
-        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == 'as-macbook.local' or os.uname()[1] == 'as-macbook.home':
+        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == 'as-macbook.local' or os.uname()[1] == 'as-macbook.home' or os.uname()[1] == "Ashipunova.local":
             return "c"
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
