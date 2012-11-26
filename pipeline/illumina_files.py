@@ -188,14 +188,10 @@ pair_2 = %s
             while f_input.next():
                 e = f_input.entry
                 ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
-#                ini_run_key  = e.index_sequence + "_" + e.sequence[4:9] + "_" + e.lane_number
                 if ini_run_key in self.runobj.samples.keys() and int(e.pair_no) == 1:
-                    sample = self.runobj.samples[ini_run_key] 
-#                    dataset_file_name_base = sample.dataset + "_" + sample.barcode_index
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
                         self.out_files[dataset_file_name_base_r1].store_entry(e)
-    #                    print "id = %s,\nseq = %s" % (e.id, e.sequence)
                         "TODO: make a method:"
                         short_id1 = e.header_line.split()[0]
                         short_id2 = ":".join(e.header_line.split()[1].split(":")[1:])
