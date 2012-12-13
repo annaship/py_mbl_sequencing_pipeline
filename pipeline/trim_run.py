@@ -81,7 +81,10 @@ class TrimRun( object ):
         os.environ['PATH'] = '/usr/local/sge/bin/lx24-amd64:'+path
         
         self.runbin={}
-        
+#         print 'SAMPLES: '
+#         for idx_key in self.runobj.samples:
+#                 print idx_key,self.runobj.samples[idx_key]
+#         print 'SAMPLES: '    
         if self.runobj.vamps_user_upload:
             for idx_key in self.runobj.samples:
                 sample = self.runobj.samples[idx_key]

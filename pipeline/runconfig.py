@@ -105,7 +105,7 @@ class RunConfig:
         
         self.initializeFromDictionary(config_dict)
         
-    
+        print "self.vamps_user_upload",self.vamps_user_upload
         if not self.vamps_user_upload:
     
             # primers should be in json format in a file and that file should be specified in the general section
@@ -178,7 +178,8 @@ class RunConfig:
             #self.dataset        = general_config['dataset']
             self.dna_region     = general_config['dna_region']
             self.domain         = general_config['domain']
-            #self.env_source_id  = general_config['envsource']
+            
+            
             self.site           = general_config['site']
             
             self.load_vamps_database = general_config['load_vamps_database']
@@ -186,6 +187,14 @@ class RunConfig:
                 self.fasta_file    = general_config['fasta_file'] 
             except:
                 self.fasta_file    = None
+            try:
+                self.use_full_length= general_config['use_full_length']
+            except:
+                self.use_full_length= False
+            try:
+                self.classifier     = general_config['classifier']
+            except:
+                self.classifier= 'unknown'
         else:
             if self.platform == 'illumina':
                 self.compressed     = general_config['compressed'] 
@@ -256,10 +265,11 @@ class RunConfig:
         
         # now deal with each lane_runkey combo (Sample) that is misnamed though
         # populate sample information for every run_key
+        
         for lane_run_key in [s for s in configDict.keys() if s != 'general']:
         	# change ':' to '_'
         	# key = lane_run_key[:1]+'_'+lane_run_key[2:]
-        	
+            
             lane_run_dict = configDict[lane_run_key]
             #print 'CD ',configDict
             
@@ -339,7 +349,7 @@ class RunConfig:
             sample.dataset_description  = lane_run_dict['dataset_description']
             sample.project              = lane_run_dict['project']
             sample.dataset              = lane_run_dict['dataset']
-            
+            print 'lane_run_keyv'+lane_run_key
             if self.vamps_user_upload:
                 # required for 454
                 sample.direction = lane_run_dict['direction'] 

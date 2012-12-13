@@ -145,8 +145,8 @@ class Gast:
                 unique_file = os.path.join(output_dir, 'unique.fa')
                 names_file  = os.path.join(output_dir, 'names')
                 #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
-                print 'gast_dir', gast_dir
-                print 'unique_file', unique_file
+                print 'gast_dir:', gast_dir
+                print 'unique_file:', unique_file
             else:
                 if self.runobj.platform == 'illumina':
                     output_dir = os.path.join(self.global_gast_dir,key)
@@ -177,7 +177,7 @@ class Gast:
             print "\nFile", str(counter), key
             print 'use_cluster:', self.use_cluster
             if os.path.exists(unique_file) and (os.path.getsize(unique_file) > 0):
-                
+                print "cluster nodes: "+str(cluster_nodes)
                 i = 0
                 if cluster_nodes:
                     grep_cmd = ['grep', '-c', '>', unique_file]
@@ -188,6 +188,7 @@ class Gast:
                     
                     calcout = subprocess.check_output(calcnode_cmd).strip()
                     logger.debug("calcout:\n"+calcout)
+                    print "facount: "+str(facount)
                     #calcout:
                     # node=1 start=1 end=1 rows=1
                     # node=2 start=2 end=2 rows=1
@@ -249,7 +250,7 @@ class Gast:
                         grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename)
     
                         logger.debug("grep command: "+grep_cmd)
-                        if self.use_cluster:                
+                        if self.use_cluster:  
                             fh.write(grep_cmd + "\n")
                             fh.close()
                             
@@ -261,7 +262,7 @@ class Gast:
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
                             #qsub_cmd = C.qsub_cmd + " " + script_filename
                             logger.debug("qsub command: "+qsub_cmd)
-                            
+                            print "qsub command: "+qsub_cmd
                             #subprocess.call(qsub_cmd, shell=True)
                             proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             # proc.communicate will block - probably not what we want
@@ -698,8 +699,15 @@ class Gast:
             dna_region = 'v4v6'
         if dna_region == 'v6v4a':
             dna_region = 'v4v6a'
-        print  'dna_region ', dna_region   
-        if C.use_full_length or dna_region == 'unknown' or dna_region not in C.refdbs:
+        print  'dna_region ', dna_region 
+        # try this first:
+        if os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')):
+            refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')
+            taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+        elif os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')):
+            refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')
+            taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+        elif C.use_full_length or dna_region == 'unknown' or dna_region not in C.refdbs:
             if os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
                 refdb = os.path.join(self.refdb_dir, 'refssu.udb')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
@@ -792,7 +800,9 @@ class Gast:
     def get_grep_cmd(self, usearch_filename, clustergast_filename ):
         
         use_full_length = ''
-        if C.use_full_length: 
+        if C.use_full_length:
+            use_full_length = "-use_full_length"
+        if hasattr(self.runobj, 'use_full_length') and self.runobj.use_full_length: 
             use_full_length = "-use_full_length"
             
         grep_cmd = "grep"

@@ -253,7 +253,7 @@ class Vamps:
             datarow.append(str(knt))
             datarow.append(str(freq))
             datarow.append(dataset_count)
-            datarow.append("GAST")
+            datarow.append(self.runobj.classifier)
             
             w = "\t".join(datarow)
             #print w
@@ -325,7 +325,7 @@ class Vamps:
                 datarow.append(project)
                 datarow.append(dataset)
                 datarow.append(project_dataset)
-                datarow.append("GAST")
+                datarow.append(self.runobj.classifier)
             
                 w = "\t".join(datarow)
                 #print w
