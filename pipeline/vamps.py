@@ -236,12 +236,12 @@ class Vamps:
             summer += knt
             datarow = ['',project,dataset]
             
-            taxes = tax.split(';')
-            
+            taxa = tax.split(';')
+            #if taxa[0] in C.domains:
             freq = float(knt) / int(dataset_count)
-            rank = C.ranks[len(taxes)-1]
+            rank = C.ranks[len(taxa)-1]
             for i in range(len(C.ranks)):                
-                if len(taxes) <= i:
+                if len(taxa) <= i:
                     taxes.append(C.ranks[i] + "_NA")
 
             tax_collector[tax] = {}
@@ -310,11 +310,13 @@ class Vamps:
            
             
             #print 'tax2',tax
-            rank = len( tax.split(';') ) -1
+            taxa = tax.split(';')
+            #if taxa[0] in C.domains:
+            rank = len( taxa ) -1
+            
             frequency = float(knt) / int(dataset_count)
             
-            
-            if len(tax) - len(''.join(tax.split(';'))) >= rank:
+            if len(tax) - len(''.join(taxa)) >= rank:
             
                 datarow = ['']
                 datarow.append(tax)
@@ -356,16 +358,18 @@ class Vamps:
         for taxon_string,v in taxon_string_lookup.iteritems():
             datarow = ['']
             datarow.append(taxon_string)
-            rank = str(len(taxon_string.split(';'))-1)
-            datarow.append(rank)
-            if rank==7 or taxon_string[-3:]=='_NA':
-                num_kids = '0'
-            else:
-                num_kids = '1'
-            datarow.append(num_kids)
-            w = "\t".join(datarow)
-            #print 'w',w
-            fh3.write(w+"\n")
+            taxa = taxon_string.split(';')
+            if taxa[0] in C.domains:
+                rank = str(len(taxa)-1)
+                datarow.append(rank)
+                if rank==7 or taxon_string[-3:]=='_NA':
+                    num_kids = '0'
+                else:
+                    num_kids = '1'
+                datarow.append(num_kids)
+                w = "\t".join(datarow)
+                #print 'w',w
+                fh3.write(w+"\n")
         fh3.close()
         
         return (tax_collector,read_id_lookup)
