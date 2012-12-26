@@ -36,8 +36,8 @@ csv_header_list = {
 }
 
 known_platforms = ('illumina','454','ion_torrent','vamps')
-primer_suites    = ["bacterialv6suite","bacterial v6 suite","bacterial_v6_suite","archaeal v6 suite","archaealv6suite","eukaryalv9suite"]
-dna_regions      = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", 
+primer_suites   = ["bacterialv6suite","bacterial v6 suite","bacterial_v6_suite","archaeal v6 suite","archaealv6suite","eukaryalv9suite","bacterial v4v5 suite"]
+dna_regions     = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", 
                     "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6", "its1"]
 
 
@@ -109,7 +109,8 @@ pipeline_run_items = {
                 'baseoutputdir':'output',
                 'input_dir':'.',
                 'primer_file':'',
-                'require_distal':True
+                'require_distal':True,
+                'do_perfect':True
 			},
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',
@@ -180,7 +181,7 @@ vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
 vamps_tax_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
 analysis_dir        = 'analysis'
 gast_dir            = 'analysis/gast'
-illumina_reads_dir  = 'analysis/perfect_reads'
+illumina_reads_dir  = 'analysis/reads_overlap'
 
 max_accepts = 10
 max_rejects = 0

@@ -6,6 +6,7 @@ import fastqlib as fq
 import fastalib as fa
 from subprocess import call
 import ast
+from utils import Dirs
 
 "TODO: add tests and test case"
 #from collections import defaultdict
@@ -16,8 +17,7 @@ class IlluminaFiles:
     1) split fastq files from casava into files with dataset_names
     2) create ini files 
     3) process them through Meren's script
-    4) result - files dataset_lane-PERFECT_reads.fa.unique with frequencies - to process with env454upload()
-    
+    4) result - files dataset_lane-PERFECT_reads.fa.unique with frequencies - to process with env454upload()    
     
     """
     def __init__(self, runobj):
@@ -32,10 +32,11 @@ class IlluminaFiles:
 #        self.file_name_base = [i + "_R1" for i in self.runobj.samples.keys()] + [i + "_R2" for i in self.runobj.samples.keys()]
 #        self.dataset_index  = dict((self.runobj.samples[key].dataset + "_" + self.runobj.samples[key].barcode_index, self.runobj.samples[key].dataset) for key in self.runobj.samples)
         self.in_file_path   = self.runobj.input_dir
-        self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
+        (self.out_file_path, self.results_path) = Dirs(self.in_file_path).check_and_make_output_dir()
+#        self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
 #        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
 #        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
-        self.results_path  = self.create_out_dir(os.path.join(self.out_file_path, "perfect_reads"))
+#        self.results_path  = self.create_out_dir(os.path.join(self.out_file_path, "reads_overlap"))
         self.open_dataset_files()
         
     def split_files(self, compressed = False):
@@ -52,17 +53,6 @@ class IlluminaFiles:
 
 #        self.perfect_reads()
 #        self.uniq_fa()
-            
-    def create_out_dir(self, dirname):
-        try:
-            os.makedirs(dirname)
-        except OSError:
-            if os.path.isdir(dirname):
-                pass
-            else:
-                # There was an error on creation, so make sure we know about it
-                raise        
-        return dirname
 
     def open_dataset_files(self):
         file_name_base = [i + "_R1" for i in self.runobj.samples.keys()] + [i + "_R2" for i in self.runobj.samples.keys()]
@@ -101,7 +91,6 @@ class IlluminaFiles:
 #        print "len(files) = %s" % len(files)
         return files
     
-    "TODO: made one method out of the next two"
     def perfect_reads(self):
 #        n = 0
         print "Extract perfect V6 reads:"
@@ -114,6 +103,16 @@ class IlluminaFiles:
                 call([program_name, file_name, "--archaea"]) 
             else: 
                 call([program_name, file_name])
+
+    def partial_overlap_reads(self):
+#        n = 0
+        print "Extract partial_overlap V4V5 reads:"
+        for idx_key in self.runobj.samples.keys():
+            file_name = os.path.join(self.out_file_path, idx_key + ".ini")
+            program_name = "merge-illumina-pairs"
+            if self.LOCAL:
+                program_name = "/Users/ashipunova/bin/illumina-utils/merge-illumina-pairs"           
+            call([program_name, file_name])
     
     def uniq_fa(self):
         n = 0        

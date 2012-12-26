@@ -86,8 +86,8 @@ class dbUpload:
         self.use_cluster = 1
 #        /test/sample_data/illumina/result/20120614/analysis
         "TODO: have all directory names in one place for gast, db_upload etc, using run_obj.input_dir and run_obj.output_dir"
-        res_path = "../result/" + self.rundate + "/analysis/perfect_reads"
-        "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/sample_data/illumina/result/20120614/analysis/perfect_reads"
+        res_path = "../result/" + self.rundate + "/analysis/reads_overlap"
+#        "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/sample_data/illumina/result/20120614/analysis/reads_overlap"
         self.in_file_path = os.path.join(self.runobj.input_dir, res_path)
         host_name = runobj.database_host
         database_name = runobj.database_name
@@ -361,6 +361,7 @@ class dbUpload:
     def count_sequence_pdr_info_ill(self):
         projects = self.get_project_names()
         "TODO: add query by dataset names from actual files?"
+#        run_key, barcode_index_lane
         my_sql = """SELECT count(sequence_pdr_info_ill_id) 
                     FROM sequence_pdr_info_ill 
                       JOIN run_info_ill USING(run_info_ill_id) 

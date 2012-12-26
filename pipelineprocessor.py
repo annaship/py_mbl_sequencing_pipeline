@@ -267,7 +267,10 @@ def illumina_files(runobj):
 #        shutil.rmtree('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis/')
     illumina_files = IlluminaFiles(runobj)
     illumina_files.split_files(compressed = runobj.compressed)
-    illumina_files.perfect_reads()
+    if runobj.do_perfect: 
+        illumina_files.perfect_reads()
+    else:
+        illumina_files.partial_overlap_reads()
     illumina_files.uniq_fa()
     
     elapsed = (time() - start)

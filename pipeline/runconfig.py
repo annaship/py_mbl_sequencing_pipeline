@@ -52,7 +52,8 @@ class RunConfig:
         self.samples    = {}
         self.base_python_dir = os.path.normpath(basepythondir)
         self.compressed = None # True/False
-
+        self.do_perfect = None # True/False
+        
         #self.configFile = config_info
         #
         # IMPORTANT to get a dictionary here from whatever the input is:
@@ -188,7 +189,8 @@ class RunConfig:
                 self.fasta_file    = None
         else:
             if self.platform == 'illumina':
-                self.compressed     = general_config['compressed'] 
+                self.compressed     = general_config['compressed']                 
+                self.do_perfect     = general_config['do_perfect'] 
                 self.database_name  = general_config['database_name'] 
                 self.database_host  = general_config['database_host'] 
                 self.site           = general_config['site']

@@ -983,7 +983,7 @@ class Gast:
                 #get from database
             else:
                 if self.runobj.platform == 'illumina':
-                    reads_dir = os.path.join(self.analysis_dir, 'perfect_reads')
+                    reads_dir = os.path.join(self.analysis_dir, 'reads_overlap')
                     
                     file_prefix = self.runobj.samples[key].file_prefix
                     unique_file = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique")

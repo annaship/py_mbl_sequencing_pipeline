@@ -296,7 +296,43 @@ class PipelneUtils:
 #        print "len(files) = %s" % len(files)
         return files    
 
+class Dirs:
+    """get input dir from args, create all other dirs
 
+analysis_dir        = 'analysis'
+gast_dir            = 'analysis/gast'
+illumina_reads_dir  = 'analysis/perfect_reads'
+  
+
+input_dir - directory with fastq or sff files
+
+"""
+    def __init__(self, input_dir = "."):
+        self.analysis_dir       = os.path.join(input_dir, C.analysis_dir)
+        self.gast_dir           = os.path.join(input_dir, C.gast_dir)
+        self.illumina_reads_dir = os.path.join(input_dir, C.illumina_reads_dir)
+        
+    def check_and_make_dir(self, dir_name):
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+        return dir_name
+    
+    def check_and_make_output_dir(self):
+        analysis_dir       = self.check_and_make_dir(self.analysis_dir)
+        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
+        return(analysis_dir, illumina_reads_dir)
+        
+    def create_out_dir(self, dirname):
+        try:
+            os.makedirs(dirname)
+        except OSError:
+            if os.path.isdir(dirname):
+                pass
+            else:
+                # There was an error on creation, so make sure we know about it
+                raise        
+        return dirname        
+        
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"
     print revcomp("GTTCAAAGAYTCGATGATTCAC")

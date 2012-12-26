@@ -141,6 +141,8 @@ if __name__ == '__main__':
      
     parser.add_argument('-cp', '--compressed',  required=True,   action="store",       dest = "compressed",              
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
+    parser.add_argument('-do_perfect', '--do_perfect',  required=True,   action="store",       dest = "do_perfect",              
+                                                 help = '"True" if it is perfect overlap, "False" - if partial. For illumina fastq files') 
     parser.add_argument('-db_host', '--database_host',  required=False,   action="store",  dest = "database_host",          
                                                  help = 'Database host') 
     parser.add_argument('-db_name', '--database_name',  required=False,   action="store", dest = "database_name",        
