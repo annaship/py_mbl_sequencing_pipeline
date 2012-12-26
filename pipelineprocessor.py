@@ -527,6 +527,7 @@ def get_keys(runobj):
         # if illumina they are index_runkey_lane concatenation
         # if 454 the are lane_key
         if runobj.vamps_user_upload:
+            #print 'KEYS: '+' '.join(runobj.run_keys)
             idx_keys=runobj.samples.keys()
         else:
             if runobj.platform == 'illumina':  

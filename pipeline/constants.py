@@ -218,6 +218,7 @@ refdbs = {'unknown':'refssu_all',
     
 ########### VAMPS UPLOAD ###########################################################################  
 ranks = ('domain','phylum','class','orderx','family','genus','species','strain')
+domains = ('Archaea','Bacteria','Eukarya','Organelle','Unknown')
 database_tables = {
 'vamps_user_uploads': {
             'tax_dc_tbl'      : 'vamps_data_cube_uploads',
