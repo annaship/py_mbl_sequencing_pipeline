@@ -108,11 +108,11 @@ class IlluminaFiles:
 #        n = 0
         print "Extract partial_overlap V4V5 reads:"
         for idx_key in self.runobj.samples.keys():
-            file_name = os.path.join(self.out_file_path, idx_key + ".ini")
+            ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "merge-illumina-pairs"
             if self.LOCAL:
                 program_name = "/Users/ashipunova/bin/illumina-utils/merge-illumina-pairs"           
-            call([program_name, file_name])
+            call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, "output"])
     
     def uniq_fa(self):
         n = 0        
@@ -183,10 +183,12 @@ pair_2 = %s
         """
         for file_r1 in files_r1:
             print "FFF1: file %s" % file_r1
+            index_sequence = self.get_index(file_r1)
             f_input  = fq.FastQSource(file_r1, compressed)
             while f_input.next():
                 e = f_input.entry
-                ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
+                ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
+#                ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
                 if ini_run_key in self.runobj.samples.keys() and int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
@@ -213,3 +215,6 @@ pair_2 = %s
                 else:
                     self.out_files["unknown"].store_entry(e)
 
+    def get_index(self, file_r1):
+        file_base_name = os.path.basename(file_r1)
+        return file_base_name.split("_")[0]
