@@ -346,12 +346,11 @@ id_number is a run date for MBL and a random number for VAMPS users
         else:
             id_number = runobj.run
             root_dir  = C.output_root_mbl
+        if self.utils.is_local:
+            root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results'
 
         self.analysis_dir = os.path.join(root_dir, runobj.platform, id_number, C.analysis_dir)
-        if self.utils.is_local:
-            analysis_dir = self.check_and_make_dir("/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results")
-        else:
-            analysis_dir = self.check_and_make_dir(self.analysis_dir)            
+        analysis_dir = self.check_and_make_dir(self.analysis_dir)            
         return analysis_dir
     
 #        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)

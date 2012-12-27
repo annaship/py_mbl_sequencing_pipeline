@@ -8,18 +8,15 @@ import constants as C
 import re
 import json  
 from types import *
+from pipeline.utils import PipelneUtils
 
 class Gast:
     """Doc string here.."""
     Name = "GAST"
-    def __init__(self, run_object = None, idx_keys=[]):
-        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == "as-macbook.home" or os.uname()[1] == "as-macbook.local" or os.uname()[1] == "Ashipunova.local":
-            self.LOCAL = True
-        else:
-            self.LOCAL = False
-                        
+    def __init__(self, run_object = None, idx_keys=[]):                       
         self.runobj = run_object       
         self.test   = True
+        self.utils  = PipelneUtils()
         
         # Create and move all from below
         # self.set_directories()
@@ -38,7 +35,7 @@ class Gast:
             self.iterator  = self.idx_keys
             self.refdb_dir = C.ref_database_dir
 
-            if self.LOCAL:
+            if self.utils.is_local:
 #                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"        
                 self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
 
@@ -768,8 +765,8 @@ class Gast:
 #             usearch6 = C.usearch6_cmd
 #             
         usearch_cmd = C.usearch6_cmd
-        if self.LOCAL:
-            usearch_cmd = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"
+        if self.utils.is_local:
+            usearch_cmd = "/Users/ashipunova/bin/illumina-utils/usearch"
         
         usearch_cmd += ' -usearch_global ' + fastasamp_filename
         usearch_cmd += ' -gapopen 6I/1E'

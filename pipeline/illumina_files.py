@@ -6,7 +6,7 @@ import fastqlib as fq
 import fastalib as fa
 from subprocess import call
 import ast
-from utils import Dirs
+from pipeline.utils import Dirs, PipelneUtils
 import constants as C
 
 "TODO: add tests and test case"
@@ -22,10 +22,7 @@ class IlluminaFiles:
     
     """
     def __init__(self, runobj):
-        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == "as-macbook.home" or os.uname()[1] == "as-macbook.local" or os.uname()[1] == "Ashipunova.local":
-            self.LOCAL = True
-        else:
-            self.LOCAL = False
+        self.utils = PipelneUtils()
         self.runobj         = runobj
         self.out_files      = {} 
         self.id_dataset_idx = {}
@@ -102,7 +99,7 @@ class IlluminaFiles:
         for idx_key in self.runobj.samples.keys():
             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "analyze-illumina-v6-overlaps"
-            if self.LOCAL:
+            if self.utils.is_local:
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"           
             if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
                 call([program_name, file_name, "--archaea"]) 
@@ -115,7 +112,7 @@ class IlluminaFiles:
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "merge-illumina-pairs"
-            if self.LOCAL:
+            if self.utils.is_local:
                 program_name = "/Users/ashipunova/bin/illumina-utils/merge-illumina-pairs"           
             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, "output"])
     
@@ -128,7 +125,7 @@ class IlluminaFiles:
                 n +=1   
 #                print "%s fasta file: %s" % (n, full_name)
                 program_name = "fastaunique"
-                if self.LOCAL:
+                if self.utils.is_local:
                     program_name = "/Users/ashipunova/bin/illumina-utils/fastaunique"                
                 call([program_name, full_name])
 #                pass
