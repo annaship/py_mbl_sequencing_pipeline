@@ -34,7 +34,7 @@ class IlluminaFiles:
 #        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
 
         self.out_file_path = dirs.check_and_make_analysis_dir(self.runobj)
-        self.results_path  = ""
+        self.results_path  = dirs.check_and_make_dir('reads_overlap')
 #        self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
 #        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
 #        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
@@ -62,23 +62,9 @@ class IlluminaFiles:
             output_file = os.path.join(self.out_file_path, f_name + ".fastq")
             self.out_files[f_name] = fq.FastQOutput(output_file)
         self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))
-#        n = 0
-#        for dataset_idx in self.dataset_index.keys():
-#            for read_n in ["_R1", "_R2"]:
-#                n += 1
-#                dataset_idx_base = dataset_idx + read_n
-#                output_file = os.path.join(self.out_file_path, dataset_idx_base + ".fastq")
-#                self.out_files[dataset_idx_base] = fq.FastQOutput(output_file)
-#        self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))
         
 
     def close_dataset_files(self): 
-#        map(lambda x: x.close(), [dict[item]['filename'] for item in dict])
-#        for dataset in self.dataset_emails.keys():
-#            for read_n in ["_R1", "_R2"]:
-#                key_d = dataset + read_n
-#                self.out_files[key_d].close()
-#        self.out_files["unknown"].close()
         for o_file in self.out_files.iteritems():
             o_file[1].close()
         return

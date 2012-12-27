@@ -45,6 +45,7 @@ import json
 import fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
+from pipeline.utils import Dirs
 
 
 # the main loop for performing each of the user's supplied steps
@@ -54,11 +55,13 @@ def process(runobj, steps):
     if 'clean' in requested_steps and len(requested_steps) > 1:
         sys.exit("The clean step cannot be combined with other steps - Exiting")
     
-    # create output directory:
+    # create output directories:
+#    Dirs().create_output_dirs(runobj)
+
     # this should have been created in pipeline-ui.py. but just in case....
-    if not os.path.exists(runobj.output_dir):
-        logger.debug("Creating output directory: "+runobj.output_dir)
-        os.makedirs(runobj.output_dir)  
+#    if not os.path.exists(runobj.output_dir):
+#        logger.debug("Creating output directory: "+runobj.output_dir)
+#        os.makedirs(runobj.output_dir)  
 
     
     # Open run STATUS File here.

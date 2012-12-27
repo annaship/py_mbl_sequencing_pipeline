@@ -30,6 +30,7 @@ from pipeline.metadata import MetadataUtils
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
+from pipeline.utils import Dirs
 
 import logging
 import argparse
@@ -63,10 +64,7 @@ if __name__ == '__main__':
                                             [optional (default: fasta)]
                                             
                 -fs/--seq_file_suffix   File suffix - useful when there are additional files
-                                            in the input directory that you don't want to include. [optional (default: fa.unique)]
-                                            
-                -b/--baseoutputdir       Base output directory where the run directory will be found.
-                                            The run directory will be created if it is not found.  [optional (default: ./)]
+                                            in the input directory that you don't want to include. [optional (default: fa.unique)]                                            
                 -archaea/--archaea               For illumina only [optional (default: "")]
                                             
                 -s/--steps              Steps to be performed by this pipeline (comma separated list)
@@ -82,6 +80,12 @@ if __name__ == '__main__':
                 -l/--loglevel           Change the level of logging: info, debug, error   [optional (default: error)]
              
         """
+    """
+    not use, remove!
+                    -b/--baseoutputdir       Base output directory where the run directory will be found.
+                                            The run directory will be created if it is not found.  [optional (default: ./)]
+    """
+        
     if  len(sys.argv) == 1:
         print usage
         sys.exit()
@@ -117,9 +121,7 @@ if __name__ == '__main__':
     #################################################################################################################### 
     parser.add_argument('-l', '--loglevel',  required=False,   action="store",          dest = "loglevel",          default='ERROR',       
                                                  help = 'Sets logging level... DEBUG, [INFO], WARNING, ERROR, CRITICAL')
-     # see note for base_output_dir in runconfig.py  about line: 130                                               
-    parser.add_argument("-o", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", 
-                                                help="default: ./") 
+
     parser.add_argument("-i", "--input_directory",     required=False,  action="store", dest = "input_dir",   
                                                     help="Directory where sequence files can be found. ")                           
     #################################################################################################################### 
@@ -141,7 +143,7 @@ if __name__ == '__main__':
      
     parser.add_argument('-cp', '--compressed',  required=True,   action="store",       dest = "compressed",              
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
-    parser.add_argument('-do_perfect', '--do_perfect',  required=True,   action="store",       dest = "do_perfect",              
+    parser.add_argument('-do_perfect', '--do_perfect',  required=False,   action="store",       dest = "do_perfect",              
                                                  help = '"True" if it is perfect overlap, "False" - if partial. For illumina fastq files') 
     parser.add_argument('-db_host', '--database_host',  required=False,   action="store",  dest = "database_host",          
                                                  help = 'Database host') 
@@ -167,6 +169,13 @@ if __name__ == '__main__':
                                                         help = '') 
     parser.add_argument("-fasta","--fasta",                  required=False,  action="store",   dest = "fasta_file", 
                                                         help = '') 
+    
+    """
+    TODO: not use, remove!
+         # see note for base_output_dir in runconfig.py  about line: 130                                               
+    parser.add_argument("-o", "--baseoutputdir",     required=False,  action="store",   dest = "baseoutputdir", 
+                                                help="default: ./") 
+    """
     
     #DEBUG	Detailed information, typically of interest only when diagnosing problems.
     #INFO	Confirmation that things are working as expected.
@@ -232,15 +241,18 @@ if __name__ == '__main__':
     # to write ini file and status file
     ##############
     
-    try:
-        outdir = os.path.join(data_object['baseoutputdir'], data_object['run'])
-        #outdir = data_object['output_dir']
-        if not os.path.exists(outdir):
-            logger.debug("Creating output directory: "+outdir)
-            os.makedirs(outdir)    
-    except:
-        sys.exit("Could not find or create the output_dir "+data_object['output_dir']+" - Exiting.")
-    data_object['output_dir'] = outdir
+#    try:
+#        outdir = os.path.join(data_object['baseoutputdir'], data_object['run'])
+#        #outdir = data_object['output_dir']
+#        if not os.path.exists(outdir):
+#            logger.debug("Creating output directory: "+outdir)
+#            os.makedirs(outdir)    
+#    except:
+#        sys.exit("Could not find or create the output_dir "+data_object['output_dir']+" - Exiting.")
+#    data_object['output_dir'] = outdir
+    dirs = Dirs() 
+    dirs.create_output_dirs(data_object)
+
     ##############
     #
     #  VALIDATE THE INI FILE

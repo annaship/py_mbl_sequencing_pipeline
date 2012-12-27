@@ -310,14 +310,14 @@ Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/ana
 id_number is a run date for MBL and a random number for VAMPS users
 """
     def __init__(self):
-        self.analysis_dir      = ""
-        
-        self.gast_dir          = os.path.join(self.analysis_dir, C.gast_dir)
-        self.reads_overlap_dir = os.path.join(self.analysis_dir, C.reads_overlap_dir)
-        self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.vamps_upload_dir)
-        self.chimera_dir       = os.path.join(self.analysis_dir, C.chimera_dir)
-        self.trimming_dir      = os.path.join(self.analysis_dir, C.trimming_dir)
         self.utils             = PipelneUtils()
+        self.analysis_dir      = None
+        
+        self.gast_dir          = None
+        self.reads_overlap_dir = None
+        self.vamps_upload_dir  = None
+        self.chimera_dir       = None
+        self.trimming_dir      = None
         
     def check_and_make_dir(self, dir_name):
 #        if not os.path.exists(dir_name):
@@ -339,22 +339,33 @@ id_number is a run date for MBL and a random number for VAMPS users
                 raise    
         return dir_name
     
-    def check_and_make_analysis_dir(self, runobj):        
-        if runobj.vamps_user_upload:
+    def check_and_make_analysis_dir(self, runobj):      
+        if 'vamps_user_upload' in runobj.keys():
             id_number = None
             root_dir  = C.output_root_vamps_users
         else:
-            id_number = runobj.run
+            id_number = runobj['run']
             root_dir  = C.output_root_mbl
-        if self.utils.is_local:
+        if self.utils.is_local():
             root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results'
 
-        self.analysis_dir = os.path.join(root_dir, runobj.platform, id_number, C.analysis_dir)
-        analysis_dir = self.check_and_make_dir(self.analysis_dir)            
-        return analysis_dir
+        self.analysis_dir = os.path.join(root_dir, runobj['platform'], id_number, C.analysis_dir)
+        self.check_and_make_dir(self.analysis_dir)
     
-#        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
+    def create_output_dirs(self, runobj):
+        self.check_and_make_analysis_dir(runobj)
         
+        self.gast_dir          = os.path.join(self.analysis_dir, C.gast_dir)
+        self.reads_overlap_dir = os.path.join(self.analysis_dir, C.reads_overlap_dir)
+        self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.vamps_upload_dir)
+        self.chimera_dir       = os.path.join(self.analysis_dir, C.chimera_dir)
+        self.trimming_dir      = os.path.join(self.analysis_dir, C.trimming_dir)
+        
+        self.check_and_make_dir(self.gast_dir)
+        self.check_and_make_dir(self.reads_overlap_dir)
+        self.check_and_make_dir(self.vamps_upload_dir)
+        self.check_and_make_dir(self.chimera_dir)
+        self.check_and_make_dir(self.trimming_dir)
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"

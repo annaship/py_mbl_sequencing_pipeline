@@ -199,13 +199,17 @@ class RunConfig:
         else:
             if self.platform == 'illumina':
                 self.compressed     = general_config['compressed']                 
-                self.do_perfect     = general_config['do_perfect'] 
                 self.database_name  = general_config['database_name'] 
                 self.database_host  = general_config['database_host'] 
                 self.site           = general_config['site']
                 self.load_vamps_database = general_config['load_vamps_database']
                 if general_config.has_key("archaea"):
                     self.archaea    = general_config['archaea'] 
+                if general_config.has_key("do_perfect"):
+                    self.do_perfect = general_config['do_perfect']
+                else:
+                    self.do_perfect = C.pipeline_run_items['illumina']['do_perfect']                
+                    
             elif self.platform == '454':
                 self.compressed     = general_config['compressed'] 
                 self.database_name  = general_config['database_name'] 
