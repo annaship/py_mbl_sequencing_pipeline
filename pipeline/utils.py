@@ -274,7 +274,7 @@ def zip_up_directory(run_date, dirPath, mode='a'):
         os.remove(i.filename)
 
     zf.close()
-    
+      
 class PipelneUtils:
     def __init__(self):
         pass
@@ -296,42 +296,66 @@ class PipelneUtils:
 #        print "len(files) = %s" % len(files)
         return files    
 
+    def is_local(self):
+        dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local"]
+        if os.uname()[1] in dev_comps:
+            return True
+        else:
+            return False
+
 class Dirs:
     """get input dir from args, create all other dirs
-
-analysis_dir        = 'analysis'
-gast_dir            = 'analysis/gast'
-illumina_reads_dir  = 'analysis/perfect_reads'
-  
-
 input_dir - directory with fastq or sff files
-
+Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
+id_number is a run date for MBL and a random number for VAMPS users
 """
-    def __init__(self, input_dir = "."):
-        self.analysis_dir       = os.path.join(input_dir, C.analysis_dir)
-        self.gast_dir           = os.path.join(input_dir, C.gast_dir)
-        self.illumina_reads_dir = os.path.join(input_dir, C.illumina_reads_dir)
+    def __init__(self):
+        self.analysis_dir      = ""
+        
+        self.gast_dir          = os.path.join(self.analysis_dir, C.gast_dir)
+        self.reads_overlap_dir = os.path.join(self.analysis_dir, C.reads_overlap_dir)
+        self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.vamps_upload_dir)
+        self.chimera_dir       = os.path.join(self.analysis_dir, C.chimera_dir)
+        self.trimming_dir      = os.path.join(self.analysis_dir, C.trimming_dir)
+        self.utils             = PipelneUtils()
         
     def check_and_make_dir(self, dir_name):
-        if not os.path.exists(dir_name):
+#        if not os.path.exists(dir_name):
+        try:
             os.makedirs(dir_name)
+        except OSError:
+            if os.path.isdir(dir_name):
+                print "\nDirectory %s already exists and will be overwritten."  % (dir_name)
+                confirm_msg = "Do you want to continue? (Yes / No) "
+                answer = raw_input(confirm_msg)
+                if answer != 'Yes':
+                    sys.exit()
+                elif answer == 'Yes':
+                    pass
+
+#                print "Directory %s already exists and will be overwritten"
+            else:
+            # There was an error on creation, so make sure we know about it
+                raise    
         return dir_name
     
-    def check_and_make_output_dir(self):
-        analysis_dir       = self.check_and_make_dir(self.analysis_dir)
-        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
-        return(analysis_dir, illumina_reads_dir)
+    def check_and_make_analysis_dir(self, runobj):        
+        if runobj.vamps_user_upload:
+            id_number = None
+            root_dir  = C.output_root_vamps_users
+        else:
+            id_number = runobj.run
+            root_dir  = C.output_root_mbl
+
+        self.analysis_dir = os.path.join(root_dir, runobj.platform, id_number, C.analysis_dir)
+        if self.utils.is_local:
+            analysis_dir = self.check_and_make_dir("/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results")
+        else:
+            analysis_dir = self.check_and_make_dir(self.analysis_dir)            
+        return analysis_dir
+    
+#        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
         
-    def create_out_dir(self, dirname):
-        try:
-            os.makedirs(dirname)
-        except OSError:
-            if os.path.isdir(dirname):
-                pass
-            else:
-                # There was an error on creation, so make sure we know about it
-                raise        
-        return dirname        
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"

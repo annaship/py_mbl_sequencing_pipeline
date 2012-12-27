@@ -161,6 +161,34 @@ regions_to_chimera_check = ['v6v4','v3v5','v4v5','v4v6','v3v1','v1v3','v5v3']
 cluster_max_wait                = 1*60*60  # 1 hour
 cluster_check_interval          = 2
 cluster_initial_check_interval  = 10
+
+################################################################################################  
+
+############# directories ################################################################ 
+"""
+Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
+"""
+#output data
+roche454_dir       = 'roche454'
+ion_torrent_dir    = 'ion_torrent'
+illumina_hiseq_dir = 'illumina/hiseq'
+illumina_miseq_dir = 'illumina/miseq'
+#under rundate
+analysis_dir      = 'analysis'
+#under analysis
+gast_dir          = 'gast'
+reads_overlap_dir = 'reads_overlap'
+vamps_upload_dir  = 'vamps_upload'
+chimera_dir       = 'chimera'
+trimming_dir      = 'trimming'
+
+#root:
+#VAMPS users
+"TODO: Change to the real name!"
+output_root_vamps_users = ''
+#MBL
+output_root_mbl = '/xraid2-2/g454/run_new_pipeline/'
+
 ################################################################################################  
 
 ############# defaults for GAST ################################################################ 
@@ -179,9 +207,6 @@ ref_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 tax_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
 vamps_tax_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
-analysis_dir        = 'analysis'
-gast_dir            = 'analysis/gast'
-illumina_reads_dir  = 'analysis/reads_overlap'
 
 max_accepts = 10
 max_rejects = 0

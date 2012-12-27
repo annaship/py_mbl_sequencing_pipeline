@@ -7,6 +7,7 @@ import fastalib as fa
 from subprocess import call
 import ast
 from utils import Dirs
+import constants as C
 
 "TODO: add tests and test case"
 #from collections import defaultdict
@@ -32,7 +33,11 @@ class IlluminaFiles:
 #        self.file_name_base = [i + "_R1" for i in self.runobj.samples.keys()] + [i + "_R2" for i in self.runobj.samples.keys()]
 #        self.dataset_index  = dict((self.runobj.samples[key].dataset + "_" + self.runobj.samples[key].barcode_index, self.runobj.samples[key].dataset) for key in self.runobj.samples)
         self.in_file_path   = self.runobj.input_dir
-        (self.out_file_path, self.results_path) = Dirs(self.in_file_path).check_and_make_output_dir()
+        dirs = Dirs()
+#        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
+
+        self.out_file_path = dirs.check_and_make_analysis_dir(self.runobj)
+        self.results_path  = ""
 #        self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
 #        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
 #        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
@@ -143,6 +148,14 @@ class IlluminaFiles:
 #        for dataset in self.dataset_emails.keys():
 #            dataset_idx_base = dataset + "_" + self.dataset_index[dataset]
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
+            """
+add to partial
+# following section is optional
+[prefixes]
+pair_1_prefix = ^....ACTGCCCAGCAGC[C,T]GCGGTAA.
+pair_2_prefix = ^CCGTC[A,T]ATT[C,T].TTT[G,A]A.T
+
+"""
             "TODO: one argument"
             text = """[general]
 project_name = %s
@@ -153,7 +166,7 @@ output_directory = %s
 [files]
 pair_1 = %s
 pair_2 = %s
-            """ % (idx_key, email, self.out_file_path, self.results_path, idx_key + "_R1.fastq", idx_key + "_R2.fastq")
+""" % (idx_key, email, self.out_file_path, self.results_path, idx_key + "_R1.fastq", idx_key + "_R2.fastq")
             ini_file_name = os.path.join(self.out_file_path,  idx_key + ".ini")
             self.open_write_close(ini_file_name, text)
 

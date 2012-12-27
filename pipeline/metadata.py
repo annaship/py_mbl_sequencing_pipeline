@@ -24,6 +24,7 @@ from types import *
 from pipeline.pipelinelogging import logger
 import constants as C
 from pipeline.db_upload import MyConnection
+from pipeline.utils import PipelneUtils
 import re
 #import pipeline.fastalib
 
@@ -530,10 +531,8 @@ class MetadataUtils:
         if 'validate' in steps.split(','):
             # print we are done
             sys.exit()
-        print os.uname()
-        print os.uname()[1]
-        if os.uname()[1] == 'ashipunova.mbl.edu' or os.uname()[1] == 'as-macbook.local' or os.uname()[1] == 'as-macbook.home' or os.uname()[1] == "Ashipunova.local":
-            return "c"
+        if PipelneUtils().is_local:
+            return 'c'
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
         

@@ -262,9 +262,6 @@ def chimera(runobj):
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')
 def illumina_files(runobj):  
     start = time()
-#    if os.uname()[1] == 'ashipunova.mbl.edu':
-#        import shutil 
-#        shutil.rmtree('/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis/')
     illumina_files = IlluminaFiles(runobj)
     illumina_files.split_files(compressed = runobj.compressed)
     if runobj.do_perfect: 
