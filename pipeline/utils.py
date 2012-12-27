@@ -309,15 +309,15 @@ input_dir - directory with fastq or sff files
 Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
 id_number is a run date for MBL and a random number for VAMPS users
 """
-    def __init__(self):
+    def __init__(self, runobj):
         self.utils             = PipelneUtils()
-        self.analysis_dir      = None
-        
-        self.gast_dir          = None
-        self.reads_overlap_dir = None
-        self.vamps_upload_dir  = None
-        self.chimera_dir       = None
-        self.trimming_dir      = None
+        self.analysis_dir      = None 
+        self.check_and_make_analysis_dir(runobj)
+        self.gast_dir          = os.path.join(self.analysis_dir, C.gast_dir)
+        self.reads_overlap_dir = os.path.join(self.analysis_dir, C.reads_overlap_dir)
+        self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.vamps_upload_dir)
+        self.chimera_dir       = os.path.join(self.analysis_dir, C.chimera_dir)
+        self.trimming_dir      = os.path.join(self.analysis_dir, C.trimming_dir)        
         
     def check_and_make_dir(self, dir_name):
 #        if not os.path.exists(dir_name):
@@ -353,14 +353,6 @@ id_number is a run date for MBL and a random number for VAMPS users
         self.check_and_make_dir(self.analysis_dir)
     
     def create_output_dirs(self, runobj):
-        self.check_and_make_analysis_dir(runobj)
-        
-        self.gast_dir          = os.path.join(self.analysis_dir, C.gast_dir)
-        self.reads_overlap_dir = os.path.join(self.analysis_dir, C.reads_overlap_dir)
-        self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.vamps_upload_dir)
-        self.chimera_dir       = os.path.join(self.analysis_dir, C.chimera_dir)
-        self.trimming_dir      = os.path.join(self.analysis_dir, C.trimming_dir)
-        
         self.check_and_make_dir(self.gast_dir)
         self.check_and_make_dir(self.reads_overlap_dir)
         self.check_and_make_dir(self.vamps_upload_dir)

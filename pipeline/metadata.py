@@ -52,17 +52,18 @@ class MetadataUtils:
         self.res_headers = []
         self.env = {}
                   
-    def convert_and_save_ini(self):
+    def convert_and_save_ini(self, analysis_dir):
         
-        new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'] + '.ini')
+        new_ini_file = os.path.join(analysis_dir, self.general_config_dict['run'] + '.ini')
         #new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'],self.general_config_dict['run'] + '.ini')
         # converts csv to ini and saves to output_dir
         if self.general_config_dict['platform'] == 'vamps':
             self.save_ini_file(new_ini_file)
         else:
             self.convert_csv_to_ini(new_ini_file)
-        self.general_config_dict['configPath']
-        self.general_config_dict['configPath_original'] = self.general_config_dict['configPath']
+        'TODO: Andy, what mean the next two lines?'
+#        self.general_config_dict['configPath']
+#        self.general_config_dict['configPath_original'] = self.general_config_dict['configPath']
         self.general_config_dict['configPath'] = new_ini_file
         
         # change path and type to new ini
@@ -70,16 +71,16 @@ class MetadataUtils:
     
     
     
-    def validate(self): 
+    def validate(self, analysis_dir): 
         
         if self.general_config_dict['platform'] == 'illumina':
-            self.warn_msg = self.validate_illumina_ini()
+            self.warn_msg = self.validate_illumina_ini(analysis_dir)
         elif self.general_config_dict['platform'] == '454':
-            data = self.validate_454_ini()
+            data = self.validate_454_ini(analysis_dir)
         elif self.general_config_dict['platform'] == 'ion_torrent':
             pass
         elif self.general_config_dict['platform'] == 'vamps':
-            data = self.validate_vamps_ini()
+            data = self.validate_vamps_ini(analysis_dir)
         else:
             sys.exit("Unknown platform and configFile type for validation")
             
@@ -165,28 +166,29 @@ class MetadataUtils:
 #         print "TODO: write validate def for 454/csv"
 #         data_object = self.populate_data_object_454(args, my_csv)
         
-    def validate_vamps_ini(self):
+    def validate_vamps_ini(self, analysis_dir):
         # configPath is the new configPath
+        'todo: Andy, what should be here, just directory name or directory + number.ini?'
         self.data_object = self.configDictionaryFromFile_ini(self.general_config_dict['configPath'])
         if 'fasta_file' in self.data_object and not os.path.exists(self.data_object['fasta_file']):
             sys.exit("Fasta file path doesn't exist: "+self.data_object['fasta_file'] )
         elif 'fasta_file' in self.data_object['general'] and not os.path.exists(self.data_object['general']['fasta_file']): 
             sys.exit("Fasta file path doesn't exist: "+self.data_object['general']['fasta_file'] )
                           
-    def validate_454_ini(self):
+    def validate_454_ini(self, analysis_dir):
         print "TODO - write validation def for 454/ini"
         #self.data_object = self.create_dictionary_from_ini() 
         # 454 ini file requirements:
         
         
         
-    def validate_illumina_ini(self):
+    def validate_illumina_ini(self, analysis_dir):
         """
         The csv headers are checked earlier
         """
         
         print "Validating ini type Config File (may have been converted from csv)"
-        new_ini_file = os.path.join(self.general_config_dict['output_dir'],self.general_config_dict['run'] + '.ini')
+        new_ini_file = os.path.join(analysis_dir, self.general_config_dict['run'] + '.ini')
         print "New ini file location: "+new_ini_file
         return_code = False
         error_code  = False
@@ -536,11 +538,11 @@ class MetadataUtils:
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
         
-    def convert_csv_to_ini(self,new_ini_file):
+    def convert_csv_to_ini(self, new_ini_file):
         #print self.args
         from pipeline.get_ini import readCSV
         
-        print 'CSV path',self.general_config_dict['csvPath']
+        print 'CSV path', self.general_config_dict['csvPath']
         my_csv = readCSV(file_path = self.general_config_dict['csvPath'])
         
         content     = my_csv.read_csv()
@@ -564,9 +566,9 @@ class MetadataUtils:
         fh.write("run = "+self.general_config_dict['run']+"\n")
         fh.write("configPath = "+new_ini_file+"\n")
         
-        fh.write("configPath_orig = "+self.general_config_dict['configPath']+"\n")
-        fh.write("platform = "+self.general_config_dict['platform']+"\n")
-        fh.write("output_dir = "          + self.general_config_dict['output_dir']+"\n")
+        fh.write("configPath_orig = " + self.general_config_dict['configPath']+"\n")
+        fh.write("platform = " + self.general_config_dict['platform']+"\n")
+        fh.write("output_dir = " + os.path.dirname(new_ini_file)+"\n")
         #fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
         if self.general_config_dict['platform'] == 'illumina':
             #fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")

@@ -250,8 +250,8 @@ if __name__ == '__main__':
 #    except:
 #        sys.exit("Could not find or create the output_dir "+data_object['output_dir']+" - Exiting.")
 #    data_object['output_dir'] = outdir
-    dirs = Dirs() 
-    dirs.create_output_dirs(data_object)
+    dirs = Dirs(data_object) 
+#    dirs.create_output_dirs(data_object)
 
     ##############
     #
@@ -263,8 +263,8 @@ if __name__ == '__main__':
 #    print 'do1',data_object
     del v
     v = MetadataUtils( configuration_dictionary = data_object )
-    v.convert_and_save_ini()
-    data_object = v.validate()
+    v.convert_and_save_ini(dirs.analysis_dir)
+    data_object = v.validate(dirs.analysis_dir)
     #general_data = v.get_general_data()
 
     answer = v.get_confirmation(args.steps, data_object['general'])
@@ -273,7 +273,7 @@ if __name__ == '__main__':
         sys.exit()
     elif answer == 'v':
         # view CONFIG file contents
-        fh = open(os.path.join(data_object['general']['output_dir'],  data_object['general']['run']+'.ini'))
+        fh = open(os.path.join(dirs.analysis_dir,  data_object['general']['run']+'.ini'))
         lines = fh.readlines()
         print "\n=== START ===\n"
         for line in lines:
