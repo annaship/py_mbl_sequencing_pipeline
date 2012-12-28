@@ -252,8 +252,8 @@ if __name__ == '__main__':
 #    data_object['output_dir'] = outdir
     is_user_upload = False #we never call pipeline-ui.py to do vamps user upload.
     dirs = Dirs(is_user_upload, data_object['run'], data_object['platform']) 
-    dirs.check_and_make_analysis_dir()
-    dirs.create_output_dirs()
+    dirs.check_and_make_output_dir()
+    dirs.create_all_output_dirs()
     data_object['output_dir'] = dirs.output_dir
 
     ##############

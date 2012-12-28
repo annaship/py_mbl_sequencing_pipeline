@@ -252,7 +252,7 @@ class RunConfig:
             
             
             if file_format not in C.input_file_formats:
-                raise Exception("Invalid sequence input file format: " + config_dict['input_file_format'])
+                raise Exception("Invalid sequence input file format: " + general_config['input_file_format'])
                 
             if "input_file_lane" in general_config:
                 file_lane = general_config['input_file_lane']

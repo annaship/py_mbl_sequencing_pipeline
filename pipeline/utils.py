@@ -332,7 +332,7 @@ example of getting all directory name in illumina_files
                 confirm_msg = "Do you want to continue? (Yes / No) "
                 answer = raw_input(confirm_msg)
                 if answer != 'Yes':
-                    sys.exit("There was an error in the directory " + dir_name + "creation - Exiting.")
+                    sys.exit("There was an error in the directory " + dir_name + " creation - Exiting.")
                 elif answer == 'Yes':
                     pass
 
@@ -361,10 +361,10 @@ example of getting all directory name in illumina_files
 
         self.output_dir = os.path.join(root_dir, platform, id_number)
     
-    def check_and_make_analysis_dir(self):      
+    def check_and_make_output_dir(self):      
         self.check_and_make_dir(self.output_dir)
     
-    def create_output_dirs(self):        
+    def create_all_output_dirs(self):        
         self.check_and_make_dir(self.analysis_dir)
         self.check_and_make_dir(self.gast_dir)
         self.check_and_make_dir(self.reads_overlap_dir)

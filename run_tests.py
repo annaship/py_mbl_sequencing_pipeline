@@ -15,11 +15,13 @@
 from unittest import TestLoader, TextTestRunner, TestSuite
 import test.illumina_files_tests as ill_f
 import test.db_upload_tests as db_up
+import test.utils_tests as utils
 
 if __name__ == "__main__":
 
     loader = TestLoader()
     suite = TestSuite((
+        loader.loadTestsFromTestCase(utils.IlluminaFilesTestCase),
         loader.loadTestsFromTestCase(ill_f.IlluminaFilesTestCase),
         loader.loadTestsFromTestCase(db_up.DbUloadTestCase),
         ))
