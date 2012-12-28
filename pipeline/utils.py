@@ -309,10 +309,10 @@ input_dir - directory with fastq or sff files
 Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
 id_number is a run date for MBL and a random number for VAMPS users
 """
-    def __init__(self, runobj):
+    def __init__(self, is_user_upload, run_date, platform):
         self.utils             = PipelneUtils()
         self.analysis_dir      = None 
-        self.check_and_make_analysis_dir(runobj)
+        self.get_path(is_user_upload, run_date, platform)
         self.gast_dir          = os.path.join(self.analysis_dir, C.gast_dir)
         self.reads_overlap_dir = os.path.join(self.analysis_dir, C.reads_overlap_dir)
         self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.vamps_upload_dir)
@@ -329,7 +329,7 @@ id_number is a run date for MBL and a random number for VAMPS users
                 confirm_msg = "Do you want to continue? (Yes / No) "
                 answer = raw_input(confirm_msg)
                 if answer != 'Yes':
-                    sys.exit()
+                    sys.exit("Could not find or create the directory " + dir_name + " - Exiting.")
                 elif answer == 'Yes':
                     pass
 
@@ -339,20 +339,30 @@ id_number is a run date for MBL and a random number for VAMPS users
                 raise    
         return dir_name
     
-    def check_and_make_analysis_dir(self, runobj):      
-        if 'vamps_user_upload' in runobj.keys():
+    def check_dir(self, dir_name):
+        if os.path.isdir(dir_name):
+            return dir_name
+        else:            
+            return self.check_and_make_dir(dir_name) 
+    
+    def get_path(self, is_user_upload, run_date, platform):
+        if is_user_upload:
             id_number = None
             root_dir  = C.output_root_vamps_users
         else:
-            id_number = runobj['run']
+            id_number = run_date
+#            runobj['run']
             root_dir  = C.output_root_mbl
         if self.utils.is_local():
             root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results'
 
-        self.analysis_dir = os.path.join(root_dir, runobj['platform'], id_number, C.analysis_dir)
+        self.analysis_dir = os.path.join(root_dir, platform, id_number, C.analysis_dir)
+#         runobj['platform']
+    
+    def check_and_make_analysis_dir(self):      
         self.check_and_make_dir(self.analysis_dir)
     
-    def create_output_dirs(self, runobj):
+    def create_output_dirs(self):
         self.check_and_make_dir(self.gast_dir)
         self.check_and_make_dir(self.reads_overlap_dir)
         self.check_and_make_dir(self.vamps_upload_dir)

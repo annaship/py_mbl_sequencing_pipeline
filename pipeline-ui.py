@@ -250,7 +250,11 @@ if __name__ == '__main__':
 #    except:
 #        sys.exit("Could not find or create the output_dir "+data_object['output_dir']+" - Exiting.")
 #    data_object['output_dir'] = outdir
-    dirs = Dirs(data_object) 
+    is_user_upload = False #we never call pipeline-ui.py to do vamps user upload.
+    dirs = Dirs(is_user_upload, data_object['run'], data_object['platform']) 
+    dirs.check_and_make_analysis_dir()
+    dirs.create_output_dirs()
+
 #    dirs.create_output_dirs(data_object)
 
     ##############

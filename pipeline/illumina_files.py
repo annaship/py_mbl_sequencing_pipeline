@@ -30,11 +30,11 @@ class IlluminaFiles:
 #        self.file_name_base = [i + "_R1" for i in self.runobj.samples.keys()] + [i + "_R2" for i in self.runobj.samples.keys()]
 #        self.dataset_index  = dict((self.runobj.samples[key].dataset + "_" + self.runobj.samples[key].barcode_index, self.runobj.samples[key].dataset) for key in self.runobj.samples)
         self.in_file_path   = self.runobj.input_dir
-        dirs = Dirs()
+        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
 #        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
 
-        self.out_file_path = dirs.check_and_make_analysis_dir(self.runobj)
-        self.results_path  = dirs.check_and_make_dir('reads_overlap')
+        self.out_file_path = dirs.check_dir(dirs.analysis_dir)
+        self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
 #        self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
 #        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
 #        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
