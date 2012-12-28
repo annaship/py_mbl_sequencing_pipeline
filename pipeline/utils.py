@@ -357,7 +357,7 @@ example of getting all directory name in illumina_files
 #            runobj['run']
             root_dir  = C.output_root_mbl
         if self.utils.is_local():
-            root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results'
+            root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
 
         self.output_dir = os.path.join(root_dir, platform, id_number)
     

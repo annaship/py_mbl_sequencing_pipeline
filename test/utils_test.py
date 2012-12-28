@@ -20,7 +20,7 @@ class UtilsTestCase(unittest.TestCase):
         is_user_upload = False #we never call pipeline-ui.py to do vamps user upload.
         data_object = fake_data_object.data_object
         cls._dirs = utils.Dirs(is_user_upload, data_object['general']['run'], data_object['general']['platform'])    
-        root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results'
+        root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
         cls.file_path = os.path.join(root_dir, data_object['general']['platform'], data_object['general']['run']) 
         if os.path.isdir(cls.file_path):
             shutil.rmtree(cls.file_path) 
