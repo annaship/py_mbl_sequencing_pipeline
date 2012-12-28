@@ -308,16 +308,19 @@ class Dirs:
 input_dir - directory with fastq or sff files
 Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
 id_number is a run date for MBL and a random number for VAMPS users
+example of initiation all directories in pipelie_ui
+example of getting all directory name in illumina_files
 """
     def __init__(self, is_user_upload, run_date, platform):
         self.utils             = PipelneUtils()
-        self.analysis_dir      = None 
+        self.output_dir_name   = None
         self.get_path(is_user_upload, run_date, platform)
-        self.gast_dir          = os.path.join(self.analysis_dir, C.gast_dir)
-        self.reads_overlap_dir = os.path.join(self.analysis_dir, C.reads_overlap_dir)
-        self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.vamps_upload_dir)
-        self.chimera_dir       = os.path.join(self.analysis_dir, C.chimera_dir)
-        self.trimming_dir      = os.path.join(self.analysis_dir, C.trimming_dir)        
+        self.analysis_dir      = os.path.join(self.output_dir,   C.subdirs['analysis_dir'])
+        self.gast_dir          = os.path.join(self.analysis_dir, C.subdirs['gast_dir'])
+        self.reads_overlap_dir = os.path.join(self.analysis_dir, C.subdirs['reads_overlap_dir'])
+        self.vamps_upload_dir  = os.path.join(self.analysis_dir, C.subdirs['vamps_upload_dir'])
+        self.chimera_dir       = os.path.join(self.analysis_dir, C.subdirs['chimera_dir'])
+        self.trimming_dir      = os.path.join(self.analysis_dir, C.subdirs['trimming_dir'])        
         
     def check_and_make_dir(self, dir_name):
 #        if not os.path.exists(dir_name):
@@ -329,7 +332,7 @@ id_number is a run date for MBL and a random number for VAMPS users
                 confirm_msg = "Do you want to continue? (Yes / No) "
                 answer = raw_input(confirm_msg)
                 if answer != 'Yes':
-                    sys.exit("Could not find or create the directory " + dir_name + " - Exiting.")
+                    sys.exit("There was an error in the directory " + dir_name + "creation - Exiting.")
                 elif answer == 'Yes':
                     pass
 
@@ -356,13 +359,13 @@ id_number is a run date for MBL and a random number for VAMPS users
         if self.utils.is_local():
             root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/results'
 
-        self.analysis_dir = os.path.join(root_dir, platform, id_number, C.analysis_dir)
-#         runobj['platform']
+        self.output_dir = os.path.join(root_dir, platform, id_number)
     
     def check_and_make_analysis_dir(self):      
-        self.check_and_make_dir(self.analysis_dir)
+        self.check_and_make_dir(self.output_dir)
     
-    def create_output_dirs(self):
+    def create_output_dirs(self):        
+        self.check_and_make_dir(self.analysis_dir)
         self.check_and_make_dir(self.gast_dir)
         self.check_and_make_dir(self.reads_overlap_dir)
         self.check_and_make_dir(self.vamps_upload_dir)

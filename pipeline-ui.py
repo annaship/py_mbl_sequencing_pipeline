@@ -254,8 +254,7 @@ if __name__ == '__main__':
     dirs = Dirs(is_user_upload, data_object['run'], data_object['platform']) 
     dirs.check_and_make_analysis_dir()
     dirs.create_output_dirs()
-
-#    dirs.create_output_dirs(data_object)
+    data_object['output_dir'] = dirs.output_dir
 
     ##############
     #
@@ -267,8 +266,8 @@ if __name__ == '__main__':
 #    print 'do1',data_object
     del v
     v = MetadataUtils( configuration_dictionary = data_object )
-    v.convert_and_save_ini(dirs.analysis_dir)
-    data_object = v.validate(dirs.analysis_dir)
+    v.convert_and_save_ini(data_object['output_dir'])
+    data_object = v.validate(data_object['output_dir'])
     #general_data = v.get_general_data()
 
     answer = v.get_confirmation(args.steps, data_object['general'])

@@ -26,19 +26,11 @@ class IlluminaFiles:
         self.runobj         = runobj
         self.out_files      = {} 
         self.id_dataset_idx = {}
-#        self.dataset_emails = dict((self.runobj.samples[key].dataset, self.runobj.samples[key].email) for key in self.runobj.samples)
-#        self.file_name_base = [i + "_R1" for i in self.runobj.samples.keys()] + [i + "_R2" for i in self.runobj.samples.keys()]
-#        self.dataset_index  = dict((self.runobj.samples[key].dataset + "_" + self.runobj.samples[key].barcode_index, self.runobj.samples[key].dataset) for key in self.runobj.samples)
         self.in_file_path   = self.runobj.input_dir
         dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
-#        illumina_reads_dir = self.check_and_make_dir(self.illumina_reads_dir)
 
         self.out_file_path = dirs.check_dir(dirs.analysis_dir)
         self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
-#        self.out_file_path  = self.create_out_dir(os.path.join(self.runobj.output_dir, "analysis"))
-#        self.in_file_path  = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/input/illumina_files_test"
-#        self.out_file_path = "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/data/fastq/illumina_files_test/output/analysis"
-#        self.results_path  = self.create_out_dir(os.path.join(self.out_file_path, "reads_overlap"))
         self.open_dataset_files()
         
     def split_files(self, compressed = False):
@@ -61,8 +53,7 @@ class IlluminaFiles:
         for f_name in file_name_base:
             output_file = os.path.join(self.out_file_path, f_name + ".fastq")
             self.out_files[f_name] = fq.FastQOutput(output_file)
-        self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))
-        
+        self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))        
 
     def close_dataset_files(self): 
         for o_file in self.out_files.iteritems():
@@ -80,7 +71,6 @@ class IlluminaFiles:
         return files
     
     def perfect_reads(self):
-#        n = 0
         print "Extract perfect V6 reads:"
         for idx_key in self.runobj.samples.keys():
             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
@@ -93,37 +83,26 @@ class IlluminaFiles:
                 call([program_name, file_name])
 
     def partial_overlap_reads(self):
-#        n = 0
         print "Extract partial_overlap V4V5 reads:"
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "merge-illumina-pairs"
             if self.utils.is_local:
                 program_name = "/Users/ashipunova/bin/illumina-utils/merge-illumina-pairs"           
-            call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, "output"])
+            call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
     
     def uniq_fa(self):
         n = 0        
         print "Uniqueing fasta files"      
         files = self.get_all_files()
         for full_name in files.keys():    
-            if files[full_name][1] == ".fa":
+            if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED'):
                 n +=1   
 #                print "%s fasta file: %s" % (n, full_name)
                 program_name = "fastaunique"
                 if self.utils.is_local:
                     program_name = "/Users/ashipunova/bin/illumina-utils/fastaunique"                
                 call([program_name, full_name])
-#                pass
-
-#                    
-#            fasta = fa.SequenceSource(full_name, unique = True) 
-#            while fasta.next():
-#                e = fasta.entry
-#                """TODO: open all files with name -PERFECT_reads.fa.unique
-#                files[full_name][0] + '.fa.unique'
-#                """
-#                self.out_files["W5_4-PERFECT_reads.fa.unique"].store_entry(e)
 
     def create_inis(self):
         for idx_key in self.runobj.samples.keys():
@@ -131,15 +110,6 @@ class IlluminaFiles:
 #        for dataset in self.dataset_emails.keys():
 #            dataset_idx_base = dataset + "_" + self.dataset_index[dataset]
 #            print "dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset])
-            """
-add to partial
-# following section is optional
-[prefixes]
-pair_1_prefix = ^....ACTGCCCAGCAGC[C,T]GCGGTAA.
-pair_2_prefix = ^CCGTC[A,T]ATT[C,T].TTT[G,A]A.T
-
-"""
-            "TODO: one argument"
             text = """[general]
 project_name = %s
 researcher_email = %s
@@ -150,6 +120,16 @@ output_directory = %s
 pair_1 = %s
 pair_2 = %s
 """ % (idx_key, email, self.out_file_path, self.results_path, idx_key + "_R1.fastq", idx_key + "_R2.fastq")
+
+            "That's for v4v5 miseq illumina" 
+            if not self.runobj.do_perfect:    
+                text += """
+# following section is optional
+[prefixes]
+pair_1_prefix = ^....ACTGCCCAGCAGC[C,T]GCGGTAA.
+pair_2_prefix = ^CCGTC[A,T]ATT[C,T].TTT[G,A]A.T
+                """
+                
             ini_file_name = os.path.join(self.out_file_path,  idx_key + ".ini")
             self.open_write_close(ini_file_name, text)
 
