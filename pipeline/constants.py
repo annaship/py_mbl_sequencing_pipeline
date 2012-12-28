@@ -169,18 +169,21 @@ cluster_initial_check_interval  = 10
 Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
 """
 #output data
+'TODO: take it from platform parameter and check:'
 roche454_dir       = 'roche454'
 ion_torrent_dir    = 'ion_torrent'
 illumina_hiseq_dir = 'illumina/hiseq'
 illumina_miseq_dir = 'illumina/miseq'
+#subdirs = ['analysis_dir', 'gast_dir', 'reads_overlap_dir', 'vamps_upload_dir', 'chimera_dir', 'trimming_dir']
+
 #under rundate
-analysis_dir      = 'analysis'
+subdirs = {'analysis_dir' : 'analysis',
 #under analysis
-gast_dir          = 'gast'
-reads_overlap_dir = 'reads_overlap'
-vamps_upload_dir  = 'vamps_upload'
-chimera_dir       = 'chimera'
-trimming_dir      = 'trimming'
+'gast_dir'          : 'gast',
+'reads_overlap_dir' : 'reads_overlap',
+'vamps_upload_dir'  : 'vamps_upload',
+'chimera_dir'       : 'chimera',
+'trimming_dir'      : 'trimming'}
 
 #root:
 #VAMPS users
