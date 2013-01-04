@@ -369,6 +369,12 @@ example of getting all directory name in illumina_files
         self.check_and_make_dir(self.vamps_upload_dir)
         self.check_and_make_dir(self.chimera_dir)
         self.check_and_make_dir(self.trimming_dir)
+    
+    def create_gast_name_dirs(self, name_iterator):
+        gast_name_dirs = []
+        for key in name_iterator:
+            gast_name_dirs.append(self.check_and_make_dir(os.path.join(self.gast_dir, key)))
+        return gast_name_dirs
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"

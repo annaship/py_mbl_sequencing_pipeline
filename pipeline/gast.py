@@ -22,14 +22,15 @@ class Gast:
         # Create and move all from below
         # self.set_directories()
        
-#        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
+        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
 #
 #        self.out_file_path = dirs.check_dir(dirs.analysis_dir)
 #        self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
         
         self.basedir = self.runobj.output_dir
-        if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
-            self.basedir = os.path.join(self.runobj.input_dir, self.runobj.run)
+        self.reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
+#        if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
+#            self.basedir = os.path.join(self.runobj.input_dir, self.runobj.run)
         
         self.use_cluster = self.runobj.use_cluster
         if self.runobj.vamps_user_upload:        
@@ -56,32 +57,35 @@ class Gast:
         # If we are here from a vamps gast process
         # then there should be just one dataset to gast
         # but if MBL/illumina pipe then many datasets are probably involved.
-        self.analysis_dir = os.path.join(self.basedir, C.analysis_dir)
-        if not os.path.exists(self.analysis_dir):
-            os.mkdir(self.analysis_dir)
-        if self.runobj.vamps_user_upload:
-            self.global_gast_dir = self.basedir
-        else:
-            self.global_gast_dir = os.path.join(self.basedir, C.gast_dir)
-            if os.path.exists(self.global_gast_dir):
-                # delete gast directory and recreate
-                shutil.rmtree(self.global_gast_dir, True)
-                os.mkdir(self.global_gast_dir)
-            else:
-                os.mkdir(self.global_gast_dir)
+        self.analysis_dir = dirs.check_dir(dirs.analysis_dir)
+#        if not os.path.exists(self.analysis_dir):
+#            os.mkdir(self.analysis_dir)
+
+        self.global_gast_dir = dirs.check_dir(dirs.gast_dir)
+#        if self.runobj.vamps_user_upload:
+#            self.global_gast_dir = self.basedir
+#        else:
+#            self.global_gast_dir = os.path.join(self.basedir, C.gast_dir)
+#            if os.path.exists(self.global_gast_dir):
+#                # delete gast directory and recreate
+#                shutil.rmtree(self.global_gast_dir, True)
+#                os.mkdir(self.global_gast_dir)
+#            else:
+#                os.mkdir(self.global_gast_dir)
                 
-        if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
-            reads_dir = os.path.join(self.basedir, C.illumina_reads_dir)
-            if os.path.exists(reads_dir):
-                self.input_dir = reads_dir
-            else:
-                self.input_dir = self.runobj.input_dir
+#        if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
+#            reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
+#            if os.path.exists(reads_dir):
+#                self.input_dir = reads_dir
+#            else:
+#                self.input_dir = self.runobj.input_dir
             
         # create our directories for each key
-        for key in self.iterator:
-            output_dir = os.path.join(self.global_gast_dir, key)
-            if output_dir and not os.path.exists(output_dir):
-                os.mkdir(output_dir)
+        dirs.create_gast_name_dirs(self.iterator)
+#        for key in self.iterator:
+#            output_dir = os.path.join(self.global_gast_dir, key)
+#            if output_dir and not os.path.exists(output_dir):
+#                os.mkdir(output_dir)
 #                 gast_dir = output_dir
 #                 if os.path.exists(gast_dir):
 #                     # empty then recreate directory
@@ -114,7 +118,13 @@ class Gast:
         #   /usr/local/sge/bin/lx24-amd64/qsub $qsub_priority $script_filename
         
         calcnodes = C.calcnodes_cmd
+        if self.utils.is_local:
+            calcnodes = "/Users/ashipunova/bin/illumina-utils/calcnodes"           
+        
         sqlImportCommand = C.mysqlimport_cmd
+        if self.utils.is_local:
+            sqlImportCommand = "/usr/local/mysql/bin/mysqlimport"           
+        
         #qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
         clusterize = C.clusterize_cmd
 
@@ -152,11 +162,12 @@ class Gast:
                 print 'unique_file:', unique_file
             else:
                 if self.runobj.platform == 'illumina':
-                    output_dir = os.path.join(self.global_gast_dir,key)
-                    gast_dir = os.path.join(self.global_gast_dir,key)
-                    file_prefix = self.runobj.samples[key].file_prefix
-                    unique_file = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique")
-                    names_file  = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique.names")
+                    output_dir  = os.path.join(self.global_gast_dir, key)
+                    gast_dir    = os.path.join(self.global_gast_dir, key)
+                    file_prefix = key
+#                    file_prefix = self.runobj.samples[key].file_prefix
+                    unique_file = os.path.join(self.reads_dir, file_prefix + "-PERFECT_reads.fa.unique")
+                    names_file  = os.path.join(self.reads_dir, file_prefix + "-PERFECT_reads.fa.unique.names")
                 elif self.runobj.platform == '454':
                     pass
                 else:
@@ -202,13 +213,13 @@ class Gast:
                         i += 1
                         if i >= cluster_nodes:
                             continue
-                        script_filename = os.path.join(gast_dir, qsub_prefix + str(i))
-                        gast_filename   = os.path.join(gast_dir, gast_prefix + str(i))
-                        fastasamp_filename = os.path.join(gast_dir, 'samp_' + str(i))
-                        clustergast_filename   = os.path.join(gast_dir, key+".gast_" + str(i))
+                        script_filename      = os.path.join(gast_dir, qsub_prefix + str(i))
+                        gast_filename        = os.path.join(gast_dir, gast_prefix + str(i))
+                        fastasamp_filename   = os.path.join(gast_dir, 'samp_' + str(i))
+                        clustergast_filename = os.path.join(gast_dir, key+".gast_" + str(i))
                         gast_file_list.append(clustergast_filename)
-                        usearch_filename= os.path.join(gast_dir, "uc_" + str(i))
-                        log_file = os.path.join(gast_dir, 'clustergast.log_' + str(i))
+                        usearch_filename     = os.path.join(gast_dir, "uc_" + str(i))
+                        log_file             = os.path.join(gast_dir, 'clustergast.log_' + str(i))
                         
                         data = line.split()
                         
@@ -757,6 +768,8 @@ class Gast:
           
     def get_fastasampler_cmd(self, unique_file, fastasamp_filename, start, end):
         fastasampler = C.fastasampler_cmd
+        if self.utils.is_local:
+            fastasampler = "/Users/ashipunova/bin/illumina-utils/fastasampler"        
         fastasampler_cmd = fastasampler
         fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
         fastasampler_cmd += ' ' + unique_file
@@ -996,10 +1009,11 @@ class Gast:
                 #get from database
             else:
                 if self.runobj.platform == 'illumina':
-                    reads_dir = os.path.join(self.analysis_dir, 'reads_overlap')
+#                    reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
+#                    os.path.join(self.analysis_dir, 'reads_overlap')
                     
-                    file_prefix = self.runobj.samples[key].file_prefix
-                    unique_file = os.path.join(self.input_dir, file_prefix+"-PERFECT_reads.fa.unique")
+                    file_prefix = key
+                    unique_file = os.path.join(self.reads_dir, file_prefix+"-PERFECT_reads.fa.unique")
                     if os.path.exists(unique_file):
                         if os.path.getsize(unique_file) > 0:
                             logger.debug( "GAST: Found uniques file: "+unique_file)

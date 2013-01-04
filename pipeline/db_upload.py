@@ -1,9 +1,10 @@
 import sys
 
 import os
-from pipeline.utils import PipelneUtils
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
+from pipeline.utils import Dirs, PipelneUtils
+
 try:
     import MySQLdb
 except:
@@ -85,25 +86,23 @@ class dbUpload:
         self.rundate     = self.runobj.run
         self.use_cluster = 1
 #        /test/sample_data/illumina/result/20120614/analysis
-        "TODO: have all directory names in one place for gast, db_upload etc, using run_obj.input_dir and run_obj.output_dir"
-        res_path = "../result/" + self.rundate + "/analysis/reads_overlap"
+        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
+        self.analysis_dir       = dirs.check_dir(dirs.analysis_dir)
 #        "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/sample_data/illumina/result/20120614/analysis/reads_overlap"
-        self.in_file_path = os.path.join(self.runobj.input_dir, res_path)
-        host_name = runobj.database_host
+        self.fasta_dir   = dirs.check_dir(dirs.reads_overlap_dir)
+        self.gast_dir    = dirs.check_dir(dirs.gast_dir)
+
+        host_name     = runobj.database_host
         database_name = runobj.database_name
         
-#
-#        self.fasta_dir   = os.path.join(run.input_dir, "fasta/")
-#        self.gast_dir    = os.path.join(run.input_dir, "gast/")
         self.filenames   = []
 #        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
         self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
-#        ['__doc__', '__init__', '__module__', 'anchors', 'args', 'base_output_dir', 'base_python_dir', 'chimera_status_file_h', 'chimera_status_file_name', 'configFile', 'config_file_type', 'force_runkey', 'gast_input_source', 'initializeFromDictionary', 'input_dir', 'input_file_info', 'maximumLength', 'minAvgQual', 'minimumLength', 'output_dir', 'platform', 'primer_suites', 'require_distal', 'run_date', 'run_key_lane_dict', 'run_keys', 'run_status_file_h', 'run_status_file_name', 'samples', 'sff_files', 'trim_status_file_h', 'trim_status_file_name', 'vamps_user_upload']
 
-        self.unique_file_counts = os.path.join(runobj.output_dir, "unique_file_counts")
+        self.unique_file_counts = os.path.join(self.analysis_dir, "unique_file_counts")
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         self.run_id      = None
@@ -113,7 +112,7 @@ class dbUpload:
     def get_fasta_file_names(self):
         fa_files = []
         pipelne_utils   = PipelneUtils()
-        files = pipelne_utils.get_all_files(self.in_file_path)
+        files = pipelne_utils.get_all_files(self.fasta_dir)
         for full_name in files.keys():    
             if (files[full_name][1] == ".unique") and (files[full_name][0].split(".")[-1].strip() == "fa"):
                 fa_files.append(full_name)
@@ -165,8 +164,8 @@ class dbUpload:
         return res_id
  
     def get_gasta_result(self, filename):
-#        gast_file_name = self.gast_dir + filename + '.gast'
-        gast_file_name = filename + '.gast'
+        gast_file_name = os.path.join(self.gast_dir, filename + '.gast')
+#        gast_file_name = filename + '.gast'
         try:
             with open(gast_file_name) as fd:
                 gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
