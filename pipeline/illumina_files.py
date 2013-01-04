@@ -74,8 +74,8 @@ class IlluminaFiles:
         for idx_key in self.runobj.samples.keys():
             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "analyze-illumina-v6-overlaps"
-            print "self.utils.is_local = %s" % self.utils.is_local
-            if self.utils.is_local:
+            print "self.utils.is_local() = %s" % self.utils.is_local()
+            if self.utils.is_local():
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"    
             try:
                 if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
@@ -92,7 +92,7 @@ class IlluminaFiles:
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "merge-illumina-pairs"
-            if self.utils.is_local:
+            if self.utils.is_local():
                 program_name = "/Users/ashipunova/bin/illumina-utils/merge-illumina-pairs"           
             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
     
@@ -105,7 +105,7 @@ class IlluminaFiles:
                 n +=1   
 #                print "%s fasta file: %s" % (n, full_name)
                 program_name = "fastaunique"
-                if self.utils.is_local:
+                if self.utils.is_local():
                     program_name = "/Users/ashipunova/bin/illumina-utils/fastaunique"                
                 call([program_name, full_name])
 

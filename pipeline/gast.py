@@ -42,7 +42,7 @@ class Gast:
             self.iterator  = self.idx_keys
             self.refdb_dir = C.ref_database_dir
 
-            if self.utils.is_local:
+            if self.utils.is_local():
 #                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"        
                 self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
 
@@ -118,11 +118,11 @@ class Gast:
         #   /usr/local/sge/bin/lx24-amd64/qsub $qsub_priority $script_filename
         
         calcnodes = C.calcnodes_cmd
-        if self.utils.is_local:
+        if self.utils.is_local():
             calcnodes = "/Users/ashipunova/bin/illumina-utils/calcnodes"           
         
         sqlImportCommand = C.mysqlimport_cmd
-        if self.utils.is_local:
+        if self.utils.is_local():
             sqlImportCommand = "/usr/local/mysql/bin/mysqlimport"           
         
         #qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
@@ -768,7 +768,7 @@ class Gast:
           
     def get_fastasampler_cmd(self, unique_file, fastasamp_filename, start, end):
         fastasampler = C.fastasampler_cmd
-        if self.utils.is_local:
+        if self.utils.is_local():
             fastasampler = "/Users/ashipunova/bin/illumina-utils/fastasampler"        
         fastasampler_cmd = fastasampler
         fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
@@ -784,7 +784,7 @@ class Gast:
 #             usearch6 = C.usearch6_cmd
 #             
         usearch_cmd = C.usearch6_cmd
-        if self.utils.is_local:
+        if self.utils.is_local():
             usearch_cmd = "/Users/ashipunova/bin/illumina-utils/usearch"
         
         usearch_cmd += ' -usearch_global ' + fastasamp_filename
