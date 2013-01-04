@@ -74,6 +74,7 @@ class IlluminaFiles:
         for idx_key in self.runobj.samples.keys():
             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "analyze-illumina-v6-overlaps"
+            print self.utils.is_local
             if self.utils.is_local:
                 program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"    
             try:

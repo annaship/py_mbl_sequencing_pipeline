@@ -298,6 +298,7 @@ class PipelneUtils:
 
     def is_local(self):
         dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local"]
+        print "self.utils.is_local, os.uname()[1] = %s" % os.uname()[1] 
         if os.uname()[1] in dev_comps:
             return True
         else:
