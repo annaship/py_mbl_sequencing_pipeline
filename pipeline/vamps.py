@@ -242,13 +242,13 @@ class Vamps:
             rank = C.ranks[len(taxa)-1]
             for i in range(len(C.ranks)):                
                 if len(taxa) <= i:
-                    taxes.append(C.ranks[i] + "_NA")
+                    taxa.append(C.ranks[i] + "_NA")
 
             tax_collector[tax] = {}
 
 
             datarow.append(tax)
-            datarow.append("\t".join(taxes))
+            datarow.append("\t".join(taxa))
             datarow.append(rank)
             datarow.append(str(knt))
             datarow.append(str(freq))
