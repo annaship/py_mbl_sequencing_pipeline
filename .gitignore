@@ -16,6 +16,7 @@ unique_file_counts
 illumina_files_test
 analysis
 unique_file_counts_test
+temp
 
 # Result files #
 ################

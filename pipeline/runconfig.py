@@ -355,7 +355,7 @@ class RunConfig:
             sample.dataset_description  = lane_run_dict['dataset_description']
             sample.project              = lane_run_dict['project']
             sample.dataset              = lane_run_dict['dataset']
-            print 'lane_run_keyv'+lane_run_key
+            print 'lane_run_key '+lane_run_key
             if self.vamps_user_upload:
                 # required for 454
                 sample.direction = lane_run_dict['direction'] 

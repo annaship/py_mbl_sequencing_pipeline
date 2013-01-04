@@ -603,7 +603,36 @@ class MetadataUtils:
             
             for v in values:
                 if v == "env_sample_source":
-                    new_val = [str(j[0]) for j in self.env if j[1] == values[v]][0]
+                    try:
+                        new_val = [str(j[0]) for j in self.env if j[1] == values[v]][0]
+                    except:
+                        print """There was an error in env_sample_source. Please check your metadata. 
+Possible values:  
+-----------
+air
+extreme habitat
+host associated
+human associated
+human-amniotic-fluid
+human-blood
+human-gut
+human-oral
+human-skin
+human-urine
+human-vaginal
+indoor
+microbial mat/biofilm
+miscellaneous_natural_or_artificial_environment
+plant associated
+sediment
+soil/sand
+unknown
+wastewater/sludge
+water-freshwater
+water-marine
+-----------
+"""
+                        raise
                     fh.write("env_sample_source_id = "+new_val+"\n")
                 else:
                     fh.write(v+" = "+values[v]+"\n")

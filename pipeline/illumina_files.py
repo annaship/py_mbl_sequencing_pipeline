@@ -192,5 +192,9 @@ pair_2_prefix = ^CCGTC[A,T]ATT[C,T].TTT[G,A]A.T
                     self.out_files["unknown"].store_entry(e)
 
     def get_index(self, file_r1):
-        file_base_name = os.path.basename(file_r1)
-        return file_base_name.split("_")[0]
+        file_name_parts = os.path.basename(file_r1).split("_")
+#        if the file name starts with "IDX, then actual idx will be next.
+        index = file_name_parts[0]
+        if file_name_parts[0].startswith("IDX"):
+            index = file_name_parts[1]
+        return index

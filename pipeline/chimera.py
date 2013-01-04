@@ -2,6 +2,7 @@ import subprocess
 import sys, os
 import time
 from pipeline.pipelinelogging import logger
+from pipeline.utils import Dirs
 
 import pipeline.constants as C
 
@@ -11,6 +12,10 @@ class Chimera:
         self.run       = run
         self.run_keys  = self.run.run_keys
         self.rundate   = self.run.run_date
+#        dirs = Dirs(self.run.vamps_user_upload, self.run, self.run.platform) 
+#
+#        self.out_file_path = dirs.check_dir(dirs.analysis_dir)
+#        self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
         self.outdir    = run.output_dir
         
         self.usearch_cmd = 'usearch'

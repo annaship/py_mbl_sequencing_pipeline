@@ -335,8 +335,6 @@ example of getting all directory name in illumina_files
                     sys.exit("There was an error in the directory " + dir_name + " creation - Exiting.")
                 elif answer == 'Yes':
                     pass
-
-#                print "Directory %s already exists and will be overwritten"
             else:
             # There was an error on creation, so make sure we know about it
                 raise    

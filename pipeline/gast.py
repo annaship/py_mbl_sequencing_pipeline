@@ -8,7 +8,8 @@ import constants as C
 import re
 import json  
 from types import *
-from pipeline.utils import PipelneUtils
+from pipeline.utils import Dirs, PipelneUtils
+
 
 class Gast:
     """Doc string here.."""
@@ -21,6 +22,11 @@ class Gast:
         # Create and move all from below
         # self.set_directories()
        
+#        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
+#
+#        self.out_file_path = dirs.check_dir(dirs.analysis_dir)
+#        self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
+        
         self.basedir = self.runobj.output_dir
         if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
             self.basedir = os.path.join(self.runobj.input_dir, self.runobj.run)
