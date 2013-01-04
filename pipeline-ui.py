@@ -30,7 +30,6 @@ from pipeline.metadata import MetadataUtils
 from pipeline.pipelinelogging import logger
 from pipeline.trim_run import TrimRun
 from pipeline.get_ini import readCSV
-from pipeline.utils import Dirs
 
 import logging
 import argparse

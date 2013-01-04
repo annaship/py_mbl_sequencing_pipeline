@@ -54,16 +54,7 @@ def process(runobj, steps):
     requested_steps = steps.split(",")            
     if 'clean' in requested_steps and len(requested_steps) > 1:
         sys.exit("The clean step cannot be combined with other steps - Exiting")
-    
-    # create output directories:
-#    Dirs().create_output_dirs(runobj)
-
-    # this should have been created in pipeline-ui.py. but just in case....
-#    if not os.path.exists(runobj.output_dir):
-#        logger.debug("Creating output directory: "+runobj.output_dir)
-#        os.makedirs(runobj.output_dir)  
-
-    
+       
     # Open run STATUS File here.
     # open in append mode because we may start the run in the middle
     # say at the gast stage and don't want to over write.
@@ -266,7 +257,9 @@ def chimera(runobj):
 def illumina_files(runobj):  
     start = time()
     illumina_files = IlluminaFiles(runobj)
-    illumina_files.split_files(compressed = runobj.compressed)
+    'TODO: remove comment from the next 2 lines!'
+    #illumina_files.open_dataset_files()
+    #illumina_files.split_files(compressed = runobj.compressed)
     if runobj.do_perfect: 
         illumina_files.perfect_reads()
     else:

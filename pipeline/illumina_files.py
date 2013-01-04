@@ -31,7 +31,6 @@ class IlluminaFiles:
 
         self.out_file_path = dirs.check_dir(dirs.analysis_dir)
         self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
-        self.open_dataset_files()
         
     def split_files(self, compressed = False):
         """
@@ -76,11 +75,16 @@ class IlluminaFiles:
             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = "analyze-illumina-v6-overlaps"
             if self.utils.is_local:
-                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"           
-            if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
-                call([program_name, file_name, "--archaea"]) 
-            else: 
-                call([program_name, file_name])
+                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"    
+            try:
+                if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
+                    call([program_name, file_name, "--archaea"]) 
+                else: 
+                    call([program_name, file_name])
+            except:
+                print "Problems with program_name = %s, file_name = %s" % (program_name, file_name)
+                raise  
+
 
     def partial_overlap_reads(self):
         print "Extract partial_overlap V4V5 reads:"
