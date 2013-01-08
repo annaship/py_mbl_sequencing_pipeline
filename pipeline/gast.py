@@ -43,8 +43,10 @@ class Gast:
             self.refdb_dir = C.ref_database_dir
 
             if self.utils.is_local():
-#                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"        
-                self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
+                self.refdb_dir = C.ref_database_dir_local
+#
+##                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"        
+#                self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
 
         os.environ['SGE_ROOT'] ='/usr/local/sge'
         os.environ['SGE_CELL'] ='grendel'
@@ -119,11 +121,11 @@ class Gast:
         
         calcnodes = C.calcnodes_cmd
         if self.utils.is_local():
-            calcnodes = "/Users/ashipunova/bin/illumina-utils/calcnodes"           
+            calcnodes = C.calcnodes_cmd_local
         
         sqlImportCommand = C.mysqlimport_cmd
         if self.utils.is_local():
-            sqlImportCommand = "/usr/local/mysql/bin/mysqlimport"           
+            sqlImportCommand = C.mysqlimport_cmd_local
         
         #qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
         clusterize = C.clusterize_cmd
@@ -769,7 +771,7 @@ class Gast:
     def get_fastasampler_cmd(self, unique_file, fastasamp_filename, start, end):
         fastasampler = C.fastasampler_cmd
         if self.utils.is_local():
-            fastasampler = "/Users/ashipunova/bin/illumina-utils/fastasampler"        
+            fastasampler = C.fastasampler_cmd_local
         fastasampler_cmd = fastasampler
         fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
         fastasampler_cmd += ' ' + unique_file
@@ -785,7 +787,7 @@ class Gast:
 #             
         usearch_cmd = C.usearch6_cmd
         if self.utils.is_local():
-            usearch_cmd = "/Users/ashipunova/bin/illumina-utils/usearch"
+            usearch_cmd = C.usearch6_cmd_local
         
         usearch_cmd += ' -usearch_global ' + fastasamp_filename
         usearch_cmd += ' -gapopen 6I/1E'

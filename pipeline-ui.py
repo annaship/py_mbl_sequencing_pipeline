@@ -143,7 +143,9 @@ if __name__ == '__main__':
     parser.add_argument('-cp', '--compressed',  required=True,   action="store",       dest = "compressed",              
                                                  help = 'Make it "False" if illumina fastq files are not compressed with gzip') 
     parser.add_argument('-do_perfect', '--do_perfect',  required=False,   action="store",       dest = "do_perfect",              
-                                                 help = '"True" if it is perfect overlap, "False" - if partial. For illumina fastq files') 
+                                                 help = '"True" if it is perfect overlap, "False" - if partial. For illumina fastq files')
+    parser.add_argument('-lane_name', '--lane_name',  required=False,   action="store",       dest = "lane_name",              
+                                                 help = '"If more then one lane for the same run date we want to create additional directories. For illumina. Default - empty') 
     parser.add_argument('-db_host', '--database_host',  required=False,   action="store",  dest = "database_host",          
                                                  help = 'Database host') 
     parser.add_argument('-db_name', '--database_name',  required=False,   action="store", dest = "database_name",        
@@ -250,7 +252,7 @@ if __name__ == '__main__':
 #        sys.exit("Could not find or create the output_dir "+data_object['output_dir']+" - Exiting.")
 #    data_object['output_dir'] = outdir
     is_user_upload = False #we never call pipeline-ui.py to do vamps user upload.
-    dirs = Dirs(is_user_upload, data_object['run'], data_object['platform']) 
+    dirs = Dirs(is_user_upload, data_object['run'], data_object['platform'], data_object['lane_name']) 
     dirs.check_and_make_output_dir()
     dirs.create_all_output_dirs()
     data_object['output_dir'] = dirs.output_dir

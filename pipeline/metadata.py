@@ -576,7 +576,8 @@ class MetadataUtils:
             fh.write("anchor_file = "        + self.general_config_dict['anchor_file']+"\n")
             fh.write("primer_file = "        + self.general_config_dict['primer_file']+"\n")
             fh.write("compressed = "          + str(self.general_config_dict['compressed'])+"\n")
-            fh.write("do_perfect = "          + str(self.general_config_dict['do_perfect'])+"\n")            
+            fh.write("do_perfect = "          + str(self.general_config_dict['do_perfect'])+"\n")
+            fh.write("lane_name = "          + str(self.general_config_dict['lane_name'])+"\n")            
             fh.write("database_host = "          + self.general_config_dict['database_host']+"\n")
             fh.write("database_name = "          + self.general_config_dict['database_name']+"\n")
             

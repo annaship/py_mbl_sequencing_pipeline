@@ -30,8 +30,10 @@ class DbUloadTestCase(unittest.TestCase):
 
         cls.filenames   = []
         cls.seq_id_dict = {}
-        fasta_file_path = "./test/sample_data/illumina/result/20120614/analysis/perfect_reads/SMPL53_3-PERFECT_reads.fa.unique"
-        cls.fasta       = u.SequenceSource(fasta_file_path, lazy_init = False) 
+        root_dir        = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
+        cls.file_path   = os.path.join(root_dir, data_object['general']['platform'], data_object['general']['run'], 'analysis') 
+        cls.fasta_file_path = cls.file_path + "/reads_overlap/SMPL53_3-PERFECT_reads.fa.unique"
+        cls.fasta       = u.SequenceSource(cls.fasta_file_path, lazy_init = False) 
         cls.fasta.seq   = "TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC"
         cls.fasta.id    = "A5BCDEF3:25:Z987YXWUQ:3:1101:4387:2211 1:N:0:ATCACG|frequency:1"
 
@@ -130,8 +132,8 @@ class DbUloadTestCase(unittest.TestCase):
 
     def test_j_get_gasta_result(self):
         self.maxDiff = None
-        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL53_3-PERFECT_reads.fa.unique"
-        res       = self._my_db_upload.get_gasta_result(filename)
+#        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/SMPL53_3-PERFECT_reads.fa.unique"
+        res       = self._my_db_upload.get_gasta_result(self.fasta_file_path)
         print res
         print fake_data_object.gast_dict
         self.assertEqual(res, fake_data_object.gast_dict)
@@ -150,12 +152,12 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(res, 1)
  
     def test_n_put_seq_statistics_in_file(self):
-        filename = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/perfect_reads/SMPL53_3-PERFECT_reads.fa.unique"    
+#        filename = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/SMPL53_3-PERFECT_reads.fa.unique"    
         stats_file = "test/sample_data/illumina/result/20120614/unique_file_counts_test"
         if os.path.exists(stats_file):
             os.remove(stats_file)        
         self._my_db_upload.unique_file_counts = stats_file
-        self._my_db_upload.put_seq_statistics_in_file(filename, self.fasta.total_seq)
+        self._my_db_upload.put_seq_statistics_in_file(self.fasta_file_path, self.fasta.total_seq)
         num_lines = sum(1 for line in open(stats_file))
         self.assertEqual(num_lines, 1)
         

@@ -110,7 +110,8 @@ pipeline_run_items = {
                 'input_dir':'.',
                 'primer_file':'',
                 'require_distal':True,
-                'do_perfect':True
+                'do_perfect':True,
+                'lane_name':''
 			},
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',
@@ -190,7 +191,16 @@ subdirs = {'analysis_dir' : 'analysis',
 "TODO: Change to the real name!"
 output_root_vamps_users = ''
 #MBL
-output_root_mbl = '/xraid2-2/g454/run_new_pipeline/'
+output_root_mbl         = '/xraid2-2/g454/run_new_pipeline/'
+
+output_root_mbl_local   = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test' 
+cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/"
+
+############# defaults for illumina ################################################################ 
+perfect_overlap_cmd       = "analyze-illumina-v6-overlaps"
+perfect_overlap_cmd_local = cmd_path_local + perfect_overlap_cmd    
+partial_overlap_cmd       = "merge-illumina-pairs"
+partial_overlap_cmd_local = cmd_path_local + partial_overlap_cmd           
 
 ################################################################################################  
 
@@ -206,6 +216,15 @@ clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #mothur_cmd          = '/bioware/mothur/mothur'
 #fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
 fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
+#local commands
+usearch6_cmd_local     = cmd_path_local + 'usearch'
+fastasampler_cmd_local = cmd_path_local + 'fastasampler'
+calcnodes_cmd_local    = cmd_path_local + 'calcnodes'
+mysqlimport_cmd_local  = '/usr/local/mysql/bin/mysqlimport'
+fastaunique_cmd_local  = cmd_path_local + 'fastaunique'
+ref_database_dir_local = cmd_path_local
+tax_database_dir_local = cmd_path_local
+
 ref_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 tax_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/'

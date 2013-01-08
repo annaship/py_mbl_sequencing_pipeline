@@ -24,6 +24,7 @@ class IlluminaFilesTestCase(unittest.TestCase):
         pi_path             = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         cls._runobj         = Run(data_object, pi_path)    
         cls._illumina_files = ill_f.IlluminaFiles(cls._runobj)
+        cls._illumina_files.open_dataset_files()        
         cls.dataset_emails  = fake_data_object.dataset_emails
 
     @classmethod  
@@ -74,8 +75,8 @@ class IlluminaFilesTestCase(unittest.TestCase):
         (in_files_r1, in_files_r2) = self._illumina_files.get_fastq_file_names(self._runobj.input_dir)
 
 #        in_files_r1_compare = './results/illumina_filtering/123001/illumina_filtered/v6_Amplicon_IDX1_ATCACG_L003_R1_001.filtered.fastq' in in_files_r1
-        r1file_name = os.path.join(self.file_path, 'v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq.gz')
-        in_files_r1_compare = "./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq.gz" in in_files_r1
+        r1file_name = os.path.join(self.file_path, 'v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq')
+        in_files_r1_compare = "./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R1_001.fastq" in in_files_r1
         in_files_r2_compare = ('./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX1/v6_Amplicon_IDX1_ATCACG_L003_R2_001.fastq.gz' in in_files_r2) or ('./test/sample_data/illumina/Project_J_v6_30/Sample_v6_Amplicon_IDX2/v6_Amplicon_IDX2_CGATGT_L003_R2_001.fastq' in in_files_r2)
 
         self.assertTrue(in_files_r1_compare)

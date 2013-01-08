@@ -52,7 +52,7 @@ class RunConfig:
         self.samples    = {}
         self.base_python_dir = os.path.normpath(basepythondir)
         self.compressed = None # True/False
-        self.do_perfect = None # True/False
+#        self.do_perfect = None # True/False
         
         #self.configFile = config_info
         #
@@ -208,7 +208,11 @@ class RunConfig:
                 if general_config.has_key("do_perfect"):
                     self.do_perfect = general_config['do_perfect']
                 else:
-                    self.do_perfect = C.pipeline_run_items['illumina']['do_perfect']                
+                    self.do_perfect = C.pipeline_run_items['illumina']['do_perfect']        
+                if general_config.has_key("lane_name"):
+                    self.lane_name = general_config['lane_name']
+                else:
+                    self.lane_name = C.pipeline_run_items['illumina']['lane_name']                                    
                     
             elif self.platform == '454':
                 self.compressed     = general_config['compressed'] 

@@ -298,7 +298,6 @@ class PipelneUtils:
 
     def is_local(self):
         dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local"]
-        print "self.utils.is_local, os.uname()[1] = %s" % os.uname()[1] 
         if os.uname()[1] in dev_comps:
             return True
         else:
@@ -312,10 +311,10 @@ id_number is a run date for MBL and a random number for VAMPS users
 example of initiation all directories in pipelie_ui
 example of getting all directory name in illumina_files
 """
-    def __init__(self, is_user_upload, run_date, platform):
+    def __init__(self, is_user_upload, run_date, platform, lane_name = ''):
         self.utils             = PipelneUtils()
         self.output_dir_name   = None
-        self.get_path(is_user_upload, run_date, platform)
+        self.get_path(is_user_upload, run_date, platform, lane_name)
         self.analysis_dir      = os.path.join(self.output_dir,   C.subdirs['analysis_dir'])
         self.gast_dir          = os.path.join(self.analysis_dir, C.subdirs['gast_dir'])
         self.reads_overlap_dir = os.path.join(self.analysis_dir, C.subdirs['reads_overlap_dir'])
@@ -329,7 +328,7 @@ example of getting all directory name in illumina_files
             os.makedirs(dir_name)
         except OSError:
             if os.path.isdir(dir_name):
-                print "\nDirectory %s already exists and will be overwritten."  % (dir_name)
+                print "\nDirectory %s already exists."  % (dir_name)
                 confirm_msg = "Do you want to continue? (Yes / No) "
                 answer = raw_input(confirm_msg)
                 if answer != 'Yes':
@@ -347,7 +346,7 @@ example of getting all directory name in illumina_files
         else:            
             return self.check_and_make_dir(dir_name) 
     
-    def get_path(self, is_user_upload, run_date, platform):
+    def get_path(self, is_user_upload, run_date, platform, lane_name = ''):
         if is_user_upload:
             id_number = None
             root_dir  = C.output_root_vamps_users
@@ -356,9 +355,11 @@ example of getting all directory name in illumina_files
 #            runobj['run']
             root_dir  = C.output_root_mbl
         if self.utils.is_local():
-            root_dir  = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
+            root_dir  = C.output_root_mbl_local
 
         self.output_dir = os.path.join(root_dir, platform, id_number)
+        if (lane_name != ''):
+            self.output_dir = os.path.join(root_dir, platform, id_number, lane_name)
     
     def check_and_make_output_dir(self):      
         self.check_and_make_dir(self.output_dir)

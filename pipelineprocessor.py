@@ -257,9 +257,8 @@ def chimera(runobj):
 def illumina_files(runobj):  
     start = time()
     illumina_files = IlluminaFiles(runobj)
-    'TODO: remove comment from the next 2 lines!'
-    #illumina_files.open_dataset_files()
-    #illumina_files.split_files(compressed = runobj.compressed)
+    illumina_files.open_dataset_files()
+    illumina_files.split_files(compressed = runobj.compressed)
     if runobj.do_perfect: 
         illumina_files.perfect_reads()
     else:

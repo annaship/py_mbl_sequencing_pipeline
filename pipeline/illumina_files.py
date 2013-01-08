@@ -27,7 +27,10 @@ class IlluminaFiles:
         self.out_files      = {} 
         self.id_dataset_idx = {}
         self.in_file_path   = self.runobj.input_dir
-        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
+        if not self.runobj.lane_name:    
+            dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform)
+        else:
+            dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform, self.runobj.lane_name) 
 
         self.out_file_path = dirs.check_dir(dirs.analysis_dir)
         self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
@@ -73,10 +76,10 @@ class IlluminaFiles:
         print "Extract perfect V6 reads:"
         for idx_key in self.runobj.samples.keys():
             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
-            program_name = "analyze-illumina-v6-overlaps"
-            print "self.utils.is_local() = %s" % self.utils.is_local()
+            program_name = C.perfect_overlap_cmd
             if self.utils.is_local():
-                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"    
+                program_name = C.perfect_overlap_cmd_local                    
+#                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"    
             try:
                 if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
                     call([program_name, file_name, "--archaea"]) 
@@ -91,9 +94,9 @@ class IlluminaFiles:
         print "Extract partial_overlap V4V5 reads:"
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
-            program_name = "merge-illumina-pairs"
+            program_name = C.partial_overlap_cmd
             if self.utils.is_local():
-                program_name = "/Users/ashipunova/bin/illumina-utils/merge-illumina-pairs"           
+                program_name = C.partial_overlap_cmd_local           
             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
     
     def uniq_fa(self):
@@ -104,9 +107,9 @@ class IlluminaFiles:
             if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED'):
                 n +=1   
 #                print "%s fasta file: %s" % (n, full_name)
-                program_name = "fastaunique"
+                program_name = C.fastaunique_cmd
                 if self.utils.is_local():
-                    program_name = "/Users/ashipunova/bin/illumina-utils/fastaunique"                
+                    program_name = C.fastaunique_cmd_local                
                 call([program_name, full_name])
 
     def create_inis(self):
