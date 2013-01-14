@@ -25,6 +25,7 @@ from fastalib import *
 from fastqlib import *
 from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
+from pipeline.utils import Dirs, PipelneUtils
 from pipeline.pipelinelogging import logger
 from Bio import SeqIO
 import subprocess
@@ -49,6 +50,20 @@ class TrimRun( object ):
         self.outdir     = self.runobj.output_dir
         
         self.indir     = self.runobj.input_dir
+        
+        if self.runobj.vamps_user_upload:
+            site = self.runobj.site
+            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_trim'
+        else:
+            site = ''
+            dir_prefix = self.runobj.run
+            
+        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site) 
+        
+        self.analysis_dir = dirs.check_dir(dirs.analysis_dir)        
+        self.trimming_dir = dirs.check_dir(dirs.trimming_dir)
+        
+        
         # do something with 'run'.
         self.run = self.runobj.run
         logger.debug("Rundate:" + str(self.run))
@@ -107,7 +122,7 @@ class TrimRun( object ):
                 self.trimmed_ids[idx_key]       = {}
                 self.uniques[idx_key]           = {}
                 self.names[idx_key]             = {}
-                self.fa[idx_key]       = FastaOutput(os.path.join(self.outdir,idx_key) + ".trimmed.fa")
+                self.fa[idx_key]       = FastaOutput(os.path.join(self.trimming_dir, idx_key) + ".trimmed.fa")
                 
       
       
@@ -161,7 +176,7 @@ class TrimRun( object ):
                     self.trimmed_ids[idx_key]       = {}
                     self.uniques[idx_key]           = {}
                     self.names[idx_key]             = {}
-                    self.fa[idx_key]       = FastaOutput(os.path.join(self.outdir,idx_key) + ".trimmed.fa")
+                    self.fa[idx_key]       = FastaOutput(os.path.join(self.trimming_dir, idx_key) + ".trimmed.fa")
                     
           
           
@@ -763,7 +778,7 @@ class TrimRun( object ):
 
         for idx_key in self.runobj.run_keys:
             self.fa[idx_key].close()  
-            base_file_name = os.path.join(self.outdir,idx_key)
+            base_file_name = os.path.join(self.trimming_dir,idx_key)
             uniquesFileName = base_file_name + ".unique.fa"
             abundFileName   = base_file_name + ".abund.fa"
             namesFileName   = base_file_name + ".names"
@@ -839,7 +854,7 @@ class TrimRun( object ):
             
         # print out readids that failed the key test: one file only
         if 'nokey' in self.deleted_ids and self.deleted_ids['nokey']:
-            nokeyFileName = os.path.join(self.outdir,'nokey.deleted.txt')
+            nokeyFileName = os.path.join(self.trimming_dir,'nokey.deleted.txt')
             f_del = open(nokeyFileName,"w")
             for id in  self.deleted_ids['nokey']:                
                 f_del.write(id+"\tnokey\n")

@@ -3,13 +3,14 @@ from subprocess import check_output
 import constants as C
 from time import sleep
 import datetime
-from pipeline.pipelinelogging import logger
+
 from contextlib import closing
 import zipfile
 import zlib
 from string import maketrans
 import collections
-
+sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline')
+from py_mbl_sequencing_pipeline.pipeline.pipelinelogging import logger
 
 base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
 
@@ -307,14 +308,15 @@ class Dirs:
     """get input dir from args, create all other dirs
 input_dir - directory with fastq or sff files
 Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
-id_number is a run date for MBL and a random number for VAMPS users
+dir_prefix is <vamps_user>_<random_number> for vamps user uplads
+and run_date otherwise
 example of initiation all directories in pipelie_ui
 example of getting all directory name in illumina_files
 """
-    def __init__(self, is_user_upload, run_date, platform, lane_name = ''):
+    def __init__(self, is_user_upload, dir_prefix, platform, lane_name = '', site = ''):
         self.utils             = PipelneUtils()
         self.output_dir_name   = None
-        self.get_path(is_user_upload, run_date, platform, lane_name)
+        self.get_path(is_user_upload, dir_prefix, platform, lane_name, site)
         self.analysis_dir      = os.path.join(self.output_dir,   C.subdirs['analysis_dir'])
         self.gast_dir          = os.path.join(self.analysis_dir, C.subdirs['gast_dir'])
         self.reads_overlap_dir = os.path.join(self.analysis_dir, C.subdirs['reads_overlap_dir'])
@@ -346,20 +348,31 @@ example of getting all directory name in illumina_files
         else:            
             return self.check_and_make_dir(dir_name) 
     
-    def get_path(self, is_user_upload, run_date, platform, lane_name = ''):
+    def get_path(self, is_user_upload, dir_prefix, platform, lane_name, site):
+        """
+        dir_prefix is <vamps_user>_<random_number> for vamps user uploads
+        and run_date otherwise
+        """
         if is_user_upload:
-            id_number = None
-            root_dir  = C.output_root_vamps_users
+            if site == 'vamps':
+                root_dir  = C.output_root_vamps_users
+            else:
+                root_dir  = C.output_root_vampsdev_users
+                
+            self.output_dir = os.path.join(root_dir, dir_prefix) 
+           
         else:
-            id_number = run_date
+            id_number = dir_prefix
 #            runobj['run']
             root_dir  = C.output_root_mbl
-        if self.utils.is_local():
-            root_dir  = C.output_root_mbl_local
-
-        self.output_dir = os.path.join(root_dir, platform, id_number)
-        if (lane_name != ''):
-            self.output_dir = os.path.join(root_dir, platform, id_number, lane_name)
+            
+            if self.utils.is_local():
+                root_dir  = C.output_root_mbl_local
+        
+            self.output_dir = os.path.join(root_dir, platform, id_number)    
+            if (lane_name != ''):
+                self.output_dir = os.path.join(root_dir, platform, id_number, lane_name)
+            
     
     def check_and_make_output_dir(self):      
         self.check_and_make_dir(self.output_dir)
@@ -375,7 +388,8 @@ example of getting all directory name in illumina_files
     def create_gast_name_dirs(self, name_iterator):
         gast_name_dirs = []
         for key in name_iterator:
-            gast_name_dirs.append(self.check_and_make_dir(os.path.join(self.gast_dir, key)))
+            #gast_name_dirs.append(self.check_and_make_dir(os.path.join(self.gast_dir, key)))
+            gast_name_dirs.append(self.check_dir(os.path.join(self.gast_dir, key)))
         return gast_name_dirs
         
 if __name__=='__main__':

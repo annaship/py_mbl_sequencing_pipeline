@@ -2,48 +2,57 @@ import subprocess
 import sys, os, stat
 import time
 import shutil
-from pipeline.pipelinelogging import logger
+
 #import logging
 import constants as C
 import re
 import json  
 from types import *
-from pipeline.utils import Dirs, PipelneUtils
+sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline')
+from py_mbl_sequencing_pipeline.pipeline.pipelinelogging import logger
+from py_mbl_sequencing_pipeline.pipeline.utils import Dirs, PipelneUtils
 
 
 class Gast:
-    """Doc string here.."""
+    """The Gast class takes a uniqued fasta file for each dataset (vamps), or lane_key (illumina)
+        clustergast
+        gast_cleanup
+        gast2tax
+        
+    """
     Name = "GAST"
     def __init__(self, run_object = None, idx_keys=[]):                       
         self.runobj = run_object       
         self.test   = True
         self.utils  = PipelneUtils()
         
-        # Create and move all from below
-        # self.set_directories()
        
-        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
-#
-#        self.out_file_path = dirs.check_dir(dirs.analysis_dir)
-#        self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
-        
-        self.basedir = self.runobj.output_dir
-        self.reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
-#        if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
-#            self.basedir = os.path.join(self.runobj.input_dir, self.runobj.run)
-        
         self.use_cluster = self.runobj.use_cluster
         if self.runobj.vamps_user_upload:        
             self.idx_keys  = [self.runobj.user+self.runobj.run]
             self.refdb_dir = C.vamps_ref_database_dir
             self.iterator  = self.runobj.datasets
+            site = self.runobj.site
+            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
         else:
             self.idx_keys  = idx_keys
             self.iterator  = self.idx_keys
             self.refdb_dir = C.ref_database_dir
+            site = ''
+            dir_prefix = self.runobj.run
+            
+            
 
             if self.utils.is_local():
                 self.refdb_dir = C.ref_database_dir_local
+                
+        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site) 
+#
+#        self.out_file_path = dirs.check_dir(dirs.analysis_dir)
+#        self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
+        self.reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
+        
+                        
 #
 ##                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"        
 #                self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
@@ -57,44 +66,17 @@ class Gast:
         self.limit = 400
        
         # If we are here from a vamps gast process
-        # then there should be just one dataset to gast
+        # then there should be just one dataset to gast <- NOT TRUE
         # but if MBL/illumina pipe then many datasets are probably involved.
+        
         self.analysis_dir = dirs.check_dir(dirs.analysis_dir)
-#        if not os.path.exists(self.analysis_dir):
-#            os.mkdir(self.analysis_dir)
-
+        
         self.global_gast_dir = dirs.check_dir(dirs.gast_dir)
-#        if self.runobj.vamps_user_upload:
-#            self.global_gast_dir = self.basedir
-#        else:
-#            self.global_gast_dir = os.path.join(self.basedir, C.gast_dir)
-#            if os.path.exists(self.global_gast_dir):
-#                # delete gast directory and recreate
-#                shutil.rmtree(self.global_gast_dir, True)
-#                os.mkdir(self.global_gast_dir)
-#            else:
-#                os.mkdir(self.global_gast_dir)
-                
-#        if self.runobj.platform == 'illumina' and not self.runobj.vamps_user_upload:
-#            reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
-#            if os.path.exists(reads_dir):
-#                self.input_dir = reads_dir
-#            else:
-#                self.input_dir = self.runobj.input_dir
-            
+
         # create our directories for each key
+        
         dirs.create_gast_name_dirs(self.iterator)
-#        for key in self.iterator:
-#            output_dir = os.path.join(self.global_gast_dir, key)
-#            if output_dir and not os.path.exists(output_dir):
-#                os.mkdir(output_dir)
-#                 gast_dir = output_dir
-#                 if os.path.exists(gast_dir):
-#                     # empty then recreate directory
-#                     shutil.rmtree(gast_dir)
-#                     os.mkdir(gast_dir)
-#                 else:
-#                     os.mkdir(gast_dir)
+        
         
     def clustergast(self):
         """
@@ -147,12 +129,12 @@ class Gast:
             logger.info("Not using cluster")
             
             
-        counter=0
+        key_counter=0
         gast_file_list = []
         cluster_nodes = C.cluster_nodes
         logger.info("Cluster nodes set to: "+str(cluster_nodes))
         for key in self.iterator:
-            counter += 1
+            key_counter += 1
             if self.runobj.vamps_user_upload:
                 output_dir  = os.path.join(self.global_gast_dir, key)
                 gast_dir    = os.path.join(self.global_gast_dir, key)
@@ -175,7 +157,7 @@ class Gast:
                 else:
                     sys.exit("clustergast: no platform")
             
-            if counter >= self.limit:
+            if key_counter >= self.limit:
                 pass
                    
             #print 'samples', key, self.runobj.samples
@@ -190,7 +172,7 @@ class Gast:
             (refdb, taxdb) = self.get_reference_databases(dna_region)
             
             
-            print "\nFile", str(counter), key
+            print "\nFile", str(key_counter), key
             print 'use_cluster:', self.use_cluster
             if os.path.exists(unique_file) and (os.path.getsize(unique_file) > 0):
                 print "cluster nodes: "+str(cluster_nodes)
@@ -575,12 +557,12 @@ class Gast:
         Creates taxtax files
         """
         self.runobj.run_status_file_h.write(json.dumps({'status':'STARTING_GAST2TAX'})+"\n")
-        counter = 0
+        key_counter = 0
         qsub_prefix = 'gast2tax_sub_'
         #print tax_file
         tax_files = []
         for key in self.iterator:
-            counter += 1
+            key_counter += 1
             if self.runobj.vamps_user_upload:
                 output_dir = os.path.join(self.global_gast_dir, key)
                 gast_dir = os.path.join(self.global_gast_dir, key)
@@ -614,14 +596,16 @@ class Gast:
             max_distance = C.max_distance['default']
             if dna_region in C.max_distance:
                 max_distance = C.max_distance[dna_region] 
+                
+                
             if self.use_cluster:
                 
                 clusterize = C.clusterize_cmd
                 # create script - each file gets script
-                script_filename = os.path.join(gast_dir, qsub_prefix + str(counter))
+                script_filename = os.path.join(gast_dir, qsub_prefix + str(key_counter))
                 fh = open(script_filename, 'w')
-                qstat_name = "gast2tax" + key + '_' + self.runobj.run + "_" + str(counter)
-                log_file = os.path.join(gast_dir, 'gast2tax.log_' + str(counter))
+                qstat_name = "gast2tax" + key + '_' + self.runobj.run + "_" + str(key_counter)
+                log_file = os.path.join(gast_dir, 'gast2tax.log_' + str(key_counter))
                 fh.write("#!/bin/sh\n\n")
                 #fh.write("#$ -j y\n" )
                 #fh.write("#$ -o " + log_file + "\n")
@@ -631,20 +615,39 @@ class Gast:
                 fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
                 fh.write("module load bioware\n")
                 fh.write("export PYTHONPATH=/xraid2-2/vampsweb/"+self.runobj.site+"/:$PYTHONPATH\n\n")
-                fh.write("/xraid2-2/vampsweb/"+self.runobj.site+"/pipeline/gast2tax.py -dna "+dna_region+" -max "+str(max_distance)+" -o "+gast_dir+" -n "+names_file+" -site "+self.runobj.site+"\n" )
+                py_pipeline_base = '/bioware/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline/pipeline/'
+                gast2tax_cmd = [py_pipeline_base+"gast2tax.py",
+                                '-dna',dna_region,
+                                '-key',key,
+                                "-max",str(max_distance),
+                                '-o', gast_dir,
+                                '-n',names_file,
+                                '-site', self.runobj.site,
+                                '--vamps_user_upload',
+                                '-platform', self.runobj.platform
+                                ]
+                fh.write(' '.join(gast2tax_cmd)+"\n" )
+  
+                #fh.write("/xraid2-2/vampsweb/"+self.runobj.site+"/pipeline/gast2tax.py -dna "+dna_region+" -max "+str(max_distance)+" -o "+gast_dir+" -n "+names_file+" -site "+self.runobj.site+"\n" )
                 fh.close()
                             
                 # make script executable and run it
                 os.chmod(script_filename, stat.S_IRWXU)
-                qsub_cmd = clusterize + " -log /xraid2-2/vampsweb/"+self.runobj.site+"/clusterize.log " + script_filename
-                print qsub_cmd
+                qsub_cmd = clusterize + " " + script_filename
+                # -log /xraid2-2/vampsweb/"+self.runobj.site+"/clusterize.log
+                
                 # on vamps and vampsdev qsub cannot be run - unless you call it from the
                 # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
                 #qsub_cmd = C.qsub_cmd + " " + script_filename
                 #qsub_cmd = C.clusterize_cmd + " " + script_filename
-                logger.debug("qsub command: "+qsub_cmd)
+                
                 
                 subprocess.call(qsub_cmd, shell=True)
+                
+                logger.debug("qsub command: "+qsub_cmd)
+                print "gast2tax qsub command: "+qsub_cmd
+                #subprocess.call(qsub_cmd, shell=True)
+                proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 
@@ -872,12 +875,15 @@ class Gast:
         return taxa
     
     def assign_taxonomy(self, key, gast_dir, dna_region, names_file, ref_taxa):
-        from pipeline.taxonomy import Taxonomy, consensus
+    
+        from py_mbl_sequencing_pipeline.pipeline.taxonomy import Taxonomy, consensus
         #results = uc_results
         results = {}
  
- 
-        self.runobj.run_status_file_h.write(json.dumps({'status':"STARTING_ASSIGN_TAXONOMY: "+key})+"\n")
+        try:
+            self.runobj.run_status_file_h.write(json.dumps({'status':"STARTING_ASSIGN_TAXONOMY: "+key})+"\n")
+        except:
+            pass
         #test_read='FI1U8LC02GEF7N'
         # open gast_file to get results
         tagtax_terse_filename     = os.path.join(gast_dir, "tagtax_terse")

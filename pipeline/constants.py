@@ -189,7 +189,12 @@ subdirs = {'analysis_dir' : 'analysis',
 #root:
 #VAMPS users
 "TODO: Change to the real name!"
-output_root_vamps_users = ''
+# This constant is different for vamps and vampsdev:
+# vamps:   /xraid2-2/vampsweb/vamps/tmp/
+# vampsdev /xraid2-2/vampsweb/vampsdev/tmp/
+output_root_vampsdev_users = '/xraid2-2/vampsweb/vampsdev/tmp/'
+output_root_vamps_users = '/xraid2-2/vampsweb/vamps/tmp/'
+
 #MBL
 output_root_mbl         = '/xraid2-2/g454/run_new_pipeline/'
 

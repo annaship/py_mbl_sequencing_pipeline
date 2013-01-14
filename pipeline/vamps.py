@@ -5,6 +5,7 @@ import shutil
 import datetime
 from pipeline.pipelinelogging import logger
 import constants as C
+from pipeline.utils import Dirs, PipelneUtils
 #from pipeline.db_upload import MyConnection
 import ConMySQL
 
@@ -55,7 +56,20 @@ class Vamps:
 
         self.runobj 	 = run_object
         
-        self.basedir = self.runobj.output_dir
+        
+        if self.runobj.vamps_user_upload:
+            site = self.runobj.site
+            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
+        else:
+            site = ''
+            dir_prefix = self.runobj.run
+            
+        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site) 
+        
+        
+        
+        
+        #self.basedir = self.runobj.output_dir
         #self.outdir  = os.path.join(self.runobj.output_dir,self.prefix)
         self.idx_keys = idx_keys
         if self.runobj.vamps_user_upload:
@@ -81,11 +95,8 @@ class Vamps:
         # 2) gast cleanup
         # 3) gast2tax
         
-        # already present:
-        if self.runobj.vamps_user_upload:
-            self.global_gast_dir = self.basedir
-        else:
-            self.global_gast_dir = os.path.join(self.basedir,C.gast_dir)
+        
+        self.global_gast_dir = dirs.check_dir(dirs.gast_dir)
             
         
         if not os.path.exists(self.global_gast_dir):
@@ -126,7 +137,7 @@ class Vamps:
                 if self.runobj.platform == 'illumina':
                     
                     #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
-                    reads_dir = os.path.join(self.basedir,C.illumina_reads_dir)
+                    reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
                     file_prefix = self.runobj.samples[key].file_prefix
                     unique_file = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
                     grep_cmd = ['grep','-c','>',unique_file]

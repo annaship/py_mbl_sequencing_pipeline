@@ -27,10 +27,20 @@ class IlluminaFiles:
         self.out_files      = {} 
         self.id_dataset_idx = {}
         self.in_file_path   = self.runobj.input_dir
-        if not self.runobj.lane_name:    
-            dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform)
+        
+        
+        if self.runobj.vamps_user_upload:
+            site = self.runobj.site
+            dir_prefix=self.runobj.user+'_'+self.runobj.run
         else:
-            dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform, self.runobj.lane_name) 
+            site = ''
+            dir_prefix = self.runobj.run
+        if self.runobj.lane_name:
+            lane_name = self.runobj.lane_name
+        else:
+            lane_name = ''
+        
+        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
 
         self.out_file_path = dirs.check_dir(dirs.analysis_dir)
         self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)

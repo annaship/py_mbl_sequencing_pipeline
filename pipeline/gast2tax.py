@@ -24,10 +24,11 @@ import types
 
 def run_gast2tax(args):
 
-    sys.path.append("/xraid2-2/vampsweb/"+args.site+"/")
+    #sys.path.append("/xraid2-2/vampsweb/"+args.site+"/")
+    sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline')
     #from pipeline.utils import *
-    from pipeline.gast import Gast
-    import pipeline.constants as C
+    from py_mbl_sequencing_pipeline.pipeline.gast import Gast
+    import py_mbl_sequencing_pipeline.pipeline.constants as C
 
     if os.path.exists(args.names_file) and os.path.getsize(args.names_file) > 0:
         
@@ -37,8 +38,13 @@ def run_gast2tax(args):
         runobj.use_cluster = True
         runobj.user = ''
         runobj.run = ''
-        # for vamps this has to be 'vamps' and empty list
-        runobj.platform = 'vamps'
+        # for vamps this has to be True and empty list
+        print 'VUU ',args.vamps_user_upload
+        runobj.vamps_user_upload = args.vamps_user_upload
+        runobj.platform = args.platform
+        runobj.site = args.site
+        key = args.key
+        
         runobj.datasets = []
         
         mygast = Gast(run_object = runobj)
@@ -53,8 +59,8 @@ def run_gast2tax(args):
         
         ref_taxa = mygast.load_reftaxa(taxdb)
 
-        mygast.assign_taxonomy(args.gast_dir, args.dna_region, args.names_file, ref_taxa)
-        
+        mygast.assign_taxonomy(key, args.gast_dir, args.dna_region, args.names_file, ref_taxa)
+                                #key, gast_dir, dna_region, names_file, ref_taxa
         
         
         
@@ -92,11 +98,14 @@ if __name__ == '__main__':
                                                 """)
     parser.add_argument("-n", "--names_file",     required=True,  action="store",         dest = "names_file", 
                                                     help="Names file path ")                                              
-   
+    parser.add_argument("-key", "--key",     required=True,  action="store",         dest = "key", 
+                                                    help="key: dataset or lane_key") 
     parser.add_argument("-site", "--site",     required=True,  action="store",         dest = "site", 
                                                     help="vamps or vampsdev")  
-    
-   
+    parser.add_argument("-platform", "--platform",     required=True,  action="store",         dest = "platform", 
+                                                    help="454,illumina...") 
+    parser.add_argument("-vamps_user_upload","--vamps_user_upload", required=False,  action="store_true",   dest = "vamps_user_upload", default=False,
+                                                        help = 'data comes from vamps upload') 
     
     args = parser.parse_args() 
     

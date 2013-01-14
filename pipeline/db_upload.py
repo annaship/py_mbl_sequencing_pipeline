@@ -86,7 +86,16 @@ class dbUpload:
         self.rundate     = self.runobj.run
         self.use_cluster = 1
 #        /test/sample_data/illumina/result/20120614/analysis
-        dirs = Dirs(self.runobj.vamps_user_upload, self.runobj.run, self.runobj.platform) 
+        
+        if self.runobj.vamps_user_upload:
+            site = self.runobj.site
+            dir_prefix=self.runobj.user+'_'+self.runobj.run
+        else:
+            site = ''
+            dir_prefix = self.runobj.run
+            
+        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site) 
+        
         self.analysis_dir       = dirs.check_dir(dirs.analysis_dir)
 #        "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/sample_data/illumina/result/20120614/analysis/reads_overlap"
         self.fasta_dir   = dirs.check_dir(dirs.reads_overlap_dir)
