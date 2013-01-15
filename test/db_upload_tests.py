@@ -7,6 +7,7 @@ import pipeline.db_upload as dbup
 sys.path.append("/bioware/pythonmodules/illumina-utils/")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
 import fastalib as u
+import shutil
 
 from pipeline.run import Run
 import test.test_factory as fake_data_object
@@ -24,18 +25,18 @@ class DbUloadTestCase(unittest.TestCase):
         cls._connection.execute_no_fetch(msql) 
         
         data_object = fake_data_object.data_object
+        root_dir      = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
+        cls.file_path = os.path.join(root_dir, data_object['general']['platform'], data_object['general']['run'], 'lane_1', 'analysis') 
         pi_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         cls._runobj = Run(data_object, pi_path)    
         cls._my_db_upload = dbup.dbUpload(cls._runobj)
 
         cls.filenames   = []
         cls.seq_id_dict = {}
-        root_dir        = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
-        cls.file_path   = os.path.join(root_dir, data_object['general']['platform'], data_object['general']['run'], 'analysis') 
-        cls.fasta_file_path = cls.file_path + "/reads_overlap/SMPL53_3-PERFECT_reads.fa.unique"
+        cls.fasta_file_path = cls.file_path + "/reads_overlap/ATCACG_NNNNGTATC_3-PERFECT_reads.fa.unique"
         cls.fasta       = u.SequenceSource(cls.fasta_file_path, lazy_init = False) 
-        cls.fasta.seq   = "TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC"
-        cls.fasta.id    = "A5BCDEF3:25:Z987YXWUQ:3:1101:4387:2211 1:N:0:ATCACG|frequency:1"
+        cls.fasta.seq   = "TGGGTTTGAACTACTGAGGGCCGGTACAGAGATGTACCCTTCCCTTCGGGGACTTCAGGAG"
+        cls.fasta.id    = "D4ZHLFP1:25:B022DACXX:3:1101:14809:2249 1:N:0:ATCACG|frequency:1"
 
     @classmethod  
     def tearDownClass(cls):
@@ -62,7 +63,8 @@ class DbUloadTestCase(unittest.TestCase):
         
 #    @unittest.skip("Needs clean db")
     def test_b_execute_fetch_select(self): 
-        msql = 'INSERT INTO run_info_ill VALUES ("1", "1529", "2164", "8", "6951", "2411", "83", "", "", "19", "JV", "JV", "GCCTAA", "0", "230", "6_FP1BermC_6_14_10_CGCTC", "101", "23")'
+        msql = '''INSERT INTO run_info_ill (run_info_ill_id, run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode, adaptor, dna_region_id, amp_operator, seq_operator, barcode_index, overlap, insert_size, file_prefix, read_length, primer_suite_id)
+                 VALUES ("1", "1529", "2164", "8", "6951", "2411", "83", "", "", "19", "JV", "JV", "GCCTAA", "0", "230", "6_FP1BermC_6_14_10_CGCTC", "101", "23")'''
         self._connection.execute_no_fetch(msql) 
         
         table_name = "run_info_ill"
@@ -105,7 +107,7 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(sorted(filenames), sorted(file_names_list))
     
     def test_g_get_run_info_ill_id(self):
-        filename_base   = "SMPL53_3"
+        filename_base   = "ATCACG_NNNNGTATC_3"
         run_info_ill_id = self._my_db_upload.get_run_info_ill_id(filename_base)        
         
         sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'" % (filename_base)
@@ -123,7 +125,7 @@ class DbUloadTestCase(unittest.TestCase):
         
         self._my_db_upload.seq_id_dict = {'TACCCTTGACATCATCAGAACTTGTCAGAGATGACTCGGTGCCTTCGGGAACTGATAGAC': 1}
         
-        sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = 'SMPL53_3'"
+        sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = 'ATCACG_NNNNGTATC_3'"
         res = self._connection.execute_fetch_select(sql)        
         run_info_ill_id = int(res[0][0])
 
@@ -132,7 +134,7 @@ class DbUloadTestCase(unittest.TestCase):
 
     def test_j_get_gasta_result(self):
         self.maxDiff = None
-#        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/SMPL53_3-PERFECT_reads.fa.unique"
+#        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/ATCACG_NNNNGTATC_3-PERFECT_reads.fa.unique"
         res       = self._my_db_upload.get_gasta_result(self.fasta_file_path)
         print res
         print fake_data_object.gast_dict
@@ -152,7 +154,7 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(res, 1)
  
     def test_n_put_seq_statistics_in_file(self):
-#        filename = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/SMPL53_3-PERFECT_reads.fa.unique"    
+#        filename = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/ATCACG_NNNNGTATC_3-PERFECT_reads.fa.unique"    
         stats_file = "test/sample_data/illumina/result/20120614/unique_file_counts_test"
         if os.path.exists(stats_file):
             os.remove(stats_file)        
@@ -161,6 +163,26 @@ class DbUloadTestCase(unittest.TestCase):
         num_lines = sum(1 for line in open(stats_file))
         self.assertEqual(num_lines, 1)
         
+    def test_o_del_sequence_pdr_info_by_project_dataset(self):
+        pr_list = ["DMW_MT_Bv6", "LAZ_MHB_Bv6"]
+        dt_list = ["MHB_0001_20100219_DCP_1", "MHB_0002_20100219_DCP_2"]
+
+        result1  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset() 
+        print result1
+         
+        projects = ", ".join('"%s"' % i for i in pr_list)
+        result2  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = projects)
+        print result2
+         
+        datasets = ", ".join('"%s"' % i for i in dt_list)
+        result3  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = "", datasets = datasets)
+        print result3
+
+        projects = ", ".join('"%s"' % i for i in pr_list)
+        datasets = ", ".join('"%s"' % i for i in dt_list)
+        result4  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = projects, datasets = datasets)
+        print result4
+
 #    def test_n_count_seq_from_file(self):
 #        res = self._my_db_upload.count_seq_from_file()
 #        print res 
