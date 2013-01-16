@@ -8,9 +8,9 @@ import constants as C
 import re
 import json  
 from types import *
-sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline')
-from py_mbl_sequencing_pipeline.pipeline.pipelinelogging import logger
-from py_mbl_sequencing_pipeline.pipeline.utils import Dirs, PipelneUtils
+sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
+from pipeline.pipelinelogging import logger
+from pipeline.utils import Dirs, PipelneUtils
 
 
 class Gast:

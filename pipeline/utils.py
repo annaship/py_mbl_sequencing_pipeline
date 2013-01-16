@@ -9,8 +9,8 @@ import zipfile
 import zlib
 from string import maketrans
 import collections
-sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline')
-from py_mbl_sequencing_pipeline.pipeline.pipelinelogging import logger
+sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
+from pipeline.pipelinelogging import logger
 
 base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
 

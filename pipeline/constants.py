@@ -170,11 +170,6 @@ cluster_initial_check_interval  = 10
 Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
 """
 #output data
-'TODO: take it from platform parameter and check:'
-roche454_dir       = 'roche454'
-ion_torrent_dir    = 'ion_torrent'
-illumina_hiseq_dir = 'illumina/hiseq'
-illumina_miseq_dir = 'illumina/miseq'
 #subdirs = ['analysis_dir', 'gast_dir', 'reads_overlap_dir', 'vamps_upload_dir', 'chimera_dir', 'trimming_dir']
 
 #under rundate
@@ -188,10 +183,6 @@ subdirs = {'analysis_dir' : 'analysis',
 
 #root:
 #VAMPS users
-"TODO: Change to the real name!"
-# This constant is different for vamps and vampsdev:
-# vamps:   /xraid2-2/vampsweb/vamps/tmp/
-# vampsdev /xraid2-2/vampsweb/vampsdev/tmp/
 output_root_vampsdev_users = '/xraid2-2/vampsweb/vampsdev/tmp/'
 output_root_vamps_users = '/xraid2-2/vampsweb/vamps/tmp/'
 

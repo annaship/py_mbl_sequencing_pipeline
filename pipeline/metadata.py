@@ -324,7 +324,7 @@ class MetadataUtils:
             
         return files_list
         
-    def check_for_input_files(self,data_object):
+    def check_for_input_files(self, data_object):
     
         file_count = 0
         files_list = []

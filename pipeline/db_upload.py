@@ -84,22 +84,32 @@ class dbUpload:
     def __init__(self, runobj = None):
         self.runobj      = runobj
         self.rundate     = self.runobj.run
-        self.use_cluster = 1
-#        /test/sample_data/illumina/result/20120614/analysis
-        
+        self.use_cluster = 1       
+#        if self.runobj.vamps_user_upload:
+#            site       = self.runobj.site
+#            dir_prefix = self.runobj.user + '_' + self.runobj.run
+#        else:
+#            site = ''
+#            dir_prefix = self.runobj.run         
+#        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site)
+
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
             dir_prefix=self.runobj.user+'_'+self.runobj.run
         else:
             site = ''
             dir_prefix = self.runobj.run
-            
-        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site) 
+        if self.runobj.lane_name:
+            lane_name = self.runobj.lane_name
+        else:
+            lane_name = ''
         
-        self.analysis_dir       = dirs.check_dir(dirs.analysis_dir)
-#        "/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/sample_data/illumina/result/20120614/analysis/reads_overlap"
-        self.fasta_dir   = dirs.check_dir(dirs.reads_overlap_dir)
-        self.gast_dir    = dirs.check_dir(dirs.gast_dir)
+        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
+ 
+        
+        self.analysis_dir = dirs.check_dir(dirs.analysis_dir)
+        self.fasta_dir    = dirs.check_dir(dirs.reads_overlap_dir)
+        self.gast_dir     = dirs.check_dir(dirs.gast_dir)
 
         host_name     = runobj.database_host
         database_name = runobj.database_name

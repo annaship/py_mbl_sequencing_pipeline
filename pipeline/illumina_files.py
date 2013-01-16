@@ -27,8 +27,7 @@ class IlluminaFiles:
         self.out_files      = {} 
         self.id_dataset_idx = {}
         self.in_file_path   = self.runobj.input_dir
-        
-        
+                
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
             dir_prefix=self.runobj.user+'_'+self.runobj.run
