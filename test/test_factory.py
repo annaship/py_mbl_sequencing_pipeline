@@ -38,11 +38,11 @@ file_names_list = ['/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/illumi
 gast_dict = {'D4ZHLFP1:25:B022DACXX:3:1101:14017:2243 1:N:0:ATCACG|frequency:1':
 ['Bacteria;Proteobacteria;Deltaproteobacteria', '0.05', 'class', '2', '100', 'orderx', '1;1;1;1;0;0;0;0', '100;100;100;50;0;0;0;0', '0;0;0;50;100;100;100;100', 'v6_CH014\n']}
 
-gast_dict1 = {'D4ZHLFP1:25:B022DACXX:3:1101:14809:2249 1:N:0:ATCACG|frequency:1':
-['Bacteria;Acidobacteria;Holophagae', '0', 'class', '9', '100', 'class', '1;1;1;0;0;0;0;0', '100;100;100;0;0;0;0;0', '0;0;0;100;100;100;100;100', 'v6_CS611\n']}
-
-gast_dict2 = {'D4ZHLFP1:25:B022DACXX:3:1101:18910:2233 1:N:0:ATCACG|frequency:1':
-['Bacteria;Proteobacteria;Gammaproteobacteria;Alteromonadales;Colwelliaceae;Colwellia', '0', 'genus', '32', '100', 'species', '1;1;1;1;1;1;1;0', '100;100;100;100;100;100;3;0', '0;0;0;0;0;0;97;100', 'v6_BJ919\n']}
+#gast_dict1 = {'D4ZHLFP1:25:B022DACXX:3:1101:14809:2249 1:N:0:ATCACG|frequency:1':
+#['Bacteria;Acidobacteria;Holophagae', '0', 'class', '9', '100', 'class', '1;1;1;0;0;0;0;0', '100;100;100;0;0;0;0;0', '0;0;0;100;100;100;100;100', 'v6_CS611\n']}
+#
+#gast_dict2 = {'D4ZHLFP1:25:B022DACXX:3:1101:18910:2233 1:N:0:ATCACG|frequency:1':
+#['Bacteria;Proteobacteria;Gammaproteobacteria;Alteromonadales;Colwelliaceae;Colwellia', '0', 'genus', '32', '100', 'species', '1;1;1;1;1;1;1;0', '100;100;100;100;100;100;3;0', '0;0;0;0;0;0;97;100', 'v6_BJ919\n']}
 
 dataset_emails = {'SMPL42_3': 'guest@guest.com',
 'SMPL5_3': 'guest@guest.com',

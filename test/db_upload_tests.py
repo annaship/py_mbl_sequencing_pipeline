@@ -40,9 +40,10 @@ class DbUloadTestCase(unittest.TestCase):
         cls.filenames   = []
         cls.seq_id_dict = {}
         cls.fasta_file_path = cls.file_path + "/reads_overlap/ATCACG_NNNNGTATC_3-PERFECT_reads.fa.unique"
+        cls.stats_file  = cls.file_path + "/unique_file_counts_test"
         cls.fasta       = u.SequenceSource(cls.fasta_file_path, lazy_init = False) 
         cls.fasta.seq   = "TGGGTTTGAACTACTGAGGGCCGGTACAGAGATGTACCCTTCCCTTCGGGGACTTCAGGAG"
-        cls.fasta.id    = "D4ZHLFP1:25:B022DACXX:3:1101:14809:2249 1:N:0:ATCACG|frequency:1"
+        cls.fasta.id    = "D4ZHLFP1:25:B022DACXX:3:1101:14017:2243 1:N:0:ATCACG|frequency:1"
 
     @classmethod  
     def tearDownClass(cls):
@@ -142,53 +143,52 @@ class DbUloadTestCase(unittest.TestCase):
         self.maxDiff = None
     #        filename  = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/ATCACG_NNNNGTATC_3-PERFECT_reads.fa.unique"
         res       = self._my_db_upload.get_gasta_result(self.fasta_file_path)
-        print res
+        print res['D4ZHLFP1:25:B022DACXX:3:1101:14017:2243 1:N:0:ATCACG|frequency:1']
         print fake_data_object.gast_dict
-        self.assertEqual(res, fake_data_object.gast_dict)
+        self.assertEqual(res['D4ZHLFP1:25:B022DACXX:3:1101:14017:2243 1:N:0:ATCACG|frequency:1'], fake_data_object.gast_dict['D4ZHLFP1:25:B022DACXX:3:1101:14017:2243 1:N:0:ATCACG|frequency:1'])
         
-#     def test_k_insert_taxonomy(self):
-#         tax_id         = self._my_db_upload.insert_taxonomy(self.fasta, fake_data_object.gast_dict2) 
-#         
-#         self.assertEqual(tax_id, 1)
-#         
-#     def test_l_insert_sequence_uniq_info_ill(self):
-#         res_id         = self._my_db_upload.insert_sequence_uniq_info_ill(self.fasta, fake_data_object.gast_dict2) 
-#         self.assertEqual(res_id, 1)
-# 
-#     def test_m_count_sequence_pdr_info_ill(self):
-#         res = self._my_db_upload.count_sequence_pdr_info_ill()
-#         self.assertEqual(res, 1)
-#  
-#     def test_n_put_seq_statistics_in_file(self):
-# #        filename = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/ATCACG_NNNNGTATC_3-PERFECT_reads.fa.unique"    
-#         stats_file = "test/sample_data/illumina/result/20120614/unique_file_counts_test"
-#         if os.path.exists(stats_file):
-#             os.remove(stats_file)        
-#         self._my_db_upload.unique_file_counts = stats_file
-#         self._my_db_upload.put_seq_statistics_in_file(self.fasta_file_path, self.fasta.total_seq)
-#         num_lines = sum(1 for line in open(stats_file))
-#         self.assertEqual(num_lines, 1)
-#         
-#     def test_o_del_sequence_pdr_info_by_project_dataset(self):
-#         pr_list = ["DMW_MT_Bv6", "LAZ_MHB_Bv6"]
-#         dt_list = ["MHB_0001_20100219_DCP_1", "MHB_0002_20100219_DCP_2"]
-# 
-#         result1  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset() 
-#         print result1
-#          
-#         projects = ", ".join('"%s"' % i for i in pr_list)
-#         result2  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = projects)
-#         print result2
-#          
-#         datasets = ", ".join('"%s"' % i for i in dt_list)
-#         result3  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = "", datasets = datasets)
-#         print result3
-# 
-#         projects = ", ".join('"%s"' % i for i in pr_list)
-#         datasets = ", ".join('"%s"' % i for i in dt_list)
-#         result4  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = projects, datasets = datasets)
-#         print result4
-# 
+    def test_k_insert_taxonomy(self):
+        tax_id         = self._my_db_upload.insert_taxonomy(self.fasta, fake_data_object.gast_dict) 
+        
+        self.assertEqual(tax_id, 1)
+        
+    def test_l_insert_sequence_uniq_info_ill(self):
+        res_id         = self._my_db_upload.insert_sequence_uniq_info_ill(self.fasta, fake_data_object.gast_dict) 
+        self.assertEqual(res_id, 1)
+
+    def test_m_count_sequence_pdr_info_ill(self):
+        res = self._my_db_upload.count_sequence_pdr_info_ill()
+        self.assertEqual(res, 1)
+ 
+    def test_n_put_seq_statistics_in_file(self):
+#        filename = "./test/sample_data/illumina/Project_J_v6_30/../result/20120614/analysis/reads_overlap/ATCACG_NNNNGTATC_3-PERFECT_reads.fa.unique"    
+        if os.path.exists(self.stats_file):
+            os.remove(self.stats_file)        
+        self._my_db_upload.unique_file_counts = self.stats_file
+        self._my_db_upload.put_seq_statistics_in_file(self.fasta_file_path, self.fasta.total_seq)
+        num_lines = sum(1 for line in open(self.stats_file))
+        self.assertEqual(num_lines, 1)
+        
+    def test_o_del_sequence_pdr_info_by_project_dataset(self):
+        pr_list = ["DMW_MT_Bv6", "LAZ_MHB_Bv6"]
+        dt_list = ["MHB_0001_20100219_DCP_1", "MHB_0002_20100219_DCP_2"]
+    
+        result1  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset() 
+        print result1
+         
+        projects = ", ".join('"%s"' % i for i in pr_list)
+        result2  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = projects)
+        print result2
+         
+        datasets = ", ".join('"%s"' % i for i in dt_list)
+        result3  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = "", datasets = datasets)
+        print result3
+    
+        projects = ", ".join('"%s"' % i for i in pr_list)
+        datasets = ", ".join('"%s"' % i for i in dt_list)
+        result4  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = projects, datasets = datasets)
+        print result4
+ 
 # #    def test_n_count_seq_from_file(self):
 # #        res = self._my_db_upload.count_seq_from_file()
 # #        print res 
