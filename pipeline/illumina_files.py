@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append("/xraid/bioware/linux/seqinfo/bin")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
+sys.path.append("/bioware/pythonmodules/illumina-utils/")
 import fastqlib as fq
 import fastalib as fa
 from subprocess import call
@@ -88,7 +89,6 @@ class IlluminaFiles:
             program_name = C.perfect_overlap_cmd
             if self.utils.is_local():
                 program_name = C.perfect_overlap_cmd_local                    
-#                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"    
             try:
                 if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
                     call([program_name, file_name, "--archaea"]) 

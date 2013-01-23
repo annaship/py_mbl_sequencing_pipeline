@@ -22,6 +22,8 @@ import sys
 #sys.path.append("/bioware/pythonmodules/illumina-utils/")
 sys.path.append("/xraid/bioware/linux/seqinfo/bin")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
+sys.path.append("/bioware/pythonmodules/illumina-utils/")
+
 
 import shutil
 import types

@@ -25,6 +25,7 @@ from time import sleep
 
 sys.path.append( '/bioware/python/lib/python2.7/site-packages/' )
 sys.path.append("/xraid/bioware/linux/seqinfo/bin")
+sys.path.append("/bioware/pythonmodules/illumina-utils/")
 
 import datetime
 import subprocess

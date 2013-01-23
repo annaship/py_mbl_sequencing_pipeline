@@ -56,6 +56,14 @@ class DbUloadTestCase(unittest.TestCase):
         cls._connection.execute_no_fetch(msql) 
         print "\nDone!"
         
+    def get_id(self, sql):
+        res = self._connection.execute_fetch_select(sql)        
+        print res
+        if res:
+            return int(res[0][0])
+        else:
+            return None
+            
 #    def test_1(self):
 #        print "URA"
 #
@@ -77,8 +85,7 @@ class DbUloadTestCase(unittest.TestCase):
         table_name = "run_info_ill"
         id_name = table_name + "_id"
         sql = "select %s from %s where %s = 1" % (id_name, table_name, id_name)
-        res = self._connection.execute_fetch_select(sql)
-        self.assertEqual(int(res[0][0]), 1)
+        self.assertEqual(self.get_id(sql), 1)
 #        
 #    @unittest.skip("Needs clean db")
     def test_c_execute_no_fetch(self):
@@ -103,8 +110,7 @@ class DbUloadTestCase(unittest.TestCase):
         my_read_csv = dbup.dbUpload(self._runobj)
         my_read_csv.put_run_info()
         sql = "SELECT max(run_info_ill_id) FROM run_info_ill"
-        res = self._connection.execute_fetch_select(sql)
-        self.assertEqual(int(res[0][0]), 10)        
+        self.assertEqual(self.get_id(sql), 10)        
         print "done with put_run_info" 
     
 #         "FIrst do: illumina_files time = 136.972903013"    
@@ -118,8 +124,7 @@ class DbUloadTestCase(unittest.TestCase):
         run_info_ill_id = self._my_db_upload.get_run_info_ill_id(filename_base)        
         
         sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'" % (filename_base)
-        res = self._connection.execute_fetch_select(sql)
-        self.assertEqual(run_info_ill_id, int(res[0][0]))
+        self.assertEqual(run_info_ill_id, self.get_id(sql))
 
     def test_h_insert_seq(self, sequences = ['TGGGTTTGAACTACTGAGGGCCGGTACAGAGATGTACCCTTCCCTTCGGGGACTTCAGGAG']):
         seq_id = self._my_db_upload.insert_seq(sequences)       
@@ -128,15 +133,13 @@ class DbUloadTestCase(unittest.TestCase):
     def test_i_insert_pdr_info(self):
         sql = "truncate sequence_pdr_info_ill"
         self._connection.execute_no_fetch(sql)
-        self._connection.execute_fetch_select(sql)        
+#        self._connection.execute_fetch_select(sql)        
         
         self._my_db_upload.seq_id_dict = {'TGGGTTTGAACTACTGAGGGCCGGTACAGAGATGTACCCTTCCCTTCGGGGACTTCAGGAG': 1}
         
         sql = "SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = 'ATCACG_NNNNGTATC_3'"
-        res = self._connection.execute_fetch_select(sql)        
-        run_info_ill_id = int(res[0][0])
-
-        res_id = self._my_db_upload.insert_pdr_info(self.fasta, run_info_ill_id)
+ 
+        res_id = self._my_db_upload.insert_pdr_info(self.fasta, self.get_id(sql))
         self.assertEqual(res_id, 1)
 
     def test_j_get_gasta_result(self):
@@ -170,15 +173,36 @@ class DbUloadTestCase(unittest.TestCase):
         self.assertEqual(num_lines, 1)
         
     def test_o_del_sequence_pdr_info_by_project_dataset(self):
-        pr_list = ["DMW_MT_Bv6", "LAZ_MHB_Bv6"]
-        dt_list = ["MHB_0001_20100219_DCP_1", "MHB_0002_20100219_DCP_2"]
-    
+#        msql = '''INSERT INTO test.project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id)
+#                 VALUES ("LAZ_MHB_Bv6", "Mount Hope Bay", "Survey of Mount Hope Bay at 17 stations including Brayton Point power plant", "6vB_BHM_ZAL", "104650", "130", "28"),
+#("DMW_MT_Bv6", "Bacteria of Drosophila Malphigian tubules", "Bacteria of Drosophila Malphigian tubules", "6vB_TM_WMD", "PO P277719", "30", "76")'''
+#        self._connection.execute_no_fetch(msql) 
+#
+#        msql = '''INSERT INTO test.dataset (dataset)
+#                 VALUES ("MHB_0001_20100219_DCP_1"), ("MHB_0002_20100219_DCP_2")'''
+#        self._connection.execute_no_fetch(msql) 
+#        
+#        pr_list = ["DMW_MT_Bv6", "LAZ_MHB_Bv6"]
+#        dt_list = ["MHB_0001_20100219_DCP_1", "MHB_0002_20100219_DCP_2"]
+        pr_list = ["AAA_BBB_Bv6"]
+        dt_list = ["SMPL53_3", "SMPL9_3"]
+
+#        sql = """SELECT sequence_pdr_info_ill_id FROM sequence_pdr_info_ill join run_info_ill using(run_info_ill_id) join project using(project_id) WHERE project = '%s'""" % pr_list[0]
+        sql = "SELECT sequence_pdr_info_ill_id FROM sequence_pdr_info_ill where run_info_ill_id = 6"
+        print sql
+        res_id = self.get_id(sql)
+        print res_id
+#        self.assertEqual(res_id, 1)
+
         result1  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset() 
         print result1
          
         projects = ", ".join('"%s"' % i for i in pr_list)
         result2  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = projects)
         print result2
+        sql = "SELECT sequence_pdr_info_ill_id FROM sequence_pdr_info_ill where run_info_ill_id = 6"
+        print sql
+        res_id = self.get_id(sql)
          
         datasets = ", ".join('"%s"' % i for i in dt_list)
         result3  = self._my_db_upload.del_sequence_pdr_info_by_project_dataset(projects = "", datasets = datasets)
