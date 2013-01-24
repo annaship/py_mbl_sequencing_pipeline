@@ -339,15 +339,10 @@ class dbUpload:
     def insert_primer(self):
         pass
         
-    def del_sequence_pdr_info(self):
-        my_sql = """DELETE FROM sequence_pdr_info_ill
-                    USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
-                """ % self.rundate
-        self.my_conn.execute_no_fetch(my_sql)
-
     def del_sequence_pdr_info_by_project_dataset(self, projects = "", datasets = ""):
         my_sql1 = """DELETE FROM sequence_pdr_info_ill
-                    USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) 
+                    USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) 
+                    JOIN run USING(run_id) 
                     JOIN project using(project_id)
                     JOIN dataset using(dataset_id)
                     WHERE run = "%s"
@@ -365,17 +360,39 @@ class dbUpload:
 #        print my_sql
         self.my_conn.execute_no_fetch(my_sql)
 
-    def del_run_info(self):
-        my_sql = """DELETE FROM run_info_ill
-                    USING run_info_ill JOIN run USING(run_id) WHERE run = "%s"
-                """ % self.rundate
+#    def del_sequence_pdr_info(self):
+#        my_sql = """DELETE FROM sequence_pdr_info_ill
+#                    USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
+#                """ % self.rundate
+#        self.my_conn.execute_no_fetch(my_sql)
+        
+#    def del_run_info(self):
+#        my_sql = """DELETE FROM run_info_ill
+#                    USING run_info_ill JOIN run USING(run_id) WHERE run = "%s"
+#                """ % self.rundate
+#        self.my_conn.execute_no_fetch(my_sql)
+
+    def del_run_info_by_project_dataset(self, projects = "", datasets = ""):
+        my_sql1 = """DELETE FROM run_info_ill
+                    USING run_info_ill 
+                    JOIN run USING(run_id) 
+                    JOIN project using(project_id)
+                    JOIN dataset using(dataset_id)
+                    WHERE run = "%s"
+                """ % (self.rundate)
+        my_sql2 = " AND project in (" + projects + ")"
+        my_sql3 = " AND dataset in (" + datasets + ")"
+        if (projects == "") and (datasets == ""):
+            my_sql = my_sql1
+        elif (projects != "") and (datasets == ""):
+            my_sql = my_sql1 + my_sql2
+        elif (projects == "") and (datasets != ""):
+            my_sql = my_sql1 + my_sql3
+        elif (projects != "") and (datasets != ""):
+            my_sql = my_sql1 + my_sql2 + my_sql3
+#        print my_sql
         self.my_conn.execute_no_fetch(my_sql)
 
-    def del_run_info_by_project_dataset(self):
-        my_sql = """DELETE FROM run_info_ill
-                    USING run_info_ill JOIN run USING(run_id) WHERE run = "%s"
-                """ % self.rundate
-        self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequence_uniq_info(self):
         my_sql = """DELETE FROM sequence_uniq_info_ill 
