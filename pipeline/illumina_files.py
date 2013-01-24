@@ -123,6 +123,7 @@ class IlluminaFiles:
 
     def create_inis(self):
         for idx_key in self.runobj.samples.keys():
+            run_key = idx_key.split('_')[1].replace("N", ".");
             email = self.runobj.samples[idx_key].email
 #        for dataset in self.dataset_emails.keys():
 #            dataset_idx_base = dataset + "_" + self.dataset_index[dataset]
@@ -143,7 +144,7 @@ pair_2 = %s
                 text += """
 # following section is optional
 [prefixes]
-pair_1_prefix = ^....ACTGCCCAGCAGC[C,T]GCGGTAA.
+pair_1_prefix = ^""" + run_key + """CCAGCAGC[C,T]GCGGTAA.
 pair_2_prefix = ^CCGTC[A,T]ATT[C,T].TTT[G,A]A.T
                 """
                 
