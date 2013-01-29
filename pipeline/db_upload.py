@@ -301,7 +301,8 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
         ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
-
+        print my_sql
+        
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
@@ -322,6 +323,7 @@ class dbUpload:
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
         primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
         file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
+        overlap = content_row.overlap
         if (content_row.overlap == 'complete'):
             overlap = 0
         
