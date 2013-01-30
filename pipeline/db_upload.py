@@ -301,8 +301,6 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
         ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
-        print my_sql
-        
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
@@ -323,20 +321,22 @@ class dbUpload:
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
         primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
         file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
-        overlap = content_row.overlap
-        if (content_row.overlap == 'complete'):
-            overlap = 0
+        #overlap = content_row.overlap
+        #if (content_row.overlap == 'complete'):
+        #    overlap = 0
         
         my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode, 
                                                     adaptor, dna_region_id, amp_operator, seq_operator, barcode_index, overlap, insert_size, 
                                                     file_prefix, read_length, primer_suite_id) 
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',  
-                                                    '%s', %s, '%s', '%s', '%s', %s, %s, 
+                                                    '%s', %s, '%s', '%s', '%s', '%s', %s, 
                                                     '%s', %s, %s)
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
-               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, overlap, content_row.insert_size,
+               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id)
-        self.my_conn.execute_no_fetch(my_sql)
+        
+	print my_sql
+	self.my_conn.execute_no_fetch(my_sql)
 
     def insert_primer(self):
         pass
