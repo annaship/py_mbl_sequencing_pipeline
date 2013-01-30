@@ -43,7 +43,7 @@ class MetadataUtils:
         self.general_config_dict = configuration_dictionary
         self.known_header_list  = C.csv_header_list
         self.pipeline_run_items = C.pipeline_run_items
-        self.primer_suites      = C.primer_suites 
+        self.primer_suites      = self.convert_primer_suites(C.primer_suites) 
         self.dna_regions        = C.dna_regions
         self.data_object = {}
         self.data_object['general'] = {}
@@ -417,26 +417,32 @@ class MetadataUtils:
         for item in data:
             
             if item != 'general':
+                primer_suite = self.convert_primer_suites(data[item]['primer_suite'])
+                dna_region   = self.convert_primer_suites(data[item]['dna_region'])
+                
                 # CHECK MUST MATCH: "Domain","Primer Suite","DNA Region"
-                if data[item]['primer_suite'].lower() not in self.primer_suites:
-                    logger.error("Primer Suite not found: "+data[item]['primer_suite']+" - Exiting (key: "+item+")")
+                if primer_suite not in self.primer_suites:
+                    logger.error("Primer Suite not found: "+primer_suite+" - Exiting (key: "+item+")")
                     error=True
-                #if dataset_items['domain'] not in domains:
-                #   sys.exit("ERROR: Domain not found: "+dataset_items['domain'])
-                if data[item]['dna_region'].lower() not in self.dna_regions:
-                    logger.error("DNA Region not found: "+data[item]['dna_region']+" - Exiting (key: "+item+")")
+                if dna_region not in self.dna_regions:
+                    logger.error("DNA Region not found: "+dna_region+" - Exiting (key: "+item+")")
                     error=True
-                # "Bacterial v6","BacterialV6Suite","v6"
-                #if dataset_items['domain'][:6] != dataset_items['primer_suite'][:6]:
-                #    sys.exit("ERROR: Domain ("+dataset_items['domain']+") -- Primer Suite ("+dataset_items['primer_suite']+") mismatch.")
-                #if dataset_items['domain'][-2:].lower() != dataset_items['dna_region'].lower():
-                #    sys.exit("ERROR: DNA Region ("+dataset_items['dna_region']+") -- Domain ("+dataset_items['domain']+") mismatch.")
-                if data[item]['dna_region'].lower() not in data[item]['primer_suite'].lower():
-                    logger.error("DNA Region ("+data[item]['dna_region']+") not found in Primer Suite ("+data[item]['primer_suite']+") - Exiting (key: "+item+")")
+                if dna_region not in primer_suite:
+                    logger.error("DNA Region ("+dna_region+") not found in Primer Suite ("+primer_suite+") - Exiting (key: "+item+")")
                     error=True
         return (error, warn)
+    
+    def convert_primer_suites(self, suite):
+        if type(suite) is list:
+            conv_suite = []
+            for item in suite:
+                item = item.lower().translate(None, '_- ')
+                conv_suite.append(item)
+        if type(suite) is str:
+            conv_suite = suite.lower().translate(None, '_- ')
+        return conv_suite
         
-    def check_project_name(self,data):
+    def check_project_name(self, data):
         """
         # CHECK: project name format: 3 parts; end with Bv6,Ev9,Av6 or something similar
         """
