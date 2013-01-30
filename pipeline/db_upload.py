@@ -335,8 +335,7 @@ class dbUpload:
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id)
         
-	print my_sql
-	self.my_conn.execute_no_fetch(my_sql)
+        self.my_conn.execute_no_fetch(my_sql)
 
     def insert_primer(self):
         pass
