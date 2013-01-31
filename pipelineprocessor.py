@@ -300,6 +300,9 @@ def env454upload(runobj):
             logger.debug("\n----------------\nfilename = %s" % filename)
             fasta_file_path = filename
             filename_base   = "-".join(filename.split("/")[-1].split("-")[:-1])
+            if (filename_base == ""):
+#                For v4v5 illumia
+                filename_base   = "_".join(filename.split("/")[-1].split("_")[:-1])                
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
             gast_dict       = my_env454upload.get_gasta_result(filename)
             read_fasta      = u.ReadFasta(fasta_file_path)

@@ -115,8 +115,8 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#        self.my_conn     = MyConnection()    
+        #self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -133,7 +133,7 @@ class dbUpload:
         pipelne_utils   = PipelneUtils()
         files = pipelne_utils.get_all_files(self.fasta_dir)
         for full_name in files.keys():    
-            if (files[full_name][1] == ".unique") and (files[full_name][0].split(".")[-1].strip() == "fa"):
+            if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == "MERGED")):
                 fa_files.append(full_name)
         return fa_files
         
@@ -179,6 +179,7 @@ class dbUpload:
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
+        print my_sql
         res_id = self.my_conn.execute_no_fetch(my_sql)
         return res_id
  
