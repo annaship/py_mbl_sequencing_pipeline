@@ -434,10 +434,7 @@ class MetadataUtils:
     
     def convert_primer_suites(self, suite):
         if type(suite) is list:
-            conv_suite = []
-            for item in suite:
-                item = item.lower().translate(None, '_- ')
-                conv_suite.append(item)
+            conv_suite = [item.lower().translate(None, '_- ') for item in suite]
         if type(suite) is str:
             conv_suite = suite.lower().translate(None, '_- ')
         return conv_suite
