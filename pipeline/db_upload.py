@@ -115,8 +115,8 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        #self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-        self.my_conn     = MyConnection()    
+        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+#        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -140,7 +140,11 @@ class dbUpload:
         
     def get_run_info_ill_id(self, filename_base):
         
-        my_sql = """SELECT run_info_ill_id FROM run_info_ill WHERE file_prefix = '%s'""" % (filename_base)
+        my_sql = """SELECT run_info_ill_id FROM run_info_ill 
+                    JOIN run using(run_id)
+                    WHERE file_prefix = '%s'
+                    and run = '%s'
+        """ % (filename_base, self.rundate)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])
@@ -150,6 +154,7 @@ class dbUpload:
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
         seq_id     = self.my_conn.execute_no_fetch(my_sql)
+        print "sequences in file: %s" % (len(sequences))
         return seq_id
         
     def get_seq_id_dict(self, sequences):
@@ -306,6 +311,7 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
         ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
+#        print my_sql
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
