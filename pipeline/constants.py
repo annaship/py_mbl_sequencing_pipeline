@@ -239,7 +239,7 @@ cluster_nodes = 100
 use_full_length = 0
 ignore_terminal_gaps = 0
 ignore_all_gaps = 0
-max_distance = {'default': 0.30, 'v6': 0.30, 'v6a': 0.30, 'v6v4': 0.25, 'v3v5': 0.25}
+max_gast_distance = {'default': 0.30, 'v6': 0.30, 'v6a': 0.30, 'v6v4': 0.25, 'v3v5': 0.25}
 #cluster wait
 maxwaittime = 50000  # seconds
 sleeptime = 5      # seconds

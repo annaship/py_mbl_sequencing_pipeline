@@ -15,9 +15,9 @@ from pipeline.utils import Dirs, PipelneUtils
 
 class Gast:
     """The Gast class takes a uniqued fasta file for each dataset (vamps), or lane_key (illumina)
-        clustergast
-        gast_cleanup
-        gast2tax
+        clustergast: clusterizing, gast
+        gast_cleanup: expand the results onto duplicate names; collect refhvr_ids for each read_id
+        gast2tax:
         
     """
     Name = "GAST"
@@ -57,12 +57,13 @@ class Gast:
 ##                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"        
 #                self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
 
+        "For VAMPS-user-uload:"
         os.environ['SGE_ROOT'] ='/usr/local/sge'
         os.environ['SGE_CELL'] ='grendel'
         path                   = os.environ['PATH']
         os.environ['PATH']     = '/usr/local/sge/bin/lx24-amd64:'+path
         
-        # for testing
+        # limiting datasets for testing
         self.limit = 400
        
         # If we are here from a vamps gast process
@@ -105,9 +106,9 @@ class Gast:
         if self.utils.is_local():
             calcnodes = C.calcnodes_cmd_local
         
-        sqlImportCommand = C.mysqlimport_cmd
-        if self.utils.is_local():
-            sqlImportCommand = C.mysqlimport_cmd_local
+#        sqlImportCommand = C.mysqlimport_cmd
+#        if self.utils.is_local():
+#            sqlImportCommand = C.mysqlimport_cmd_local
         
         #qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
         clusterize = C.clusterize_cmd
@@ -129,9 +130,9 @@ class Gast:
             logger.info("Not using cluster")
             
             
-        key_counter=0
+        key_counter    = 0
         gast_file_list = []
-        cluster_nodes = C.cluster_nodes
+        cluster_nodes  = C.cluster_nodes
         logger.info("Cluster nodes set to: "+str(cluster_nodes))
         for key in self.iterator:
             key_counter += 1
@@ -193,6 +194,7 @@ class Gast:
                     # node=3 start=3 end=3 rows=1           
                     lines = calcout.split("\n")
                     #gast_file_list = []
+                    'Create empty files'
                     for line in lines:
                         i += 1
                         if i >= cluster_nodes:
@@ -200,6 +202,7 @@ class Gast:
                         script_filename      = os.path.join(gast_dir, qsub_prefix + str(i))
                         gast_filename        = os.path.join(gast_dir, gast_prefix + str(i))
                         fastasamp_filename   = os.path.join(gast_dir, 'samp_' + str(i))
+                        "!!! output = 100"
                         clustergast_filename = os.path.join(gast_dir, key+".gast_" + str(i))
                         gast_file_list.append(clustergast_filename)
                         usearch_filename     = os.path.join(gast_dir, "uc_" + str(i))
@@ -212,6 +215,7 @@ class Gast:
                         start = data[1].split('=')[1]
                         end  = data[2].split('=')[1]
                         
+                        'creating sctipts to run on grendel'
                         if self.use_cluster:
                             fh = open(script_filename, 'w')
                             qstat_name = "gast" + key + '_' + self.runobj.run + "_" + str(i)
@@ -223,6 +227,7 @@ class Gast:
                             #fh.write("#$ -N " + qstat_name + "\n\n")
         
                             # setup environment
+                            'move to constants py'
                             fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
                             fh.write("module load bioware\n\n")
                         
@@ -272,6 +277,9 @@ class Gast:
                             print grep_cmd
                 
                 else:
+                    """works only if custer_nodes = 0 or False. In constants.py it's 100
+                    Call this either from here or from 100 scripts we'll create
+                    """
                     #fastasamp_filename = os.path.join(gast_dir, 'samp')
                     # no nodes means that just one file will be run by clusterize
                     usearch_filename= os.path.join(gast_dir, "uc")
@@ -288,7 +296,9 @@ class Gast:
             else:
                 logger.warning( "unique_file not found or zero size: "+unique_file)
                 
+
         if self.use_cluster:
+            'check if clusters are done'
             # wait here for all the clustergast scripts to finish
             temp_file_list = gast_file_list
         
@@ -376,6 +386,7 @@ class Gast:
         """
         self.runobj.run_status_file_h.write(json.dumps({'status':'STARTING_GAST_CLEANUP'})+"\n")
         for key in self.iterator:
+            "UTIL: Dirs: create file names"
             if self.runobj.vamps_user_upload:
                 output_dir = os.path.join(self.global_gast_dir, key)
                 gast_dir = os.path.join(self.global_gast_dir, key)
@@ -405,11 +416,12 @@ class Gast:
                 dna_region = 'unknown'
             # find gast_dir
             
-            
+            'Check in Dirs'            
             if not os.path.exists(gast_dir):
                 logger.error("Could not find gast directory: "+gast_dir+" Exiting")
                 sys.exit()
                 
+            'create in Dirs'
             clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
             try:
                 logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename_single)))
@@ -420,10 +432,11 @@ class Gast:
             gastconcat_filename    = os.path.join(gast_dir, "gast_concat")  
             #dupes_filename    = os.path.join(gast_dir, "dupes") 
             #nonhits_filename    = os.path.join(gast_dir, "nonhits")   
-            copies = {}
+            copies  = {}
             nonhits = {}
             # open and read names file
             
+            'TODO: put here create names file for illumina'
             if os.path.exists(names_file) and os.path.getsize(names_file) > 0:
                 names_fh = open(names_file, 'r')
                 for line in names_fh:
@@ -507,12 +520,14 @@ class Gast:
                 gast_fh.close()
                 
                 # concatenate the two gast files
-                clustergast_fh = open(clustergast_filename_single, 'a')            
+                clustergast_fh = open(clustergast_filename_single, 'a')       
+                'add dupilicate info into original result  '     
                 shutil.copyfileobj(open(gast_filename, 'rb'), clustergast_fh)
                 clustergast_fh.close()
                 #then open again and get data for gast concat
                 concat = {}
                 #print clustergast_filename_single
+                'create content for the gast_concat table'
                 for line in open(clustergast_filename_single, 'r'):
                     data = line.strip().split("\t")
                     id = data[0]
@@ -563,6 +578,7 @@ class Gast:
         tax_files = []
         for key in self.iterator:
             key_counter += 1
+            'move to Dirs'
             if self.runobj.vamps_user_upload:
                 output_dir = os.path.join(self.global_gast_dir, key)
                 gast_dir = os.path.join(self.global_gast_dir, key)
@@ -584,7 +600,8 @@ class Gast:
                     pass
                 else:
                     sys.exit("gast2tax: no platform")
-                
+            
+            'create dna_region in self'
             if key in self.runobj.samples:
                 dna_region = self.runobj.samples[key].dna_region
             else:            
@@ -593,9 +610,9 @@ class Gast:
                 logger.error("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 self.runobj.run_status_file_h.write(json.dumps({'status':'WARNING', 'message':"gast2tax: We have no DNA Region: Setting dna_region to 'unknown'"})+"\n")
                 dna_region = 'unknown'
-            max_distance = C.max_distance['default']
-            if dna_region in C.max_distance:
-                max_distance = C.max_distance[dna_region] 
+            max_gast_distance = C.max_gast_distance['default']
+            if dna_region in C.max_gast_distance:
+                max_gast_distance = C.max_gast_distance[dna_region] 
                 
                 
             if self.use_cluster:
@@ -619,7 +636,7 @@ class Gast:
                 gast2tax_cmd = [py_pipeline_base+"gast2tax.py",
                                 '-dna',dna_region,
                                 '-key',key,
-                                "-max",str(max_distance),
+                                "-max",str(max_gast_distance),
                                 '-o', gast_dir,
                                 '-n',names_file,
                                 '-site', self.runobj.site,
@@ -628,7 +645,7 @@ class Gast:
                                 ]
                 fh.write(' '.join(gast2tax_cmd)+"\n" )
   
-                #fh.write("/xraid2-2/vampsweb/"+self.runobj.site+"/pipeline/gast2tax.py -dna "+dna_region+" -max "+str(max_distance)+" -o "+gast_dir+" -n "+names_file+" -site "+self.runobj.site+"\n" )
+                #fh.write("/xraid2-2/vampsweb/"+self.runobj.site+"/pipeline/gast2tax.py -dna "+dna_region+" -max "+str(max_gast_distance)+" -o "+gast_dir+" -n "+names_file+" -site "+self.runobj.site+"\n" )
                 fh.close()
                             
                 # make script executable and run it
@@ -661,6 +678,7 @@ class Gast:
                     
                     
         if self.use_cluster:
+            'check if clusterize is done'
             # wait here for tagtax files to finish
             temp_file_list = tax_files
             tagtax_terse_filename     = os.path.join(gast_dir, "tagtax_terse")
@@ -886,6 +904,7 @@ class Gast:
             pass
         #test_read='FI1U8LC02GEF7N'
         # open gast_file to get results
+        "to Dirs"
         tagtax_terse_filename     = os.path.join(gast_dir, "tagtax_terse")
         tagtax_long_filename     = os.path.join(gast_dir, "tagtax_long")
         tagtax_terse_fh = open(tagtax_terse_filename, 'w')
@@ -895,6 +914,7 @@ class Gast:
         if not os.path.exists(gast_file):
             logger.info("gast:assign_taxonomy: Could not find gast file: "+gast_file+". Returning")
             return results
+        
         for line in  open(gast_file, 'r'): 
             # must split on tab because last field may be empty and must be maintained as blank
             data=line.strip().split("\t")
@@ -904,34 +924,36 @@ class Gast:
             #if data[0]==test_read:
             #    print 'found test in gastv6 ', data[1].split('|')[0], data[2], data[3]
                 
-            read = data[0]
-            if read in results:
-                results[read].append( [data[1].split('|')[0], data[2], data[3], data[4]] )
+            read_id = data[0]
+            if read_id in results:
+                results[read_id].append( [data[1].split('|')[0], data[2], data[3], data[4]] )
             else:            
-                results[read]=[ [data[1].split('|')[0], data[2], data[3], data[4]] ]
+                results[read_id]=[ [data[1].split('|')[0], data[2], data[3], data[4]] ]
             
         
         for line in open(names_file, 'r'):
             data=line.strip().split("\t")
             dupes = data[1].split(",")
-            read  = data[0]
+            read_id  = data[0]
             taxObjects  = []
             distance    = 0
             frequency   = 0
             refs_for    = {}
             
-            #print 'read', read
-            if read not in results:
-                results[read]=["Unknown", '1', "NA", '0', '0', "NA", "0;0;0;0;0;0;0;0", "0;0;0;0;0;0;0;0", "100;100;100;100;100;100;100;100"]
-                refs_for[read] = [ "NA" ]
+            #print 'read_id', read_id
+            'assing taxonomyt method, either fake or real'
+            if read_id not in results:
+                results[read_id]=["Unknown", '1', "NA", '0', '0', "NA", "0;0;0;0;0;0;0;0", "0;0;0;0;0;0;0;0", "100;100;100;100;100;100;100;100"]
+                refs_for[read_id] = [ "NA" ]
             else:
-                #print 'read in res', read, results[read]
-                #if read == test_read:
-                #    print 'found ', test_read, results[test_read]
-                for i in range( 0, len(results[read])):
-                    #for resultread in results[read]:
-                    #print 'resread', results[read]
-                    ref = results[read][i][0]
+                'it is in results[]'
+                #print 'read_id in res', read_id, results[read_id]
+                #if read_id == test_read_id:
+                #    print 'found ', test_read_id, results[test_read_id]
+                for i in range( 0, len(results[read_id])):
+                    #for resultread_id in results[read_id]:
+                    #print 'resread_id', results[read_id]
+                    ref = results[read_id][i][0]
                     if ref in ref_taxa:
                         for tax in ref_taxa[ref]:
                             for t in tax:
@@ -939,19 +961,19 @@ class Gast:
                     else:
                         pass
                         
-                    if read in refs_for:
-                        #if read ==test_read:
-                        #    print '2', read, refs_for[test_read]
-                        if results[read][i][0] not in refs_for[read]:
-                            refs_for[read].append(results[read][i][0])  
+                    if read_id in refs_for:
+                        #if read_id ==test_read_id:
+                        #    print '2', read_id, refs_for[test_read_id]
+                        if results[read_id][i][0] not in refs_for[read_id]:
+                            refs_for[read_id].append(results[read_id][i][0])  
                     else:
-                        #if read == test_read:
-                        #    print '1', read, results[read][i][0]
-                        refs_for[read] = [results[read][i][0]]                   
+                        #if read_id == test_read_id:
+                        #    print '1', read_id, results[read_id][i][0]
+                        refs_for[read_id] = [results[read_id][i][0]]                   
                      
-                    # should all be the same distance
-                    distance = results[read][i][1]
-                    frequency = results[read][i][3]
+                    # should all be the same distance for the duplicates
+                    distance = results[read_id][i][1]
+                    frequency = results[read_id][i][3]
                 #Lookup the consensus taxonomy for the array
                 taxReturn = consensus(taxObjects, C.majority)
                 
@@ -961,22 +983,22 @@ class Gast:
                 #    taxon = taxon[:-3]
                 #tax_counter[taxon]
                 rank = taxReturn[0].depth()
-                #print read, taxon, rank, taxReturn[0], taxReturn[1]
+                #print read_id, taxon, rank, taxReturn[0], taxReturn[1]
                 if not taxon: taxon = "Unknown"
             
                 # (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts)
-                results[read] = [ taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5] ] 
-                #print "\t".join([read, taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5]]) + "\n"
-#read_id taxonomy        distance        rank    refssu_count    vote    minrank taxa_counts     max_pcts        na_pcts refhvr_ids
+                results[read_id] = [ taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5] ] 
+                #print "\t".join([read_id, taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5]]) + "\n"
+#read_id_id taxonomy        distance        rank    refssu_count    vote    minrank taxa_counts     max_pcts        na_pcts refhvr_ids
 #D4ZHLFP1:25:B022DACXX:3:1101:12919:40734 1:N:0:TGACCA|frequency:162     Bacteria;Proteobacteria;Gammaproteobacteria     0.117   class   2       100     genus   1;1;1;2;2;2;0;0 100;100;100;50;50;50;0;0        0;0;0;0;0;0;100;100     v6_CI671
 #D4ZHLFP1:25:B022DACXX:3:1101:10432:76870 1:N:0:TGACCA|frequency:105     Bacteria;Proteobacteria;Gammaproteobacteria     0.017   class   1       100     class   1;1;1;0;0;0;0;0 100;100;100;0;0;0;0;0   0;0;0;100;100;100;100;100       v6_BW306
                 
             # Replace hash with final taxonomy results, for each copy of the sequence
             for d in dupes:
-               # print OUT join("\t", $d, @{$results{$read}}, join(", ", sort @{$refs_for{$read}})) . "\n";
+               # print OUT join("\t", $d, @{$results{$read_id}}, join(", ", sort @{$refs_for{$read_id}})) . "\n";
                 d = d.strip()
-                tagtax_long_fh.write( d+"\t"+"\t".join(results[read])+"\t"+', '.join(sorted(refs_for[read]))  + "\n")
-                tagtax_terse_fh.write(d+"\t"+results[read][0]+"\t"+results[read][2]+"\t"+results[read][3]+"\t"+', '.join(sorted(refs_for[read]))+"\t"+results[read][1]+"\t"+str(frequency)+"\n")
+                tagtax_long_fh.write( d+"\t"+"\t".join(results[read_id])+"\t"+', '.join(sorted(refs_for[read_id]))  + "\n")
+                tagtax_terse_fh.write(d+"\t"+results[read_id][0]+"\t"+results[read_id][2]+"\t"+results[read_id][3]+"\t"+', '.join(sorted(refs_for[read_id]))+"\t"+results[read_id][1]+"\t"+str(frequency)+"\n")
                
         tagtax_terse_fh.close()
         tagtax_long_fh.close()

@@ -307,6 +307,8 @@ def env454upload(runobj):
             gast_dict       = my_env454upload.get_gasta_result(filename)
             read_fasta      = u.ReadFasta(fasta_file_path)
             sequences       = read_fasta.sequences
+#            sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
+
             if not (len(sequences)):
                 continue            
             read_fasta.close()

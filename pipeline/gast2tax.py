@@ -52,9 +52,9 @@ def run_gast2tax(args):
         ( refdb, taxdb ) = mygast.get_reference_databases(args.dna_region)
         
         #print tax_file
-        max_distance = C.max_distance['default']
-        if args.dna_region in C.max_distance:
-            max_distance = C.max_distance[args.dna_region] 
+        max_gast_distance = C.max_gast_distance['default']
+        if args.dna_region in C.max_gast_distance:
+            max_gast_distance = C.max_gast_distance[args.dna_region] 
         
         
         ref_taxa = mygast.load_reftaxa(taxdb)
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MBL Sequence Pipeline: gast2tax')
     parser.add_argument('-dna', '--dna', required=True,                         dest = "dna_region",
                                                  help = 'Configuration parameters (.ini file) of the run. See README File')
-    parser.add_argument("-max", "--max",     required=True,  action="store",              dest = "max_distance", 
+    parser.add_argument("-max", "--max",     required=True,  action="store",              dest = "max_gast_distance", 
                                                     help="unique run number ") 
                                                     
                                                     
