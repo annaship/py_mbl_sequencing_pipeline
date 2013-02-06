@@ -324,6 +324,9 @@ example of getting all directory name in illumina_files
         self.chimera_dir       = os.path.join(self.analysis_dir, C.subdirs['chimera_dir'])
         self.trimming_dir      = os.path.join(self.analysis_dir, C.subdirs['trimming_dir'])        
         
+        self.unique_file_counts = os.path.join(self.analysis_dir, "unique_file_counts")
+
+        
     def check_and_make_dir(self, dir_name):
 #        if not os.path.exists(dir_name):
         try:
@@ -391,6 +394,13 @@ example of getting all directory name in illumina_files
             #gast_name_dirs.append(self.check_and_make_dir(os.path.join(self.gast_dir, key)))
             gast_name_dirs.append(self.check_dir(os.path.join(self.gast_dir, key)))
         return gast_name_dirs
+        
+    def delete_file(self, filename):
+        try:
+            os.remove(filename)
+            print "DELETE %s" % (filename)
+        except OSError:
+            pass
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"

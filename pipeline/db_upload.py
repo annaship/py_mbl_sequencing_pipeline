@@ -121,7 +121,8 @@ class dbUpload:
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
 
-        self.unique_file_counts = os.path.join(self.analysis_dir, "unique_file_counts")
+        self.unique_file_counts = dirs.unique_file_counts
+        dirs.delete_file(self.unique_file_counts)
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         self.run_id      = None
@@ -175,11 +176,14 @@ class dbUpload:
     def insert_pdr_info(self, fasta, run_info_ill_id):
         # ------- insert sequence info per run/project/dataset --------
         sequence_ill_id = self.seq_id_dict[fasta.seq]
+
+ #       sequence_ill_id = self.seq_id_dict[fasta.seq.upper()]
         seq_count       = int(fasta.id.split('|')[1].split(':')[1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-        print my_sql
+#        print "URA"
+#        print my_sql
         res_id = self.my_conn.execute_no_fetch(my_sql)
         return res_id
  
@@ -359,7 +363,6 @@ class dbUpload:
             my_sql = my_sql1 + my_sql3
         elif (projects != "") and (datasets != ""):
             my_sql = my_sql1 + my_sql2 + my_sql3
-#        print my_sql
         self.my_conn.execute_no_fetch(my_sql)
 
 #    def del_sequence_pdr_info(self):
@@ -392,7 +395,6 @@ class dbUpload:
             my_sql = my_sql1 + my_sql3
         elif (projects != "") and (datasets != ""):
             my_sql = my_sql1 + my_sql2 + my_sql3
-#        print my_sql
         self.my_conn.execute_no_fetch(my_sql)
 
 
@@ -420,14 +422,20 @@ class dbUpload:
 
     def count_sequence_pdr_info_ill(self):
         projects = self.get_project_names()
-        "TODO: add query by dataset names from actual files?"
-#        run_key, barcode_index_lane
+        datasets = self.get_dataset_names()
+        lane     = self.get_lane().pop()   
+
         my_sql = """SELECT count(sequence_pdr_info_ill_id) 
                     FROM sequence_pdr_info_ill 
                       JOIN run_info_ill USING(run_info_ill_id) 
                       JOIN run USING(run_id) 
-                      join project using(project_id)
-                    WHERE run = '%s' and project in (\"%s\")""" % (self.rundate, projects)
+                      JOIN project using(project_id)
+                      JOIN dataset USING(dataset_id)                      
+                    WHERE run = '%s' 
+                      AND lane = %s
+                      AND project in (\"%s\")
+                      AND dataset in (\"%s\")
+                      """ % (self.rundate, lane, projects, datasets)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])              
@@ -440,6 +448,10 @@ class dbUpload:
         datasets = [v.dataset for v in self.runobj.samples.itervalues()]
         return '", "'.join(set(datasets))
 
+    def get_lane(self):
+        lane = [v.lane for v in self.runobj.samples.itervalues()]
+        return set(lane)
+
     def count_seq_from_file(self):
         try:
             with open(self.unique_file_counts) as fd:
@@ -451,16 +463,13 @@ class dbUpload:
             raise
 
     def check_seq_upload(self):
-        """
-        TODO: remove file after use
-        """
         file_seq_db_count   = self.count_sequence_pdr_info_ill()
 #        print "file_seq_db_count = %s" % file_seq_db_count
         file_seq_orig_count = self.count_seq_from_file()
         if (file_seq_orig_count == file_seq_db_count):
             print "All sequences from files made it to the db: %s == %s" % (file_seq_orig_count, file_seq_db_count)
         else:
-            print "Oops, not all sequences from files made it to the db.\nIn file: %s != in db: %s\n==============" % (file_seq_orig_count, file_seq_db_count)
+            print "Oops, amount of sequences from files not equal to the one in the db.\nIn file: %s != in db: %s\n==============" % (file_seq_orig_count, file_seq_db_count)
             
     def put_seq_statistics_in_file(self, filename, seq_in_file):
         pipelne_utils   = PipelneUtils()
