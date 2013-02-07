@@ -115,8 +115,8 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#        self.my_conn     = MyConnection()    
+#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -351,14 +351,16 @@ class dbUpload:
     def insert_primer(self):
         pass
         
-    def del_sequence_pdr_info_by_project_dataset(self, projects = "", datasets = ""):
+    def del_sequence_pdr_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
         my_sql1 = """DELETE FROM sequence_pdr_info_ill
                     USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) 
                     JOIN run USING(run_id) 
                     JOIN project using(project_id)
                     JOIN dataset using(dataset_id)
-                    WHERE run = "%s"
-                """ % (self.rundate)
+                    JOIN primer_suite using(primer_suite_id)
+                    WHERE primer_suite = "%s"
+                    AND run = "%s"
+                """ % (primer_suite, self.rundate)
         my_sql2 = " AND project in (" + projects + ")"
         my_sql3 = " AND dataset in (" + datasets + ")"
         if (projects == "") and (datasets == ""):
@@ -383,14 +385,15 @@ class dbUpload:
 #                """ % self.rundate
 #        self.my_conn.execute_no_fetch(my_sql)
 
-    def del_run_info_by_project_dataset(self, projects = "", datasets = ""):
+    def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
         my_sql1 = """DELETE FROM run_info_ill
                     USING run_info_ill 
                     JOIN run USING(run_id) 
                     JOIN project using(project_id)
-                    JOIN dataset using(dataset_id)
-                    WHERE run = "%s"
-                """ % (self.rundate)
+                    JOIN primer_suite using(primer_suite_id)
+                    WHERE primer_suite = "%s"
+                    AND run = "%s"
+                """ % (primer_suite, self.rundate)
         my_sql2 = " AND project in (" + projects + ")"
         my_sql3 = " AND dataset in (" + datasets + ")"
         if (projects == "") and (datasets == ""):
@@ -426,26 +429,47 @@ class dbUpload:
 #        self.del_sequences(self.rundate)
 #        self.del_sequence_pdr_info(self.rundate)
 
+#    def count_sequence_pdr_info_ill(self):
+#        projects = self.get_project_names()
+#        datasets = self.get_dataset_names()
+#        lane     = self.get_lane().pop()   
+#
+#        my_sql = """SELECT count(sequence_pdr_info_ill_id) 
+#                    FROM sequence_pdr_info_ill 
+#                      JOIN run_info_ill USING(run_info_ill_id) 
+#                      JOIN run USING(run_id) 
+#                      JOIN project using(project_id)
+#                      JOIN dataset USING(dataset_id)                      
+#                    WHERE run = '%s' 
+#                      AND lane = %s
+#                      AND project in (\"%s\")
+#                      AND dataset in (\"%s\")
+#                      """ % (self.rundate, lane, projects, datasets)
+#        res    = self.my_conn.execute_fetch_select(my_sql)
+#        if res:
+#            return int(res[0][0])              
+
     def count_sequence_pdr_info_ill(self):
-        projects = self.get_project_names()
-        datasets = self.get_dataset_names()
-        lane     = self.get_lane().pop()   
+        primer_suite = self.get_primer_suite_name()
+        lane         = self.get_lane().pop()   
 
         my_sql = """SELECT count(sequence_pdr_info_ill_id) 
                     FROM sequence_pdr_info_ill 
                       JOIN run_info_ill USING(run_info_ill_id) 
                       JOIN run USING(run_id) 
-                      JOIN project using(project_id)
-                      JOIN dataset USING(dataset_id)                      
+                      JOIN primer_suite using(primer_suite_id) 
                     WHERE run = '%s' 
                       AND lane = %s
-                      AND project in (\"%s\")
-                      AND dataset in (\"%s\")
-                      """ % (self.rundate, lane, projects, datasets)
+                      AND primer_suite = '%s'
+                      """ % (self.rundate, lane, primer_suite)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
-            return int(res[0][0])              
-
+            return int(res[0][0])   
+    
+    def get_primer_suite_name(self):
+        primer_suite = [v.primer_suite for v in self.runobj.samples.itervalues()]
+        return list(set(primer_suite))[0]
+        
     def get_project_names(self):
         projects = [v.project for v in self.runobj.samples.itervalues()]
         return '", "'.join(set(projects))
