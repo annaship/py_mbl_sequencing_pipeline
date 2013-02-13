@@ -183,7 +183,7 @@ class dbUpload:
         sequence_ill_id = self.seq_id_dict[fasta.seq]
 
  #       sequence_ill_id = self.seq_id_dict[fasta.seq.upper()]
-        seq_count       = int(fasta.id.split('|')[1].split(':')[1])
+        seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
