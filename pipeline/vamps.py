@@ -59,7 +59,10 @@ class Vamps:
         
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
-            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
+            if self.runobj.mobedac:
+                dir_prefix = 'mobedac_' + self.runobj.user + '_' + self.runobj.run + '_gast'
+            else:
+                dir_prefix = self.runobj.user + '_' + self.runobj.run + '_gast'
         else:
             site = ''
             dir_prefix = self.runobj.run

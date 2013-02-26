@@ -181,13 +181,17 @@ class RunConfig:
             self.domain         = general_config['domain']
             
             
-            self.site           = general_config['site']
+            self.site               = general_config['site']
             
             self.load_vamps_database = general_config['load_vamps_database']
             try:
-                self.fasta_file    = general_config['fasta_file'] 
+                self.fasta_file     = general_config['fasta_file'] 
             except:
-                self.fasta_file    = None
+                self.fasta_file     = None
+            try:
+                self.mobedac        = general_config['mobedac'] 
+            except:
+                self.mobedac        = False
             try:
                 self.use_full_length= general_config['use_full_length']
             except:
@@ -355,7 +359,7 @@ class RunConfig:
             sample.project_title        = lane_run_dict['project_title']
             sample.project_description  = lane_run_dict['project_description']
             
-            sample.env_sample_source_id    = lane_run_dict['env_sample_source_id']
+            sample.env_sample_source_id = lane_run_dict['env_sample_source_id']
             sample.dataset_description  = lane_run_dict['dataset_description']
             sample.project              = lane_run_dict['project']
             sample.dataset              = lane_run_dict['dataset']
@@ -396,7 +400,7 @@ class RunConfig:
                     
                 elif self.platform == '454':
                     # required for 454
-                    sample.direction = lane_run_dict['direction'] 
+                    sample.direction            = lane_run_dict['direction'] 
                     sample.data_owner           = lane_run_dict['data_owner']
                     sample.first_name           = lane_run_dict['first_name']
                     sample.last_name            = lane_run_dict['last_name']

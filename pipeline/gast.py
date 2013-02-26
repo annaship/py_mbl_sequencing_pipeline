@@ -33,7 +33,10 @@ class Gast:
             self.refdb_dir = C.vamps_ref_database_dir
             self.iterator  = self.runobj.datasets
             site = self.runobj.site
-            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
+            if self.runobj.mobedac:
+                dir_prefix= 'mobedac_' + self.runobj.user+'_'+self.runobj.run+'_gast'
+            else:            
+                dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
         else:
             self.idx_keys  = idx_keys
             self.iterator  = self.idx_keys
