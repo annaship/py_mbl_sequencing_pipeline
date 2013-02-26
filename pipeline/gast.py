@@ -34,7 +34,7 @@ class Gast:
             self.iterator  = self.runobj.datasets
             site = self.runobj.site
             if self.runobj.mobedac:
-                dir_prefix= 'mobedac_' + self.runobj.user+'_'+self.runobj.run+'_gast'
+                dir_prefix= 'mobedac_' + self.runobj.user+'_'+self.runobj.run
             else:            
                 dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
         else:
