@@ -116,85 +116,178 @@ class Vamps:
         obj=ConMySQL.New(db_host, db_name, db_home)
         self.conn = obj.get_conn()    
         
+#         for key in self.iterator:
+#             file_collector={}
+#             out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
+#             file_collector['gast_concat_file'] = os.path.join(out_gast_dir,'gast_concat')
+#             file_collector['tagtax_file'] = os.path.join(out_gast_dir,'tagtax_terse')
+#             if not os.path.exists(file_collector['gast_concat_file']):
+#                     logger.warning("Could not find gast_concat_file file: "+file_collector['gast_concat_file'])
+#                      
+#             if not os.path.exists(file_collector['tagtax_file']):
+#                 logger.warning("Could not find tagtax_file file: "+file_collector['tagtax_file'])
+#             #print key,self.runobj.platform
+#             
+#             if self.runobj.vamps_user_upload:
+#                 
+#                 file_collector['unique_file'] = os.path.join(out_gast_dir,'unique.fa')
+#                 file_collector['original_fa_file'] = os.path.join(out_gast_dir,'fasta.fa')
+#                 
+#                 if self.runobj.fasta_file:
+#                     grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
+#                 else:
+#                     grep_cmd = ['grep','-c','>',file_collector['unique_file']]
+#             else:
+#                 if self.runobj.platform == 'illumina':
+#                     
+#                     #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
+#                     reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
+#                     file_prefix = self.runobj.samples[key].file_prefix
+#                     file_collector['unique_file'] = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
+#                     # ANNA What is the correct file here:
+#                     file_collector['original_fa_file'] = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
+#                     grep_cmd = ['grep','-c','>',file_collector['unique_file']]
+#                 elif self.runobj.platform == '454':
+#                     pass
+#                 else:
+#                     sys.exit("no usable platform found")
+#                 
+#             if not os.path.exists(file_collector['unique_file']):
+#                 logger.error("Could not find unique_file: "+file_collector['unique_file'])
+#                 
+#             # get dataset_count here from unique_file
+#             # the dataset_count should be from the non-unique file
+#             # but if we don't have that must use uniques
+#             
+#             try:
+#                 dataset_count = subprocess.check_output(grep_cmd).strip()
+#             except:
+#                 dataset_count = 0
+#             print key,": Sequence Count", dataset_count
+#             
+#             # output files to be created:            
+#             file_collector['taxes_file']                = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
+#             file_collector['summed_taxes_file']         = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
+#             file_collector['distinct_taxes_file']       = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
+#             file_collector['sequences_file']            = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
+#             file_collector['export_file']               = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
+#             file_collector['projects_datasets_file']    = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
+#             file_collector['project_info_file']         = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
+#             
+#             
+#             
+#             if dataset_count:
+#                 (tax_collector, read_id_lookup) = self.taxonomy(key, dataset_count, file_collector)
+#                 #sys.exit()
+#                 
+#                 refid_collector = self.sequences(key, tax_collector, read_id_lookup, file_collector)   
+#                 
+#                 self.exports(key, refid_collector, tax_collector, read_id_lookup, file_collector)
+#                 
+#                 self.projects(key, dataset_count, file_collector)
+#                 self.info(key, file_collector)
+#                 if self.runobj.load_vamps_database:
+#                     self.load_database(key, out_gast_dir, file_collector)
+#                     #self.load_taxonomy
+#                     #self.load_sequences
+#                     #self.load_export
+#                     #self.load_projects
+#             else:
+#                 print "no tagtax file found or no dataset_count -- continuing to next dataset..."
+    
+    def create_vamps_files(self):
+        """
+        Creates the vamps files in the gast directory ready for loading into vampsdb
+        """
         for key in self.iterator:
-            out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
-            gast_concat_file = os.path.join(out_gast_dir,'gast_concat')
-            tagtax_file = os.path.join(out_gast_dir,'tagtax_terse')
-            if not os.path.exists(gast_concat_file):
-                    logger.warning("Could not find gast_concat_file file: "+gast_concat_file)
-                     
-            if not os.path.exists(tagtax_file):
-                logger.warning("Could not find tagtax_file file: "+tagtax_file)
-            #print key,self.runobj.platform
-            
-            if self.runobj.vamps_user_upload:
-                
-                unique_file = os.path.join(out_gast_dir,'unique.fa')
-                original_fa_file = os.path.join(out_gast_dir,'fasta.fa')
-                
-                if self.runobj.fasta_file:
-                    grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
-                else:
-                    grep_cmd = ['grep','-c','>',unique_file]
+            (files, ds_count, gast_dir) = self.gather_files_per_key(key)
+            if ds_count:
+                 (tax_collector, read_id_lookup) = self.taxonomy(key, ds_count, files)
+                 refid_collector = self.sequences(key, tax_collector, read_id_lookup, files)   
+                 self.exports(key, refid_collector, tax_collector, read_id_lookup, files)
+                 self.projects(key, ds_count, files)
+                 self.info(key, files)
             else:
-                if self.runobj.platform == 'illumina':
-                    
-                    #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
-                    reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
-                    file_prefix = self.runobj.samples[key].file_prefix
-                    unique_file = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
-                    grep_cmd = ['grep','-c','>',unique_file]
-                elif self.runobj.platform == '454':
-                    pass
-                else:
-                    sys.exit("no usable platform found")
-                
-            if not os.path.exists(unique_file):
-                logger.error("Could not find unique_file: "+unique_file)
-                
-            # get dataset_count here from unique_file
-            # the dataset_count should be from the non-unique file
-            # but if we don't have that must use uniques
+                print "no tagtax file found or no dataset_count -- continuing to next dataset..."
             
-            try:
-                dataset_count = subprocess.check_output(grep_cmd).strip()
-            except:
-                dataset_count = 0
-            print key,": Sequence Count", dataset_count
-            
-            # to be created:
-            file_collector={}
-            
-            file_collector['taxes_file']                = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
-            file_collector['summed_taxes_file']       = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
-            file_collector['distinct_taxes_file']     = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
-            file_collector['sequences_file']          = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
-            file_collector['export_file']             = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
-            file_collector['projects_datasets_file']  = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
-            file_collector['project_info_file']       = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
-            
-            
-            
-            if dataset_count:
-                (tax_collector,read_id_lookup) = self.taxonomy(key, tagtax_file, dataset_count, file_collector)
-                #sys.exit()
-                
-                refid_collector = self.sequences(key, tax_collector, read_id_lookup, unique_file, gast_concat_file, file_collector)   
-                
-                self.exports(key, refid_collector, tax_collector, read_id_lookup, original_fa_file, gast_concat_file, file_collector)
-                
-                self.projects(key, dataset_count, file_collector)
-                self.info(key, file_collector)
+    def load_vamps_db(self):
+        """
+        Loads files into vampsdb tables.
+        """
+        for key in self.iterator:
+            (files, ds_count, gast_dir) = self.gather_files_per_key(key)
+            if ds_count:
                 if self.runobj.load_vamps_database:
-                    self.load_database(key, out_gast_dir, file_collector)
-                    #self.load_taxonomy
-                    #self.load_sequences
-                    #self.load_export
-                    #self.load_projects
+                     self.load_database(key, gast_dir, files)
             else:
-                print "no tagtax file found -- continuing...."
+                print "no tagtax file found or no dataset_count -- continuing to next dataset..."
+            
+    def gather_files_per_key(self, key):
+    
+        file_collector={}
+        out_gast_dir = os.path.join(self.global_gast_dir,key)  #directory
+        file_collector['gast_concat_file'] = os.path.join(out_gast_dir,'gast_concat')
+        file_collector['tagtax_file'] = os.path.join(out_gast_dir,'tagtax_terse')
+        if not os.path.exists(file_collector['gast_concat_file']):
+                logger.warning("Could not find gast_concat_file file: "+file_collector['gast_concat_file'])
+                 
+        if not os.path.exists(file_collector['tagtax_file']):
+            logger.warning("Could not find tagtax_file file: "+file_collector['tagtax_file'])
+        #print key,self.runobj.platform
+        
+        if self.runobj.vamps_user_upload:
+            
+            file_collector['unique_file'] = os.path.join(out_gast_dir,'unique.fa')
+            file_collector['original_fa_file'] = os.path.join(out_gast_dir,'fasta.fa')
+            
+            if self.runobj.fasta_file:
+                grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
+            else:
+                grep_cmd = ['grep','-c','>',file_collector['unique_file']]
+        else:
+            if self.runobj.platform == 'illumina':
                 
-    def taxonomy(self,key,tagtax_file,dataset_count, file_collector):
+                #unique_file = os.path.join(self.basedir,C.gast_dir),'unique.fa')
+                reads_dir = dirs.check_dir(dirs.reads_overlap_dir)
+                file_prefix = self.runobj.samples[key].file_prefix
+                file_collector['unique_file'] = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                # ANNA What is the correct file here:
+                file_collector['original_fa_file'] = os.path.join(reads_dir,file_prefix+"-PERFECT_reads.fa.unique")
+                grep_cmd = ['grep','-c','>',file_collector['unique_file']]
+            elif self.runobj.platform == '454':
+                pass
+            else:
+                sys.exit("no usable platform found")
+            
+        if not os.path.exists(file_collector['unique_file']):
+            logger.error("Could not find unique_file: "+file_collector['unique_file'])
+            
+        # get dataset_count here from unique_file
+        # the dataset_count should be from the non-unique file
+        # but if we don't have that must use uniques
+        
+        try:
+            dataset_count = subprocess.check_output(grep_cmd).strip()
+        except:
+            dataset_count = 0
+        print key,": Sequence Count", dataset_count
+        
+        # output files to be created:            
+        file_collector['taxes_file']                = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
+        file_collector['summed_taxes_file']         = os.path.join(out_gast_dir,'vamps_junk_data_cube_pipe.txt')
+        file_collector['distinct_taxes_file']       = os.path.join(out_gast_dir,'vamps_taxonomy_pipe.txt')
+        file_collector['sequences_file']            = os.path.join(out_gast_dir,'vamps_sequences_pipe.txt')
+        file_collector['export_file']               = os.path.join(out_gast_dir,'vamps_export_pipe.txt')
+        file_collector['projects_datasets_file']    = os.path.join(out_gast_dir,'vamps_projects_datasets_pipe.txt')
+        file_collector['project_info_file']         = os.path.join(out_gast_dir,'vamps_projects_info_pipe.txt')
+    
+    
+        return (file_collector, dataset_count, out_gast_dir)
+    
+
+    
+    
+    def taxonomy(self,key, dataset_count, file_collector):
         """
         fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy files
         """
@@ -217,8 +310,8 @@ class Vamps:
         project_dataset = project+'--'+dataset
         taxa_lookup = {}
         read_id_lookup={}
-        if os.path.exists(tagtax_file):
-            for line in  open(tagtax_file,'r'):
+        if os.path.exists(file_collector['tagtax_file']):
+            for line in  open(file_collector['tagtax_file'],'r'):
                 line = line.strip()
                 items = line.split("\t")
                 taxa = items[1]
@@ -388,9 +481,10 @@ class Vamps:
         
         return (tax_collector,read_id_lookup)
         
-    def sequences(self,key,tax_collector, read_id_lookup, unique_file, gast_concat_file, file_collector):
+    def sequences(self,key,tax_collector, read_id_lookup, file_collector):
         """
         fill vamps_sequences.txt file
+        
         """
         
         logger.info("Starting vamps_upload: sequences")
@@ -412,7 +506,7 @@ class Vamps:
         # open gast_concat table to get the distances and the ferids
         refid_collector={}
         #if os.path.exists(gast_concat_file):
-        for line in  open(gast_concat_file,'r'):
+        for line in  open(file_collector['gast_concat_file'],'r'):
             line = line.strip()
             items=line.split()
             id=items[0]
@@ -432,8 +526,8 @@ class Vamps:
         
         
         # open uniques fa file
-        if os.path.exists(unique_file) and os.path.getsize(unique_file) > 0:
-            f = FastaReader(unique_file)
+        if os.path.exists(file_collector['unique_file']) and os.path.getsize(file_collector['unique_file']) > 0:
+            f = FastaReader(file_collector['unique_file'])
             
             while f.next():
                 datarow = ['']
@@ -478,9 +572,10 @@ class Vamps:
         logger.info("")
         return refid_collector
         
-    def exports(self, key, refid_collector, tax_collector, read_id_lookup, original_fa_file, gast_concat_file, file_collector):
+    def exports(self, key, refid_collector, tax_collector, read_id_lookup, file_collector):
         """
         fill vamps_exports.txt file
+    
         """
         logger.info("Starting vamps_upload: exports")
         print "Starting vamps_upload: exports"
@@ -505,8 +600,8 @@ class Vamps:
         fh.write("\t".join(["HEADER","read_id","project","dataset","refhvr_ids","distance","taxonomy","sequence", "rank","entry_date"] )+"\n")
         today     = str(datetime.date.today())
         # open original fasta file
-        if os.path.exists(original_fa_file) and os.path.getsize(original_fa_file) > 0:
-            f = FastaReader(original_fa_file)
+        if os.path.exists(file_collector['original_fa_file']) and os.path.getsize(file_collector['original_fa_file']) > 0:
+            f = FastaReader(file_collector['original_fa_file'])
             while f.next():
                 datarow = ['']
                 id = f.id.split('|')[0]

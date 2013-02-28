@@ -423,6 +423,11 @@ def gast(runobj):
     if result_code['status'] == 'ERROR':
         logger.error("uniques not found failed")
         sys.exit("uniques not found failed")
+        if runobj.vamps_user_upload:
+            write_status_to_vamps_db( runobj.site, runobj.run, "GAST ERROR", "uniques file not found - failed" )
+    elif runobj.vamps_user_upload:
+        write_status_to_vamps_db( runobj.site, runobj.run, result_code['status'], result_code['message'] )
+        
     sleep(5)
     
     # CLUSTERGAST
@@ -431,6 +436,11 @@ def gast(runobj):
     if result_code['status'] == 'ERROR':
         logger.error("clutergast failed")
         sys.exit("clustergast failed")
+        if runobj.vamps_user_upload:
+            write_status_to_vamps_db( runobj.site, runobj.run, "GAST ERROR", "clustergast failed" )
+    elif runobj.vamps_user_upload:
+        write_status_to_vamps_db( runobj.site, runobj.run, result_code['status'], result_code['message'] )
+        
     sleep(5)
     
     # GAST_CLEANUP
@@ -439,6 +449,11 @@ def gast(runobj):
     if result_code['status'] == 'ERROR':
         logger.error("gast_cleanup failed")        
         sys.exit("gast_cleanup failed")
+        if runobj.vamps_user_upload:
+            write_status_to_vamps_db( runobj.site, runobj.run, "GAST ERROR", "gast_cleanup failed" )
+    elif runobj.vamps_user_upload:
+        write_status_to_vamps_db( runobj.site, runobj.run, result_code['status'], result_code['message'] )
+        
     sleep(5)
     
     # GAST2TAX
@@ -447,7 +462,11 @@ def gast(runobj):
     if result_code['status'] == 'ERROR':
         logger.error("gast2tax failed") 
         sys.exit("gast2tax failed")
-        
+        if runobj.vamps_user_upload:
+            write_status_to_vamps_db( runobj.site, runobj.run, "GAST ERROR", "gast2tax failed" )
+    elif runobj.vamps_user_upload:
+        write_status_to_vamps_db( runobj.site, runobj.run, result_code['status'], result_code['message'] )
+            
 def cluster(runobj):
     """
     TO be developed eventually:
@@ -475,7 +494,7 @@ def vampsupload(runobj):
 #     else:
 #         idx_keys = convert_unicode_dictionary_to_str(json.loads(open(runobj.trim_status_file_name,"r").read()))["new_lane_keys"]
      
-     # NOT NEEDED HERE Find duplicate project names
+     # NOT NEEDED HERE: Find duplicate project names
      # if vamps user uploads this has already been done and this project is
      # already in vamps_upload_info table
      # if data from a csv file (illumina and 454) this also is not needed
@@ -483,6 +502,15 @@ def vampsupload(runobj):
     
      
     myvamps = Vamps(runobj, idx_keys)
+    # Create files
+    myvamps.create_vamps_files()
+    # put files in db
+    myvamps.load_vamps_db()
+    
+    
+    # check here for completion of 
+    # 1-file creation
+    # 2-data appears in vamps
     
         
     
