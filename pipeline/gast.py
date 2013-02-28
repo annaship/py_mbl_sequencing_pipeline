@@ -33,7 +33,10 @@ class Gast:
             self.refdb_dir = C.vamps_ref_database_dir
             self.iterator  = self.runobj.datasets
             site = self.runobj.site
-            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
+            if self.runobj.mobedac:
+                dir_prefix= 'mobedac_' + self.runobj.user+'_'+self.runobj.run
+            else:            
+                dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
         else:
             self.idx_keys  = idx_keys
             self.iterator  = self.idx_keys
@@ -377,7 +380,7 @@ class Gast:
         
         print "Finished clustergast"
         logger.info("Finished clustergast")
-        return {'status':"SUCCESS", 'message':"Clustergast Finished"}    
+        return {'status':"GAST_SUCCESS", 'message':"Clustergast Finished"}    
         
             
     def gast_cleanup(self):
@@ -565,7 +568,7 @@ class Gast:
             
         print "Finished gast_cleanup"   
         logger.info("Finished gast_cleanup")
-        return {'status':"SUCCESS", 'message':"gast_cleanup finished"}
+        return {'status':"GAST_SUCCESS", 'message':"gast_cleanup finished"}
 
     def gast2tax(self):
         """
@@ -725,7 +728,7 @@ class Gast:
                     
                     
         print "Finished gast2tax" 
-        return {'status':"SUCCESS", 'message':"gast2tax finished"} 
+        return {'status':"GAST_SUCCESS", 'message':"gast2tax finished"} 
         
     
     def get_reference_databases(self, dna_region):
@@ -1060,16 +1063,7 @@ class Gast:
                     pass
                 
             
-#         for key in keys:
-#             fasta_file = ""
-#             output_dir = os.path.join(self.basedir, key)
-#             unique_file = os.path.join(output_dir, key+'.unique.fa')
-#             if not os.path.exists(unique_file):
-#                 mothur_cmd = C.mothur_cmd+" \"#unique.seqs(fasta="+fasta_file+", outputdir="+os.path.join(self.basedir, key)+"/);\""; 
-#         
-#                 #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
-#                 subprocess.call(mothur_cmd, shell=True)
-        return {"status":"SUCCESS", "message":"checking for uniques"}       
+        return {"status":"GAST_SUCCESS", "message":"checking for uniques"}       
                 
     def get_fasta_from_database(self):
         pass

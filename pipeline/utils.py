@@ -275,7 +275,35 @@ def zip_up_directory(run_date, dirPath, mode='a'):
         os.remove(i.filename)
 
     zf.close()
-      
+    
+def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message=''):
+    """
+    This should be available to write status updates to vamps:vamps_upload_status.
+    It is especially important for MoBeDAC uploads because the qiime site
+    will 'see' and react to the message in the db.
+    
+    """
+    import ConMySQL
+    
+    today   = str(datetime.date.today())
+    if site == 'vamps':
+        db_host    = 'vampsdb'
+        db_name    = 'vamps'
+        db_home = '/xraid2-2/vampsweb/vamps/'
+    else:
+        db_host    = 'vampsdev'
+        db_name    = 'vamps'
+        db_home = '/xraid2-2/vampsweb/vampsdev/'
+    obj=ConMySQL.New(db_host, db_name, db_home)
+    conn = obj.get_conn()
+    cursor = conn.cursor()
+    
+    query = "update vamps_upload_status set status='%s', status_message='%s', date='%s' where id='%s'" % (status, message, today, id)
+    
+    cursor.execute( query  )
+    
+    conn.commit()
+    
 class PipelneUtils:
     def __init__(self):
         pass

@@ -115,8 +115,8 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-#        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-        self.my_conn     = MyConnection()    
+        self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
+#        self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -311,7 +311,7 @@ class dbUpload:
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
         ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
-#        print my_sql
+        print my_sql
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
