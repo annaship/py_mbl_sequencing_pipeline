@@ -299,8 +299,7 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
     cursor = conn.cursor()
     
     query = "update vamps_upload_status set status='%s', status_message='%s', date='%s' where id='%s'" % (status, message, today, id)
-    
-    cursor.execute( query  )
+    cursor.execute(query)
     
     conn.commit()
     

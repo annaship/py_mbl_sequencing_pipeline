@@ -182,19 +182,15 @@ class dbUpload:
         # ------- insert sequence info per run/project/dataset --------
         sequence_ill_id = self.seq_id_dict[fasta.seq]
 
- #       sequence_ill_id = self.seq_id_dict[fasta.seq.upper()]
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-#        print "URA"
-#        print my_sql
         res_id = self.my_conn.execute_no_fetch(my_sql)
         return res_id
  
     def get_gasta_result(self, filename):
         gast_file_name = os.path.join(self.gast_dir, filename + '.gast')
-#        gast_file_name = filename + '.gast'
         try:
             with open(gast_file_name) as fd:
                 gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
@@ -423,32 +419,6 @@ class dbUpload:
         self.my_conn.execute_no_fetch(my_sql)
 
 
-    #That order is important!
-#    def del_all_seq_info(self):
-#        self.del_sequence_uniq_info(self.rundate)
-#        self.del_sequences(self.rundate)
-#        self.del_sequence_pdr_info(self.rundate)
-
-#    def count_sequence_pdr_info_ill(self):
-#        projects = self.get_project_names()
-#        datasets = self.get_dataset_names()
-#        lane     = self.get_lane().pop()   
-#
-#        my_sql = """SELECT count(sequence_pdr_info_ill_id) 
-#                    FROM sequence_pdr_info_ill 
-#                      JOIN run_info_ill USING(run_info_ill_id) 
-#                      JOIN run USING(run_id) 
-#                      JOIN project using(project_id)
-#                      JOIN dataset USING(dataset_id)                      
-#                    WHERE run = '%s' 
-#                      AND lane = %s
-#                      AND project in (\"%s\")
-#                      AND dataset in (\"%s\")
-#                      """ % (self.rundate, lane, projects, datasets)
-#        res    = self.my_conn.execute_fetch_select(my_sql)
-#        if res:
-#            return int(res[0][0])              
-
     def count_sequence_pdr_info_ill(self):
         primer_suite = self.get_primer_suite_name()
         lane         = self.get_lane().pop()   
@@ -488,8 +458,10 @@ class dbUpload:
                 file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
             file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
             return file_seq_orig_count
+        except IOError as e:
+            print "Can't open file %s, error = %s" % (self.unique_file_counts, e)         
         except Exception:
-            print "Unexpected error:", sys.exc_info()[0]
+            print "Unexpected error from 'count_seq_from_file':", sys.exc_info()[0]
             raise
 
     def check_seq_upload(self):
