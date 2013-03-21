@@ -1,6 +1,7 @@
 import sys,os
 
-sys.path.append("/bioware/pythonmodules/illumina-utils/")
+# sys.path.append("/bioware/pythonmodules/illumina-utils/")
+sys.path.append("/bioware/merens-illumina-utils")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
 from fastalib import *
 from pipeline.Fasta import sfasta
