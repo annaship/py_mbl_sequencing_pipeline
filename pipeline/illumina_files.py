@@ -107,13 +107,27 @@ class IlluminaFiles:
             if self.utils.is_local():
                 program_name = C.partial_overlap_cmd_local           
             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
-    
+            
+    def filter_mismatches(self, max_mismatch = 3):
+        print "Filter mismatches if more then %s" % (max_mismatch)
+        n = 0        
+        files = self.get_all_files()
+        for full_name in files.keys():    
+            if files[full_name][0].endswith('_MERGED'):
+                n +=1   
+#                print "%s fasta file: %s" % (n, full_name)
+                program_name = C.filter_mismatch_cmd
+                if self.utils.is_local():
+                    program_name = C.filter_mismatch_cmd_local
+                output_flag = "--output " + full_name + "_FILTERED"                
+                call([program_name, full_name, output_flag])
+                    
     def uniq_fa(self):
         n = 0        
         print "Uniqueing fasta files"      
         files = self.get_all_files()
         for full_name in files.keys():    
-            if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED'):
+            if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED_FILTERED'):
                 n +=1   
 #                print "%s fasta file: %s" % (n, full_name)
                 program_name = C.fastaunique_cmd

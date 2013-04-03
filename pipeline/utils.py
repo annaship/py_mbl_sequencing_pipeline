@@ -325,7 +325,8 @@ class PipelneUtils:
         return files    
 
     def is_local(self):
-        dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local"]
+        print os.uname()[1]
+        dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local"]
         if os.uname()[1] in dev_comps:
             return True
         else:

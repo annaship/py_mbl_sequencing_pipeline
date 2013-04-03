@@ -265,6 +265,7 @@ def illumina_files(runobj):
         illumina_files.perfect_reads()
     else:
         illumina_files.partial_overlap_reads()
+        illumina_files.filter_mismatches()
     illumina_files.uniq_fa()
     
     elapsed = (time() - start)

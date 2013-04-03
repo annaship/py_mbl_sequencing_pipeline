@@ -61,6 +61,14 @@ class IlluminaFilesTestCase(unittest.TestCase):
         f_path = os.path.join(self.file_path, "reads_overlap")
         files_amount  = len([name for name in os.listdir(f_path) if os.path.isfile(os.path.join(f_path, name))])
         self.assertEqual(files_amount, 110)
+
+    def test_05a_filter_mismatches(self):
+        self._illumina_files.filter_mismatches()
+        f_path = os.path.join(self.file_path, "reads_overlap")
+        files_amount = len([name for name in os.listdir(f_path) if os.path.isfile(os.path.join(f_path, name))])
+        merged_files = len([f for f in os.listdir(f_path) if f.endswith('-MERGED_FILTERED') and os.path.isfile(os.path.join(f_path, f))])       
+        self.assertEqual(files_amount, 150)
+        self.assertEqual(merged_files, 10)
         
     def test_05_uniq_fa(self):
         self._illumina_files.uniq_fa()
