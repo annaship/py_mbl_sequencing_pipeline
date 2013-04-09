@@ -134,7 +134,7 @@ class dbUpload:
         pipelne_utils   = PipelneUtils()
         files = pipelne_utils.get_all_files(self.fasta_dir)
         for full_name in files.keys():    
-            if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == "MERGED")):
+            if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == "_MERGED_FILTERED")):
                 fa_files.append(full_name)
         return fa_files
         
