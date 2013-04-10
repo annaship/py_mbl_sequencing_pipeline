@@ -7,15 +7,29 @@ from pipeline.utils import Dirs, PipelneUtils
 
 try:
     import MySQLdb
-except:
-    sys.exit("""
+except MySQLdb.Error, e:
+    print """
     MySQLdb ERROR
       To load the correct module, try running these commands before running the pipeline:
-      
+       
 source /xraid/bioware/Modules/etc/profile.modules
 module load bioware
+    """
+    print "Error %d: %s" % (e.args[0], e.args[1])
+    raise
+except:                       # catch everything
+    print "Unexpected:"         # handle unexpected exceptions
+    print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+    raise          
 
-    """)
+#     sys.exit("""
+#     MySQLdb ERROR
+#       To load the correct module, try running these commands before running the pipeline:
+#       
+# source /xraid/bioware/Modules/etc/profile.modules
+# module load bioware
+# 
+#     """)
 class MyConnection:
     """
     Connection to env454
