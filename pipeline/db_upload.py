@@ -177,7 +177,6 @@ class dbUpload:
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
         res        = self.my_conn.execute_fetch_select(my_sql)
-        print "res = %s" % (res)
         self.seq_id_dict = dict((y, int(x)) for x, y in res)
 
     def get_id(self, table_name, value):
