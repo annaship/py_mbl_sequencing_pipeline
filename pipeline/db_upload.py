@@ -177,6 +177,7 @@ class dbUpload:
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
         res        = self.my_conn.execute_fetch_select(my_sql)
+        print "res = %s" % (res[0])
         self.seq_id_dict = dict((y, int(x)) for x, y in res)
 
     def get_id(self, table_name, value):
@@ -194,7 +195,8 @@ class dbUpload:
     
     def insert_pdr_info(self, fasta, run_info_ill_id):
         # ------- insert sequence info per run/project/dataset --------
-        sequence_ill_id = self.seq_id_dict[fasta.seq]
+        seq_upper = fasta.seq.upper()
+        sequence_ill_id = self.seq_id_dict[seq_upper]
 
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
@@ -244,7 +246,8 @@ class dbUpload:
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-            sequence_ill_id = self.seq_id_dict[fasta.seq]
+            seq_upper = fasta.seq.upper()
+            sequence_ill_id = self.seq_id_dict[seq_upper]
             if taxonomy in self.tax_id_dict:
                 try:
                     taxonomy_id = self.tax_id_dict[taxonomy] 
