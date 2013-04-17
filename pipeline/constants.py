@@ -273,7 +273,7 @@ database_tables = {
 'vamps_user_uploads': {
             'tax_dc_tbl'      : 'vamps_data_cube_uploads',
             'tax_summed_tbl'  : 'vamps_junk_data_cube_pipe',
-            'tax_tbl'         : 'vamps_taxonomy',
+            'tax_tbl'         : 'vamps_taxonomy_pipe',
             'sequences_tbl'   : 'vamps_sequences_pipe',
             'export_tbl'      : 'vamps_export_pipe',
             'info_tbl'        : 'vamps_upload_info',
