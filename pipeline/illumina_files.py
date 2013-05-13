@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append("/xraid/bioware/linux/seqinfo/bin")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
+sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
 sys.path.append("/bioware/merens-illumina-utils")
 # sys.path.append("/bioware/pythonmodules/illumina-utils/")
 import fastqlib as fq
@@ -105,8 +106,15 @@ class IlluminaFiles:
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = C.partial_overlap_cmd
             if self.utils.is_local():
-                program_name = C.partial_overlap_cmd_local           
-            call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
+                program_name = C.partial_overlap_cmd_local        
+            try:
+                call([program_name, "--fast-merge", ini_file_name, idx_key])
+            except:
+                print "Problems with program_name = %s" % (program_name)
+                raise  
+                
+#             print "HERE: program_name = " % (program_name)   
+#             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
             
     def filter_mismatches(self, max_mismatch = 3):
         print "Filter mismatches if more then %s" % (max_mismatch)
@@ -119,15 +127,24 @@ class IlluminaFiles:
                 program_name = C.filter_mismatch_cmd
                 if self.utils.is_local():
                     program_name = C.filter_mismatch_cmd_local
-                output_flag = "--output " + full_name + "_FILTERED"                
-                call([program_name, full_name, output_flag])
+#                 output_flag = "--output " + full_name + "_FILTERED"
+# TODO:    Remove!!!
+#                 output_flag = "-o " + full_name + "_FILTERED"           
+#                 output_flag = "-o TTAGGC_NNNNTGACT_1_MERGED_FILTERED"           
+
+#                 print "output_flag = %s" % (output_flag)
+#                 print "%s %s %s" % (program_name, full_name, output_flag)                
+#                 call([program_name, full_name, output_flag])
+                call([program_name, full_name])
+
                     
     def uniq_fa(self):
         n = 0        
         print "Uniqueing fasta files"      
         files = self.get_all_files()
         for full_name in files.keys():    
-            if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED_FILTERED'):
+#             if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED_FILTERED'):
+            if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED-MAX-MISMATCH-3'):
                 n +=1   
 #                print "%s fasta file: %s" % (n, full_name)
                 program_name = C.fastaunique_cmd
