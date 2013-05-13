@@ -135,7 +135,6 @@ def wait_for_cluster_to_finish(my_running_id_list):
     
     while my_working_id_list:
     
-    
         qstat_codes = get_qstat_id_list()
         if not qstat_codes['id']:
             #print 'No qstat ids'
