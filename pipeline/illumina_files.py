@@ -144,7 +144,7 @@ class IlluminaFiles:
         files = self.get_all_files()
         for full_name in files.keys():    
 #             if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED_FILTERED'):
-            if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED-MAX-MISMATCH-3'):
+            if files[full_name][1] == ".fa" or files[full_name][0].endswith(C.filtered_suffix):
                 n +=1   
 #                print "%s fasta file: %s" % (n, full_name)
                 program_name = C.fastaunique_cmd

@@ -1,6 +1,7 @@
 import sys
-
 import os
+import constants as C
+
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
@@ -130,7 +131,7 @@ class dbUpload:
         
         self.filenames   = []
         self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#        self.my_conn     = MyConnection()    
+#         self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv      = None
@@ -147,8 +148,11 @@ class dbUpload:
         fa_files = []
         pipelne_utils   = PipelneUtils()
         files = pipelne_utils.get_all_files(self.fasta_dir)
-        for full_name in files.keys():    
-            if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == "FILTERED")):
+
+        for full_name in files.keys():
+                
+            if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == C.filtered_suffix)):
+                
                 fa_files.append(full_name)
         return fa_files
         
@@ -193,6 +197,7 @@ class dbUpload:
             return int(res[0][0])     
     
     def insert_pdr_info(self, fasta, run_info_ill_id):
+        res_id = ""
         # ------- insert sequence info per run/project/dataset --------
         seq_upper = fasta.seq.upper()
         sequence_ill_id = self.seq_id_dict[seq_upper]
@@ -202,8 +207,13 @@ class dbUpload:
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
 
-        res_id = self.my_conn.execute_no_fetch(my_sql)
-        return res_id
+        try:
+            res_id = self.my_conn.execute_no_fetch(my_sql)
+            return res_id
+        except:
+            print "Offensive query: %s" % my_sql
+            raise
+        
  
     def get_gasta_result(self, filename):
         gast_file_name = os.path.join(self.gast_dir, filename + '.gast')

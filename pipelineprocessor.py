@@ -300,8 +300,9 @@ def env454upload(runobj):
         try:
             logger.debug("\n----------------\nfilename = %s" % filename)
             fasta_file_path = filename
+#             TODO: one filter for basename for v4v5 and v6
             filename_base   = "-".join(filename.split("/")[-1].split("-")[:-1])
-            if (filename_base == ""):
+            if (filename.find(C.filtered_suffix)):
 #                For v4v5 illumia
                 filename_base   = "_".join(filename.split("/")[-1].split("_")[:3])                
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
