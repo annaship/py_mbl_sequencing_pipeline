@@ -256,6 +256,15 @@ def chimera(runobj):
         
     # def is in utils.py: appends
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')
+    
+def illumina_files_demultiplex_only(runobj):  
+    start = time()
+    illumina_files = IlluminaFiles(runobj)
+    illumina_files.open_dataset_files()
+    illumina_files.split_files(compressed = runobj.compressed)
+    elapsed = (time() - start)
+    print "illumina_files demultiplex only time = %s" % str(elapsed)
+        
 def illumina_files(runobj):  
     start = time()
     illumina_files = IlluminaFiles(runobj)

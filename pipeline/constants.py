@@ -58,8 +58,9 @@ ENV454RUN_INFO_UPLOAD   = "env454run_info_upload"
 STATUS_STEP             = 'status'
 CLEAN_STEP              = 'clean'
 ILLUMINA_FILES_STEP     = 'illumina_files'
+ILLUMINA_FILES_DEM_STEP = 'illumina_files_demultiplex_only'
 
-existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ILLUMINA_FILES_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
+existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ILLUMINA_FILES_DEM_STEP, ILLUMINA_FILES_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
 
 ########### RUN CONFIG #############################################################################
 input_file_formats = ['sff', 'fasta', 'fasta-mbl', 'fastq', 'fastq-illumina', 'fastq-sanger']
