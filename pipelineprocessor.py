@@ -267,9 +267,8 @@ def illumina_files_demultiplex_only(runobj):
         
 def illumina_files(runobj):  
     start = time()
-    illumina_files = IlluminaFiles(runobj)
-    illumina_files.open_dataset_files()
-    illumina_files.split_files(compressed = runobj.compressed)
+    illumina_files_demultiplex_only(runobj)
+    illumina_files = IlluminaFiles(runobj)    
     if runobj.do_perfect: 
         illumina_files.perfect_reads()
     else:
