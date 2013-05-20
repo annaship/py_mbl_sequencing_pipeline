@@ -283,7 +283,7 @@ class dbUpload:
         values = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
         self.insert_bulk_data('dna_region', values)
         self.insert_rundate()
-        self.insert_test_contact()
+#         self.insert_test_contact()
        
 #        --------- indiv_inserts --------- 
 
@@ -368,6 +368,8 @@ class dbUpload:
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id)
+        
+        print "insert run_info sql = %s" % my_sql
         
         self.my_conn.execute_no_fetch(my_sql)
 
