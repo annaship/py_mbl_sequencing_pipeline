@@ -256,7 +256,23 @@ def chimera(runobj):
         
     # def is in utils.py: appends
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')
+
+def illumina_chimera(runobj):
+    mychimera = Chimera(runobj)
+    idx_keys = get_keys(runobj)
+    input_file_names = mychimera.make_chimera_input_illumina_file_names(idx_keys)
+    for i in input_file_names:
+        print "Element was: %s" % i
+
+    output_file_names = mychimera.make_chimera_output_illumina_file_names(input_file_names)
+    for i in output_file_names:
+        print "output_file_name: %s" % i
+
+    c_den    = mychimera.chimera_denovo(idx_keys)
+    print c_den
+
     
+
 def illumina_files_demultiplex_only(runobj):  
     start = time()
     illumina_files = IlluminaFiles(runobj)
@@ -275,7 +291,7 @@ def illumina_files(runobj):
         illumina_files.partial_overlap_reads()
         illumina_files.filter_mismatches()
     illumina_files.uniq_fa()
-    
+#     illumina_chimera(runobj)
     elapsed = (time() - start)
     print "illumina_files time = %s" % str(elapsed)
         

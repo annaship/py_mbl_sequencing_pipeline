@@ -266,7 +266,9 @@ refdbs = {'unknown':'refssu_all',
         'its1'   :'refits1'       
         }
     
-
+chimera_checking_refdb     = '/xraid2-2/g454/blastdbs/rRNA16S.gold.fasta'
+chimera_checking_its_refdb = '/xraid2-2/g454/blastdbs/fungalITS.fa'
+chimera_checking_abskew    = '1.9'    
     
 ########### VAMPS UPLOAD ###########################################################################  
 ranks = ('domain','phylum','class','orderx','family','genus','species','strain')
