@@ -3,17 +3,18 @@ import sys, os
 import re
 import time
 from pipeline.pipelinelogging import logger
-from pipeline.utils import Dirs
+from pipeline.utils import Dirs, PipelneUtils
 
 import pipeline.constants as C
 
 class Chimera:
     """ Define here """
     def __init__(self, runobj = None):
-        self.runobj   = runobj
-        self.run_keys = self.runobj.run_keys
-        self.rundate  = self.runobj.run
+        self.runobj     = runobj
+        self.run_keys   = self.runobj.run_keys
+        self.rundate    = self.runobj.run
         self.chg_suffix = ".chg"
+        self.utils      = PipelneUtils()
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -64,6 +65,7 @@ class Chimera:
         change_from_suffix = ""
         change_to_suffix   = self.chg_suffix
         print "find = %s, replace = %s" % (find, replace)
+        regex = re.compile(r"%s" % find)
             
         for idx_key in cur_file_names:
             file_name = os.path.join(cur_dirname, cur_file_names[idx_key])
@@ -71,8 +73,7 @@ class Chimera:
                 lines = sources.readlines()
             with open(file_name + change_to_suffix, "w") as target:
                 for line in lines:
-#                     print line
-                    target.write(re.sub(r"%s" % find, replace, line))
+                    target.write(regex.sub(replace, line))
 
     def illumina_rm_size_files(self):
         for idx_key in self.input_file_names:
@@ -123,7 +124,12 @@ class Chimera:
                     logger.debug("uchime denovo may have broken")                    
 
             except OSError, e:
-                print >>sys.stderr, "Execution failed:", e               
+                print "Problems with this command: %s" % (uchime_cmd)
+                if self.utils.is_local():
+                    print >>sys.stderr, "Execution failed:", e
+                else:
+                    raise                  
+                               
         
         if not chimera_region_found:            
             return ('NOREGION','No regions found that need checking','')
