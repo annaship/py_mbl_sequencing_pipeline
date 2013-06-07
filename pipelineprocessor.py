@@ -262,13 +262,15 @@ def illumina_chimera(runobj):
     mychimera = Chimera(runobj)
     elapsed = (time() - start)
     print elapsed
-    mychimera.illumina_frequncy_size()
+    mychimera.illumina_frequency_size()
     elapsed = (time() - start)
     print elapsed
 
     c_den    = mychimera.chimera_denovo()
     print c_den
-
+    
+    mychimera.illumina_rm_size_files()
+    mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
     
 
 def illumina_files_demultiplex_only(runobj):  

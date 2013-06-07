@@ -13,6 +13,7 @@ class Chimera:
         self.runobj   = runobj
         self.run_keys = self.runobj.run_keys
         self.rundate  = self.runobj.run
+        self.chg_suffix = ".chg"
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -26,12 +27,8 @@ class Chimera:
             lane_name = ''
         
         dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
-        #         self.outdir    = run.output_dir
         self.indir  = dirs.check_dir(dirs.reads_overlap_dir)
         self.outdir = dirs.check_dir(dirs.chimera_dir)
-
-        
-#         self.usearch_cmd = 'usearch'
         self.usearch_cmd = C.usearch_cmd
         self.abskew      = C.chimera_checking_abskew
         self.refdb       = C.chimera_checking_refdb
@@ -56,20 +53,32 @@ class Chimera:
             output_file_names[idx_key] = input_file_name + ".chimeras.txt"
         return output_file_names
 
-#             
-#             allTheLists = [[] for x in range(int(L))]
-# #...
-# allTheLists[j].append(jListItem)
-# printAllTheLiats[listIndex][itemIndex]
+    def illumina_frequency_size(self, cur_dirname = "", find = "frequency:", replace = ";size="):
+        if cur_dirname == "":
+            cur_dirname    = self.indir 
+            cur_file_names = self.input_file_names
+        else:
+            cur_dirname    = self.outdir
+            cur_file_names = self.output_file_names
+
+        change_from_suffix = ""
+        change_to_suffix   = self.chg_suffix
+        print "find = %s, replace = %s" % (find, replace)
             
-    def illumina_frequncy_size(self):
-        for idx_key in self.input_file_names:
-            file_name = os.path.join(self.indir, self.input_file_names[idx_key])
-            with open(file_name, "r") as sources:
+        for idx_key in cur_file_names:
+            file_name = os.path.join(cur_dirname, cur_file_names[idx_key])
+            with open(file_name + change_from_suffix, "r") as sources:
                 lines = sources.readlines()
-            with open(file_name + ".size", "w") as target:
+            with open(file_name + change_to_suffix, "w") as target:
                 for line in lines:
-                    target.write(re.sub(r'frequency:', ';size=', line))
+#                     print line
+                    target.write(re.sub(r"%s" % find, replace, line))
+
+    def illumina_rm_size_files(self):
+        for idx_key in self.input_file_names:
+            file_name = os.path.join(self.indir, self.input_file_names[idx_key] + self.chg_suffix)
+            if os.path.exists(file_name):
+                os.remove(file_name)
           
        
     def chimera_denovo(self):
@@ -92,7 +101,7 @@ class Chimera:
             uchime_cmd = "clusterize "
             uchime_cmd += self.usearch_cmd
             uchime_cmd += " --uchime "
-            uchime_cmd += file_name + ".size"
+            uchime_cmd += file_name + self.chg_suffix
             uchime_cmd += " --uchimeout "
             uchime_cmd += self.output_file_names[idx_key]
             uchime_cmd += " --abskew "
