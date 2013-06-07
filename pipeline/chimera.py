@@ -62,7 +62,10 @@ class Chimera:
         input_file_names = {} 
         
         for lane_key in self.run_keys:
-            input_file_names[lane_key] = (lane_key + "_" + C.filtered_suffix + ".unique")
+            file_name = lane_key + "_" + C.filtered_suffix + ".unique" 
+           
+            if os.path.exists(os.path.join(self.indir, file_name)):
+                input_file_names[lane_key] = file_name
         
         return input_file_names
             
@@ -89,38 +92,14 @@ class Chimera:
 #                     target.write( changed )
         
 #         frequency_size_cmd = "sed -i\".bkp\" 's/frequency:/;size=/g'"
-        for lane_key in self.run_keys:
-            file_name = os.path.join(self.indir, self.input_file_names[lane_key])
-#             print file_name
-            if os.path.exists(file_name):
-                with open(file_name, "r") as sources:
-                    lines = sources.readlines()
-                with open(file_name + ".size", "w") as sources:
-                    for line in lines:
-                        sources.write(re.sub(r'frequency:', ';size=', line))
-                        
-                
-#                 with open( file_name, "r" ) as source:
-#                     with open( os.path.join(file_name + '.size'), "w" ) as target:            
-#                         data    = source.read()
-#                         changed = source.replace('frequency:',';size=')
-#                         target.write( changed )
-#                         print repr(cmd)
-
-#             if self.utils.is_local():
-#                 program_name = C.frequency_size_cmd_local        
-#             if os.path.exists(file_name):
-#                 try:
-#                     subprocess.call([frequency_size_cmd, file_name])
-#                 except:
-#                     print "Problems with program_name & file_name = %s %s" % (frequency_size_cmd, file_name)
-#                     raise               
-
-        
-#         pass
-#         sed -i 's/frequency:/;size=/g' *
-#         self.input_file_names[lane_key]
-            
+        for idx_key in self.input_file_names:
+            file_name = os.path.join(self.indir, self.input_file_names[idx_key])
+            with open(file_name, "r") as sources:
+                lines = sources.readlines()
+            with open(file_name + ".size", "w") as target:
+                for line in lines:
+                    target.write(re.sub(r'frequency:', ';size=', line))
+          
        
     def chimera_denovo(self):
         
@@ -136,48 +115,36 @@ class Chimera:
                 logger.debug('region not checked: ' +  dna_region)
                 continue
             
-#             out_file_name = self.prefix[lane_key] + ".chimeras.txt"        
-            #clusterize uchime454 -replace -r self.rundate -t chimeras_denovo
-#             TODO: use:
-#             If we use a single criterion, I would rather that any dataset with a ratio of ref/de novo greater than two should use only de novo.  But maybe it would be better to include consideration of the total percent of chimeras found.  If the percent of chimeras found is > 15 (or whatever) and the ratio is greater than 3, use de novo.
-#             clusterize usearch --uchime ../reads_overlap/TTAGGC_NNNNTGACT_1_MERGED-MAX-MISMATCH-3.unique.size --uchimeout TTAGGC_NNNNTGACT_1_MERGED-MAX-MISMATCH-3.unique.chimeras.txt --abskew 1.9 
-# denovo:
-# uchime --input query.fasta
-# 
-# ref:
-# usearch --uchime query.fa --uchimeout output.txt --db
-# /groups/g454/reftaxonomy/greengenes/gg_12_10/gg_12_10.fasta
-# TODO: get file_ arrays filtered by exists
+
             file_name = os.path.join(self.indir, self.input_file_names[lane_key])
             print file_name
-            if os.path.exists(self.input_file_names[lane_key]):
-    
-                uchime_cmd = "clusterize "
-                uchime_cmd += self.usearch_cmd
-                uchime_cmd += " --uchime "
-                uchime_cmd += file_name
-                uchime_cmd += " --uchimeout "
-                uchime_cmd += self.output_file_names[lane_key] + ".size"
-                uchime_cmd += " --abskew "
-                uchime_cmd += self.abskew
-                
-                print "uchime_cmd = %s" % (uchime_cmd)
-                try:
-                    logger.info("chimera denovo command: " + str(uchime_cmd))
-                    output[lane_key] = subprocess.check_output(uchime_cmd)
-                    #print output[lane_key]
-                    #print output[lane_key].split()[2]
-                    cluster_id_list.append(output[lane_key].split()[2])
-                    #print 'Have %d bytes in output' % len(output)
-                    #print 'denovo',lane_key,output,len(output)
-                    # len(output) is normally = 47
-                    if len(output[lane_key]) < 50 and len(output[lane_key]) > 40:
-                        logger.debug(lane_key + " uchime denovo seems to have been submitted successfully")
-                    else:
-                        logger.debug("uchime denovo may have broken")                    
-    
-                except OSError, e:
-                    print >>sys.stderr, "Execution failed:", e               
+
+            uchime_cmd = "clusterize "
+            uchime_cmd += self.usearch_cmd
+            uchime_cmd += " --uchime "
+            uchime_cmd += file_name
+            uchime_cmd += " --uchimeout "
+            uchime_cmd += self.output_file_names[lane_key] + ".size"
+            uchime_cmd += " --abskew "
+            uchime_cmd += self.abskew
+            
+            print "uchime_cmd = %s" % (uchime_cmd)
+            try:
+                logger.info("chimera denovo command: " + str(uchime_cmd))
+                output[lane_key] = subprocess.check_output(uchime_cmd)
+                #print output[lane_key]
+                #print output[lane_key].split()[2]
+                cluster_id_list.append(output[lane_key].split()[2])
+                #print 'Have %d bytes in output' % len(output)
+                #print 'denovo',lane_key,output,len(output)
+                # len(output) is normally = 47
+                if len(output[lane_key]) < 50 and len(output[lane_key]) > 40:
+                    logger.debug(lane_key + " uchime denovo seems to have been submitted successfully")
+                else:
+                    logger.debug("uchime denovo may have broken")                    
+
+            except OSError, e:
+                print >>sys.stderr, "Execution failed:", e               
         
         if not chimera_region_found:            
             return ('NOREGION','No regions found that need checking','')
