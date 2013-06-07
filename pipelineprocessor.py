@@ -258,17 +258,15 @@ def chimera(runobj):
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')
 
 def illumina_chimera(runobj):
+    start = time()
     mychimera = Chimera(runobj)
-    idx_keys = get_keys(runobj)
-    input_file_names = mychimera.make_chimera_input_illumina_file_names(idx_keys)
-    for i in input_file_names:
-        print "Element was: %s" % i
+    elapsed = (time() - start)
+    print elapsed
+    mychimera.illumina_frequncy_size()
+    elapsed = (time() - start)
+    print elapsed
 
-    output_file_names = mychimera.make_chimera_output_illumina_file_names(input_file_names)
-    for i in output_file_names:
-        print "output_file_name: %s" % i
-
-    c_den    = mychimera.chimera_denovo(idx_keys)
+    c_den    = mychimera.chimera_denovo()
     print c_den
 
     
