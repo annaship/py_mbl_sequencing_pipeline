@@ -272,6 +272,12 @@ def illumina_chimera(runobj):
     mychimera.illumina_rm_size_files()
     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
     
+def illumina_chimera_only(runobj):  
+    start = time()
+    illumina_chimera(runobj)
+    elapsed = (time() - start)
+    print "illumina_chimera_only time = %s" % str(elapsed)
+
 
 def illumina_files_demultiplex_only(runobj):  
     start = time()
