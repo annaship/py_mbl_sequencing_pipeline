@@ -130,16 +130,18 @@ class Chimera:
                 else:
                     raise                  
                                
-        
+# ???
         if not chimera_region_found:            
-            return ('NOREGION','No regions found that need checking','')
+            return ('NOREGION', 'No regions found that need checking', '')
         
+        # ???
         for idx_key in output:
             if len(output[idx_key]) > 50 or len(output[idx_key]) < 40:
-                return ('ERROR','uchime ref may have broken or empty',idx_key)  
+                return ('ERROR','uchime ref may have broken or empty', idx_key)  
         
         # finally
-        return ('SUCCESS','uchime ref seems to have been submitted successfully',cluster_id_list)
+        if cluster_id_list: 
+            return ('SUCCESS', 'uchime ref seems to have been submitted successfully', cluster_id_list)
         
     def chimera_reference(self):
     
