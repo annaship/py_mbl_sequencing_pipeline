@@ -266,8 +266,8 @@ def illumina_chimera(runobj):
     elapsed = (time() - start)
     print elapsed
 
-#     c_den    = mychimera.chimera_denovo()
-#     print c_den
+    c_den    = mychimera.chimera_denovo()
+    print c_den
 
     
 

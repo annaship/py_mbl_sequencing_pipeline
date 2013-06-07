@@ -38,41 +38,22 @@ class Chimera:
         self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
-#         self.files       = {} #TODO: use run.input_file_info .unique
-#         self.prefix      = {}
-#         time.sleep(10)
-#         for lane_key in self.runobj.run_keys:
-#             #if file exists and if dna_region is v6v4 or v3v5:
-#             self.prefix[lane_key] = os.path.join(self.outdir, lane_key)
-#             self.files[lane_key] = {}
-#             self.files[lane_key]['names']       = self.prefix[lane_key] + '.names'
-#             self.files[lane_key]['unique']      = self.prefix[lane_key] + '.unique.fa'
-#             self.files[lane_key]['abund']       = self.prefix[lane_key] + '.abund.fa'
-#             self.files[lane_key]['deleted']     = self.prefix[lane_key]  + ".deleted.txt"
-#             #self.files[lane_key]['chimera_del'] = self.prefix[lane_key] + ".chimera.deleted.txt"
-#             self.files[lane_key]['chimera_db']  = self.prefix[lane_key] + ".chimeras.db"
-#             self.files[lane_key]['chimera_txt'] = self.prefix[lane_key] + ".chimeras.txt"
-#             
-#             if os.path.isfile(self.files[lane_key]['names']) and os.path.isfile(self.files[lane_key]['abund']):
-#                 pass
-#             else:
-#                 pass
 
     def make_chimera_input_illumina_file_names(self):
         input_file_names = {} 
         
-        for lane_key in self.run_keys:
-            file_name = lane_key + "_" + C.filtered_suffix + ".unique" 
+        for idx_key in self.run_keys:
+            file_name = idx_key + "_" + C.filtered_suffix + ".unique" 
            
             if os.path.exists(os.path.join(self.indir, file_name)):
-                input_file_names[lane_key] = file_name
+                input_file_names[idx_key] = file_name
         
         return input_file_names
             
     def make_chimera_output_illumina_file_names(self, input_file_names):
         output_file_names = {} 
-        for lane_key, input_file_name in input_file_names.iteritems():
-            output_file_names[lane_key] = input_file_name + ".chimeras.txt"
+        for idx_key, input_file_name in input_file_names.iteritems():
+            output_file_names[idx_key] = input_file_name + ".chimeras.txt"
         return output_file_names
 
 #             
@@ -82,16 +63,6 @@ class Chimera:
 # printAllTheLiats[listIndex][itemIndex]
             
     def illumina_frequncy_size(self):
-#         files = os.listdir(sys.argv[1])
-
-#         for count, f in enumerate(files):
-#             with open( os.path.join(sys.argv[1],f), "r" ) as source:
-#                 with open( os.path.join('..',str(count)+'.txt'), "w" ) as target:
-#                     data= source.read()
-#                     changed= source.replace('"','')
-#                     target.write( changed )
-        
-#         frequency_size_cmd = "sed -i\".bkp\" 's/frequency:/;size=/g'"
         for idx_key in self.input_file_names:
             file_name = os.path.join(self.indir, self.input_file_names[idx_key])
             with open(file_name, "r") as sources:
@@ -106,9 +77,9 @@ class Chimera:
         chimera_region_found = False
         output = {}
         cluster_id_list = []
-        for lane_key in self.run_keys:
-            
-            dna_region  = self.runobj.samples[lane_key].dna_region
+        for idx_key in self.input_file_names:
+            file_name  = os.path.join(self.indir, self.input_file_names[idx_key])        
+            dna_region = self.runobj.samples[idx_key].dna_region
             if dna_region in C.regions_to_chimera_check:
                 chimera_region_found = True
             else:
@@ -116,30 +87,29 @@ class Chimera:
                 continue
             
 
-            file_name = os.path.join(self.indir, self.input_file_names[lane_key])
             print file_name
 
             uchime_cmd = "clusterize "
             uchime_cmd += self.usearch_cmd
             uchime_cmd += " --uchime "
-            uchime_cmd += file_name
+            uchime_cmd += file_name + ".size"
             uchime_cmd += " --uchimeout "
-            uchime_cmd += self.output_file_names[lane_key] + ".size"
+            uchime_cmd += self.output_file_names[idx_key]
             uchime_cmd += " --abskew "
             uchime_cmd += self.abskew
             
             print "uchime_cmd = %s" % (uchime_cmd)
             try:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
-                output[lane_key] = subprocess.check_output(uchime_cmd)
-                #print output[lane_key]
-                #print output[lane_key].split()[2]
-                cluster_id_list.append(output[lane_key].split()[2])
+                output[idx_key] = subprocess.check_output(uchime_cmd)
+                #print output[idx_key]
+                #print output[idx_key].split()[2]
+                cluster_id_list.append(output[idx_key].split()[2])
                 #print 'Have %d bytes in output' % len(output)
-                #print 'denovo',lane_key,output,len(output)
+                #print 'denovo',idx_key,output,len(output)
                 # len(output) is normally = 47
-                if len(output[lane_key]) < 50 and len(output[lane_key]) > 40:
-                    logger.debug(lane_key + " uchime denovo seems to have been submitted successfully")
+                if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
+                    logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
                 else:
                     logger.debug("uchime denovo may have broken")                    
 
@@ -149,9 +119,9 @@ class Chimera:
         if not chimera_region_found:            
             return ('NOREGION','No regions found that need checking','')
         
-        for lane_key in output:
-            if len(output[lane_key]) > 50 or len(output[lane_key]) < 40:
-                return ('ERROR','uchime ref may have broken or empty',lane_key)  
+        for idx_key in output:
+            if len(output[idx_key]) > 50 or len(output[idx_key]) < 40:
+                return ('ERROR','uchime ref may have broken or empty',idx_key)  
         
         # finally
         return ('SUCCESS','uchime ref seems to have been submitted successfully',cluster_id_list)
@@ -161,16 +131,16 @@ class Chimera:
         chimera_region_found = False
         output = {}
         cluster_id_list = []
-        for lane_key in self.run_keys:
+        for idx_key in self.run_keys:
             
-            dna_region  = self.runobj.samples[lane_key].dna_region
+            dna_region  = self.runobj.samples[idx_key].dna_region
             if dna_region in C.regions_to_chimera_check:
                 chimera_region_found = True
             else:
                 logger.debug('region not checked: ' + dna_region)                    
                 continue
             
-            out_file_name = self.prefix[lane_key] + ".chimeras.db"      
+            out_file_name = self.prefix[idx_key] + ".chimeras.db"      
             
             # which ref db to use?
             ref_db = ''
@@ -184,7 +154,7 @@ class Chimera:
             uchime_cmd = ["clusterize"]
             uchime_cmd.append(self.usearch_cmd)
             uchime_cmd.append("--uchime")
-            uchime_cmd.append(self.files[lane_key]['abund'])
+            uchime_cmd.append(self.files[idx_key]['abund'])
             uchime_cmd.append("--uchimeout")
             uchime_cmd.append(out_file_name)
             uchime_cmd.append("--db")
@@ -193,13 +163,13 @@ class Chimera:
             
             try:
                 logger.info("chimera referenc command: " + str(uchime_cmd))
-                output[lane_key] = subprocess.check_output(uchime_cmd)
-                #print 'outsplit',output[lane_key].split()[2]
-                cluster_id_list.append(output[lane_key].split()[2])
+                output[idx_key] = subprocess.check_output(uchime_cmd)
+                #print 'outsplit',output[idx_key].split()[2]
+                cluster_id_list.append(output[idx_key].split()[2])
                 #print 'Have %d bytes in output' % len(output)
-                #print 'ref',lane_key,output,len(output)
-                if len(output[lane_key]) < 50 and len(output[lane_key]) > 40:
-                    logger.debug(lane_key + " uchime ref seems to have been submitted successfully")                    
+                #print 'ref',idx_key,output,len(output)
+                if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
+                    logger.debug(idx_key + " uchime ref seems to have been submitted successfully")                    
                 else:
                     print >>sys.stderr, "uchime ref may be broke"
                
@@ -209,22 +179,22 @@ class Chimera:
         if not chimera_region_found:            
             return ('NOREGION','No regions found that need checking','')
               
-        for lane_key in output:
-            if len(output[lane_key]) > 50 or len(output[lane_key]) < 40:
-                return ('ERROR','uchime ref may have broken or empty',lane_key)  
+        for idx_key in output:
+            if len(output[idx_key]) > 50 or len(output[idx_key]) < 40:
+                return ('ERROR','uchime ref may have broken or empty',idx_key)  
         
         return ('SUCCESS','uchime ref seems to have been submitted successfully',cluster_id_list)
         
             
     def write_chimeras_to_deleted_file(self): 
     
-        for lane_key in self.run_keys:
+        for idx_key in self.run_keys:
             # open  deleted file and append chimera to it
             # open and read both chimeras files: chimeras.db and chimeras.txt
             
             # hash to remove dupes
             chimera_deleted = {}
-            for file in [self.files[lane_key]['chimera_db'], self.files[lane_key]['chimera_txt']]:            
+            for file in [self.files[idx_key]['chimera_db'], self.files[idx_key]['chimera_txt']]:            
                 fh = open(file,"r") 
                 # make a list of chimera deleted read_ids            
                 for line in fh.readlines():
@@ -234,7 +204,7 @@ class Chimera:
                     if(chimera_yesno) == 'Y':
                         chimera_deleted[id] = 'chimera'
         
-            fh_del = open(self.files[lane_key]['deleted'],"a")
+            fh_del = open(self.files[idx_key]['deleted'],"a")
             for id in chimera_deleted:
                 fh_del.write(id+"\tchimera\n") 
             
