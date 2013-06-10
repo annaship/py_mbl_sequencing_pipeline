@@ -116,19 +116,31 @@ class Chimera:
             uchime_cmd += self.abskew
             
             print "uchime_cmd = %s" % (uchime_cmd)
+            
             try:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
-                output[idx_key] = subprocess.check_output(uchime_cmd)
-                print output[idx_key]
-                print output[idx_key].split()[2]
-                cluster_id_list.append(output[idx_key].split()[2])
-                print 'Have %d bytes in output' % len(output)
-                print 'denovo',idx_key,output,len(output)
-                # len(output) is normally = 47
-                if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
-                    logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
-                else:
-                    logger.debug("uchime denovo may have broken")                    
+                subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                # proc.communicate will block - probably not what we want
+                #(stdout, stderr) = proc.communicate() #block the last onehere
+                #print stderr, stdout
+
+#             else:
+#                 subprocess.call(uchime_cmd, shell=True)
+#                 print uchime_cmd            
+#             
+#             try:
+#                 logger.info("chimera denovo command: " + str(uchime_cmd))
+#                 output[idx_key] = subprocess.check_output(uchime_cmd)
+#                 print output[idx_key]
+#                 print output[idx_key].split()[2]
+#                 cluster_id_list.append(output[idx_key].split()[2])
+#                 print 'Have %d bytes in output' % len(output)
+#                 print 'denovo',idx_key,output,len(output)
+#                 # len(output) is normally = 47
+#                 if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
+#                     logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
+#                 else:
+#                     logger.debug("uchime denovo may have broken")                    
 
             except OSError, e:
                 print "Problems with this command: %s" % (uchime_cmd)
