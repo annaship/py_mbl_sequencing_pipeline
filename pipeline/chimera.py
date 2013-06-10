@@ -91,7 +91,7 @@ class Chimera:
         
         for idx_key in self.input_file_names:
 #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
-            input_file_name  = os.path.join(self.indir, self.input_file_names[idx_key])        
+            input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
             output_file_name = os.path.join(self.outdir, self.output_file_names[idx_key])        
             dna_region       = self.runobj.samples[idx_key].dna_region
 #             print "dna_region = %s" % dna_region
@@ -107,7 +107,7 @@ class Chimera:
             uchime_cmd = "clusterize "
             uchime_cmd += self.usearch_cmd
             uchime_cmd += " --uchime "
-            uchime_cmd += input_file_name + self.chg_suffix
+            uchime_cmd += input_file_name
             uchime_cmd += " --uchimeout "
             uchime_cmd += output_file_name
             uchime_cmd += " --abskew "
@@ -117,11 +117,11 @@ class Chimera:
             try:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
                 output[idx_key] = subprocess.check_output(uchime_cmd)
-                #print output[idx_key]
-                #print output[idx_key].split()[2]
+                print output[idx_key]
+                print output[idx_key].split()[2]
                 cluster_id_list.append(output[idx_key].split()[2])
-                #print 'Have %d bytes in output' % len(output)
-                #print 'denovo',idx_key,output,len(output)
+                print 'Have %d bytes in output' % len(output)
+                print 'denovo',idx_key,output,len(output)
                 # len(output) is normally = 47
                 if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
                     logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
@@ -185,7 +185,7 @@ class Chimera:
             
             
             try:
-                logger.info("chimera referenc command: " + str(uchime_cmd))
+                logger.info("chimera reference command: " + str(uchime_cmd))
                 output[idx_key] = subprocess.check_output(uchime_cmd)
                 #print 'outsplit',output[idx_key].split()[2]
                 cluster_id_list.append(output[idx_key].split()[2])
@@ -197,7 +197,7 @@ class Chimera:
                     print >>sys.stderr, "uchime ref may be broke"
                
             except OSError, e:
-                print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                print >>sys.stderr, "Execution of chimera_reference failed: %s" % (uchime_cmd, e)
                 raise
 
         if not chimera_region_found:            
