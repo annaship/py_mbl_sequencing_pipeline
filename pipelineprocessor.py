@@ -269,7 +269,7 @@ def illumina_chimera(runobj):
     c_den    = mychimera.chimera_denovo()
     print c_den
     
-    mychimera.illumina_rm_size_files()
+#     mychimera.illumina_rm_size_files()
     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
     
 def illumina_chimera_only(runobj):  
