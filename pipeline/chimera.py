@@ -106,6 +106,7 @@ class Chimera:
 
 
             uchime_cmd = C.clusterize_cmd
+            uchime_cmd += " "
             uchime_cmd += self.usearch_cmd
             uchime_cmd += " --uchime "
             uchime_cmd += input_file_name
