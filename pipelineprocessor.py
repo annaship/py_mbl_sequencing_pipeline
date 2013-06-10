@@ -258,19 +258,21 @@ def chimera(runobj):
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')
 
 def illumina_chimera(runobj):
-    start = time()
+#     start = time()
     mychimera = Chimera(runobj)
-    elapsed = (time() - start)
+#     elapsed = (time() - start)
 #     print elapsed
     mychimera.illumina_frequency_size()
-    elapsed = (time() - start)
+#     elapsed = (time() - start)
 #     print elapsed
     print "START chimera_denovo"
     c_den    = mychimera.chimera_denovo()
     print c_den
     
+#     run after cluster is done with it work:
+    mychimera.check_if_cluster_is_done()
 #     mychimera.illumina_rm_size_files()
-    mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
+#     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
     
 def illumina_chimera_only(runobj):  
     start = time()

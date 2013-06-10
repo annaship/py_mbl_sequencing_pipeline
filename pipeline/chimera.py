@@ -83,7 +83,6 @@ class Chimera:
             if os.path.exists(file_name):
                 os.remove(file_name)
           
-       
     def chimera_denovo(self):
         chimera_region_found = False
         output = {}
@@ -119,7 +118,20 @@ class Chimera:
             
             try:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
-                subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                
+                output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                print output[idx_key]
+                print output[idx_key].split()[2]
+                cluster_id_list.append(output[idx_key].split()[2])
+                print 'Have %d bytes in output' % len(output)
+                print 'denovo', idx_key, output, len(output)
+                # len(output) is normally = 47
+                if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
+                    logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
+                else:
+                    logger.debug("uchime denovo may have broken")  
+                
                 # proc.communicate will block - probably not what we want
                 #(stdout, stderr) = proc.communicate() #block the last onehere
                 #print stderr, stdout
