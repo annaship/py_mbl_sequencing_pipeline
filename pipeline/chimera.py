@@ -83,16 +83,19 @@ class Chimera:
             if os.path.exists(file_name):
                 os.remove(file_name)
           
+    def check_if_cluster_is_done(self):
+        cluster_done = False
+        check_qstat_cmd_line = "qstat | grep usearch | wc -l"
+        print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
+        if (check_qstat_cmd_line > 0):
+            cluster_done = True
+        return cluster_done
+          
     def chimera_denovo(self):
         chimera_region_found = False
         output = {}
         cluster_id_list = []
         
-        import select
-
-        poller = select.epoll()
-        subprocs = {} #map stdout pipe's file descriptor to the Popen object
-
         for idx_key in self.input_file_names:
 #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
@@ -125,17 +128,8 @@ class Chimera:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
-                subproc = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                pprint(subproc)
-
-
-                subprocs[subproc.stdout.fileno()] = subproc
-                print "subproc.stdout.fileno() = %s" % subproc.stdout.fileno()
-                pprint(subprocs)
-                poller.register(subproc.stdout, select.EPOLLHUP)
-
-
-                
+                output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                print "output[idx_key] = %s" % output[idx_key]
 #                 print output[idx_key].split()[2]
 #                 cluster_id_list.append(output[idx_key].split()[2])
                 print 'Have %d bytes in output' % len(output)
@@ -175,16 +169,7 @@ class Chimera:
                 else:
                     print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
                     raise                  
-                    
-        pprint(subprocs)       
-        while True:
-            for fd, flags in poller.poll(timeout=1): #never more than a second without a UI update
-                print "fd =  %s, flags = %s in poller.poll(timeout=1)" % (fd, flags)
-                pprint(poller)
-                done_proc = subprocs[fd]
-                poller.unregister(fd)
-                print "this proc is done! blah blah blah"
-
+                               
 # ???
         if not chimera_region_found:            
             return ('NOREGION', 'No regions found that need checking', '')

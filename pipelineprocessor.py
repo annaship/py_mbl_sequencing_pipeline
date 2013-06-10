@@ -270,7 +270,14 @@ def illumina_chimera(runobj):
     print c_den
     
 #     run after cluster is done with it work:
-#     mychimera.check_if_cluster_is_done()
+    
+    while True:
+        cluster_done = mychimera.check_if_cluster_is_done()
+        print "cluster_done = %s" % cluster_done
+        time.sleep(20)
+        if (cluster_done):
+            break
+    
 #     mychimera.illumina_rm_size_files()
 #     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
     
