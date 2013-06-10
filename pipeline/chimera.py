@@ -104,7 +104,8 @@ class Chimera:
 
             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
 
-            uchime_cmd = "clusterize "
+
+            uchime_cmd = C.clusterize_cmd
             uchime_cmd += self.usearch_cmd
             uchime_cmd += " --uchime "
             uchime_cmd += input_file_name
