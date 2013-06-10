@@ -95,8 +95,9 @@ class Chimera:
         print "output is ", output
         pprint(p)
         
-        if (output == 0):
+        if (int(output) == 0):
             cluster_done = True
+        print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
         return cluster_done
           
     def chimera_denovo(self):
@@ -137,11 +138,11 @@ class Chimera:
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                print "output[idx_key] = %s" % output[idx_key]
+#                 print "output[idx_key] = %s" % output[idx_key]
 #                 print output[idx_key].split()[2]
 #                 cluster_id_list.append(output[idx_key].split()[2])
-                print 'Have %d bytes in output' % len(output)
-                print 'denovo', idx_key, output, len(output)
+#                 print 'Have %d bytes in output' % len(output)
+#                 print 'denovo', idx_key, output, len(output)
                 # len(output) is normally = 47
 #                 if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
 #                     logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
