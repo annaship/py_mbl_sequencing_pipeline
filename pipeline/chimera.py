@@ -92,7 +92,7 @@ class Chimera:
         
         p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
         (output, err) = p.communicate()
-        print "output is ", output
+        print "qstat is running %s 'usearch' processes", output
         pprint(p)
         
         if (int(output) == 0):
@@ -100,6 +100,86 @@ class Chimera:
         print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
         return cluster_done
           
+    def create_chimera_cmd(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
+        uchime_cmd = C.clusterize_cmd
+        uchime_cmd += " "
+        uchime_cmd += self.usearch_cmd
+        uchime_cmd += " --uchime "
+        uchime_cmd += input_file_name
+        uchime_cmd += " --uchimeout "
+        uchime_cmd += output_file_name
+
+        if (ref_or_novo == "denovo"):
+            uchime_cmd += " --abskew "
+            uchime_cmd += self.abskew
+        elif (ref_or_novo == "ref"):
+
+            output_file_name = output_file_name + ".chimeras.db"                        
+            uchime_cmd += " --db "
+            uchime_cmd += ref_db
+
+
+    def get_ref_db(self, dna_region):
+        ref_db = ''
+        if dna_region.upper() == 'ITS':
+            logger.debug("got an ITS dna region so using refdb: " + self.its_refdb)
+            ref_db = self.its_refdb
+        else:
+            logger.debug("using standard refdb: " + self.refdb)
+            ref_db = self.refdb
+        print  "ref_db = %s" % ref_db  
+        return ref_db       
+    
+    
+    def chimera_checking(self, ref_or_novo):
+        chimera_region_found = False
+        output = {}
+        
+        for idx_key in self.input_file_names:
+#             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
+            input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
+            output_file_name = os.path.join(self.outdir, self.output_file_names[idx_key])        
+            dna_region       = self.runobj.samples[idx_key].dna_region
+#             print "dna_region = %s" % dna_region
+            if dna_region in C.regions_to_chimera_check:
+                chimera_region_found = True
+            else:
+                logger.debug('region not checked: ' +  dna_region)
+                continue
+            
+
+            print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
+
+
+            uchime_cmd = C.clusterize_cmd
+            uchime_cmd += " "
+            uchime_cmd += self.usearch_cmd
+            uchime_cmd += " --uchime "
+            uchime_cmd += input_file_name
+            uchime_cmd += " --uchimeout "
+            uchime_cmd += output_file_name
+            uchime_cmd += " --abskew "
+            uchime_cmd += self.abskew
+            
+            print "uchime_cmd = %s" % (uchime_cmd)
+            
+            try:
+                logger.info("chimera denovo command: " + str(uchime_cmd))
+                output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            except OSError, e:
+                print "Problems with this command: %s" % (uchime_cmd)
+                if self.utils.is_local():
+                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                else:
+                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                    raise                  
+                               
+# ???
+        if not chimera_region_found:            
+            return ('NOREGION', 'No regions found that need checking', '')
+    
+        
     def chimera_denovo(self):
         chimera_region_found = False
         output = {}
@@ -216,6 +296,9 @@ class Chimera:
             else:
                 logger.debug("using standard refdb: " + self.refdb)
                 ref_db = self.refdb
+                
+            uchime_cmd.append("--db")
+            uchime_cmd.append(ref_db)                
                 
             uchime_cmd = ["clusterize"]
             uchime_cmd.append(self.usearch_cmd)
