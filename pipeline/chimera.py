@@ -179,6 +179,8 @@ class Chimera:
         pprint(subprocs)       
         while True:
             for fd, flags in poller.poll(timeout=1): #never more than a second without a UI update
+                print "fd =  %s, flags = %s in poller.poll(timeout=1)" % (fd, flags)
+                pprint(poller)
                 done_proc = subprocs[fd]
                 poller.unregister(fd)
                 print "this proc is done! blah blah blah"
