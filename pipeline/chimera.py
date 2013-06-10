@@ -90,6 +90,7 @@ class Chimera:
         for idx_key in self.input_file_names:
             file_name  = os.path.join(self.indir, self.input_file_names[idx_key])        
             dna_region = self.runobj.samples[idx_key].dna_region
+            print "dna_region = %s" % dna_region
             if dna_region in C.regions_to_chimera_check:
                 chimera_region_found = True
             else:
@@ -126,8 +127,9 @@ class Chimera:
             except OSError, e:
                 print "Problems with this command: %s" % (uchime_cmd)
                 if self.utils.is_local():
-                    print >>sys.stderr, "Execution failed:", e
+                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
                 else:
+                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
                     raise                  
                                
 # ???
@@ -191,8 +193,9 @@ class Chimera:
                     print >>sys.stderr, "uchime ref may be broke"
                
             except OSError, e:
-                print >>sys.stderr, "Execution failed:", e 
-        
+                print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                raise
+
         if not chimera_region_found:            
             return ('NOREGION','No regions found that need checking','')
               
