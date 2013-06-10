@@ -87,7 +87,12 @@ class Chimera:
         cluster_done = False
         check_qstat_cmd_line = "qstat | grep usearch | wc -l"
         print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
-        if (check_qstat_cmd_line > 0):
+        
+        p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
+        (output, err) = p.communicate()
+        print "output is ", output
+        
+        if (output > 0):
             cluster_done = True
         return cluster_done
           
