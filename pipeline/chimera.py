@@ -121,7 +121,7 @@ class Chimera:
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                pprint output[idx_key]
+                print "output[idx_key] = %s" % output[idx_key]
 #                 print output[idx_key].split()[2]
 #                 cluster_id_list.append(output[idx_key].split()[2])
                 print 'Have %d bytes in output' % len(output)
