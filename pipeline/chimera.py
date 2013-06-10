@@ -36,7 +36,7 @@ class Chimera:
         self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
         from pprint import pprint
-        pprint(self.input_file_names)
+        pprint(self.run_keys)
         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
 
     def make_chimera_input_illumina_file_names(self):
