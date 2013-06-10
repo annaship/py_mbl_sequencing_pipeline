@@ -261,11 +261,11 @@ def illumina_chimera(runobj):
     start = time()
     mychimera = Chimera(runobj)
     elapsed = (time() - start)
-    print elapsed
+#     print elapsed
     mychimera.illumina_frequency_size()
     elapsed = (time() - start)
-    print elapsed
-
+#     print elapsed
+    print "START chimera_denovo"
     c_den    = mychimera.chimera_denovo()
     print c_den
     

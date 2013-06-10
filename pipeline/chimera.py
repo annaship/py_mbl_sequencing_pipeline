@@ -83,11 +83,12 @@ class Chimera:
           
        
     def chimera_denovo(self):
-        
+        print "HHH"
         chimera_region_found = False
         output = {}
         cluster_id_list = []
         for idx_key in self.input_file_names:
+            print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
             file_name  = os.path.join(self.indir, self.input_file_names[idx_key])        
             dna_region = self.runobj.samples[idx_key].dna_region
             print "dna_region = %s" % dna_region
