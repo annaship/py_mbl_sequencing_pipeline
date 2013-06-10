@@ -35,8 +35,8 @@ class Chimera:
         self.refdb       = C.chimera_checking_refdb
         self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
-        from pprint import pprint
-        pprint(self.run_keys)
+#         from pprint import pprint
+#         pprint(self.run_keys)
         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
 
     def make_chimera_input_illumina_file_names(self):
@@ -90,10 +90,11 @@ class Chimera:
         cluster_id_list = []
         
         for idx_key in self.input_file_names:
-            print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
-            file_name  = os.path.join(self.indir, self.input_file_names[idx_key])        
-            dna_region = self.runobj.samples[idx_key].dna_region
-            print "dna_region = %s" % dna_region
+#             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
+            input_file_name  = os.path.join(self.indir, self.input_file_names[idx_key])        
+            output_file_name = os.path.join(self.outdir, self.output_file_names[idx_key])        
+            dna_region       = self.runobj.samples[idx_key].dna_region
+#             print "dna_region = %s" % dna_region
             if dna_region in C.regions_to_chimera_check:
                 chimera_region_found = True
             else:
@@ -101,14 +102,14 @@ class Chimera:
                 continue
             
 
-            print file_name
+            print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
 
             uchime_cmd = "clusterize "
             uchime_cmd += self.usearch_cmd
             uchime_cmd += " --uchime "
-            uchime_cmd += file_name + self.chg_suffix
+            uchime_cmd += input_file_name + self.chg_suffix
             uchime_cmd += " --uchimeout "
-            uchime_cmd += self.output_file_names[idx_key]
+            uchime_cmd += output_file_name
             uchime_cmd += " --abskew "
             uchime_cmd += self.abskew
             
