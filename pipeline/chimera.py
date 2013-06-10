@@ -88,6 +88,11 @@ class Chimera:
         output = {}
         cluster_id_list = []
         
+        import select
+
+        poller = select.epoll()
+        subprocs = {} #map stdout pipe's file descriptor to the Popen object
+
         for idx_key in self.input_file_names:
 #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
@@ -120,17 +125,24 @@ class Chimera:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
-                output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                print "output[idx_key] = %s" % output[idx_key]
+                subproc = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                print "subproc = %s" % subproc
+
+
+                subprocs[subproc.stdout.fileno()] = subproc
+                poller.register(subproc.stdout, select.EPOLLHUP)
+
+
+                
 #                 print output[idx_key].split()[2]
 #                 cluster_id_list.append(output[idx_key].split()[2])
                 print 'Have %d bytes in output' % len(output)
                 print 'denovo', idx_key, output, len(output)
                 # len(output) is normally = 47
-                if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
-                    logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
-                else:
-                    logger.debug("uchime denovo may have broken")  
+#                 if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
+#                     logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
+#                 else:
+#                     logger.debug("uchime denovo may have broken")  
                 
                 # proc.communicate will block - probably not what we want
                 #(stdout, stderr) = proc.communicate() #block the last onehere
@@ -161,7 +173,13 @@ class Chimera:
                 else:
                     print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
                     raise                  
-                               
+                           
+        while True:
+            for fd, flags in poller.poll(timeout=1): #never more than a second without a UI update
+                done_proc = subprocs[fd]
+                poller.unregister(fd)
+                print "this proc is done! blah blah blah"
+
 # ???
         if not chimera_region_found:            
             return ('NOREGION', 'No regions found that need checking', '')
