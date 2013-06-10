@@ -4,6 +4,7 @@ import re
 import time
 from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
+from pprint import pprint
 
 import pipeline.constants as C
 
@@ -35,7 +36,6 @@ class Chimera:
         self.refdb       = C.chimera_checking_refdb
         self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
-#         from pprint import pprint
 #         pprint(self.run_keys)
         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
 
@@ -121,9 +121,9 @@ class Chimera:
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                print output[idx_key]
-                print output[idx_key].split()[2]
-                cluster_id_list.append(output[idx_key].split()[2])
+                pprint output[idx_key]
+#                 print output[idx_key].split()[2]
+#                 cluster_id_list.append(output[idx_key].split()[2])
                 print 'Have %d bytes in output' % len(output)
                 print 'denovo', idx_key, output, len(output)
                 # len(output) is normally = 47
