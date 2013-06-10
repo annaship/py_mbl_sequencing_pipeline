@@ -126,10 +126,12 @@ class Chimera:
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 
                 subproc = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                print "subproc = %s" % subproc
+                pprint(subproc)
 
 
                 subprocs[subproc.stdout.fileno()] = subproc
+                print "subproc.stdout.fileno() = %s" % subproc.stdout.fileno()
+                pprint(subprocs)
                 poller.register(subproc.stdout, select.EPOLLHUP)
 
 
@@ -173,7 +175,8 @@ class Chimera:
                 else:
                     print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
                     raise                  
-                           
+                    
+        pprint(subprocs)       
         while True:
             for fd, flags in poller.poll(timeout=1): #never more than a second without a UI update
                 done_proc = subprocs[fd]
