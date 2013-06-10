@@ -85,8 +85,8 @@ class Chimera:
           
     def check_if_cluster_is_done(self):
         cluster_done = False
-#         check_qstat_cmd_line = "qstat | grep usearch | wc -l"
-        check_qstat_cmd_line = "qstat | grep usearch"
+        check_qstat_cmd_line = "qstat | grep usearch | wc -l"
+#         check_qstat_cmd_line = "qstat | grep usearch"
 
         print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
         
@@ -95,7 +95,7 @@ class Chimera:
         print "output is ", output
         pprint(p)
         
-        if (output > 0):
+        if (output == 0):
             cluster_done = True
         return cluster_done
           

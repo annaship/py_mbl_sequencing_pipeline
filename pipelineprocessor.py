@@ -272,8 +272,8 @@ def illumina_chimera(runobj):
 #     run after cluster is done with it work:
     
     while True:
-        cluster_done = mychimera.check_if_cluster_is_done()
         sleep(60)
+        cluster_done = mychimera.check_if_cluster_is_done()
         print "cluster_done = %s" % cluster_done
         if (cluster_done):
             break
