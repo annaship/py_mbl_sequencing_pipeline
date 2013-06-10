@@ -175,9 +175,9 @@ class Chimera:
             return ('NOREGION', 'No regions found that need checking', '')
         
         # ???
-        for idx_key in output:
-            if len(output[idx_key]) > 50 or len(output[idx_key]) < 40:
-                return ('ERROR','uchime ref may have broken or empty', idx_key)  
+#         for idx_key in output:
+#             if len(output[idx_key]) > 50 or len(output[idx_key]) < 40:
+#                 return ('ERROR','uchime ref may have broken or empty', idx_key)  
         
         # finally
         if cluster_id_list: 
