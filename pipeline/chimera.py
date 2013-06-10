@@ -35,6 +35,8 @@ class Chimera:
         self.refdb       = C.chimera_checking_refdb
         self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
+        from pprint import pprint
+        pprint(self.input_file_names)
         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
 
     def make_chimera_input_illumina_file_names(self):
@@ -83,10 +85,10 @@ class Chimera:
           
        
     def chimera_denovo(self):
-        print "HHH"
         chimera_region_found = False
         output = {}
         cluster_id_list = []
+        
         for idx_key in self.input_file_names:
             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
             file_name  = os.path.join(self.indir, self.input_file_names[idx_key])        
