@@ -5,6 +5,7 @@ import time
 from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 from pprint import pprint
+from collections import defaultdict
 
 import pipeline.constants as C
 
@@ -76,7 +77,7 @@ class Chimera:
             for dirname, dirnames, filenames in os.walk(cur_dirname):
                 for filename in filenames:
                     if (self.is_chimera_check_file(filename)):
-                        print "filename = %s" % filename
+#                         print "filename = %s" % filename
                         cur_file_names.append(filename)        
         return cur_file_names
 
@@ -98,8 +99,72 @@ class Chimera:
                 for line in lines:
                         target.write(regex.sub(replace, line))
                     
-    def move_out_chimeric(self, chimeric_ids):
-        pass
+    def move_out_chimeric(self):
+        chimeric_ids = self.get_chimeric_ids()
+        pprint(chimeric_ids)
+      
+    def get_chimeric_ids(self):
+      
+# http://drive5.com/uchime/uchime_quickref.pdf
+# The --uchimeout file is a tab-separated file with the following 17 fields.
+# Field Name Description
+# 1 Score Value >= 0.0, high score means more likely to be a chimera.
+# 2 Query Sequence label
+# 3 Parent A Sequence label
+# 4 Parent B Sequence label
+# 5 IdQM %id between query and model made from (A, crossover, B)
+# 6 IdQA %id between query and parent A.
+# 7 IdQB %id between query and parent B
+# 8 IdAB %id between parents (A and B).
+# 9 IdQT %id between query and closest reference sequence / candidate parent.
+# 10 LY Yes votes on left
+# 11 LN No votes on left
+# 12 LA Abstain votes on left
+# 13 RY Yes votes on right
+# 14 RN No votes on right
+# 15 RA Abstain votes on right
+# 16 Div Divergence ratio, i.e. IdQM - IdQT
+# 17 YN Y (yes) or N (no) classification as a chimera. Set to Y if score >= threshold
+        chimeric_ids = defaultdict(list)
+
+        chimeric_files = self.get_current_filenames(self.outdir)
+#         pprint(chimeric_files)
+        
+        for chimeric_file in chimeric_files:
+            file_name = os.path.join(self.outdir, chimeric_file + self.chg_suffix)
+            with open(file_name, "r") as sources:
+                lines = sources.readlines()[1:]
+            # make a list of chimera deleted read_ids   
+            for line in lines:
+#                 print "line = %s" % line
+                line_list_tab = line.strip().split("\t")
+                chimera_yesno = line_list_tab[-1]
+                if(chimera_yesno) == 'Y':
+                    id = line_list_tab[1]
+                    chimeric_ids[chimeric_file].append(id)           
+#         print "chimeric_ids:"
+        return chimeric_ids 
+
+#         for idx_key in self.run_keys:
+#             # open  deleted file and append chimera to it
+#             # open and read both chimeras files: chimeras.db and chimeras.txt
+#             
+#             # hash to remove dupes
+#             chimera_deleted = {}
+#             for file in [self.files[idx_key]['chimera_db'], self.files[idx_key]['chimera_txt']]:            
+#                 fh = open(file,"r") 
+#                 # make a list of chimera deleted read_ids            
+#                 for line in fh.readlines():
+#                     lst = line.strip().split()
+#                     id = lst[1].split(';')[0]
+#                     chimera_yesno = lst[-1]
+#                     if(chimera_yesno) == 'Y':
+#                         chimera_deleted[id] = 'chimera'
+#         
+#             fh_del = open(self.files[idx_key]['deleted'],"a")
+#             for id in chimera_deleted:
+#                 fh_del.write(id+"\tchimera\n") 
+#                     
 
     def illumina_rm_size_files(self):
         for idx_key in self.input_file_names:
@@ -126,6 +191,17 @@ class Chimera:
         return cluster_done
           
     def create_chimera_cmd(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
+#         from usearch -help
+# Chimera detection (UCHIME ref. db. mode):
+#   usearch -uchime q.fasta [-db db.fasta] [-chimeras ch.fasta]
+#     [-nonchimeras good.fasta] [-uchimeout results.uch] [-uchimealns results.alns]
+# 
+# Chimera detection (UCHIME de novo mode):
+#   usearch -uchime amplicons.fasta [-chimeras ch.fasta] [-nonchimeras good.fasta]
+#      [-uchimeout results.uch] [-uchimealns results.alns]
+#   Input is estimated amplicons with integer abundances specified using ";size=N".
+
+        
         uchime_cmd = C.clusterize_cmd
         uchime_cmd += " "
         uchime_cmd += self.usearch_cmd
@@ -138,9 +214,12 @@ class Chimera:
             
         elif (ref_or_novo == "ref"):
             output_file_name = output_file_name + self.ref_suffix           
-            cmd_append = " --db " + ref_db                                   
-
-        uchime_cmd += " --uchimeout "
+            cmd_append = " --db " + ref_db   
+        else:
+            print "Incorrect method, should be \"denovo\" or \"ref\"" 
+                                        
+#         uchime_cmd += " --uchimeout "
+        uchime_cmd += " --chimeras "
         uchime_cmd += output_file_name
         uchime_cmd += cmd_append
 #         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
