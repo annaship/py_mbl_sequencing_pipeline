@@ -290,7 +290,7 @@ def illumina_chimera(runobj):
             sleep(60)
             
     
-    mychimera.illumina_rm_size_files()
+#     mychimera.illumina_rm_size_files()
     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
     mychimera.move_out_chimeric()
     elapsed = (time() - start)
