@@ -262,37 +262,38 @@ def illumina_chimera(runobj):
     mychimera = Chimera(runobj)
 #     elapsed = (time() - start)
 #     print elapsed
-    mychimera.illumina_frequency_size()
-    elapsed = (time() - start)
-    print "illumina_frequency_size: %s" % elapsed
-    
+#     mychimera.illumina_frequency_size()
 #     elapsed = (time() - start)
-#     print elapsed
-#     print "START chimera_denovo"
-#     c_den    = mychimera.chimera_denovo()
+#     print "illumina_frequency_size: %s" % elapsed
+#     
+# #     elapsed = (time() - start)
+# #     print elapsed
+# #     print "START chimera_denovo"
+# #     c_den    = mychimera.chimera_denovo()
+# #     print c_den
+# 
+#     print "START chimera checking"
+#     c_den       = mychimera.chimera_checking("denovo")
+# #     print "c_den - check denovo res: %s" % c_den
 #     print c_den
-
-    print "START chimera checking"
-    c_den       = mychimera.chimera_checking("denovo")
-#     print "c_den - check denovo res: %s" % c_den
-    print c_den
-    c_den       = mychimera.chimera_checking("ref")
-    print c_den
-    
-#     run after cluster is done with it work:
-    
-    while True:
-        sleep(30)        
-        cluster_done = mychimera.check_if_cluster_is_done()
-        print "cluster_done = %s" % cluster_done
-        if (cluster_done):
-            break
-    
+#     c_den       = mychimera.chimera_checking("ref")
+#     print c_den
+#     
+# #     run after cluster is done with it work:
+#     
+#     while True:
+#         sleep(30)        
+#         cluster_done = mychimera.check_if_cluster_is_done()
+#         print "cluster_done = %s" % cluster_done
+#         if (cluster_done):
+#             break
+#     
+# #     mychimera.illumina_rm_size_files()
+# #     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
+#     mychimera.illumina_size_to_freq()
+# #     todo: rm txt and db from chimera (size)
 #     mychimera.illumina_rm_size_files()
-#     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
-    mychimera.illumina_size_to_freq()
-#     todo: rm txt and db from chimera (size)
-    mychimera.illumina_rm_size_files()
+    mychimera.get_chimeric_ids()
     elapsed = (time() - start)
     print "Chimera checking: %s" % elapsed
     

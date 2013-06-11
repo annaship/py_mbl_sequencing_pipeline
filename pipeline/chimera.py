@@ -6,7 +6,12 @@ from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 from pprint import pprint
 from collections import defaultdict
+sys.path.append("/xraid/bioware/linux/seqinfo/bin")
+sys.path.append("/Users/ashipunova/bin/illumina-utils")
+sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
+sys.path.append("/bioware/merens-illumina-utils")
 
+import fastalib as fa
 import pipeline.constants as C
 
 class Chimera:
@@ -312,7 +317,24 @@ class Chimera:
             return ('NOREGION', 'No regions found that need checking', '')
         else:
             return ("The usearch commands were created")
-    
+        
+    def get_chimeric_ids(self):
+        ids = set()
+        chimera_file_names = self.get_chimera_file_names(self.outdir)
+        for file_name in chimera_file_names:
+            if file_name.endswith(self.chimeras_suffix):
+                file_name_path = os.path.join(self.outdir, file_name)        
+                read_fasta     = fa.ReadFasta(file_name_path)
+                ids.update(set(read_fasta.ids))
+                print len(ids)
+#                 ids.append(set(read_fasta.ids))
+#     #             sequences       = read_fasta.sequences
+#             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
+        pprint(ids)
+        print "type(ids) %s" % type(ids)
+#         set_ids = set(ids)
+#         pprint(set_ids)
+
     """ For 454.
         not tested 
     """
