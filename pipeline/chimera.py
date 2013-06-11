@@ -66,7 +66,7 @@ class Chimera:
         return cur_dirname
 
     def is_chimera_check_file(self, filename):
-        return filename.endswith(('.txt', '.db'))
+        return filename.endswith((self.denovo_suffix, self.ref_suffix))
 
     def get_current_filenames(self, cur_dirname):
         cur_file_names = []
@@ -75,8 +75,8 @@ class Chimera:
         elif cur_dirname == self.outdir:
             for dirname, dirnames, filenames in os.walk(cur_dirname):
                 for filename in filenames:
-                    print "filename = %s" % filename
                     if (self.is_chimera_check_file(filename)):
+                        print "filename = %s" % filename
                         cur_file_names.append(filename)        
         return cur_file_names
 
