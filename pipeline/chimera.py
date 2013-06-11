@@ -19,7 +19,8 @@ class Chimera:
         self.chg_suffix = ".chg"
         self.ref_suffix = ".chimeras.db"      
         self.denovo_suffix      = ".chimeras.txt"        
-        self.nonchimeras_suffix = ".nonchimeras.fa"
+        self.nonchimeras_suffix = ".nonchimeric.fa"
+        self.chimeras_suffix    = ".chimeric.fa"
 
         if self.runobj.vamps_user_upload:
             site       = self.runobj.site
@@ -68,7 +69,7 @@ class Chimera:
         return cur_dirname
 
     def is_chimera_check_file(self, filename):
-        return filename.endswith((self.denovo_suffix, self.ref_suffix, self.nonchimeras_suffix))
+        return filename.endswith((self.denovo_suffix, self.ref_suffix, self.chimeras_suffix, self.nonchimeras_suffix))
 
     def get_current_filenames(self, cur_dirname):
         cur_file_names = []
@@ -254,6 +255,8 @@ class Chimera:
         uchime_cmd += output_file_name
         uchime_cmd += " --nonchimeras "
         uchime_cmd += (output_file_name + self.nonchimeras_suffix)
+        uchime_cmd += " --chimeras "
+        uchime_cmd += (output_file_name + self.chimeras_suffix)
          
         uchime_cmd += cmd_append
 #         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
