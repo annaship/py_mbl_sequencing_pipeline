@@ -59,19 +59,32 @@ class Chimera:
         return output_file_names
 
     def illumina_frequency_size(self, cur_dirname = "", find = "frequency:", replace = ";size="):
+        cur_file_names = []
         if cur_dirname == "":
             cur_dirname    = self.indir 
-            cur_file_names = self.input_file_names
+            cur_file_names = self.input_file_names.values()
         else:
             cur_dirname    = self.outdir
-            cur_file_names = {}
             for dirname, dirnames, filenames in os.walk(cur_dirname):
-                for idx_key in self.run_keys:
-                    print "idx_key = %s" % idx_key
-                    for filename in filenames:
-                        print "filename = %s" % filename
-                        if (filename.endswith(('txt', 'db')) and filename.startswith(idx_key)):
-                            cur_file_names[idx_key] = filename
+                for filename in filenames:
+                    print "filename = %s" % filename
+                    if (filename.endswith(('txt', 'db'))):
+                        cur_file_names.append(filename)
+        
+#         for file_name in file_names:
+#             cur_file_names.append(os.path.join(cur_dirname, file_name]))
+          
+            
+            
+            
+#             cur_file_names = {}
+#             for dirname, dirnames, filenames in os.walk(cur_dirname):
+#                 for idx_key in self.run_keys:
+#                     print "idx_key = %s" % idx_key
+#                     for filename in filenames:
+#                         print "filename = %s" % filename
+#                         if (filename.endswith(('txt', 'db')) and filename.startswith(idx_key)):
+#                             cur_file_names[idx_key] = filename
 
         print "cur_file_names: "
         pprint(cur_file_names)
@@ -80,8 +93,8 @@ class Chimera:
 #         print "find = %s, replace = %s" % (find, replace)
         regex              = re.compile(r"%s" % find)
 
-        for idx_key in cur_file_names:
-            file_name = os.path.join(cur_dirname, cur_file_names[idx_key])
+        for cur_file_name in cur_file_names:
+            file_name = os.path.join(cur_dirname, cur_file_name)
             with open(file_name + change_from_suffix, "r") as sources:
                 lines = sources.readlines()
             with open(file_name + change_to_suffix, "w") as target:
