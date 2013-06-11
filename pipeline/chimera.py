@@ -53,7 +53,7 @@ class Chimera:
     def make_chimera_output_illumina_file_names(self, input_file_names):
         output_file_names = {} 
         for idx_key, input_file_name in input_file_names.iteritems():
-            output_file_names[idx_key] = input_file_name + ".chimeras.txt"
+            output_file_names[idx_key] = input_file_name + ".chimeras"
         return output_file_names
 
     def illumina_frequency_size(self, cur_dirname = "", find = "frequency:", replace = ";size="):
@@ -106,19 +106,21 @@ class Chimera:
         uchime_cmd += self.usearch_cmd
         uchime_cmd += " --uchime "
         uchime_cmd += input_file_name
+ 
+        if (ref_or_novo == "denovo"):
+            output_file_name = output_file_name + ".txt"
+            cmd_append = " --abskew " + self.abskew                                   
+            
+        elif (ref_or_novo == "ref"):
+            output_file_name = output_file_name + ".db"                        
+            cmd_append = " --db " + ref_db                                   
+
         uchime_cmd += " --uchimeout "
         uchime_cmd += output_file_name
-
-        if (ref_or_novo == "denovo"):
-            uchime_cmd += " --abskew "
-            uchime_cmd += self.abskew
-        elif (ref_or_novo == "ref"):
-
-            output_file_name = output_file_name + ".chimeras.db"                        
-            uchime_cmd += " --db "
-            uchime_cmd += ref_db
-
-
+        uchime_cmd += cmd_append
+        print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
+        return uchime_cmd
+        
     def get_ref_db(self, dna_region):
         ref_db = ''
         if dna_region.upper() == 'ITS':
@@ -129,7 +131,6 @@ class Chimera:
             ref_db = self.refdb
         print  "ref_db = %s" % ref_db  
         return ref_db       
-    
     
     def chimera_checking(self, ref_or_novo):
         chimera_region_found = False
@@ -147,24 +148,15 @@ class Chimera:
                 logger.debug('region not checked: ' +  dna_region)
                 continue
             
-
-            print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
-
-
-            uchime_cmd = C.clusterize_cmd
-            uchime_cmd += " "
-            uchime_cmd += self.usearch_cmd
-            uchime_cmd += " --uchime "
-            uchime_cmd += input_file_name
-            uchime_cmd += " --uchimeout "
-            uchime_cmd += output_file_name
-            uchime_cmd += " --abskew "
-            uchime_cmd += self.abskew
+#             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
+            ref_db     = self.get_ref_db(dna_region)
+            print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
             
+            uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
             print "uchime_cmd = %s" % (uchime_cmd)
             
             try:
-                logger.info("chimera denovo command: " + str(uchime_cmd))
+                logger.info("chimera checking command: " + str(uchime_cmd))
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             except OSError, e:

@@ -265,9 +265,19 @@ def illumina_chimera(runobj):
     mychimera.illumina_frequency_size()
 #     elapsed = (time() - start)
 #     print elapsed
-    print "START chimera_denovo"
-    c_den    = mychimera.chimera_denovo()
-    print c_den
+#     print "START chimera_denovo"
+#     c_den    = mychimera.chimera_denovo()
+#     print c_den
+    ref_or_novo = ""
+    print "START chimera checking"
+    ref_or_novo = "denovo"
+    c_den       = mychimera.chimera_checking(ref_or_novo)
+    print "c_den - check denovo res: %s" % c_den
+    ref_or_novo = "ref"
+    c_den       = mychimera.chimera_checking(ref_or_novo)
+    print "c_den - check ref res: %s" % c_den
+    
+    
     
 #     run after cluster is done with it work:
     
