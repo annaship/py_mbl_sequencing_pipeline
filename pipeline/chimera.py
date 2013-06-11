@@ -226,8 +226,9 @@ class Chimera:
                                         
         uchime_cmd += " --uchimeout "
         uchime_cmd += output_file_name
-        uchime_cmd += " --chimeras "
-        uchime_cmd += (output_file_name + ".chimeras") 
+        uchime_cmd += " --nonchimeras "
+        uchime_cmd += (output_file_name + ".nonchimeras")
+         
         uchime_cmd += cmd_append
 #         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
         return uchime_cmd
