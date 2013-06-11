@@ -179,16 +179,22 @@ class Chimera:
 
         print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
         
-        p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
-        (output, err) = p.communicate()
-        num_proc = int(output)
-        print "qstat is running %s 'usearch' processes" % num_proc
-#         pprint(p)
-        
-        if (num_proc == 0):
-            cluster_done = True
-#         print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
+        try:
+            p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
+            (output, err) = p.communicate()
+            num_proc = int(output)
+            print "qstat is running %s 'usearch' processes" % num_proc
+    #         pprint(p)
+            
+            if (num_proc == 0):
+                cluster_done = True
+    #         print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
+        except:
+            print "Chimera checking can be dan only on grendel."
+            raise
+
         return cluster_done
+        
           
     def create_chimera_cmd(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
 #         from usearch -help
