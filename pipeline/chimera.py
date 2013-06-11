@@ -12,17 +12,18 @@ import pipeline.constants as C
 class Chimera:
     """ Define here """
     def __init__(self, runobj = None):
+        self.utils      = PipelneUtils()
         self.runobj     = runobj
         self.run_keys   = self.runobj.run_keys
         self.rundate    = self.runobj.run
         self.chg_suffix = ".chg"
-        self.denovo_suffix = ".txt"        
-        self.ref_suffix = ".db"        
-        self.utils      = PipelneUtils()
+        self.ref_suffix = ".chimeras.db"      
+        self.denovo_suffix      = ".chimeras.txt"        
+        self.nonchimeras_suffix = ".nonchimeras.fa"
 
         if self.runobj.vamps_user_upload:
-            site = self.runobj.site
-            dir_prefix=self.runobj.user+'_'+self.runobj.run
+            site       = self.runobj.site
+            dir_prefix = self.runobj.user + '_' + self.runobj.run
         else:
             site = ''
             dir_prefix = self.runobj.run
@@ -40,7 +41,7 @@ class Chimera:
         self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
 #         pprint(self.run_keys)
-        self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
+#         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
 
     def make_chimera_input_illumina_file_names(self):
         input_file_names = {} 
@@ -53,11 +54,11 @@ class Chimera:
         
         return input_file_names
             
-    def make_chimera_output_illumina_file_names(self, input_file_names):
-        output_file_names = {} 
-        for idx_key, input_file_name in input_file_names.iteritems():
-            output_file_names[idx_key] = input_file_name + ".chimeras"
-        return output_file_names
+#     def make_chimera_output_illumina_file_names(self, input_file_names):
+#         output_file_names = {} 
+#         for idx_key, input_file_name in input_file_names.iteritems():
+#             output_file_names[idx_key] = input_file_name
+#         return output_file_names
 
     def get_current_dirname(self, in_or_out = ""):
         if in_or_out == "":
@@ -67,7 +68,7 @@ class Chimera:
         return cur_dirname
 
     def is_chimera_check_file(self, filename):
-        return filename.endswith((self.denovo_suffix, self.ref_suffix, ".nonchimeras"))
+        return filename.endswith((self.denovo_suffix, self.ref_suffix, self.nonchimeras_suffix))
 
     def get_current_filenames(self, cur_dirname):
         cur_file_names = []
@@ -77,7 +78,7 @@ class Chimera:
             for dirname, dirnames, filenames in os.walk(cur_dirname):
                 for filename in filenames:
                     if (self.is_chimera_check_file(filename)):
-#                         print "filename = %s" % filename
+                        print "filename = %s" % filename
                         cur_file_names.append(filename)        
         return cur_file_names
 
@@ -227,7 +228,7 @@ class Chimera:
         uchime_cmd += " --uchimeout "
         uchime_cmd += output_file_name
         uchime_cmd += " --nonchimeras "
-        uchime_cmd += (output_file_name + ".nonchimeras")
+        uchime_cmd += (output_file_name + self.nonchimeras_suffix)
          
         uchime_cmd += cmd_append
 #         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
@@ -250,7 +251,7 @@ class Chimera:
         for idx_key in self.input_file_names:
 #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
-            output_file_name = os.path.join(self.outdir, self.output_file_names[idx_key])        
+            output_file_name = os.path.join(self.outdir, self.input_file_names[idx_key])        
             dna_region       = self.runobj.samples[idx_key].dna_region
 #             print "dna_region = %s" % dna_region
             if dna_region in C.regions_to_chimera_check:
