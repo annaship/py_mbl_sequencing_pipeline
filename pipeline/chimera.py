@@ -75,11 +75,16 @@ class Chimera:
         if cur_dirname == self.indir:
             cur_file_names = self.input_file_names.values()
         elif cur_dirname == self.outdir:
-            for dirname, dirnames, filenames in os.walk(cur_dirname):
-                for filename in filenames:
-                    if (self.is_chimera_check_file(filename)):
-                        print "filename = %s" % filename
-                        cur_file_names.append(filename)        
+            cur_file_names = self.get_chimera_file_names(self.outdir)
+        return cur_file_names
+
+    def get_chimera_file_names(self, cur_dirname):
+        cur_file_names = []        
+        for dirname, dirnames, filenames in os.walk(cur_dirname):
+            for filename in filenames:
+                if (self.is_chimera_check_file(filename)):
+                    print "filename = %s" % filename
+                    cur_file_names.append(filename)
         return cur_file_names
 
     def illumina_frequency_size(self, in_or_out = "", find = "frequency:", replace = ";size="):
@@ -99,7 +104,21 @@ class Chimera:
             with open(file_name + change_to_suffix, "w") as target:
                 for line in lines:
                         target.write(regex.sub(replace, line))
+
+    def illumina_size_to_freq(self):
+        replace        = "frequency:"
+        find           = ";size="
+        regex          = re.compile(r"%s" % find)        
+        cur_file_names = self.get_chimera_file_names(self.outdir)
                     
+        for file_chim in cur_file_names:
+            file_chim_path = os.path.join(self.outdir, file_chim)
+            with open(file_chim_path, "r") as sources:
+                lines = sources.readlines()
+            with open(file_chim_path, "w") as target:
+                for line in lines:
+                    target.write(regex.sub(replace, line))                    
+              
 #     def move_out_chimeric(self):
 #         chimeric_ids = self.get_chimeric_ids()
 #         pprint(chimeric_ids)
@@ -172,6 +191,12 @@ class Chimera:
             file_name = os.path.join(self.indir, self.input_file_names[idx_key] + self.chg_suffix)
             if os.path.exists(file_name):
                 os.remove(file_name)
+    
+#     def illumina_chimera_size_files(self):
+#     
+#     import os
+# [os.rename(f, f.replace('_', '-')) for f in os.listdir('.') if not f.startswith('.')]
+    
           
     def check_if_cluster_is_done(self):
         cluster_done = False
