@@ -58,36 +58,33 @@ class Chimera:
             output_file_names[idx_key] = input_file_name + ".chimeras"
         return output_file_names
 
-    def illumina_frequency_size(self, cur_dirname = "", find = "frequency:", replace = ";size="):
-        cur_file_names = []
-        if cur_dirname == "":
+    def get_current_dirname(self, in_or_out = ""):
+        if in_or_out == "":
             cur_dirname    = self.indir 
-            cur_file_names = self.input_file_names.values()
         else:
             cur_dirname    = self.outdir
+        return cur_dirname
+
+    def is_chimera_check_file(self, filename):
+        return filename.endswith(('.txt', '.db'))
+
+    def get_current_filenames(self, cur_dirname):
+        cur_file_names = []
+        if cur_dirname == self.indir:
+            cur_file_names = self.input_file_names.values()
+        elif cur_dirname == self.outdir:
             for dirname, dirnames, filenames in os.walk(cur_dirname):
                 for filename in filenames:
                     print "filename = %s" % filename
-                    if (filename.endswith(('txt', 'db'))):
-                        cur_file_names.append(filename)
-        
-#         for file_name in file_names:
-#             cur_file_names.append(os.path.join(cur_dirname, file_name]))
-          
-            
-            
-            
-#             cur_file_names = {}
-#             for dirname, dirnames, filenames in os.walk(cur_dirname):
-#                 for idx_key in self.run_keys:
-#                     print "idx_key = %s" % idx_key
-#                     for filename in filenames:
-#                         print "filename = %s" % filename
-#                         if (filename.endswith(('txt', 'db')) and filename.startswith(idx_key)):
-#                             cur_file_names[idx_key] = filename
+                    if (self.is_chimera_check_file(filename)):
+                        cur_file_names.append(filename)        
+        return cur_file_names
 
-        print "cur_file_names: "
-        pprint(cur_file_names)
+    def illumina_frequency_size(self, in_or_out = "", find = "frequency:", replace = ";size="):
+        cur_dirname    = self.get_current_dirname(in_or_out)
+        cur_file_names = self.get_current_filenames(cur_dirname)
+#         print "cur_file_names: "
+#         pprint(cur_file_names)
         change_from_suffix = ""
         change_to_suffix   = self.chg_suffix
 #         print "find = %s, replace = %s" % (find, replace)
