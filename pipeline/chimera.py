@@ -135,11 +135,15 @@ class Chimera:
 #     
 #     import os
 # [os.rename(f, f.replace('_', '-')) for f in os.listdir('.') if not f.startswith('.')]
-    
+    def get_time_now(self):
+        """date and hour only!"""
+        return time.strftime("%m/%d/%Y %H", time.localtime())
+# '2009-01-05 22'
+        
           
-    def check_if_cluster_is_done(self):
+    def check_if_cluster_is_done(self, time_before):
         cluster_done = False
-        check_qstat_cmd_line = "qstat | grep usearch | wc -l"
+        check_qstat_cmd_line = "qstat | grep \"%s\" | grep usearch | wc -l" % time_before
 #         check_qstat_cmd_line = "qstat | grep usearch"
 
         print "check_qstat_cmd_line = %s" % check_qstat_cmd_line

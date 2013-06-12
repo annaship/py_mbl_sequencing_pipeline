@@ -279,13 +279,14 @@ def illumina_chimera(runobj):
 #     
     """run after cluster is done with it work:"""
     start = time()  
-    
+    time_before = mychimera.get_time_now()
+    print "time_before = %s" % time_before
     while True:
         if utils.is_local():
             sleep(1)        
         else:
             sleep(120)        
-        cluster_done = mychimera.check_if_cluster_is_done()
+        cluster_done = mychimera.check_if_cluster_is_done(time_before)
         print "cluster_done = %s" % cluster_done
         if (cluster_done):
             break
