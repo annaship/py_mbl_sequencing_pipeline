@@ -263,27 +263,25 @@ class Chimera:
     
     def move_out_chimeric(self):
         chimeric_ids = self.get_chimeric_ids()
-#         print "There are %s chimeric ids, both denovo and ref" % (int(len(chimeric_ids)))
-#         pprint(chimeric_ids)
         for idx_key in self.input_file_names:
-#             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
-            fasta_file_path  = os.path.join(self.indir,  self.input_file_names[idx_key])   
-            read_fasta      = fa.ReadFasta(fasta_file_path)
-#             pprint(read_fasta)
-#             sequences       = read_fasta.sequences
-#             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
-
-#             if not (len(sequences)):
-#                 continue            
+            fasta_file_path    = os.path.join(self.indir, self.input_file_names[idx_key])   
+            read_fasta         = fa.ReadFasta(fasta_file_path)
             read_fasta.close()
+            
+            non_chimeric_file  = fasta_file_path + ".nonchimeric.fa"
+
+            non_chimeric_fasta = fa.FastaOutput(non_chimeric_file)
+
             fasta = fa.SequenceSource(fasta_file_path, lazy_init = False) 
             while fasta.next():
-                if fasta.id in chimeric_ids:
-                    print "Oops, that's chimera: %s" % fasta.id
+                if not fasta.id in chimeric_ids:
+                    non_chimeric_fasta.store(fasta, store_frequencies = False)
+
+#                     print "Oops, that's chimera: %s" % fasta.id
 #                     fasta.seq
                 
-            print "a"
-
+#             print "a"
+            non_chimeric_fasta.close()
 
     """ 
     -----------------------------------------------------------------------------
