@@ -112,8 +112,8 @@ class Chimera:
                         target.write(regex.sub(replace, line))
 
     def illumina_size_to_freq(self):
-        replace        = "frequency:"
         find           = ";size="
+        replace        = "frequency:"
         regex          = re.compile(r"%s" % find)        
         cur_file_names = self.get_chimera_file_names(self.outdir)
                     
@@ -125,73 +125,6 @@ class Chimera:
                 for line in lines:
                     target.write(regex.sub(replace, line))                    
               
-#     def move_out_chimeric(self):
-#         chimeric_ids = self.get_chimeric_ids()
-#         pprint(chimeric_ids)
-#       
-#     def get_chimeric_ids(self):
-#       
-# # http://drive5.com/uchime/uchime_quickref.pdf
-# # The --uchimeout file is a tab-separated file with the following 17 fields.
-# # Field Name Description
-# # 1 Score Value >= 0.0, high score means more likely to be a chimera.
-# # 2 Query Sequence label
-# # 3 Parent A Sequence label
-# # 4 Parent B Sequence label
-# # 5 IdQM %id between query and model made from (A, crossover, B)
-# # 6 IdQA %id between query and parent A.
-# # 7 IdQB %id between query and parent B
-# # 8 IdAB %id between parents (A and B).
-# # 9 IdQT %id between query and closest reference sequence / candidate parent.
-# # 10 LY Yes votes on left
-# # 11 LN No votes on left
-# # 12 LA Abstain votes on left
-# # 13 RY Yes votes on right
-# # 14 RN No votes on right
-# # 15 RA Abstain votes on right
-# # 16 Div Divergence ratio, i.e. IdQM - IdQT
-# # 17 YN Y (yes) or N (no) classification as a chimera. Set to Y if score >= threshold
-#         chimeric_ids = defaultdict(list)
-# 
-#         chimeric_files = self.get_current_filenames(self.outdir)
-# #         pprint(chimeric_files)
-#         
-#         for chimeric_file in chimeric_files:
-#             file_name = os.path.join(self.outdir, chimeric_file + self.chg_suffix)
-#             with open(file_name, "r") as sources:
-#                 lines = sources.readlines()[1:]
-#             # make a list of chimera deleted read_ids   
-#             for line in lines:
-# #                 print "line = %s" % line
-#                 line_list_tab = line.strip().split("\t")
-#                 chimera_yesno = line_list_tab[-1]
-#                 if(chimera_yesno) == 'Y':
-#                     id = line_list_tab[1]
-#                     chimeric_ids[chimeric_file].append(id)           
-# #         print "chimeric_ids:"
-#         return chimeric_ids 
-
-#         for idx_key in self.run_keys:
-#             # open  deleted file and append chimera to it
-#             # open and read both chimeras files: chimeras.db and chimeras.txt
-#             
-#             # hash to remove dupes
-#             chimera_deleted = {}
-#             for file in [self.files[idx_key]['chimera_db'], self.files[idx_key]['chimera_txt']]:            
-#                 fh = open(file,"r") 
-#                 # make a list of chimera deleted read_ids            
-#                 for line in fh.readlines():
-#                     lst = line.strip().split()
-#                     id = lst[1].split(';')[0]
-#                     chimera_yesno = lst[-1]
-#                     if(chimera_yesno) == 'Y':
-#                         chimera_deleted[id] = 'chimera'
-#         
-#             fh_del = open(self.files[idx_key]['deleted'],"a")
-#             for id in chimera_deleted:
-#                 fh_del.write(id+"\tchimera\n") 
-#                     
-
     def illumina_rm_size_files(self):
         for idx_key in self.input_file_names:
             file_name = os.path.join(self.indir, self.input_file_names[idx_key] + self.chg_suffix)
@@ -326,16 +259,35 @@ class Chimera:
                 file_name_path = os.path.join(self.outdir, file_name)        
                 read_fasta     = fa.ReadFasta(file_name_path)
                 ids.update(set(read_fasta.ids))
-                print len(ids)
-#                 ids.append(set(read_fasta.ids))
-#     #             sequences       = read_fasta.sequences
-#             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
-        pprint(ids)
-        print "type(ids) %s" % type(ids)
-#         set_ids = set(ids)
-#         pprint(set_ids)
+        return ids
+    
+    def move_out_chimeric(self):
+        chimeric_ids = self.get_chimeric_ids()
+#         print "There are %s chimeric ids, both denovo and ref" % (int(len(chimeric_ids)))
+#         pprint(chimeric_ids)
+        for idx_key in self.input_file_names:
+#             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
+            fasta_file_path  = os.path.join(self.indir,  self.input_file_names[idx_key])   
+            read_fasta      = fa.ReadFasta(fasta_file_path)
+#             pprint(read_fasta)
+#             sequences       = read_fasta.sequences
+#             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
 
-    """ For 454.
+#             if not (len(sequences)):
+#                 continue            
+            read_fasta.close()
+            fasta = fa.SequenceSource(fasta_file_path, lazy_init = False) 
+            while fasta.next():
+                if fasta.id in chimeric_ids:
+                    print "Oops, that's chimera: %s" % fasta.id
+#                     fasta.seq
+                
+            print "a"
+
+
+    """ 
+    -----------------------------------------------------------------------------
+        For 454.
         not tested 
     """
     def chimera_denovo(self):
@@ -357,7 +309,6 @@ class Chimera:
              
  
             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
- 
  
             uchime_cmd = C.clusterize_cmd
             uchime_cmd += " "
@@ -512,3 +463,23 @@ class Chimera:
             for id in chimera_deleted:
                 fh_del.write(id+"\tchimera\n") 
             
+# # http://drive5.com/uchime/uchime_quickref.pdf
+# # The --uchimeout file is a tab-separated file with the following 17 fields.
+# # Field Name Description
+# # 1 Score Value >= 0.0, high score means more likely to be a chimera.
+# # 2 Query Sequence label
+# # 3 Parent A Sequence label
+# # 4 Parent B Sequence label
+# # 5 IdQM %id between query and model made from (A, crossover, B)
+# # 6 IdQA %id between query and parent A.
+# # 7 IdQB %id between query and parent B
+# # 8 IdAB %id between parents (A and B).
+# # 9 IdQT %id between query and closest reference sequence / candidate parent.
+# # 10 LY Yes votes on left
+# # 11 LN No votes on left
+# # 12 LA Abstain votes on left
+# # 13 RY Yes votes on right
+# # 14 RN No votes on right
+# # 15 RA Abstain votes on right
+# # 16 Div Divergence ratio, i.e. IdQM - IdQT
+# # 17 YN Y (yes) or N (no) classification as a chimera. Set to Y if score >= threshold

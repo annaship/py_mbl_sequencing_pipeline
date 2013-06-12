@@ -291,9 +291,7 @@ def illumina_chimera(runobj):
 # #     mychimera.illumina_rm_size_files()
 # #     mychimera.illumina_frequency_size(mychimera.outdir, find = ";size=", replace = "frequency:")
 #     mychimera.illumina_size_to_freq()
-# #     todo: rm txt and db from chimera (size)
-#     mychimera.illumina_rm_size_files()
-    mychimera.get_chimeric_ids()
+    mychimera.move_out_chimeric()
     elapsed = (time() - start)
     print "Chimera checking: %s" % elapsed
     
