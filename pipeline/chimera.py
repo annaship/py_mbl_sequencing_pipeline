@@ -89,7 +89,7 @@ class Chimera:
         for dirname, dirnames, filenames in os.walk(cur_dirname):
             for filename in filenames:
                 if (self.is_chimera_check_file(filename)):
-                    print "filename = %s" % filename
+#                     print "filename = %s" % filename
                     cur_file_names.append(filename)
         return cur_file_names
 
@@ -111,7 +111,7 @@ class Chimera:
                 for line in lines:
                         target.write(regex.sub(replace, line))
 
-    def illumina_size_to_freq(self):
+    def illumina_size_to_freq_in_chimer(self):
         find           = ";size="
         replace        = "frequency:"
         regex          = re.compile(r"%s" % find)        
@@ -268,19 +268,13 @@ class Chimera:
             read_fasta         = fa.ReadFasta(fasta_file_path)
             read_fasta.close()
             
-            non_chimeric_file  = fasta_file_path + ".nonchimeric.fa"
-
+            non_chimeric_file  = fasta_file_path + self.nonchimeras_suffix
             non_chimeric_fasta = fa.FastaOutput(non_chimeric_file)
 
-            fasta = fa.SequenceSource(fasta_file_path, lazy_init = False) 
+            fasta              = fa.SequenceSource(fasta_file_path, lazy_init = False) 
             while fasta.next():
                 if not fasta.id in chimeric_ids:
                     non_chimeric_fasta.store(fasta, store_frequencies = False)
-
-#                     print "Oops, that's chimera: %s" % fasta.id
-#                     fasta.seq
-                
-#             print "a"
             non_chimeric_fasta.close()
 
     """ 
