@@ -191,8 +191,10 @@ class Chimera:
                                         
         uchime_cmd += " --uchimeout "
         uchime_cmd += output_file_name
-        uchime_cmd += " --nonchimeras "
-        uchime_cmd += (output_file_name + self.nonchimeras_suffix)
+        """if we need nonchimeric for denovo and db separate we might create them here
+#         uchime_cmd += " --nonchimeras "
+#         uchime_cmd += (output_file_name + self.nonchimeras_suffix)
+"""
         uchime_cmd += " --chimeras "
         uchime_cmd += (output_file_name + self.chimeras_suffix)
          
