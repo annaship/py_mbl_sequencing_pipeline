@@ -156,7 +156,7 @@ class dbUpload:
 #             if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == C.filtered_suffix)):
             if (full_name.endswith((self.nonchimeras_suffix, self.unique_suffix))):                
                 fa_files.append(full_name)
-                print full_name
+#                 print full_name
         return fa_files
         
     def get_run_info_ill_id(self, filename_base):
@@ -201,6 +201,9 @@ class dbUpload:
     
     def insert_pdr_info(self, fasta, run_info_ill_id):
         res_id = ""
+        if (not run_info_ill_id):
+            print "ERROR: There is no run info yet, please check if it's uploaded to env454"
+            
         # ------- insert sequence info per run/project/dataset --------
         seq_upper = fasta.seq.upper()
         sequence_ill_id = self.seq_id_dict[seq_upper]
@@ -334,6 +337,8 @@ class dbUpload:
         self.run_id = self.my_conn.execute_no_fetch(my_sql)
         
     def insert_project(self, content_row, contact_id):
+        if (not contact_id):
+            print "ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS"        
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
         ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
