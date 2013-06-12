@@ -47,7 +47,7 @@ import json
 import fastalib as u
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
-from pipeline.utils import Dirs
+# from pipeline.utils import Dirs
 
 
 # the main loop for performing each of the user's supplied steps
@@ -258,6 +258,8 @@ def chimera(runobj):
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')
 
 def illumina_chimera(runobj):
+    utils = PipelneUtils()
+
     start = time()
     mychimera = Chimera(runobj)
 #     elapsed = (time() - start)
@@ -279,7 +281,10 @@ def illumina_chimera(runobj):
     start = time()  
     
     while True:
-        sleep(30)        
+        if utils.is_local():
+            sleep(1)        
+        else:
+            sleep(120)        
         cluster_done = mychimera.check_if_cluster_is_done()
         print "cluster_done = %s" % cluster_done
         if (cluster_done):
