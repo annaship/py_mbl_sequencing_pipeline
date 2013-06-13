@@ -264,9 +264,11 @@ def illumina_chimera(runobj):
     mychimera = Chimera(runobj)
 #     elapsed = (time() - start)
 #     print elapsed
+    print "Preparing input files (replacing \"frequency:\" with \";size=\")"
+
     mychimera.illumina_frequency_size()
     elapsed = (time() - start)
-    print "illumina_frequency_size: %s" % elapsed
+    print "illumina_frequency_size time: %s" % elapsed
 #     
     print "START chimera checking"
 #     c_den = 
@@ -281,6 +283,7 @@ def illumina_chimera(runobj):
     start = time()  
     time_before = mychimera.get_time_now()
     print "time_before = %s" % time_before
+    print "Waiting for the cluster..."
     while True:
         if utils.is_local():
             sleep(1)        
@@ -292,18 +295,19 @@ def illumina_chimera(runobj):
             break
     
     elapsed = (time() - start)
-    print "Cluster is done with both chimera checkings: %s" % elapsed     
+    print "Cluster is done with both chimera checkings in: %s" % elapsed     
     
     mychimera.illumina_rm_size_files()
     start = time()
     mychimera.illumina_size_to_freq_in_chimer()
     elapsed = (time() - start)
-    print "illumina_size_to_freq_in_chimer: %s" % elapsed
+    print "illumina_size_to_freq_in_chimer time: %s" % elapsed
     
     start = time()
+    print "Creating nonchimeric files in %s" % mychimera.indir
     mychimera.move_out_chimeric()
     elapsed = (time() - start)
-    print "move_out_chimeric: %s" % elapsed
+    print "move_out_chimeric time: %s" % elapsed
     
     
 def illumina_chimera_only(runobj):  
