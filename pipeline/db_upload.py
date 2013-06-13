@@ -37,7 +37,7 @@ class MyConnection:
     Takes parameters from ~/.my.cnf, default host = "vampsdev", db="test"
     if different use my_conn = MyConnection(host, db)
     """
-    def __init__(self, host="vampsdev", db="test"):
+    def __init__(self, host="bpcweb7", db="test"):
         self.conn   = None
         self.cursor = None
         self.rows   = 0
