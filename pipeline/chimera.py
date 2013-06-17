@@ -21,11 +21,15 @@ class Chimera:
         self.runobj     = runobj
         self.run_keys   = self.runobj.run_keys
         self.rundate    = self.runobj.run
-        self.chg_suffix = ".chg"
-        self.ref_suffix = ".chimeras.db"      
-        self.denovo_suffix      = ".chimeras.txt"        
-        self.nonchimeras_suffix = ".nonchimeric.fa"
-        self.chimeras_suffix    = ".chimeric.fa"
+        
+        self.chg_suffix         = ".chg"
+        self.chimeras_suffix    = ".chimeras"      
+        self.ref_suffix         = ".db"      
+        self.denovo_suffix      = ".txt"        
+        self.nonchimeric_suffix = ".nonchimeric.fa"
+        self.chimeric_suffix    = ".chimeric.fa"
+        self.base_suffix        = "unique" + self.chimeras_suffix
+
 
         if self.runobj.vamps_user_upload:
             site       = self.runobj.site
@@ -75,7 +79,7 @@ class Chimera:
         return cur_dirname
 
     def is_chimera_check_file(self, filename):
-        return filename.endswith((self.denovo_suffix, self.ref_suffix, self.chimeras_suffix, self.nonchimeras_suffix))
+        return filename.endswith((self.chimeras_suffix + self.denovo_suffix, self.chimeras_suffix + self.ref_suffix, self.chimeric_suffix, self.nonchimeric_suffix))
 
     def get_current_filenames(self, cur_dirname):
         cur_file_names = []
@@ -185,23 +189,24 @@ class Chimera:
         uchime_cmd += input_file_name
  
         if (ref_or_novo == "denovo"):
-            output_file_name = output_file_name + self.denovo_suffix 
+            output_file_name = output_file_name + self.chimeras_suffix + self.denovo_suffix 
             cmd_append = " --abskew " + self.abskew                                   
             
         elif (ref_or_novo == "ref"):
-            output_file_name = output_file_name + self.ref_suffix           
+            output_file_name = output_file_name + self.chimeras_suffix + self.ref_suffix           
             cmd_append = " --db " + ref_db   
         else:
             print "Incorrect method, should be \"denovo\" or \"ref\"" 
+        print "output_file_name = %s" % output_file_name 
                                         
         uchime_cmd += " --uchimeout "
         uchime_cmd += output_file_name
         """if we need nonchimeric for denovo and db separate we might create them here
 #         uchime_cmd += " --nonchimeras "
-#         uchime_cmd += (output_file_name + self.nonchimeras_suffix)
+#         uchime_cmd += (output_file_name + self.nonchimeric_suffix)
 """
         uchime_cmd += " --chimeras "
-        uchime_cmd += (output_file_name + self.chimeras_suffix)
+        uchime_cmd += (output_file_name + self.chimeric_suffix)
          
         uchime_cmd += cmd_append
 #         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
@@ -264,18 +269,20 @@ class Chimera:
             ref > 15% and ratio ref to de-novo > 2
             e.g.
             if denovo_only:
-                chimeras_suffix = self.denovo_suffix + self.chimeras_suffix
+                chimeric_suffix = self.chimeras_suffix + self.denovo_suffix + self.chimeric_suffix
             if no: 
-                chimeras_suffix = self.chimeras_suffix
+                chimeras_suffix = self.chimeric_suffix
                 
-            if file_name.endswith(chimeras_suffix):
+            if file_name.endswith(chimeric_suffix):
             ...            
         """ 
         ids = set()
         chimera_file_names = self.get_chimera_file_names(self.outdir)
         for file_name in chimera_file_names:
-            if file_name.endswith(self.chimeras_suffix):
+#             print "from get_chimeric_ids: file_name = %s" % file_name
+            if file_name.endswith(self.chimeric_suffix):
                 file_name_path = os.path.join(self.outdir, file_name)        
+#                 print "from get_chimeric_ids if chimeric_suffix: file_name_path = %s" % file_name_path
                 read_fasta     = fa.ReadFasta(file_name_path)
                 ids.update(set(read_fasta.ids))
         return ids
@@ -287,7 +294,7 @@ class Chimera:
             read_fasta         = fa.ReadFasta(fasta_file_path)
             read_fasta.close()
             
-            non_chimeric_file  = fasta_file_path + self.nonchimeras_suffix
+            non_chimeric_file  = fasta_file_path + self.nonchimeric_suffix
             non_chimeric_fasta = fa.FastaOutput(non_chimeric_file)
 
             fasta              = fa.SequenceSource(fasta_file_path, lazy_init = False) 
