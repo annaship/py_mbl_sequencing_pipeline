@@ -304,12 +304,40 @@ def illumina_chimera(runobj):
     print "illumina_size_to_freq_in_chimer time: %s" % elapsed
     
     start = time()
+    print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
+    mychimera.check_chimeric_stats()
+    elapsed = (time() - start)
+    print "check_chimeric_stats time: %s" % elapsed
+    
+    start = time()
     print "Creating nonchimeric files in %s" % mychimera.indir
     mychimera.move_out_chimeric()
     elapsed = (time() - start)
     print "move_out_chimeric time: %s" % elapsed
     
     
+def illumina_chimera_after_cluster(runobj):  
+    mychimera = Chimera(runobj)
+
+    mychimera.illumina_rm_size_files()
+    start = time()
+    mychimera.illumina_size_to_freq_in_chimer()
+    elapsed = (time() - start)
+    print "illumina_size_to_freq_in_chimer time: %s" % elapsed
+    
+    start = time()
+    print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
+    mychimera.check_chimeric_stats()
+    elapsed = (time() - start)
+    print "check_chimeric_stats time: %s" % elapsed
+    
+    start = time()
+    print "Creating nonchimeric files in %s" % mychimera.indir
+    mychimera.move_out_chimeric()
+    elapsed = (time() - start)
+    print "move_out_chimeric time: %s" % elapsed
+    print "illumina_chimera_after_cluster time = %s" % str(elapsed)
+
 def illumina_chimera_only(runobj):  
     start = time()
     illumina_chimera(runobj)
