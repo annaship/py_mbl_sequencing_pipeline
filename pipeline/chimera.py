@@ -41,7 +41,8 @@ class Chimera:
         self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
         self.indir  = self.dirs.check_dir(self.dirs.reads_overlap_dir)
         self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)
-        self.usearch_cmd = C.usearch_cmd
+#         self.usearch_cmd = C.usearch_cmd
+        self.usearch_cmd = C.usearch6_cmd        
         self.abskew      = C.chimera_checking_abskew
         self.refdb       = C.chimera_checking_refdb
         self.its_refdb   = C.chimera_checking_its_refdb
@@ -258,6 +259,18 @@ class Chimera:
             return ("The usearch commands were created")
         
     def get_chimeric_ids(self):
+        """ TODO: use only de-novo (.txt) chimeric if
+            check_chimeric_stats shows
+            ref > 15% and ratio ref to de-novo > 2
+            e.g.
+            if denovo_only:
+                chimeras_suffix = self.denovo_suffix + self.chimeras_suffix
+            if no: 
+                chimeras_suffix = self.chimeras_suffix
+                
+            if file_name.endswith(chimeras_suffix):
+            ...            
+        """ 
         ids = set()
         chimera_file_names = self.get_chimera_file_names(self.outdir)
         for file_name in chimera_file_names:
@@ -283,6 +296,10 @@ class Chimera:
                     non_chimeric_fasta.store(fasta, store_frequencies = False)
             non_chimeric_fasta.close()
 
+
+    def check_chimeric_stats(self):
+        pass
+ 
     """ 
     -----------------------------------------------------------------------------
         For 454.

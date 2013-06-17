@@ -212,7 +212,7 @@ filter_mismatch_cmd_local = cmd_path_local + filter_mismatch_cmd
 filtered_suffix = 'MERGED-MAX-MISMATCH-3' #result of filter-merged-reads
 ############# defaults for GAST ################################################################
 usearch_cmd        = 'usearch'
- 
+usearch6_cmd       = 'usearch6'
 # usearch6_cmd        = '/bioware/uclust/usearch6'
 #usearch5_cmd        = '/bioware/uclust/usearch5.2.32_i86linux32'
 #usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
