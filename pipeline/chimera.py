@@ -47,9 +47,9 @@ class Chimera:
         self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)
 #         self.usearch_cmd = C.usearch_cmd
         self.usearch_cmd = C.usearch6_cmd        
-        self.abskew      = C.chimera_checking_abskew
-        self.refdb       = C.chimera_checking_refdb
-        self.its_refdb   = C.chimera_checking_its_refdb
+#         self.abskew      = C.chimera_checking_abskew
+        self.refdb       = C.chimera_checking_refdb_6
+        self.its_refdb   = C.chimera_checking_its_refdb_6
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
 #         pprint(self.run_keys)
 #         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
@@ -180,36 +180,45 @@ class Chimera:
 #   usearch -uchime amplicons.fasta [-chimeras ch.fasta] [-nonchimeras good.fasta]
 #      [-uchimeout results.uch] [-uchimealns results.alns]
 #   Input is estimated amplicons with integer abundances specified using ";size=N".
+# usearch -uchime_denovo amplicons.fasta -uchimeout results.uchime
 
-        
+        uchime_cmd_append = ""
+        db_cmd_append     = ""
+        dir_cmd_append    = ""
         uchime_cmd = C.clusterize_cmd
         uchime_cmd += " "
         uchime_cmd += self.usearch_cmd
-        uchime_cmd += " --uchime "
-        uchime_cmd += input_file_name
  
         if (ref_or_novo == "denovo"):
+            uchime_cmd_append = " -uchime_denovo "           
             output_file_name = output_file_name + self.chimeras_suffix + self.denovo_suffix 
-            cmd_append = " --abskew " + self.abskew                                   
-            
         elif (ref_or_novo == "ref"):
+            uchime_cmd_append = " -uchime_ref "
             output_file_name = output_file_name + self.chimeras_suffix + self.ref_suffix           
-            cmd_append = " --db " + ref_db   
+            db_cmd_append  = " -db " + ref_db   
+            dir_cmd_append = " -strand plus"
         else:
             print "Incorrect method, should be \"denovo\" or \"ref\"" 
         print "output_file_name = %s" % output_file_name 
-                                        
-        uchime_cmd += " --uchimeout "
+         
+        uchime_cmd += uchime_cmd_append
+        uchime_cmd += input_file_name
+
+        uchime_cmd += db_cmd_append
+                                
+        uchime_cmd += " -uchimeout "
         uchime_cmd += output_file_name
         """if we need nonchimeric for denovo and db separate we might create them here
-#         uchime_cmd += " --nonchimeras "
+#         uchime_cmd += " -nonchimeras "
 #         uchime_cmd += (output_file_name + self.nonchimeric_suffix)
 """
-        uchime_cmd += " --chimeras "
+        uchime_cmd += " -chimeras "
         uchime_cmd += (output_file_name + self.chimeric_suffix)
          
-        uchime_cmd += cmd_append
-#         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
+        uchime_cmd += dir_cmd_append
+        
+        
+        print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
         return uchime_cmd
         
     def get_ref_db(self, dna_region):
