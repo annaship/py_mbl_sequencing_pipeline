@@ -98,28 +98,59 @@ class Chimera:
                     cur_file_names.append(filename)
         return cur_file_names
 
-    def illumina_frequency_size(self, in_or_out = "", find = "frequency:", replace = ";size="):
-        cur_dirname    = self.get_current_dirname(in_or_out)
-        cur_file_names = self.get_current_filenames(cur_dirname)
+#     def illumina_frequency_size(self, in_or_out = "", find = "frequency:", replace = ";size="):
+#         cur_dirname    = self.get_current_dirname(in_or_out)
+#         cur_file_names = self.get_current_filenames(cur_dirname)
+# #         print "cur_file_names: "
+# #         pprint(cur_file_names)
+#         change_from_suffix = ""
+#         change_to_suffix   = self.chg_suffix
+# #         print "find = %s, replace = %s" % (find, replace)
+#         regex              = re.compile(r"%s" % find)
+# 
+#         for cur_file_name in cur_file_names:
+#             file_name = os.path.join(cur_dirname, cur_file_name)
+#             with open(file_name + change_from_suffix, "r") as sources:
+#                 lines = sources.readlines()
+#             with open(file_name + change_to_suffix, "w") as target:
+#                 for line in lines:
+#                         target.write(regex.sub(replace, line))
+
+    def illumina_freq_to_size_in_chg(self):
+#         TODO: refactor
+        find1    = "frequency:"
+        replace1 = ";size="
+        regex1   = re.compile(r"%s" % find1)        
+        find2    = " "
+        replace2 = "SPACE"
+        regex2   = re.compile(r"%s" % find2)        
+        
 #         print "cur_file_names: "
 #         pprint(cur_file_names)
+        cur_dirname        = self.get_current_dirname()
+        cur_file_names     = self.get_current_filenames(cur_dirname)
         change_from_suffix = ""
         change_to_suffix   = self.chg_suffix
 #         print "find = %s, replace = %s" % (find, replace)
-        regex              = re.compile(r"%s" % find)
-
+ 
         for cur_file_name in cur_file_names:
             file_name = os.path.join(cur_dirname, cur_file_name)
             with open(file_name + change_from_suffix, "r") as sources:
                 lines = sources.readlines()
             with open(file_name + change_to_suffix, "w") as target:
                 for line in lines:
-                        target.write(regex.sub(replace, line))
+                    line1 = regex1.sub(replace1, line)
+                    line2 = regex2.sub(replace2, line1)
+                    target.write(line2)  
+
 
     def illumina_size_to_freq_in_chimer(self):
-        find           = ";size="
-        replace        = "frequency:"
-        regex          = re.compile(r"%s" % find)        
+        find1           = ";size="
+        replace1        = "frequency:"
+        regex1          = re.compile(r"%s" % find1)        
+        find2           = "SPACE"
+        replace2        = " "
+        regex2          = re.compile(r"%s" % find2)        
         cur_file_names = self.get_chimera_file_names(self.outdir)
                     
         for file_chim in cur_file_names:
@@ -128,7 +159,9 @@ class Chimera:
                 lines = sources.readlines()
             with open(file_chim_path, "w") as target:
                 for line in lines:
-                    target.write(regex.sub(replace, line))                    
+                    line1 = regex1.sub(replace1, line)
+                    line2 = regex2.sub(replace2, line1)
+                    target.write(line2)                    
               
     def illumina_rm_size_files(self):
         for idx_key in self.input_file_names:
@@ -171,16 +204,20 @@ class Chimera:
         
           
     def create_chimera_cmd(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
-#         from usearch -help
-# Chimera detection (UCHIME ref. db. mode):
-#   usearch -uchime q.fasta [-db db.fasta] [-chimeras ch.fasta]
-#     [-nonchimeras good.fasta] [-uchimeout results.uch] [-uchimealns results.alns]
-# 
-# Chimera detection (UCHIME de novo mode):
-#   usearch -uchime amplicons.fasta [-chimeras ch.fasta] [-nonchimeras good.fasta]
-#      [-uchimeout results.uch] [-uchimealns results.alns]
-#   Input is estimated amplicons with integer abundances specified using ";size=N".
-# usearch -uchime_denovo amplicons.fasta -uchimeout results.uchime
+        """
+        http://www.drive5.com/usearch/manual/uchime_denovo.html
+        from usearch -help
+        Chimera detection (UCHIME ref. db. mode):
+          usearch -uchime q.fasta [-db db.fasta] [-chimeras ch.fasta]
+            [-nonchimeras good.fasta] [-uchimeout results.uch] [-uchimealns results.alns]
+         
+        Chimera detection (UCHIME de novo mode):
+          usearch -uchime amplicons.fasta [-chimeras ch.fasta] [-nonchimeras good.fasta]
+             [-uchimeout results.uch] [-uchimealns results.alns]
+          Input is estimated amplicons with integer abundances specified using ";size=N".
+        usearch -uchime_denovo amplicons.fasta -uchimeout results.uchime
+        """        
+
         uchime_cmd_append = ""
         db_cmd_append     = ""
         dir_cmd_append    = ""
@@ -212,7 +249,7 @@ class Chimera:
         uchime_cmd += dir_cmd_append
         
         
-        print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
+#         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
         return uchime_cmd
         
     def get_ref_db(self, dna_region):

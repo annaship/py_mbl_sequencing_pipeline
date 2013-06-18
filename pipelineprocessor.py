@@ -266,9 +266,10 @@ def illumina_chimera(runobj):
 #     print elapsed
     print "Preparing input files (replacing \"frequency:\" with \";size=\")"
 
-    mychimera.illumina_frequency_size()
+#     mychimera.illumina_frequency_size()
+    mychimera.illumina_freq_to_size_in_chg()
     elapsed = (time() - start)
-    print "illumina_frequency_size time: %s" % elapsed
+    print "illumina_freq_to_size_in_chg time: %s" % elapsed
 #     
     print "START chimera checking"
 #     c_den = 
