@@ -264,7 +264,7 @@ def illumina_chimera(runobj):
     mychimera = Chimera(runobj)
 #     elapsed = (time() - start)
 #     print elapsed
-    print "Preparing input files (replacing \"frequency:\" with \";size=\")"
+    print "Preparing input files (replacing \"frequency:\" with \";size=\" and capitalize reads)"
 
 #     mychimera.illumina_frequency_size()
     mychimera.illumina_freq_to_size_in_chg()

@@ -121,9 +121,6 @@ class Chimera:
         find1    = "frequency:"
         replace1 = ";size="
         regex1   = re.compile(r"%s" % find1)        
-        find2    = " "
-        replace2 = "SPACE"
-        regex2   = re.compile(r"%s" % find2)        
         
 #         print "cur_file_names: "
 #         pprint(cur_file_names)
@@ -139,18 +136,18 @@ class Chimera:
                 lines = sources.readlines()
             with open(file_name + change_to_suffix, "w") as target:
                 for line in lines:
-                    line1 = regex1.sub(replace1, line)
-                    line2 = regex2.sub(replace2, line1)
-                    target.write(line2)  
+                    if line.startswith(">"):
+                        line1 = regex1.sub(replace1, line)
+                    else:
+                        line1 = line.upper()
+                    target.write(line1)  
 
 
     def illumina_size_to_freq_in_chimer(self):
         find1           = ";size="
         replace1        = "frequency:"
         regex1          = re.compile(r"%s" % find1)        
-        find2           = "SPACE"
-        replace2        = " "
-        regex2          = re.compile(r"%s" % find2)        
+ 
         cur_file_names = self.get_chimera_file_names(self.outdir)
                     
         for file_chim in cur_file_names:
@@ -160,8 +157,7 @@ class Chimera:
             with open(file_chim_path, "w") as target:
                 for line in lines:
                     line1 = regex1.sub(replace1, line)
-                    line2 = regex2.sub(replace2, line1)
-                    target.write(line2)                    
+                    target.write(line1)                    
               
     def illumina_rm_size_files(self):
         for idx_key in self.input_file_names:
@@ -247,6 +243,7 @@ class Chimera:
 """
         uchime_cmd += " -chimeras " + (output_file_name + self.chimeric_suffix)         
         uchime_cmd += dir_cmd_append
+        uchime_cmd += " -notrunclabels"
         
         
 #         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
