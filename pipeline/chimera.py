@@ -181,40 +181,34 @@ class Chimera:
 #      [-uchimeout results.uch] [-uchimealns results.alns]
 #   Input is estimated amplicons with integer abundances specified using ";size=N".
 # usearch -uchime_denovo amplicons.fasta -uchimeout results.uchime
-
         uchime_cmd_append = ""
         db_cmd_append     = ""
         dir_cmd_append    = ""
-        uchime_cmd = C.clusterize_cmd
-        uchime_cmd += " "
-        uchime_cmd += self.usearch_cmd
- 
+
         if (ref_or_novo == "denovo"):
             uchime_cmd_append = " -uchime_denovo "           
-            output_file_name = output_file_name + self.chimeras_suffix + self.denovo_suffix 
+            output_file_name  = output_file_name + self.chimeras_suffix + self.denovo_suffix 
         elif (ref_or_novo == "ref"):
             uchime_cmd_append = " -uchime_ref "
-            output_file_name = output_file_name + self.chimeras_suffix + self.ref_suffix           
-            db_cmd_append  = " -db " + ref_db   
-            dir_cmd_append = " -strand plus"
+            output_file_name  = output_file_name + self.chimeras_suffix + self.ref_suffix           
+            db_cmd_append     = " -db " + ref_db   
+            dir_cmd_append    = " -strand plus"
         else:
             print "Incorrect method, should be \"denovo\" or \"ref\"" 
         print "output_file_name = %s" % output_file_name 
-         
-        uchime_cmd += uchime_cmd_append
-        uchime_cmd += input_file_name
 
+
+        uchime_cmd = C.clusterize_cmd
+        uchime_cmd += " "
+        uchime_cmd += self.usearch_cmd
+        uchime_cmd += uchime_cmd_append + input_file_name
         uchime_cmd += db_cmd_append
-                                
-        uchime_cmd += " -uchimeout "
-        uchime_cmd += output_file_name
+        uchime_cmd += " -uchimeout " + output_file_name
         """if we need nonchimeric for denovo and db separate we might create them here
 #         uchime_cmd += " -nonchimeras "
 #         uchime_cmd += (output_file_name + self.nonchimeric_suffix)
 """
-        uchime_cmd += " -chimeras "
-        uchime_cmd += (output_file_name + self.chimeric_suffix)
-         
+        uchime_cmd += " -chimeras " + (output_file_name + self.chimeric_suffix)         
         uchime_cmd += dir_cmd_append
         
         
