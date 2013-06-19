@@ -431,7 +431,7 @@ class Chimera:
                 percent_denovo = self.percent_count(all_lines, denovo_lines)
             file_ratio[file_basename] = (percent_ref, ratio)
             # percent_ref = int(percent_ref or 0)
-            if (percent_ref > 1):
+            if (percent_ref > 15):
                 print "=" * 50
             
                 print file_basename
