@@ -332,7 +332,25 @@ class Chimera:
             return ("The usearch commands were created")
         
     def get_chimeric_ids(self):
-        """ TODO: use only de-novo (.txt) chimeric if
+        ids = set()
+        chimera_file_names = self.get_chimera_file_names(self.outdir)
+        file_ratio = self.check_chimeric_stats()
+        
+        for file_name in chimera_file_names:
+#             print "from get_chimeric_ids: file_name = %s" % file_name
+            if file_name.endswith(self.chimeric_suffix):
+                both_or_denovo = self.get_chimeras_suffix(file_ratio, file_name)
+#                 TODO: run ones for each file_base = ".".join(file_name.split(".")[0:3]) (for txt and db)
+                if file_name.endswith(both_or_denovo):                    
+                    file_name_path = os.path.join(self.outdir, file_name)        
+                    print "Get ids from %s" % file_name_path
+                    read_fasta     = fa.ReadFasta(file_name_path)
+                    ids.update(set(read_fasta.ids))
+        return ids
+    
+    
+    def get_chimeras_suffix(self, file_ratio, file_name):
+        """ use only de-novo (.txt) chimeric if
             check_chimeric_stats shows
             ref > 15% and ratio ref to de-novo > 2
             e.g.
@@ -342,18 +360,20 @@ class Chimera:
                 chimeras_suffix = self.chimeric_suffix
                 
             if file_name.endswith(chimeric_suffix):
-            ...            
-        """ 
-        ids = set()
-        chimera_file_names = self.get_chimera_file_names(self.outdir)
-        for file_name in chimera_file_names:
-#             print "from get_chimeric_ids: file_name = %s" % file_name
-            if file_name.endswith(self.chimeric_suffix):
-                file_name_path = os.path.join(self.outdir, file_name)        
-#                 print "from get_chimeric_ids if chimeric_suffix: file_name_path = %s" % file_name_path
-                read_fasta     = fa.ReadFasta(file_name_path)
-                ids.update(set(read_fasta.ids))
-        return ids
+            ...        
+                #     first_name, last_name = get_name()
+
+        """         
+#         for file_basename in file_ratio:
+        (percent_ref, ratio) = file_ratio[".".join(file_name.split(".")[0:3])]   
+
+        chimeric_fa_suffix = ""
+#         print "percent_ref = %s, ratio = %s" % (percent_ref, ratio)
+        if (percent_ref > 15) and (ratio > 2):
+            chimeric_fa_suffix = self.chimeras_suffix + self.denovo_suffix + self.chimeric_suffix
+        else: 
+            chimeric_fa_suffix = self.chimeric_suffix   
+        return chimeric_fa_suffix 
     
     def move_out_chimeric(self):
         chimeric_ids = self.get_chimeric_ids()
@@ -377,6 +397,7 @@ class Chimera:
         chimera_ref_suffix    = self.ref_suffix + self.chimeric_suffix #".db.chimeric.fa"
         chimera_denovo_suffix = self.denovo_suffix + self.chimeric_suffix # ".txt.chimeric.fa"
         filenames             = self.get_basenames(self.get_current_filenames(self.outdir))
+        file_ratio            = {}
         for file_basename in filenames:
             # print file_basename
             all_lines      = 0
@@ -404,7 +425,7 @@ class Chimera:
         
                 percent_ref    = self.percent_count(all_lines, ref_lines)
                 percent_denovo = self.percent_count(all_lines, denovo_lines)
-                
+            file_ratio[file_basename] = (percent_ref, ratio)
             # percent_ref = int(percent_ref or 0)
             if (percent_ref > 1):
                 print "=" * 50
@@ -414,6 +435,7 @@ class Chimera:
                 print "all_lines = %s, ref_lines = %s, denovo_lines = %s" % (all_lines, ref_lines, denovo_lines)
                 print "ratio = %s" % ratio 
                 print "percent_ref = %s, percent_denovo = %s" % (percent_ref, percent_denovo)
+        return file_ratio
         
         
     def get_basenames(self, filenames):
