@@ -289,7 +289,7 @@ def illumina_chimera(runobj):
         if utils.is_local():
             sleep(1)        
         else:
-            sleep(120)        
+            sleep(60)        
         cluster_done = mychimera.check_if_cluster_is_done(time_before)
         print "cluster_done = %s" % cluster_done
         if (cluster_done):

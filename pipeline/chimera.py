@@ -116,6 +116,37 @@ class Chimera:
 #                 for line in lines:
 #                         target.write(regex.sub(replace, line))
 
+    def read_file(self, source_name):
+        with open(source_name, "r") as sources:
+            return sources.readlines()
+
+    def illumina_sed(self, cur_file_name, lines, target_name, regex, replace):
+        with open(target_name, "w") as target:
+            for line in lines:
+                if line.startswith(">"):
+                    line1 = regex.sub(replace, line)
+                else:
+                    line1 = line.upper()
+                target.write(line1)  
+
+
+    def call_illumina_sed(self):
+        find    = "frequency:"
+        replace = ";size="
+        regex   = re.compile(r"%s" % find)        
+        
+        cur_dirname        = self.indir
+        cur_file_names     = self.get_current_filenames(cur_dirname)
+        change_from_suffix = ""
+        change_to_suffix   = self.chg_suffix
+#         print "find = %s, replace = %s" % (find, replace)
+ 
+        for cur_file_name in cur_file_names:
+            source_name = cur_file_name + change_from_suffix
+            target_name  = cur_file_name + change_to_suffix 
+            lines = self.read_file(source_name)
+            self.illumina_sed(self, cur_file_name, lines, target_name, regex, replace)
+
     def illumina_freq_to_size_in_chg(self):
 #         TODO: refactor
         find1    = "frequency:"
@@ -342,7 +373,92 @@ class Chimera:
 
 
     def check_chimeric_stats(self):
-        pass
+        all_lines_suffix      = self.denovo_suffix # ".txt" or ".db, doesn't matter"
+        chimera_ref_suffix    = self.ref_suffix + self.chimeric_suffix #".db.chimeric.fa"
+        chimera_denovo_suffix = self.denovo_suffix + self.chimeric_suffix # ".txt.chimeric.fa"
+        filenames             = self.get_basenames(self.get_current_filenames(self.outdir))
+        for file_basename in filenames:
+            # print file_basename
+            all_lines      = 0
+            ref_lines      = 0
+            denovo_lines   = 0
+            ratio          = 0
+            percent_ref    = 0
+            percent_denovo = 0
+        
+            all_lines_file_name    = os.path.join(self.outdir, file_basename + all_lines_suffix)
+            ref_lines_file_name    = os.path.join(self.outdir, file_basename + chimera_ref_suffix)
+            denovo_lines_file_name = os.path.join(self.outdir, file_basename + chimera_denovo_suffix)
+        
+            all_lines    = int(self.wccount(all_lines_file_name) or 0)
+            ref_lines    = int(self.get_fa_lines_count(ref_lines_file_name) or 0)
+            denovo_lines = int(self.get_fa_lines_count(denovo_lines_file_name) or 0)
+        
+            # denovo_lines = int(denovo_lines or 0)
+            if (denovo_lines == 0) or (denovo_lines == 0) or (all_lines == 0):
+                continue
+        
+            if (denovo_lines > 0):
+            
+                ratio          = self.count_ratio(ref_lines, denovo_lines)
+        
+                percent_ref    = self.percent_count(all_lines, ref_lines)
+                percent_denovo = self.percent_count(all_lines, denovo_lines)
+                
+            # percent_ref = int(percent_ref or 0)
+            if (percent_ref > 1):
+                print "=" * 50
+            
+                print file_basename
+                # print "all_lines_file_name = %s, ref_lines_file_name = %s, denovo_lines_file_name = %s" % (all_lines_file_name, ref_lines_file_name, denovo_lines_file_name)
+                print "all_lines = %s, ref_lines = %s, denovo_lines = %s" % (all_lines, ref_lines, denovo_lines)
+                print "ratio = %s" % ratio 
+                print "percent_ref = %s, percent_denovo = %s" % (percent_ref, percent_denovo)
+        
+        
+    def get_basenames(self, filenames):
+        file_basenames = set()
+        for f in filenames:
+            file_basename = ".".join(f.split(".")[0:3])
+            if file_basename.endswith(self.base_suffix):
+                file_basenames.add(file_basename)
+    
+        return file_basenames
+    
+    def wccount(self, filename):
+        return subprocess.check_output(['wc', '-l', filename]).split()[0]
+    
+    def count_ratio(self, ref_num, denovo_num):
+        try:
+            return float(ref_num or 0) / float(denovo_num or 0) 
+        except ZeroDivisionError:
+            # print "There is no denovo chimeras to count ratio."
+            pass
+        else:
+            raise
+    
+    def get_fa_lines_count(self, file_name):
+        # return fa.SequenceSource(file_name, lazy_init = False).total_seq
+        try:
+            file_open = open(file_name)
+            return len([l for l in file_open.readlines() if l.startswith('>')])
+        except IOError, e:
+            print e
+            return 0
+            # print "%s\nThere is no such file: %s" % (e, file_name)
+        else:
+            raise
+    
+    def percent_count(self, all_lines, chimeric_count):
+        try:
+            return float(chimeric_count or 0) * 100 / float(all_lines or 0)
+        except ZeroDivisionError:
+            # print "There is no denovo chimeras to count ratio."
+            pass
+        else:
+            raise
+        
+    
  
     """ 
     -----------------------------------------------------------------------------
