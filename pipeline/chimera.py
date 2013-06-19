@@ -5,7 +5,7 @@ import time
 from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 from pprint import pprint
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 sys.path.append("/xraid/bioware/linux/seqinfo/bin")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
 sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
@@ -120,32 +120,59 @@ class Chimera:
         with open(source_name, "r") as sources:
             return sources.readlines()
 
-    def illumina_sed(self, cur_file_name, lines, target_name, regex, replace):
+    def illumina_sed(self, lines, target_name, regex, replace, uppercase):
         with open(target_name, "w") as target:
             for line in lines:
                 if line.startswith(">"):
                     line1 = regex.sub(replace, line)
                 else:
-                    line1 = line.upper()
+                    if (uppercase):
+                        line1 = line.upper()
+                    else:
+                        line1 = line
                 target.write(line1)  
 
 
-    def call_illumina_sed(self):
-        find    = "frequency:"
-        replace = ";size="
-        regex   = re.compile(r"%s" % find)        
+    def call_illumina_sed(self, from_to):
+        """
+            from_to = from_frequency_to_size or from_size_to_frequency
+        """
+        sed_from_to = namedtuple('sed_from_to', 'find, replace, cur_dirname, cur_file_names, change_from_suffix, change_to_suffix, uppercase')
+
+        from_frequency_to_size = sed_from_to(
+        find               = "frequency:",
+        replace            = ";size=",
+        cur_dirname        = self.indir,
+        cur_file_names     = self.get_current_filenames(self.indir),
+        change_from_suffix = "",
+        change_to_suffix   = self.chg_suffix,
+        uppercase          = True
+        )
+
+        from_size_to_frequency = sed_from_to(
+        find               = ";size=",
+        replace            = "frequency:",
+        cur_dirname        = self.outdir,
+        cur_file_names     = self.get_chimera_file_names(self.outdir),
+        change_from_suffix = "",
+        change_to_suffix   = "",
+        uppercase          = False        
+        )
         
-        cur_dirname        = self.indir
-        cur_file_names     = self.get_current_filenames(cur_dirname)
-        change_from_suffix = ""
-        change_to_suffix   = self.chg_suffix
+        if (from_to == "from_frequency_to_size"):
+            tuple_name = from_frequency_to_size
+        elif (from_to == "from_size_to_frequency"):
+            tuple_name = from_size_to_frequency
+        
+        regex          = re.compile(r"%s" % tuple_name.find)                                
 #         print "find = %s, replace = %s" % (find, replace)
  
-        for cur_file_name in cur_file_names:
-            source_name = cur_file_name + change_from_suffix
-            target_name  = cur_file_name + change_to_suffix 
+        for cur_file_name in tuple_name.cur_file_names:
+            file_name = os.path.join(tuple_name.cur_dirname, cur_file_name)           
+            source_name = file_name + tuple_name.change_from_suffix
+            target_name = file_name + tuple_name.change_to_suffix 
             lines = self.read_file(source_name)
-            self.illumina_sed(self, cur_file_name, lines, target_name, regex, replace)
+            self.illumina_sed(lines, target_name, regex, tuple_name.replace, tuple_name.uppercase)
 
     def illumina_freq_to_size_in_chg(self):
 #         TODO: refactor

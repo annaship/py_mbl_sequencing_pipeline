@@ -266,10 +266,14 @@ def illumina_chimera(runobj):
 #     print elapsed
     print "Preparing input files (replacing \"frequency:\" with \";size=\" and capitalize reads)"
 
-#     mychimera.illumina_frequency_size()
-    mychimera.illumina_freq_to_size_in_chg()
+#     start = time()
+#     mychimera.illumina_freq_to_size_in_chg()
+#     elapsed = (time() - start)
+#     print "1a) illumina_freq_to_size_in_chg time: %s" % elapsed
+    start = time()
+    mychimera.call_illumina_sed("from_frequency_to_size")
     elapsed = (time() - start)
-    print "illumina_freq_to_size_in_chg time: %s" % elapsed
+    print "call_illumina_sed from_frequency_to_size time: %s" % elapsed
 #     
     print "START chimera checking"
 #     c_den = 
@@ -289,7 +293,7 @@ def illumina_chimera(runobj):
         if utils.is_local():
             sleep(1)        
         else:
-            sleep(60)        
+            sleep(120)        
         cluster_done = mychimera.check_if_cluster_is_done(time_before)
         print "cluster_done = %s" % cluster_done
         if (cluster_done):
@@ -299,10 +303,15 @@ def illumina_chimera(runobj):
     print "Cluster is done with both chimera checkings in: %s" % elapsed     
     
     mychimera.illumina_rm_size_files()
+
+#     start = time()
+#     mychimera.illumina_size_to_freq_in_chimer()
+#     elapsed = (time() - start)
+#     print "2a) illumina_size_to_freq_in_chimer time: %s" % elapsed
     start = time()
-    mychimera.illumina_size_to_freq_in_chimer()
+    mychimera.call_illumina_sed("from_size_to_frequency")
     elapsed = (time() - start)
-    print "illumina_size_to_freq_in_chimer time: %s" % elapsed
+    print "call_illumina_sed from_size_to_frequency time: %s" % elapsed
     
     start = time()
 #     print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
