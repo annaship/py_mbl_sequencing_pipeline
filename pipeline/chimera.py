@@ -416,14 +416,18 @@ class Chimera:
             denovo_lines = int(self.get_fa_lines_count(denovo_lines_file_name) or 0)
         
             # denovo_lines = int(denovo_lines or 0)
-            if (denovo_lines == 0) or (denovo_lines == 0) or (all_lines == 0):
+            if (ref_lines == 0) or (all_lines == 0):
+                file_ratio[file_basename] = (0, 0)
+                continue
+            else:
+                percent_ref = self.percent_count(all_lines, ref_lines)
+                
+            if (denovo_lines == 0):
+                file_ratio[file_basename] = (percent_ref, percent_ref) #use ref instead of ratio, because we are actually looking for a huge difference between ref and denovo (ref > 15 and denovo = 0)
                 continue
         
-            if (denovo_lines > 0):
-            
-                ratio          = self.count_ratio(ref_lines, denovo_lines)
-        
-                percent_ref    = self.percent_count(all_lines, ref_lines)
+            if (denovo_lines > 0):            
+                ratio          = self.count_ratio(ref_lines, denovo_lines)        
                 percent_denovo = self.percent_count(all_lines, denovo_lines)
             file_ratio[file_basename] = (percent_ref, ratio)
             # percent_ref = int(percent_ref or 0)
