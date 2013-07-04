@@ -141,7 +141,8 @@ class dbUpload:
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         self.run_id      = None
-        self.nonchimeras_suffix = ".nonchimeric.fa"
+#        self.nonchimeras_suffix = ".nonchimeric.fa"
+        self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
         self.unique_suffix   = ".fa.unique"
         
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
@@ -154,9 +155,13 @@ class dbUpload:
         for full_name in files.keys():
                 
 #             if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == C.filtered_suffix)):
-            if (full_name.endswith((self.nonchimeras_suffix, self.unique_suffix))):                
+            if (full_name.endswith(self.nonchimeric_suffix)):                
                 fa_files.append(full_name)
-#                 print full_name
+                print full_name
+                next 
+            elif (full_name.endswith(self.unique_suffix)):
+                fa_files.append(full_name)
+                print full_name
         return fa_files
         
     def get_run_info_ill_id(self, filename_base):

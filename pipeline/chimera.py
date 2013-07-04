@@ -26,7 +26,7 @@ class Chimera:
         self.chimeras_suffix    = ".chimeras"      
         self.ref_suffix         = ".db"      
         self.denovo_suffix      = ".txt"        
-        self.nonchimeric_suffix = ".nonchimeric.fa"
+        self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
         self.chimeric_suffix    = ".chimeric.fa"
         self.base_suffix        = "unique" + self.chimeras_suffix
 
