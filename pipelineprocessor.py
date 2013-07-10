@@ -313,7 +313,7 @@ def illumina_chimera(runobj):
     elapsed = (time() - start)
     print "call_illumina_sed from_size_to_frequency time: %s" % elapsed
     
-    start = time()
+#     start = time()
 #     print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
 #     mychimera.check_chimeric_stats()
 #     elapsed = (time() - start)
