@@ -237,8 +237,9 @@ tax_database_dir_local = cmd_path_local
 
 ref_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
 tax_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
-vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
-vamps_tax_database_dir    = '/xraid2-2/vampsweb/blastdbs/'
+# these are symlinks to above
+vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/gast_distributions/'
+vamps_tax_database_dir    = '/xraid2-2/vampsweb/blastdbs/gast_distributions/'
 
 max_accepts = 10
 max_rejects = 0
