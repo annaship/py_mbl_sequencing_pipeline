@@ -155,7 +155,26 @@ class IlluminaFiles:
                     program_name = C.fastaunique_cmd_local                
                 call([program_name, full_name])
 
+    def get_primers(self):
+        proximal_primer = ""
+        distal_primer   = ""
+        primers         = {}
+        for idx_key in self.runobj.samples.keys():
+            if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal V4-V5'):
+                proximal_primer = "G[C,T][C,T]TAAA..[A,G][C,T][C,T][C,T]GTAGC"
+                distal_primer   = "CCGGCGTTGA.TCCAATT"
+            elif self.runobj.samples[idx_key].primer_suite.startswith('Bacterial V4-V5'):
+                proximal_primer = "CCAGCAGC[C,T]GCGGTAA."
+                distal_primer   = "CCGTC[A,T]ATT[C,T].TTT[G,A]A.T"
+            elif self.runobj.samples[idx_key].primer_suite.startswith('Archaeal V6mod'):
+                proximal_primer = "AATTGGCGGGGGAGCAC"
+                distal_primer   = "GCCATGCACC[A,T]CCTCT"
+            primers[idx_key] = (proximal_primer, distal_primer) 
+            
+        return primers
+        
     def create_inis(self):
+        primers = self.get_primers()
         for idx_key in self.runobj.samples.keys():
             run_key = idx_key.split('_')[1].replace("N", ".");
             email = self.runobj.samples[idx_key].email
@@ -178,9 +197,7 @@ pair_2 = %s
                 text += """
 # following section is optional
 [prefixes]
-pair_1_prefix = ^""" + run_key + """CCAGCAGC[C,T]GCGGTAA.
-pair_2_prefix = ^CCGTC[A,T]ATT[C,T].TTT[G,A]A.T
-                """
+pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + primers[idx_key][1]
                 
             ini_file_name = os.path.join(self.out_file_path,  idx_key + ".ini")
             self.open_write_close(ini_file_name, text)
