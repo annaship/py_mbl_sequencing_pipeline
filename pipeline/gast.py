@@ -844,6 +844,7 @@ class Gast:
         use_full_length = ''
         if C.use_full_length:
             use_full_length = "-use_full_length"
+            
         if hasattr(self.runobj, 'use_full_length') and self.runobj.use_full_length: 
             use_full_length = "-use_full_length"
             
