@@ -37,8 +37,8 @@ csv_header_list = {
 
 known_platforms = ('illumina','454','ion_torrent','vamps')
 #primer_suites   = ["bacterialv6suite","bacterial v6 suite","bacterial_v6_suite","archaeal v6 suite","archaealv6suite","eukaryalv9suite","bacterial v4-v5 suite"]
-primer_suites   = ["Archaeal V6 Suite", "Archaeal V6-V4 Suite", "Bacterial V3 Suite", "Bacterial V3-V1 Suite", 
-                   "Bacterial V3-V5 Suite", "Bacterial V4-V5 Suite", "Bacterial V4-V6 Suite", "Bacterial V5-V3 Suite", 
+primer_suites   = ["Archaeal V6 Suite", "Archaeal V6mod Suite", "Archaeal V6-V4 Suite", "Bacterial V3 Suite", "Bacterial V3-V1 Suite", 
+                   "Bacterial V3-V5 Suite", "Archaeal V4-V5 Suite", "Bacterial V4-V5 Suite", "Bacterial V4-V6 Suite", "Bacterial V5-V3 Suite", 
                    "Bacterial V6 Suite", "Bacterial V6-V4 Suite", "CDSIII", "Eukaryal V9 Suite", "eukv9_1380", 
                    "eukv9_1389", "Fungal ITS1 Suite", "HMP V3-V1 Suite", "HMP V5-V3 Suite", "hmpv3v1", "hmpv5v3", 
                    "Relman", "ti_v3v6", "ti_v6", "topo", "v6v4", "v6_dutch", "Vibrio V4"]
