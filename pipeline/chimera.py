@@ -379,7 +379,7 @@ class Chimera:
     def get_chimeras_suffix(self, file_ratio, file_name):
         """ use only de-novo (.txt) chimeric if
             check_chimeric_stats shows
-            ref > 15% and ratio ref to de-novo > 2
+            ratio ref to de-novo > 3
             e.g.
             if denovo_only:
                 chimeric_suffix = self.chimeras_suffix + self.denovo_suffix + self.chimeric_suffix
@@ -396,7 +396,8 @@ class Chimera:
 
         chimeric_fa_suffix = ""
 #         print "percent_ref = %s, ratio = %s" % (percent_ref, ratio)
-        if (percent_ref > 15) and (ratio > 2):
+#         if (percent_ref > 15) and (ratio > 2):
+        if ratio > 3:
             chimeric_fa_suffix = self.chimeras_suffix + self.denovo_suffix + self.chimeric_suffix
         else: 
             chimeric_fa_suffix = self.chimeric_suffix   
