@@ -1,6 +1,8 @@
 import sys
 import os
 import constants as C
+from subprocess import Popen, PIPE
+from shlex import split
 
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
@@ -142,9 +144,10 @@ class dbUpload:
         self.tax_id_dict = {}
         self.run_id      = None
 #        self.nonchimeras_suffix = ".nonchimeric.fa"
-        self.nonchimeric_suffix  = "." + C.nonchimeric_suffix #".nonchimeric.fa"
-        self.fa_unique_suffix    = ".fa." + C.unique_suffix #.fa.unique
+        self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
+        self.fa_unique_suffix   = ".fa." + C.unique_suffix #.fa.unique
 #         self.merge_unique_suffix = "." + C.filtered_suffix + "." + C.unique_suffix #.MERGED-MAX-MISMATCH-3.unique
+        self.suffix_used        = ""
         
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
@@ -159,10 +162,12 @@ class dbUpload:
             if (full_name.endswith(self.nonchimeric_suffix)):                
                 fa_files.append(full_name)
                 print full_name
+                self.suffix_used = self.nonchimeric_suffix
                 next 
             elif (full_name.endswith(self.fa_unique_suffix)):
                 fa_files.append(full_name)
                 print full_name
+                self.suffix_used = self.fa_unique_suffix                
         return fa_files
         
     def get_run_info_ill_id(self, filename_base):
@@ -506,11 +511,27 @@ class dbUpload:
         except Exception:
             print "Unexpected error from 'count_seq_from_file':", sys.exc_info()[0]
             raise
+        
+    def count_seq_from_files_grep(self):
+#         grep '>' *-PERFECT_reads.fa.unique
+#       or
+#         cd /xraid2-2/g454/run_new_pipeline/illumina/20130607/lane_5_A/analysis/reads_overlap/; grep '>' *_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa | wc -l; date
+        suffix = self.fasta_dir + "/*" + self.suffix_used 
+        program_name = "grep"
+        call_params  = " '>' " + suffix
+        command_line = program_name + call_params
+        p1 = Popen(command_line, stdout=PIPE, shell=True)
+        p2 = Popen(split("wc -l"), stdin=p1.stdout)
+
+        return p2           
+
 
     def check_seq_upload(self):
         file_seq_db_count   = self.count_sequence_pdr_info_ill()
 #        print "file_seq_db_count = %s" % file_seq_db_count
-        file_seq_orig_count = self.count_seq_from_file()
+#         file_seq_orig_count = self.count_seq_from_file()
+        file_seq_orig_count = self.count_seq_from_files_grep()
+        
         if (file_seq_orig_count == file_seq_db_count):
             print "All sequences from files made it to the db: %s == %s" % (file_seq_orig_count, file_seq_db_count)
         else:
