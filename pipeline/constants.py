@@ -175,7 +175,7 @@ cluster_initial_check_interval  = 10
 
 ############# directories ################################################################ 
 """
-Output path example: /xraid2-2/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
+Output path example: /groups/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
 """
 #output data
 #subdirs = ['analysis_dir', 'gast_dir', 'reads_overlap_dir', 'vamps_upload_dir', 'chimera_dir', 'trimming_dir']
@@ -191,11 +191,11 @@ subdirs = {'analysis_dir' : 'analysis',
 
 #root:
 #VAMPS users
-output_root_vampsdev_users = '/xraid2-2/vampsweb/vampsdev/tmp/'
-output_root_vamps_users = '/xraid2-2/vampsweb/vamps/tmp/'
+output_root_vampsdev_users = '/groups/vampsweb/vampsdev/tmp/'
+output_root_vamps_users = '/groups/vampsweb/vamps/tmp/'
 
 #MBL
-output_root_mbl         = '/xraid2-2/g454/run_new_pipeline/'
+output_root_mbl         = '/groups/g454/run_new_pipeline/'
 
 output_root_mbl_local   = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test' 
 # cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/"
@@ -235,11 +235,11 @@ fastaunique_cmd_local  = cmd_path_local + 'fastaunique'
 ref_database_dir_local = cmd_path_local
 tax_database_dir_local = cmd_path_local
 
-ref_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
-tax_database_dir    = '/xraid2-2/g454/blastdbs/gast_distributions/'
+ref_database_dir    = '/groups/g454/blastdbs/gast_distributions/'
+tax_database_dir    = '/groups/g454/blastdbs/gast_distributions/'
 # these are symlinks to above
-vamps_ref_database_dir    = '/xraid2-2/vampsweb/blastdbs/gast_distributions/'
-vamps_tax_database_dir    = '/xraid2-2/vampsweb/blastdbs/gast_distributions/'
+vamps_ref_database_dir    = '/groups/vampsweb/blastdbs/'
+vamps_tax_database_dir    = '/groups/vampsweb/blastdbs/'
 
 max_accepts         = 10
 max_rejects         = 0
@@ -273,10 +273,10 @@ refdbs = {'unknown':'refssu_all',
         }
 
 """ Use '_6' for usearch6 """    
-chimera_checking_refdb_6     = '/xraid2-2/g454/blastdbs/rRNA16S.gold.udb'
-chimera_checking_refdb       = '/xraid2-2/g454/blastdbs/rRNA16S.gold.fasta'
-chimera_checking_its_refdb_6 = '/xraid2-2/g454/blastdbs/fungalITS.udb'
-chimera_checking_its_refdb   = '/xraid2-2/g454/blastdbs/fungalITS.fa'
+chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.udb'
+chimera_checking_refdb       = '/groups/g454/blastdbs/rRNA16S.gold.fasta'
+chimera_checking_its_refdb_6 = '/groups/g454/blastdbs/fungalITS.udb'
+chimera_checking_its_refdb   = '/groups/g454/blastdbs/fungalITS.fa'
 chimera_checking_abskew      = '1.9'    
     
 ########### VAMPS UPLOAD ###########################################################################  

@@ -43,7 +43,7 @@ class MyConnection:
         self.rows   = 0
         self.new_id = None
         self.lastrowid = None
-                
+        
         try:
             print "=" * 40
             print "host = " + str(host) + ", db = "  + str(db)
