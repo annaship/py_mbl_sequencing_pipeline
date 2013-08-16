@@ -400,6 +400,9 @@ def env454upload(runobj):
     
     my_env454upload = dbUpload(runobj)
     filenames   = my_env454upload.get_fasta_file_names()
+    if not filenames:
+        logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
+        
     seq_in_file = 0
     total_seq   = 0
     for filename in filenames:
