@@ -131,7 +131,7 @@ class dbUpload:
         
         self.filenames   = []
         self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#        self.my_conn     = MyConnection()    
+#         self.my_conn     = MyConnection()    
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -142,8 +142,9 @@ class dbUpload:
         self.tax_id_dict = {}
         self.run_id      = None
 #        self.nonchimeras_suffix = ".nonchimeric.fa"
-        self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
-        self.unique_suffix   = ".fa.unique"
+        self.nonchimeric_suffix  = "." + C.nonchimeric_suffix #".nonchimeric.fa"
+        self.fa_unique_suffix    = ".fa." + C.unique_suffix #.fa.unique
+#         self.merge_unique_suffix = "." + C.filtered_suffix + "." + C.unique_suffix #.MERGED-MAX-MISMATCH-3.unique
         
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
@@ -159,7 +160,7 @@ class dbUpload:
                 fa_files.append(full_name)
                 print full_name
                 next 
-            elif (full_name.endswith(self.unique_suffix)):
+            elif (full_name.endswith(self.fa_unique_suffix)):
                 fa_files.append(full_name)
                 print full_name
         return fa_files

@@ -210,8 +210,9 @@ filter_mismatch_cmd       = "filter-merged-reads"
 filter_mismatch_cmd_local = cmd_path_local + filter_mismatch_cmd          
 
 ################################################################################################  
-filtered_suffix    = 'MERGED-MAX-MISMATCH-3' #result of filter-merged-reads
+filtered_suffix    = "MERGED-MAX-MISMATCH-3" #result of filter-merged-reads
 nonchimeric_suffix = "nonchimeric.fa"
+unique_suffix      = "unique"
 ############# defaults for GAST ################################################################
 usearch_cmd        = 'usearch'
 usearch6_cmd       = 'usearch6'

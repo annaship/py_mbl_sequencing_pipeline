@@ -169,6 +169,8 @@ class IlluminaFiles:
             elif self.runobj.samples[idx_key].primer_suite.startswith('Archaeal V6mod'):
                 proximal_primer = "AATTGGCGGGGGAGCAC"
                 distal_primer   = "GCCATGCACC[A,T]CCTCT"
+            else:
+                print "ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'" % (self.runobj.samples[idx_key].primer_suite)
             primers[idx_key] = (proximal_primer, distal_primer) 
             
         return primers
