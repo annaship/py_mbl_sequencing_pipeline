@@ -232,9 +232,16 @@ class dbUpload:
             print "Offensive query: %s" % my_sql
             raise
         
- 
-    def get_gasta_result(self, filename):
+    def gast_filename(self, filename):
+        gast_file_name = ""
+        if (filename.find(self.nonchimeric_suffix) > 0):
+#          TCTCGT_NNNNCGCAG_3_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa    
+            filename = filename.replace(self.nonchimeric_suffix, "")
         gast_file_name = os.path.join(self.gast_dir, filename + '.gast')
+        return  gast_file_name
+    
+    def get_gasta_result(self, filename):
+        gast_file_name = self.gast_filename(filename)
         try:
             with open(gast_file_name) as fd:
                 gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
