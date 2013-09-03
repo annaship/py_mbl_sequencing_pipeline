@@ -529,9 +529,11 @@ class dbUpload:
         call_params  = " '>' " + suffix
         command_line = program_name + call_params
         p1 = Popen(command_line, stdout=PIPE, shell=True)
-        p2 = Popen(split("wc -l"), stdin=p1.stdout)
-
-        return p2           
+        p2 = Popen(split("wc -l"), stdin=p1.stdout, stdout=PIPE)
+#         output = p2.stdout.read().split(" ")[0].strip()
+        output, err = p2.communicate()
+#         print output
+        return int(output.strip())           
 
 
     def check_seq_upload(self):
