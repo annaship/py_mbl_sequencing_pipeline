@@ -276,6 +276,11 @@ class dbUpload:
                     tax_id = self.my_conn.execute_no_fetch(my_sql)
                     self.tax_id_dict[taxonomy] = tax_id
                 return tax_id
+        else:
+            print "ERROR: can't read gast files! No taxonomy information will be processed."
+            logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")
+
+            
             
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         if gast_dict:
