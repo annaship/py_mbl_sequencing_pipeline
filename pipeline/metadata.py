@@ -481,7 +481,8 @@ class MetadataUtils:
         
         
     def check_projects_and_datasets(self,data):
-        self.my_conn     = MyConnection(host='newbpcdb2', db="env454")  
+        self.my_conn     = MyConnection(host='newbpcdb2', db="env454")
+#         self.my_conn     = MyConnection()      
         project_dataset = {}
         projects = {}
         datasets = {}
@@ -713,6 +714,7 @@ water-marine
         
     def env_source_to_id(self, headers):
         self.my_conn = MyConnection(host='newbpcdb2', db="env454")  
+#         self.my_conn     = MyConnection()    
         my_sql       = """SELECT * FROM env_sample_source"""
         self.env     = self.my_conn.execute_fetch_select(my_sql)
         self.res_headers = ["env_sample_source_id" if x=="env_sample_source" else x for x in headers]

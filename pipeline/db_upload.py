@@ -234,9 +234,9 @@ class dbUpload:
         
     def gast_filename(self, filename):
         gast_file_name = ""
-        if (filename.find(self.nonchimeric_suffix) > 0):
-#          TCTCGT_NNNNCGCAG_3_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa    
-            filename = filename.replace(self.nonchimeric_suffix, "")
+#         if (filename.find(self.nonchimeric_suffix) > 0):
+# #          TCTCGT_NNNNCGCAG_3_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa    
+#             filename = filename.replace(self.nonchimeric_suffix, "")
         gast_file_name = os.path.join(self.gast_dir, filename + '.gast')
         return  gast_file_name
     
