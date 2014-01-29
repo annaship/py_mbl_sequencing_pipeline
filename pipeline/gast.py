@@ -33,10 +33,7 @@ class Gast:
             self.refdb_dir = C.vamps_ref_database_dir
             self.iterator  = self.runobj.datasets
             site = self.runobj.site
-            if self.runobj.mobedac:
-                dir_prefix= 'mobedac_' + self.runobj.user+'_'+self.runobj.run
-            else:            
-                dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
+            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
         else:
             self.idx_keys  = idx_keys
             self.iterator  = self.idx_keys
@@ -134,7 +131,8 @@ class Gast:
             
             
         key_counter    = 0
-        gast_file_list = []
+        gast_file_list = 
+        qsub_id_list=[]
         cluster_nodes  = C.cluster_nodes
         logger.info("Cluster nodes set to: "+str(cluster_nodes))
         for key in self.iterator:
@@ -142,8 +140,13 @@ class Gast:
             if self.runobj.vamps_user_upload:
                 output_dir  = os.path.join(self.global_gast_dir, key)
                 gast_dir    = os.path.join(self.global_gast_dir, key)
-                fasta_file  = os.path.join(output_dir, 'fasta.fa')
-                unique_file = os.path.join(output_dir, 'unique.fa')
+                if self.runobj.platform == 'illumina':
+                    # use same file
+                    fasta_file = os.path.join(output_dir, 'unique.fa')                
+                    unique_file = os.path.join(output_dir, 'unique.fa')
+                else:
+                    fasta_file = os.path.join(output_dir, 'fasta.fa')                
+                    unique_file = os.path.join(output_dir, 'unique.fa')
                 names_file  = os.path.join(output_dir, 'names')
                 #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
                 print 'gast_dir:', gast_dir
@@ -174,7 +177,13 @@ class Gast:
                 dna_region = 'unknown'
                 
             (refdb, taxdb) = self.get_reference_databases(dna_region)
-            
+            use_64bit_usearch = False
+            if self.runobj.use64bit:
+            #if self.runobj.project[:3] == 'MBE':
+                use_64bit_usearch = True
+                # for some reason usearch64 doeasnt like the .udb file
+                refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
+                taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
             
             print "\nFile", str(key_counter), key
             print 'use_cluster:', self.use_cluster
@@ -244,10 +253,10 @@ class Gast:
                         else:
                             subprocess.call(fs_cmd, shell=True)
                         
-                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
+                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, use_64bit_usearch)
     
                         logger.debug("usearch command: "+us_cmd)
-                        #print 'usearch', cmd2
+                        #print 'usearch', us_cmd
                         if self.use_cluster:
                             fh.write(us_cmd + "\n")
                         else:
@@ -262,7 +271,7 @@ class Gast:
                             
                             # make script executable and run it
                             os.chmod(script_filename, stat.S_IRWXU)
-                            qsub_cmd = clusterize + " " + script_filename
+                            qsub_cmd = clusterize + " -log " + log_file + " " + script_filename
                             
                             # on vamps and vampsdev qsub cannot be run - unless you call it from the
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
@@ -270,10 +279,16 @@ class Gast:
                             logger.debug("qsub command: "+qsub_cmd)
                             print "qsub command: "+qsub_cmd
                             #subprocess.call(qsub_cmd, shell=True)
-                            proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                            proc = subprocess.check_output(qsub_cmd, shell=True)
+                            #print 'proc',proc
+                            qsub_id = proc.split()[2]
+                            # Your job 990889 ("clustergast_sub_46") has been submitted
+                            qsub_id_list.append(qsub_id)
                             # proc.communicate will block - probably not what we want
                             #(stdout, stderr) = proc.communicate() #block the last onehere
                             #print stderr, stdout
+                            time.sleep(0.1)
         
                         else:
                             subprocess.call(grep_cmd, shell=True)
@@ -290,7 +305,7 @@ class Gast:
                     gast_file_list = [clustergast_filename_single]
                     print usearch_filename, clustergast_filename_single
                     
-                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename)
+                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename, use_64bit_usearch)
                     print us_cmd
                     subprocess.call(us_cmd, shell=True)
                     grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
@@ -303,31 +318,11 @@ class Gast:
         if self.use_cluster:
             'check if clusters are done'
             # wait here for all the clustergast scripts to finish
-            temp_file_list = gast_file_list
-        
-            c = False
-            maxwaittime = C.maxwaittime  # seconds
-            sleeptime   = C.sleeptime    # seconds
-            counter2 = 0
-            while c == False:
-                counter2 += 1
-                if counter2 >= maxwaittime / sleeptime:
-                    raise Exception("Max wait time exceeded in gast.py: "+maxwaittime+" seconds")
-                for index, file in enumerate(temp_file_list):
-                    #print temp_file_list
-                    if os.path.exists(file):
-                        # remove from tmp list
-                        logger.debug("Found file now removing from list: "+file)
-                        temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
-                
-                if temp_file_list:
-                    logger.info("waiting for clustergast files to fill...")
-                    logger.debug(' '.join(temp_file_list))
-                    logger.info("\ttime: "+str(counter2 * sleeptime)+" | files left: "+str(len(temp_file_list)))
-                    time.sleep(sleeptime)
-                else:
-                    c = True
-                  
+            print "Checking cluster jobs" 
+            result = self.waiting_on_cluster( self.runobj.site, qsub_id_list )
+            time.sleep(10)
+    
+            print 'USEARCH: cluster jobs are complete'
                   
                   
                   
@@ -393,8 +388,13 @@ class Gast:
             if self.runobj.vamps_user_upload:
                 output_dir = os.path.join(self.global_gast_dir, key)
                 gast_dir = os.path.join(self.global_gast_dir, key)
-                fasta_file = os.path.join(output_dir, 'fasta.fa')
-                unique_file = os.path.join(output_dir, 'unique.fa')
+                if self.runobj.platform == 'illumina':
+                    # use same file
+                    fasta_file = os.path.join(output_dir, 'unique.fa')                
+                    unique_file = os.path.join(output_dir, 'unique.fa')
+                else:
+                    fasta_file = os.path.join(output_dir, 'fasta.fa')                
+                    unique_file = os.path.join(output_dir, 'unique.fa')
                 names_file = os.path.join(output_dir, 'names')
                 #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
             else:
@@ -579,14 +579,20 @@ class Gast:
         qsub_prefix = 'gast2tax_sub_'
         #print tax_file
         tax_files = []
+        qsub_id_list=[]
         for key in self.iterator:
             key_counter += 1
             'move to Dirs'
             if self.runobj.vamps_user_upload:
                 output_dir = os.path.join(self.global_gast_dir, key)
                 gast_dir = os.path.join(self.global_gast_dir, key)
-                fasta_file = os.path.join(output_dir, 'fasta.fa')
-                unique_file = os.path.join(output_dir, 'unique.fa')
+                if self.runobj.platform == 'illumina':
+                    # same file
+                    fasta_file = os.path.join(output_dir, 'unique.fa')                
+                    unique_file = os.path.join(output_dir, 'unique.fa')
+                else:
+                    fasta_file = os.path.join(output_dir, 'fasta.fa')                
+                    unique_file = os.path.join(output_dir, 'unique.fa')
                 names_file = os.path.join(output_dir, 'names')
                 tagtax_file = os.path.join(output_dir, 'tagtax_terse')
                 if os.path.exists(unique_file) and os.path.getsize(unique_file)>0:
@@ -653,7 +659,7 @@ class Gast:
                             
                 # make script executable and run it
                 os.chmod(script_filename, stat.S_IRWXU)
-                qsub_cmd = clusterize + " " + script_filename
+                qsub_cmd = clusterize + " -log " + log_file + " " + script_filename
                 # -log /xraid2-2/vampsweb/"+self.runobj.site+"/clusterize.log
                 
                 # on vamps and vampsdev qsub cannot be run - unless you call it from the
@@ -667,9 +673,11 @@ class Gast:
                 logger.debug("qsub command: "+qsub_cmd)
                 print "gast2tax qsub command: "+qsub_cmd
                 #subprocess.call(qsub_cmd, shell=True)
-                proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                
+                proc = subprocess.check_output(qsub_cmd, shell=True)
+                #print 'proc',proc
+                qsub_id = proc.split()[2]
+                qsub_id_list.append(qsub_id)
                 
             else:
                 if os.path.exists(names_file) and os.path.getsize(names_file) > 0: 
@@ -690,25 +698,11 @@ class Gast:
             maxwaittime = C.maxwaittime  # seconds
             sleeptime   = C.sleeptime    # seconds
             counter3 = 0
-            while c == False:
-                print 'temp_file_list:', temp_file_list
-                counter3 += 1
-                if counter3 >= maxwaittime / sleeptime:
-                    raise Exception("Max wait time exceeded in gast.py")
-                for index, file in enumerate(temp_file_list):
-                    #print temp_file_list
-                    if os.path.exists(file):
-                        # remove from tmp list
-                        logger.debug("Found file now removing from list: "+file)
-                        temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
-                
-                if temp_file_list:
-                    logger.info("waiting for tagtax files to fill...")
-                    logger.debug(' '.join(temp_file_list))
-                    logger.info("\ttime: "+str(counter3 * sleeptime)+" | files left: "+str(len(temp_file_list)))
-                    time.sleep(sleeptime)
-                else:
-                    c = True
+            print "Checking cluster jobs" 
+            result = self.waiting_on_cluster( self.runobj.site, qsub_id_list )
+            time.sleep(10)
+    
+            print 'gast2tax: cluster jobs are complete'
             
             
             
@@ -802,39 +796,35 @@ class Gast:
         fastasampler_cmd += ' ' + fastasamp_filename        
         return fastasampler_cmd
         
-    def get_usearch_cmd(self, fastasamp_filename, refdb, usearch_filename  ):    
+    def get_usearch_cmd(self, fastasamp_filename, refdb, usearch_filename, use_64bit=False  ):     
         
-#         if C.use_full_length:            
-#             usearch6 = C.usearch64
-#         else:
-#             usearch6 = C.usearch6_cmd
-#             
-        usearch_cmd = C.usearch6_cmd
-        if self.utils.is_local():
-            usearch_cmd = C.usearch6_cmd_local
-        
-        usearch_cmd += ' -usearch_global ' + fastasamp_filename
-        usearch_cmd += ' -gapopen 6I/1E'
-        usearch_cmd += ' -uc_allhits'
-        usearch_cmd += ' -db ' + refdb  
-        usearch_cmd += ' -strand plus'   
-        usearch_cmd += ' -uc ' + usearch_filename 
-        usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
-        usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
-        usearch_cmd += ' -id ' + str(C.pctid_threshold)
-        
-        
-#         usearch_cmd = C.usearch5_cmd
-#         usearch_cmd += ' --global '
-#         usearch_cmd += ' --query ' + fastasamp_filename
-#         usearch_cmd += ' --iddef 3'
-#         usearch_cmd += ' --gapopen 6I/1E'
-#         usearch_cmd += ' --db ' + refdb               
-#         usearch_cmd += ' --uc ' + usearch_filename 
-#         usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
-#         usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
-#         usearch_cmd += ' --id ' + str(C.pctid_threshold)
-        
+        if use_64bit:
+            
+            usearch_cmd = C.usearch64_cmd
+            usearch_cmd += ' --global '
+            usearch_cmd += ' --query ' + fastasamp_filename
+            usearch_cmd += ' --iddef 3'
+            usearch_cmd += ' --gapopen 6I/1E'
+            usearch_cmd += ' --wdb ' + refdb               
+            usearch_cmd += ' --uc ' + usearch_filename 
+            usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
+            usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
+            usearch_cmd += ' --id ' + str(C.pctid_threshold)
+        else:
+            usearch_cmd = C.usearch6_cmd
+            if self.utils.is_local():
+                usearch_cmd = C.usearch6_cmd_local
+                usearch_cmd = C.usearch5_cmd
+                
+            usearch_cmd += ' -usearch_global ' + fastasamp_filename
+            usearch_cmd += ' -gapopen 6I/1E'
+            usearch_cmd += ' -uc_allhits'
+            usearch_cmd += ' -db ' + refdb  
+            usearch_cmd += ' -strand both'   
+            usearch_cmd += ' -uc ' + usearch_filename 
+            usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
+            usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
+            usearch_cmd += ' -id ' + str(C.pctid_threshold)
         
         
         return usearch_cmd
@@ -1068,3 +1058,88 @@ class Gast:
                 
     def get_fasta_from_database(self):
         pass
+    def get_qstat_id_list(self, site):
+    
+        # ['139239', '0.55500', 'usearch', 'avoorhis', 'r', '01/22/2012', '09:00:39', 'all.q@grendel-07.bpcservers.pr', '1']
+        # 1) id
+        # 2) 
+        # 3) name
+        # 4) username
+        # 5) code r=running, Ew=Error
+        web_user = site+'httpd'
+        qstat_user = subprocess.check_output(['whoami'])
+        qstat_cmd = ['qstat', '-u', qstat_user.strip()]
+        print ' qstat cmd: ',qstat_cmd
+        qstat_codes={}
+        output = subprocess.check_output(qstat_cmd)
+        #print output
+        output_list = output.strip().split("\n")[2:]
+        qstat_codes['id'] = [n.split()[0] for n in output_list]
+        qstat_codes['name'] = [n.split()[2] for n in output_list]
+        qstat_codes['user'] = [n.split()[3] for n in output_list]
+        qstat_codes['code'] = [n.split()[4] for n in output_list]
+        #print 'Found IDs',qstat_ids    
+        
+        return qstat_codes  
+        
+    def waiting_on_cluster(self, site, my_working_id_list):
+        c = False
+        maxwaittime = C.maxwaittime  # 50000 seconds
+        sleeptime   = C.sleeptime    # 5 seconds
+        wait_counter = 0
+        #print maxwaittime,sleeptime
+        time.sleep(sleeptime)
+        got_one = False
+        while my_working_id_list:
+        
+            qstat_codes = self.get_qstat_id_list(site)
+            #print 'qstat_codes',qstat_codes['id']
+            if not qstat_codes['id']:
+                #print 'No qstat ids'
+                #print("id list not found: may need to increase initial_interval if you haven't seen running ids.")
+                print ('qstat id list not found')
+                if not got_one:
+                    # empty out list we have seen some ids and now empty
+                    my_working_id_list = []
+            if 'Eqw' in qstat_codes['code']:
+                print( "Check cluster: may have error code(s), but they may not be mine!")
+                
+            got_one = False
+        
+            #print 'working ids',my_working_id_list
+            #for id in my_working_id_list:
+            #    if id not in qstat_codes['id']:
+                               
+            if my_working_id_list and my_working_id_list[0] in qstat_codes['id']:
+            
+                got_one = True
+                name = qstat_codes['name'][qstat_codes['id'].index(my_working_id_list[0])]
+                user = qstat_codes['user'][qstat_codes['id'].index(my_working_id_list[0])]
+                code = qstat_codes['code'][qstat_codes['id'].index(my_working_id_list[0])]
+                
+                
+                if code == 'Eqw':
+                    print ('FAIL','Found Eqw code',my_working_id_list[0])
+                elif code == 'qw':
+                    print("id is still queued: " +  str(my_working_id_list[0]) + " " + str(code))
+                    wait_counter = 0  # gets reset to '0' when id is still queued
+                elif code == 'r':
+                    print my_working_id_list[0],"is running..."
+                    wait_counter = 0  # gets reset to '0' when id is stll running
+                else:
+                    print('Unknown qstat code: ' + str(code))
+            elif my_working_id_list:  
+                # here we did NOT find the id: my_working_id_list[0] in the list of ids from qstat -u
+                # so we assume it is done.
+                print 'removing: ', my_working_id_list[0]
+                my_working_id_list = my_working_id_list[1:]  # pop it off and throw it away
+                wait_counter = 0  # gets reset to '0' when an id is found/removed
+                 
+            print 'my_working_id_list length:',len(my_working_id_list)        
+            wait_counter +=1    
+            time.sleep(sleeptime)
+            # using a counter that gets reset (max_wait_counter) when an id is found/removed
+            if wait_counter >= maxwaittime:
+                print('FAIL','Max Count exceeded: ',maxwaittime)
+                sys.exit('Max Count exceeded')
+            
