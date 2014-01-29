@@ -238,7 +238,10 @@ class Vamps:
         if self.runobj.vamps_user_upload:
             
             file_collector['unique_file'] = os.path.join(out_gast_dir,'unique.fa')
-            file_collector['original_fa_file'] = os.path.join(out_gast_dir,'fasta.fa')
+            if self.runobj.project[:3] == 'MBE':   # Mobedac: use uniques in export
+                file_collector['original_fa_file'] = os.path.join(out_gast_dir,'unique.fa')
+            else:
+                file_collector['original_fa_file'] = os.path.join(out_gast_dir,'fasta.fa')
             
             if self.runobj.fasta_file:
                 grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
