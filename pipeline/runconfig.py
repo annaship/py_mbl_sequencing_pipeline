@@ -185,6 +185,10 @@ class RunConfig:
             
             self.load_vamps_database = general_config['load_vamps_database']
             try:
+                self.use64bit       = general_config['use64bit']
+            except:
+                self.use64bit = False
+            try:
                 self.fasta_file     = general_config['fasta_file'] 
             except:
                 self.fasta_file     = None
