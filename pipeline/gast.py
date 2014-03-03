@@ -33,7 +33,7 @@ class Gast:
             self.refdb_dir = C.vamps_ref_database_dir
             self.iterator  = self.runobj.datasets
             site = self.runobj.site
-            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_gast'
+            dir_prefix=self.runobj.user+'_'+self.runobj.run
         else:
             self.idx_keys  = idx_keys
             self.iterator  = self.idx_keys
@@ -77,7 +77,8 @@ class Gast:
         # create our directories for each key
         
         dirs.create_gast_name_dirs(self.iterator)
-        
+        # determin which database type will be in uclust command
+        self.db_type='udb'
         
     def clustergast(self):
         """
@@ -131,7 +132,7 @@ class Gast:
             
             
         key_counter    = 0
-        gast_file_list = 
+        gast_file_list = []
         qsub_id_list=[]
         cluster_nodes  = C.cluster_nodes
         logger.info("Cluster nodes set to: "+str(cluster_nodes))
@@ -149,7 +150,7 @@ class Gast:
                     unique_file = os.path.join(output_dir, 'unique.fa')
                 names_file  = os.path.join(output_dir, 'names')
                 #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
-                print 'gast_dir:', gast_dir
+                #print 'gast_dir:', gast_dir
                 print 'unique_file:', unique_file
             else:
                 if self.runobj.platform == 'illumina':
@@ -177,13 +178,12 @@ class Gast:
                 dna_region = 'unknown'
                 
             (refdb, taxdb) = self.get_reference_databases(dna_region)
-            use_64bit_usearch = False
-            if self.runobj.use64bit:
+            if self.runobj.use_full_length == True:
             #if self.runobj.project[:3] == 'MBE':
-                use_64bit_usearch = True
                 # for some reason usearch64 doeasnt like the .udb file
                 refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
                 taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
+                self.db_type='wdb'
             
             print "\nFile", str(key_counter), key
             print 'use_cluster:', self.use_cluster
@@ -253,7 +253,7 @@ class Gast:
                         else:
                             subprocess.call(fs_cmd, shell=True)
                         
-                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, use_64bit_usearch)
+                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, self.runobj.use64bit)
     
                         logger.debug("usearch command: "+us_cmd)
                         #print 'usearch', us_cmd
@@ -271,7 +271,9 @@ class Gast:
                             
                             # make script executable and run it
                             os.chmod(script_filename, stat.S_IRWXU)
-                            qsub_cmd = clusterize + " -log " + log_file + " " + script_filename
+                            #qsub_cmd = clusterize + " " + script_filename
+                            opts = " -n 8 "
+                            qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
                             
                             # on vamps and vampsdev qsub cannot be run - unless you call it from the
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
@@ -281,10 +283,13 @@ class Gast:
                             #subprocess.call(qsub_cmd, shell=True)
                             #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                             proc = subprocess.check_output(qsub_cmd, shell=True)
-                            #print 'proc',proc
-                            qsub_id = proc.split()[2]
-                            # Your job 990889 ("clustergast_sub_46") has been submitted
-                            qsub_id_list.append(qsub_id)
+                            print 'proc:',proc
+                            try:
+                                qsub_id = proc.split()[2]
+                                # Your job 990889 ("clustergast_sub_46") has been submitted
+                                qsub_id_list.append(qsub_id)
+                            except:
+                                print 'Could not split proc - Continuing on...'
                             # proc.communicate will block - probably not what we want
                             #(stdout, stderr) = proc.communicate() #block the last onehere
                             #print stderr, stdout
@@ -305,7 +310,7 @@ class Gast:
                     gast_file_list = [clustergast_filename_single]
                     print usearch_filename, clustergast_filename_single
                     
-                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename, use_64bit_usearch)
+                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename, self.runobj.use64bit)
                     print us_cmd
                     subprocess.call(us_cmd, shell=True)
                     grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
@@ -343,7 +348,7 @@ class Gast:
                 clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
                 clustergast_fh = open(clustergast_filename_single, 'w')
                 # have to turn off cluster above to be able to 'find' these files for concatenation
-                for n in range(1, i-1):
+                for n in range(1, C.cluster_nodes-1):
                     #cmd = "cat "+ gast_dir + key+".gast_" + str(n) + " >> " + gast_dir + key+".gast"
                     file = os.path.join(gast_dir, key+".gast_" + str(n))
                     if(os.path.exists(file)):                    
@@ -659,7 +664,8 @@ class Gast:
                             
                 # make script executable and run it
                 os.chmod(script_filename, stat.S_IRWXU)
-                qsub_cmd = clusterize + " -log " + log_file + " " + script_filename
+                opts = " -n 8 "
+                qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
                 # -log /xraid2-2/vampsweb/"+self.runobj.site+"/clusterize.log
                 
                 # on vamps and vampsdev qsub cannot be run - unless you call it from the
@@ -675,9 +681,13 @@ class Gast:
                 #subprocess.call(qsub_cmd, shell=True)
                 #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 proc = subprocess.check_output(qsub_cmd, shell=True)
-                #print 'proc',proc
-                qsub_id = proc.split()[2]
-                qsub_id_list.append(qsub_id)
+                print 'proc:',proc
+                try:
+                    qsub_id = proc.split()[2]
+                    # Your job 990889 ("clustergast_sub_46") has been submitted
+                    qsub_id_list.append(qsub_id)
+                except:
+                    print 'Could not split proc - Continuing on...'
                 
             else:
                 if os.path.exists(names_file) and os.path.getsize(names_file) > 0: 
@@ -738,16 +748,20 @@ class Gast:
         if os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')):
             refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')
             taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+            self.db_type='udb'
         elif os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')):
             refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')
-            taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+            taxdb = os.path.join
+            self.db_type='db'
         elif C.use_full_length or dna_region == 'unknown' or dna_region not in C.refdbs:
             if os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
                 refdb = os.path.join(self.refdb_dir, 'refssu.udb')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+                self.db_type='udb'
             elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.fa')):
                 refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+                self.db_type='db'
         else:
             
             # try udb first
@@ -755,29 +769,33 @@ class Gast:
                 if os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region]+".udb")):
                     refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region]+".udb")
                     taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+                    self.db_type='udb'
                 elif os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region])):
                     refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region])
                     taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+                    self.db_type='db'
                 else:
                     print 'could not find refdb '+os.path.join(self.refdb_dir, C.refdbs[dna_region])+".udb - Using full length"
                     refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                     taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+                    self.db_type='db'
             elif os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')):
                 refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')
                 taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
-                
+                self.db_type='db'
             elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
                 refdb = os.path.join(self.refdb_dir, 'refssu.udb')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
-                
+                self.db_type='udb'
             elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.fa')):
             
                 refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
-                
+                self.db_type='db'
             else:
                 refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+                self.db_type='db'
                 logger.error("Could not find reference database in "+self.refdb_dir+" - Using full length")
                 
             
@@ -805,7 +823,12 @@ class Gast:
             usearch_cmd += ' --query ' + fastasamp_filename
             usearch_cmd += ' --iddef 3'
             usearch_cmd += ' --gapopen 6I/1E'
-            usearch_cmd += ' --wdb ' + refdb               
+            if self.db_type == 'db':
+                usearch_cmd += ' --db ' + refdb  
+            elif self.db_type == 'wdb':
+                usearch_cmd += ' --wdb ' + refdb  
+            else:
+                usearch_cmd += ' --udb ' + refdb                 
             usearch_cmd += ' --uc ' + usearch_filename 
             usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
             usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
@@ -1118,7 +1141,7 @@ class Gast:
                 code = qstat_codes['code'][qstat_codes['id'].index(my_working_id_list[0])]
                 
                 
-                if code == 'Eqw':
+                if code[:1] == 'E':
                     print ('FAIL','Found Eqw code',my_working_id_list[0])
                 elif code == 'qw':
                     print("id is still queued: " +  str(my_working_id_list[0]) + " " + str(code))
