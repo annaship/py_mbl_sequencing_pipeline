@@ -165,7 +165,7 @@ def wait_for_cluster_to_finish(my_running_id_list):
                 logger.debug('Unknown qstat code ' + str(code))
         else:
             my_working_id_list = my_working_id_list[1:]
-            logger.debug('id finished ' + str(my_working_id_list[0]))
+            logger.debug('id finished ' + str(my_working_id_list))
  
         if not my_working_id_list:
             return ('SUCCESS','not my_working_id_list','')
@@ -279,10 +279,11 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
     """
     This should be available to write status updates to vamps:vamps_upload_status.
     It is especially important for MoBeDAC uploads because the qiime site
-    will 'see' and react to the message in the db.
+    will 'see' and react to the message in the db.  <-- not true any longer 2014-02-01 AAV
     
     """
     import ConMySQL
+    from pipeline.db_upload import MyConnection
     
     today   = str(datetime.date.today())
     if site == 'vamps':
@@ -290,7 +291,7 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
         db_name    = 'vamps'
         db_home = '/xraid2-2/vampsweb/vamps/'
     else:
-        db_host    = 'vampsdev'
+        db_host    = 'bpcweb7'
         db_name    = 'vamps'
         db_home = '/xraid2-2/vampsweb/vampsdev/'
     obj=ConMySQL.New(db_host, db_name, db_home)
@@ -298,9 +299,14 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
     cursor = conn.cursor()
     
     query = "update vamps_upload_status set status='%s', status_message='%s', date='%s' where id='%s'" % (status, message, today, id)
-    cursor.execute(query)
-    
-    conn.commit()
+    try:
+        cursor.execute(query)
+        #print "executing",query
+    except:
+        conn.rollback()
+        print "ERROR status update failed"
+    else:    
+        conn.commit()
     
 class PipelneUtils:
     def __init__(self):
