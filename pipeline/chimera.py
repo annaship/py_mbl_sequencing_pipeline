@@ -3,7 +3,8 @@ import sys, os
 import re
 import time
 from pipeline.pipelinelogging import logger
-from pipeline.utils import Dirs, PipelneUtils
+from pipeline.utils import Dirs, 
+from pipeline.utils import *
 from pprint import pprint
 from collections import defaultdict, namedtuple
 sys.path.append("/xraid/bioware/linux/seqinfo/bin")
@@ -13,6 +14,7 @@ sys.path.append("/bioware/merens-illumina-utils")
 
 import fastalib as fa
 import pipeline.constants as C
+import json
 
 class Chimera:
     """ Define here """
@@ -30,17 +32,28 @@ class Chimera:
         self.chimeric_suffix    = ".chimeric.fa"
         self.base_suffix        = "unique" + self.chimeras_suffix
 
-
+        try:
+            if self.runobj.lane_name:
+                lane_name = self.runobj.lane_name
+            else:
+                lane_name = ''
+        except:
+            lane_name = ''
+            
         if self.runobj.vamps_user_upload:
             site       = self.runobj.site
             dir_prefix = self.runobj.user + '_' + self.runobj.run
+            self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
+            self.idx_keys = convert_unicode_dictionary_to_str(json.loads(open(self.runobj.trim_status_file_name,"r").read()))["new_lane_keys"] 
+            self.indir  = self.dirs.check_dir(self.dirs.trimming_dir)
+            self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)
         else:
             site = ''
             dir_prefix = self.runobj.run
-        if self.runobj.lane_name:
-            lane_name = self.runobj.lane_name
-        else:
-            lane_name = ''
+            self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
+            self.indir  = self.dirs.check_dir(self.dirs.reads_overlap_dir)
+            self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)
+        
         
         self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
         self.indir  = self.dirs.check_dir(self.dirs.reads_overlap_dir)
@@ -524,39 +537,47 @@ class Chimera:
         output = {}
         cluster_id_list = []
          
-        for idx_key in self.input_file_names:
+        for idx_key in self.idx_keys:
 #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
-            input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
-            output_file_name = os.path.join(self.outdir, self.output_file_names[idx_key])        
+            input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa')  
+            output_file_name = os.path.join(self.outdir, idx_key +'.chimera.denovo')
+            log_file = os.path.join(self.outdir,idx_key+".denovo.log")       
             dna_region       = self.runobj.samples[idx_key].dna_region
-#             print "dna_region = %s" % dna_region
-            if dna_region in C.regions_to_chimera_check:
+            logger.debug("dna_region = %s" % dna_region)
+            if self.runobj.vamps_user_upload:
+                # VAMPS users can chimera check regardless of region chosen
                 chimera_region_found = True
             else:
-                logger.debug('region not checked: ' +  dna_region)
-                continue
+                if dna_region in C.regions_to_chimera_check:
+                    chimera_region_found = True
+                else:
+                    logger.debug('region not checked: ' +  dna_region)
+                    continue
              
  
             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
  
             uchime_cmd = C.clusterize_cmd
             uchime_cmd += " "
+            uchime_cmd += " -log "
+            uchime_cmd += log_file
+            uchime_cmd += " "
             uchime_cmd += self.usearch_cmd
-            uchime_cmd += " --uchime "
+            uchime_cmd += " -uchime_denovo "
             uchime_cmd += input_file_name
-            uchime_cmd += " --uchimeout "
+            uchime_cmd += " -uchimeout "
             uchime_cmd += output_file_name
-            uchime_cmd += " --abskew "
-            uchime_cmd += self.abskew
              
-            print "uchime_cmd = %s" % (uchime_cmd)
+            logger.debug("uchime_denovo_cmd = %s" % (uchime_cmd))
              
             try:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                  
-                output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#                 print "output[idx_key] = %s" % output[idx_key]
+                output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
+                #print "output[idx_key] = %s" % output[idx_key]
+                #print output[idx_key].split()[2]
+                cluster_id_list.append(output[idx_key].split()[2])  print "output[idx_key] = %s" % output[idx_key]
 #                 print output[idx_key].split()[2]
 #                 cluster_id_list.append(output[idx_key].split()[2])
 #                 print 'Have %d bytes in output' % len(output)
@@ -609,6 +630,8 @@ class Chimera:
         # finally
         if cluster_id_list: 
             return ('SUCCESS', 'uchime ref seems to have been submitted successfully', cluster_id_list)
+        else:
+            return ('ERROR', 'uchime ref returned no cluster IDs', cluster_id_list) 
          
     def chimera_reference(self):
      
@@ -618,13 +641,21 @@ class Chimera:
         for idx_key in self.run_keys:
              
             dna_region  = self.runobj.samples[idx_key].dna_region
-            if dna_region in C.regions_to_chimera_check:
+            if self.runobj.vamps_user_upload:
+                # VAMPS users can chimera check regardless of region chosen
                 chimera_region_found = True
             else:
-                logger.debug('region not checked: ' + dna_region)                    
-                continue
+                if dna_region in C.regions_to_chimera_check:
+                    chimera_region_found = True
+                else:
+                    logger.debug('region not checked: ' + dna_region)                    
+                    continue
              
-            out_file_name = self.prefix[idx_key] + ".chimeras.db"      
+            input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa') 
+            output_file_name    = os.path.join(self.outdir,idx_key+".chimera.ref") 
+            #open(output_file_name, 'a').close()  # make sure file exists
+            log_file = os.path.join(self.outdir,idx_key+".ref.log") 
+            logger.debug("OUT FILE NAME: " + output_file_name)     
              
             # which ref db to use?
             ref_db = ''
@@ -635,18 +666,25 @@ class Chimera:
                 logger.debug("using standard refdb: " + self.refdb)
                 ref_db = self.refdb
                  
-            uchime_cmd = ["clusterize"]
-            uchime_cmd.append(self.usearch_cmd)
-            uchime_cmd.append("--uchime")
-            uchime_cmd.append(self.files[idx_key]['abund'])
-            uchime_cmd.append("--uchimeout")
-            uchime_cmd.append(out_file_name)
-            uchime_cmd.append("--db")
-            uchime_cmd.append(ref_db)
+            uchime_cmd = C.clusterize_cmd
+            uchime_cmd += " "
+            uchime_cmd += " -log "
+            uchime_cmd += log_file
+            uchime_cmd += " "
+            uchime_cmd += self.usearch_cmd
+            uchime_cmd += " -uchime_ref "
+            uchime_cmd += input_file_name
+            uchime_cmd += " -uchimeout "
+            uchime_cmd += output_file_name
+            uchime_cmd += " -db "
+            uchime_cmd += ref_db
+            uchime_cmd += " -strand "
+            uchime_cmd += "plus"
+            logger.debug("uchime_ref_cmd = %s" % (uchime_cmd))  
                           
             try:
                 logger.info("chimera reference command: " + str(uchime_cmd))
-                output[idx_key] = subprocess.check_output(uchime_cmd)
+                output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
                 #print 'outsplit',output[idx_key].split()[2]
                 cluster_id_list.append(output[idx_key].split()[2])
                 #print 'Have %d bytes in output' % len(output)
@@ -678,19 +716,25 @@ class Chimera:
             
             # hash to remove dupes
             chimera_deleted = {}
-            for file in [self.files[idx_key]['chimera_db'], self.files[idx_key]['chimera_txt']]:            
-                fh = open(file,"r") 
-                # make a list of chimera deleted read_ids            
-                for line in fh.readlines():
-                    lst = line.strip().split()
-                    id = lst[1].split(';')[0]
-                    chimera_yesno = lst[-1]
-                    if(chimera_yesno) == 'Y':
-                        chimera_deleted[id] = 'chimera'
-        
-            fh_del = open(self.files[idx_key]['deleted'],"a")
+            denovo_file = os.path.join(self.outdir, idx_key +'.chimera.denovo')  
+            ref_file = os.path.join(self.outdir,idx_key+".chimera.ref") 
+            # deleted file is in trimming dir for vampsuser
+            deleted_file = os.path.join(self.indir, idx_key+".deleted.txt")
+            for file in [denovo_file, ref_file]:            
+                if os.path.isfile(file):
+                    fh = open(file,"r") 
+                    # make a list of chimera deleted read_ids            
+                    for line in fh.readlines():
+                        lst = line.strip().split()
+                        id = lst[1].split(';')[0]
+                        chimera_yesno = lst[-1]
+                        if(chimera_yesno) == 'Y':
+                            chimera_deleted[id] = 'chimera'
+            # open to append as trimming deletions are already there
+            fh_del = open(deleted_file,"a")
             for id in chimera_deleted:
-                fh_del.write(id+"\tchimera\n") 
+                fh_del.write(id+"\tChimera\n") 
+            fh_del.close()
             
 # # http://drive5.com/uchime/uchime_quickref.pdf
 # # The --uchimeout file is a tab-separated file with the following 17 fields.
