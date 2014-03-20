@@ -367,12 +367,12 @@ example of getting all directory name in illumina_files
         except OSError:
             if os.path.isdir(dir_name):
                 print "\nDirectory %s already exists."  % (dir_name)
-                confirm_msg = "Do you want to continue? (Yes / No) "
-                answer = raw_input(confirm_msg)
-                if answer != 'Yes':
-                    sys.exit("There was an error in the directory " + dir_name + " creation - Exiting.")
-                elif answer == 'Yes':
-                    pass
+#                 confirm_msg = "Do you want to continue? (Yes / No) "
+#                 answer = raw_input(confirm_msg)
+#                 if answer != 'Yes':
+#                     sys.exit("There was an error in the directory " + dir_name + " creation - Exiting.")
+#                 elif answer == 'Yes':
+                pass
             else:
             # There was an error on creation, so make sure we know about it
                 raise    
