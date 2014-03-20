@@ -155,6 +155,7 @@ class RunConfig:
     def initializeFromDictionary(self, configDict):
         # get the general stuff
         general_config = configDict['general']
+        print    'General Config0:',general_config
         #if general_config['gast_data_source'] != 'database':
         self.run       = general_config['run']
         self.platform       = general_config.get('platform', "unknown")
@@ -182,8 +183,23 @@ class RunConfig:
             
             
             self.site               = general_config['site']
-            
             self.load_vamps_database = general_config['load_vamps_database']
+            try:
+                self.require_distal = general_config['require_distal']
+            except:
+                self.require_distal = True
+            try:
+                self.minimumLength = general_config['minimum_length']
+            except:
+                self.minimumLength = C.minimumLength
+            try:
+                self.maximumLength = general_config['maximum_length']
+            except:
+                self.maximumLength = C.maximumLength
+            try:
+                self.use64bit       = general_config['use64bit']
+            except:
+                self.use64bit = False
             try:
                 self.fasta_file     = general_config['fasta_file'] 
             except:

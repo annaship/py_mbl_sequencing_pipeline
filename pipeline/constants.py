@@ -216,6 +216,7 @@ unique_suffix      = "unique"
 ############# defaults for GAST ################################################################
 usearch_cmd        = 'usearch'
 usearch6_cmd       = 'usearch6'
+usearch64_cmd      = '/bioware/uclust/usearch64'
 # usearch6_cmd        = '/bioware/uclust/usearch6'
 #usearch5_cmd        = '/bioware/uclust/usearch5.2.32_i86linux32'
 #usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
@@ -252,8 +253,8 @@ ignore_terminal_gaps= 0
 ignore_all_gaps     = 0
 max_gast_distance   = {'default': 0.30, 'v6': 0.30, 'v6a': 0.30, 'v6v4': 0.25, 'v3v5': 0.25}
 #cluster wait
-maxwaittime         = 50000  # seconds
-sleeptime           = 5      # seconds
+maxwaittime         = 50000  # 50,000 seconds == 833 minutes == 13.9 hours
+sleeptime           = 3      # seconds
 refdbs = {'unknown':'refssu_all',
         'v1v3':'refv1v3',
         'v1v3a':'refv1v3a',

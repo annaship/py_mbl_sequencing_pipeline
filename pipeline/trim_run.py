@@ -28,8 +28,8 @@ from fastalib import *
 from fastqlib import *
 from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
-from pipeline.utils import Dirs, PipelneUtils
-from pipeline.pipelinelogging import logger
+#from pipeline.utils import Dirs, PipelneUtils
+#from pipeline.pipelinelogging import logger
 from Bio import SeqIO
 import subprocess
 
@@ -56,7 +56,7 @@ class TrimRun( object ):
         
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
-            dir_prefix=self.runobj.user+'_'+self.runobj.run+'_trim'
+            dir_prefix=self.runobj.user+'_'+self.runobj.run
         else:
             site = ''
             dir_prefix = self.runobj.run
@@ -120,6 +120,8 @@ class TrimRun( object ):
                 
                 #self.id_list_all[idx_key]      = []
                 self.id_list_passed[idx_key]    = []
+                self.proximal_primers[idx_key]  = []
+                self.distal_primers[idx_key]    = []
                 self.deleted_ids[idx_key]       = {}
                 self.deleted_ids['nokey']       = {}
                 self.trimmed_ids[idx_key]       = {}
@@ -144,9 +146,15 @@ class TrimRun( object ):
                     self.distal_primers[idx_key]   = self.psuite[idx_key].primer_expanded_seq_list['R']
                     if self.anchor_name[idx_key]:
                         self.anchors[idx_key] = get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key])
-     
-                    
-                if(self.seqDirs[idx_key] == 'R' or self.seqDirs[idx_key] == 'B'):
+                
+                # append
+                if(self.seqDirs[idx_key] == 'B'):
+                    self.proximal_primers[idx_key] = self.proximal_primers[idx_key] + [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
+                    self.distal_primers[idx_key]   = self.distal_primers[idx_key] + [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
+                    if self.anchor_name[idx_key]:
+                        self.anchors[idx_key] = self.anchors[idx_key] + [revcomp( anchor ) for anchor in get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key]) ]
+                # replace        
+                if(self.seqDirs[idx_key] == 'R'):
                     self.proximal_primers[idx_key] = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
                     self.distal_primers[idx_key]   = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
                     if self.anchor_name[idx_key]:
@@ -155,6 +163,9 @@ class TrimRun( object ):
                     if len(self.proximal_primers[idx_key]) == 0 and len(self.distal_primers[idx_key]) == 0:
                         logger.debug("**** Didn't find any primers that match any of the domain/regions in the lane/key sections")
                 
+                
+                
+                logger.info('PROX PRIMERS: '+';'.join(self.proximal_primers[idx_key]) )
         else:            
             if self.runobj.platform == '454':
                 for idx_key in self.idx_keys:
@@ -173,6 +184,8 @@ class TrimRun( object ):
                     self.anchors[idx_key]           = {}
                     
                     #self.id_list_all[idx_key]      = []
+                    self.proximal_primers[idx_key]  = []
+                    self.distal_primers[idx_key]    = []
                     self.id_list_passed[idx_key]    = []
                     self.deleted_ids[idx_key]       = {}
                     self.deleted_ids['nokey']       = {}
@@ -196,9 +209,14 @@ class TrimRun( object ):
                         self.distal_primers[idx_key]   = self.psuite[idx_key].primer_expanded_seq_list['R']
                         if self.anchor_name[idx_key]:
                             self.anchors[idx_key] = get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key])
-         
-                        
-                    if(self.seqDirs[idx_key] == 'R' or self.seqDirs[idx_key] == 'B'):
+                    # replace:
+                    if(self.seqDirs[idx_key] == 'B'):
+                        self.proximal_primers[idx_key] = self.proximal_primers[idx_key] + [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
+                        self.distal_primers[idx_key]   = self.distal_primers[idx_key] + [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
+                        if self.anchor_name[idx_key]:
+                            self.anchors[idx_key] = self.anchors[idx_key] + [revcomp( anchor ) for anchor in get_anchor_list(self.runobj, self.anchor_name[idx_key], self.adtnl_anchors[idx_key]) ]
+                            
+                    if(self.seqDirs[idx_key] == 'R'):
                         self.proximal_primers[idx_key] = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['R'] ]  
                         self.distal_primers[idx_key]   = [revcomp(primer_seq) for primer_seq in self.psuite[idx_key].primer_expanded_seq_list['F'] ] 
                         if self.anchor_name[idx_key]:
@@ -228,6 +246,7 @@ class TrimRun( object ):
         self.deleted_count_for_quality =0
         self.deleted_count_for_no_insert =0
         self.deleted_count_for_minimum_length =0
+        self.deleted_count_for_maximum_length =0
         self.deleted_count_for_unknown_lane_runkey = 0
 
         # input type is defined in the config file and can be sff, fasta, fasta-mbl or fastq
@@ -275,17 +294,24 @@ class TrimRun( object ):
                     id = record.id
                 else:
                     id = record.id
+                if file_format == "sff": 
+                    # SFF files have inherent quality data and dont need external qualfile
+                    pass
                 # should merge these with above if/else
-                
                 if file_format == "fasta" or file_format == "fasta-mbl":
                     q_scores = ''
                     # for vamps user upload:
-                    if os.path.exists(self.indir + "/qualfile_qual_clean") and os.path.getsize(self.indir + "/qualfile_qual_clean") > 0:
+                    if os.path.exists(self.indir + "/QUALFILE_CLEAN.TXT") and os.path.getsize(self.indir + "/QUALFILE_CLEAN.TXT") > 0:
                         # for vamps uploads use '_clean' file 
                         # format is on one line ( created from reg fasta in upload_file.php: 
                         #  >FRZPY5Q02G73IH	37 37 37 37 37 37 37 37 37 37
-                        q_scores = subprocess.check_output("grep "+ id +" " + self.indir + "/qualfile_qual_clean", shell=True).strip().split("\t")[1].split()                    
-                        q_scores = [int(q) for q in q_scores]
+                        try:
+                            q_scores = subprocess.check_output("grep "+ id +" " + self.indir + "/QUALFILE_CLEAN.TXT", shell=True).strip().split("\t")[1].split()                    
+                            logger.debug("Q-Scores: "+str(q_scores))
+                            q_scores = [int(q) for q in q_scores]
+                            
+                        except:
+                            logger.debug("Could not read QUALFILE_CLEAN.TXT")
                         
                     else:
                         logger.debug("No usable qual file found")
@@ -604,7 +630,7 @@ class TrimRun( object ):
             delete_reason = DELETED_RUNKEY
             self.deleted_count_for_nokey += 1
             self.deleted_ids['nokey'][read_id] = delete_reason
-            logger.debug("deleted: " + tag)
+            logger.debug("deleted: No Tag" )
             return {"deleted" : True,"delete_reason" : delete_reason}
         else:            
             lane_tag = lane + '_' + tag
@@ -710,6 +736,10 @@ class TrimRun( object ):
             delete_reason = DELETED_MINIMUM_LENGTH
             self.deleted_count_for_minimum_length += 1
         
+        elif( self.runobj.maximumLength and delete_reason != DELETED_RUNKEY and len(trimmed_sequence) > int(self.runobj.maximumLength)):
+            delete_reason = DELETED_MAXIMUM_LENGTH
+            self.deleted_count_for_maximum_length += 1
+            
         if ( (not delete_reason) and (countNs > C.maxN) ):     
             delete_reason = DELETED_N
             self.deleted_count_for_n += 1
@@ -748,7 +778,7 @@ class TrimRun( object ):
         trim_collector['deleted']           = False if (not delete_reason)  else True
         trim_collector['delete_reason']     = delete_reason
         trim_collector['primer_name']       = primer_name
-        trim_collector['idx_key']          = lane_tag
+        trim_collector['idx_key']           = lane_tag
         trim_collector['orientation']       = orientation
        
         return trim_collector
@@ -844,12 +874,12 @@ class TrimRun( object ):
                     current_count = reason_counts.get(reason, 0)
                     reason_counts[reason] = current_count + 1
                 # now write out some stats
-                f_del.write("\nTotal Passed Reads in this lane/key: " + str(len(self.names[idx_key])) + "\n")
-                if(len(self.names[idx_key]) > 0):
-                    for key,value in reason_counts.items():
-                        f_del.write(" " + key + ": " + str(value) + " " + str(float(value*100.0)/float(len(self.names[idx_key]))) + "% of total \n")                
-                else:
-                    pass
+#                 f_del.write("\nTotal Passed Reads in this lane/key: " + str(len(self.names[idx_key])) + "\n")
+#                 if(len(self.names[idx_key]) > 0):
+#                     for key,value in reason_counts.items():
+#                         f_del.write(" " + key + ": " + str(value) + " " + str(float(value*100.0)/float(len(self.names[idx_key]))) + "% of total \n")                
+#                 else:
+#                     pass
                 f_del.close()
                 logger.debug("wrote deleted file: "  + delFileName)
             
@@ -885,27 +915,30 @@ class TrimRun( object ):
         #
         #  Write to stats file for this run
         #
-        self.stats_fp.write("Run: "+self.run+"\n")
-        self.stats_fp.write("Unique Counts:\n")
+        self.stats_fp.write("Run_code: "+self.run+"\n")
+        self.stats_fp.write("========================================================\n")
+        self.stats_fp.write("Deleted Counts (before chimera check if performed):\n")
+        self.stats_fp.write("   deleted_count_for_nokey:......................" + str(self.deleted_count_for_nokey) + "\n")
+        self.stats_fp.write("   deleted_count_for_proximal:..................." + str(self.deleted_count_for_proximal)+ "\n")
+        self.stats_fp.write("   deleted_count_for_distal:....................." + str(self.deleted_count_for_distal)+ "\n")
+        self.stats_fp.write("   deleted_count_for_N:.........................." + str(self.deleted_count_for_n)+ "\n")
+        self.stats_fp.write("   deleted_count_for_quality:...................." + str(self.deleted_count_for_quality)+ "\n")
+        self.stats_fp.write("   deleted_count_for_no_insert:.................." + str(self.deleted_count_for_no_insert)+ "\n")
+        self.stats_fp.write("   deleted_count_for_minimum_length("+str(self.runobj.minimumLength)+"bp):......." + str(self.deleted_count_for_minimum_length)+ "\n")
+        self.stats_fp.write("   deleted_count_for_maximum_length("+str(self.runobj.maximumLength)+"bp):........." + str(self.deleted_count_for_maximum_length)+ "\n")
+        self.stats_fp.write("   deleted_count_for_unknown_lane_runkey:........" + str(self.deleted_count_for_unknown_lane_runkey)+ "\n")
+        self.stats_fp.write("Total Raw Sequences:...."+str(self.number_of_raw_sequences)+"\n") 
+        self.stats_fp.write("Total Good Sequences:..."+str(self.number_of_good_sequences)+"\n") 
+        self.stats_fp.write("Total Deleted:.........."+str(self.number_of_raw_sequences-self.number_of_good_sequences)+"\n")    
+        self.stats_fp.write("Total Uniques:.........."+str(count_uniques)+"\n")
+        self.stats_fp.write("\nUnique Counts per Dataset:\n")
         #stats_fp.write("Run: "+self.run)
         count_uniques = 0
         for idx_key in self.runobj.run_keys:
             count = len(self.uniques[idx_key])
             count_uniques = count_uniques + count
-            self.stats_fp.write("   " + str(count)+"\t"+idx_key+"\n")
-        
-        self.stats_fp.write("Total Uniques: "+str(count_uniques)+"\n")
-        self.stats_fp.write("\nDeleted Counts (before chimera check):\n")
-        self.stats_fp.write("   deleted_count_for_nokey:\t" + str(self.deleted_count_for_nokey) + "\n")
-        self.stats_fp.write("   deleted_count_for_proximal:\t" + str(self.deleted_count_for_proximal)+ "\n")
-        self.stats_fp.write("   deleted_count_for_distal:\t" + str(self.deleted_count_for_distal)+ "\n")
-        self.stats_fp.write("   deleted_count_for_n:\t" + str(self.deleted_count_for_n)+ "\n")
-        self.stats_fp.write("   deleted_count_for_quality:\t" + str(self.deleted_count_for_quality)+ "\n")
-        self.stats_fp.write("   deleted_count_for_no_insert:\t" + str(self.deleted_count_for_no_insert)+ "\n")
-        self.stats_fp.write("   deleted_count_for_minimum_length:\t" + str(self.deleted_count_for_minimum_length)+ "\n")
-        self.stats_fp.write("   deleted_count_for_unknown_lane_runkey:\t" + str(self.deleted_count_for_unknown_lane_runkey)+ "\n")
-
-        self.stats_fp.write("Total Deleted: "+str(self.number_of_raw_sequences-self.number_of_good_sequences)+"\n")    
+            self.stats_fp.write("   " + str(count)+"\t"+idx_key+"\t"+self.runobj.samples[idx_key].dataset+"\n")
+        self.stats_fp.write("\n========================================================\n")
         self.stats_fp.close()
         
         success_code=''
