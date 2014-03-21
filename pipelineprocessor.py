@@ -183,6 +183,7 @@ def chimera(runobj):
         chimera_code = 'FAIL'
     else:
         chimera_code='FAIL'
+
     logger.debug("Chimera DeNovo Code: "+chimera_code)
     logger.debug("\nStarting Reference Chimera")
     c_ref    = mychimera.chimera_reference()
@@ -232,14 +233,13 @@ def chimera(runobj):
     if  chimera_code == 'PASS' and  chimera_cluster_code[0] == 'SUCCESS':
         logger.info("Writing Chimeras to deleted files")
         mychimera.write_chimeras_to_deleted_file()
-    
+
         # should also recreate fasta
         # then read chimera files and place (or replace) any chimeric read_id
         # into the deleted file.
         
-        #mymblutils = MBLPipelineFastaUtils(idx_keys, mychimera.outdir)
-        # runobj.output_dir == /groups/vampsweb/vampsdev/tmp/avoorhis_84115777
         mymblutils = MBLPipelineFastaUtils(idx_keys, runobj)
+        
         # write new cleaned files that remove chimera if apropriate
         # these are in fasta_mbl_pipeline.py
         # the cleaned file are renamed to the original name:
@@ -263,7 +263,8 @@ def chimera(runobj):
         # runkeys
         # primers
         # run primers
-        # mymblutils.write_clean_files_to_database()
+
+        #mymblutils.write_clean_files_to_database()
         
     # def is in utils.py: appends
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')

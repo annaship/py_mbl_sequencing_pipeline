@@ -14,7 +14,8 @@ sys.path.append("/bioware/merens-illumina-utils")
 
 import fastalib as fa
 import pipeline.constants as C
-import json 
+import json
+
 
 class Chimera:
     """ Define here """
@@ -39,6 +40,7 @@ class Chimera:
                 lane_name = ''
         except:
             lane_name = ''
+
         if self.runobj.vamps_user_upload:
             site       = self.runobj.site
             dir_prefix = self.runobj.user + '_' + self.runobj.run
@@ -532,19 +534,15 @@ class Chimera:
         chimera_region_found = False
         output = {}
         cluster_id_list = []
-        #idx_keys = convert_unicode_dictionary_to_str(json.loads(open(self.runobj.trim_status_file_name,"r").read()))["new_lane_keys"] 
-        #logger.debug('idx_keys1: ' +  str(idx_keys))
-        #logger.debug('run_keys2: ' +  str(self.run_keys))
-        #for idx_key in self.input_file_names:
+
+
         
         for idx_key in self.idx_keys:
-#             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
-            #input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)  
             input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa')  
             output_file_name = os.path.join(self.outdir, idx_key +'.chimera.denovo')
-            
             #open(output_file_name, 'a').close()  # make sure file exists
             log_file = os.path.join(self.outdir,idx_key+".denovo.log")
+
             dna_region       = self.runobj.samples[idx_key].dna_region
             logger.debug("dna_region = %s" % dna_region)
             if self.runobj.vamps_user_upload:
@@ -580,44 +578,22 @@ class Chimera:
             uchime_cmd += input_file_name
             uchime_cmd += " -uchimeout "
             uchime_cmd += output_file_name
-            
+
             logger.debug("uchime_denovo_cmd = %s" % (uchime_cmd))
              
             try:
                 logger.info("chimera denovo command: " + str(uchime_cmd))
 #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                  
+
                 #output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
                 print "output[idx_key] = %s" % output[idx_key]
                 print output[idx_key].split()[2]
                 cluster_id_list.append(output[idx_key].split()[2])
-#                 print 'Have %d bytes in output' % len(output)
-#                 print 'denovo', idx_key, output, len(output)
-                # len(output) is normally = 47
-#                 if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
-#                     logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
-#                 else:
-#                     logger.debug("uchime denovo may have broken")  
-                 
+
  
-#             else:
-#                 subprocess.call(uchime_cmd, shell=True)
-#                 print uchime_cmd            
-#             
-#             try:
-#                 logger.info("chimera denovo command: " + str(uchime_cmd))
-#                 output[idx_key] = subprocess.check_output(uchime_cmd)
-#                 print output[idx_key]
-#                 print output[idx_key].split()[2]
-#                 cluster_id_list.append(output[idx_key].split()[2])
-#                 print 'Have %d bytes in output' % len(output)
-#                 print 'denovo',idx_key,output,len(output)
-#                 # len(output) is normally = 47
-#                 if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
-#                     logger.debug(idx_key + " uchime denovo seems to have been submitted successfully")
-#                 else:
-#                     logger.debug("uchime denovo may have broken")                    
+  
  
             except OSError, e:
                 print "Problems with this command: %s" % (uchime_cmd)
@@ -641,7 +617,7 @@ class Chimera:
             return ('SUCCESS', 'uchime ref seems to have been submitted successfully', cluster_id_list)
         else:
             return ('ERROR', 'uchime ref returned no cluster IDs', cluster_id_list) 
-            
+
     def chimera_reference(self):
      
         chimera_region_found = False
@@ -659,6 +635,13 @@ class Chimera:
                 else:
                     logger.debug('region not checked: ' + dna_region)                    
                     continue
+
+             
+            input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa') 
+            output_file_name    = os.path.join(self.outdir,idx_key+".chimera.ref") 
+            #open(output_file_name, 'a').close()  # make sure file exists
+            log_file = os.path.join(self.outdir,idx_key+".ref.log") 
+            logger.debug("OUT FILE NAME: " + output_file_name)     
              
             #out_file_name = self.prefix[idx_key] + ".chimeras.db"      
             input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa') 
@@ -675,15 +658,6 @@ class Chimera:
                 logger.debug("using standard refdb: " + self.refdb)
                 ref_db = self.refdb
                  
-#             uchime_cmd = ["clusterize"]
-#             uchime_cmd.append(self.usearch_cmd)
-#             uchime_cmd.append("--uchime")
-#             uchime_cmd.append(self.files[idx_key]['abund'])
-#             uchime_cmd.append("--uchimeout")
-#             uchime_cmd.append(output_file_name)
-#             uchime_cmd.append("--db")
-#             uchime_cmd.append(ref_db)
-            
             uchime_cmd = C.clusterize_cmd
             uchime_cmd += " "
             uchime_cmd += " -log "
@@ -698,7 +672,9 @@ class Chimera:
             uchime_cmd += ref_db
             uchime_cmd += " -strand "
             uchime_cmd += "plus"
-            logger.debug("uchime_ref_cmd = %s" % (uchime_cmd))         
+
+            logger.debug("uchime_ref_cmd = %s" % (uchime_cmd))  
+                          
             try:
                 logger.info("chimera reference command: " + str(uchime_cmd))
                 output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)

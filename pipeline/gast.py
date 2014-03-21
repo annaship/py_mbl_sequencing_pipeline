@@ -33,7 +33,7 @@ class Gast:
             self.refdb_dir = C.vamps_ref_database_dir
             self.iterator  = self.runobj.datasets
             site = self.runobj.site
-                      
+
             dir_prefix=self.runobj.user+'_'+self.runobj.run
         else:
             self.idx_keys  = idx_keys
@@ -80,7 +80,7 @@ class Gast:
         dirs.create_gast_name_dirs(self.iterator)
         # determin which database type will be in uclust command
         self.db_type='udb'
-        
+
         
     def clustergast(self):
         """
@@ -146,7 +146,8 @@ class Gast:
                 output_dir  = os.path.join(self.global_gast_dir, key)
                 gast_dir    = os.path.join(self.global_gast_dir, key)
                 if self.runobj.platform == 'illumina':
-                    # same file
+
+                    # use same file
                     fasta_file = os.path.join(output_dir, 'unique.fa')                
                     unique_file = os.path.join(output_dir, 'unique.fa')
                 else:
@@ -182,7 +183,12 @@ class Gast:
                 dna_region = 'unknown'
                 
             (refdb, taxdb) = self.get_reference_databases(dna_region)
-            
+            if self.runobj.use_full_length == True:
+            #if self.runobj.project[:3] == 'MBE':
+                # for some reason usearch64 doeasnt like the .udb file
+                refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
+                taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
+                self.db_type='wdb'
             
             #use_64bit_usearch = False
             #if self.runobj.use64bit and self.runobj.use_full_length == True:
@@ -265,7 +271,8 @@ class Gast:
                         us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, self.runobj.use64bit)
     
                         logger.debug("usearch command: "+us_cmd)
-                        print 'usearch', us_cmd
+
+                        #print 'usearch', us_cmd
                         if self.use_cluster:
                             fh.write(us_cmd + "\n")
                         else:
@@ -283,13 +290,12 @@ class Gast:
                             #qsub_cmd = clusterize + " " + script_filename
                             opts = " -n 8 "
                             qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
+
                             # on vamps and vampsdev qsub cannot be run - unless you call it from the
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
                             #qsub_cmd = C.qsub_cmd + " " + script_filename
                             logger.debug("qsub command: "+qsub_cmd)
                             print "qsub command: "+qsub_cmd
-                            #proc = subprocess.call(qsub_cmd, shell=True)
-                            #proc = subprocess.Popen(qsub_cmd, shell=True)
                             proc = subprocess.check_output(qsub_cmd, shell=True)
                             print 'proc:',proc
                             try:
@@ -298,7 +304,7 @@ class Gast:
                                 qsub_id_list.append(qsub_id)
                             except:
                                 print 'Could not split proc - Continuing on...'
-                            #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
                             # proc.communicate will block - probably not what we want
                             #(stdout, stderr) = proc.communicate() #block the last onehere
                             #print stderr, stdout
@@ -332,13 +338,13 @@ class Gast:
         if self.use_cluster:
             'check if clusters are done'
             # wait here for all the clustergast scripts to finish
-            #temp_file_list = gast_file_list
+
             print "Checking cluster jobs" 
             result = self.waiting_on_cluster( self.runobj.site, qsub_id_list )
             time.sleep(10)
     
             print 'USEARCH: cluster jobs are complete'
-                    
+
         for key in self.iterator: 
             
             if self.runobj.vamps_user_upload:
@@ -608,8 +614,7 @@ class Gast:
                 else:
                     fasta_file = os.path.join(output_dir, 'fasta.fa')                
                     unique_file = os.path.join(output_dir, 'unique.fa')
-                    
-                
+
                 names_file = os.path.join(output_dir, 'names')
                 tagtax_file = os.path.join(output_dir, 'tagtax_terse')
                 if os.path.exists(unique_file) and os.path.getsize(unique_file)>0:
@@ -676,7 +681,7 @@ class Gast:
                             
                 # make script executable and run it
                 os.chmod(script_filename, stat.S_IRWXU)
-                #qsub_cmd = clusterize + " " + script_filename
+
                 opts = " -n 8 "
                 qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
                 # -log /xraid2-2/vampsweb/"+self.runobj.site+"/clusterize.log
@@ -701,7 +706,7 @@ class Gast:
                     qsub_id_list.append(qsub_id)
                 except:
                     print 'Could not split proc - Continuing on...'
-                                
+
                 
             else:
                 if os.path.exists(names_file) and os.path.getsize(names_file) > 0: 
@@ -727,25 +732,7 @@ class Gast:
             time.sleep(10)
     
             print 'gast2tax: cluster jobs are complete'
-#             while c == False:
-#                 print 'temp_file_list:', temp_file_list
-#                 counter3 += 1
-#                 if counter3 >= maxwaittime / sleeptime:
-#                     raise Exception("Max wait time exceeded in gast.py")
-#                 for index, file in enumerate(temp_file_list):
-#                     #print temp_file_list
-#                     if os.path.exists(file):
-#                         # remove from tmp list
-#                         logger.debug("Found file now removing from list: "+file)
-#                         temp_file_list = temp_file_list[:index] + temp_file_list[index+1:]
-#                 
-#                 if temp_file_list:
-#                     logger.info("waiting for tagtax files to fill...")
-#                     logger.debug(' '.join(temp_file_list))
-#                     logger.info("\ttime: "+str(counter3 * sleeptime)+" | files left: "+str(len(temp_file_list)))
-#                     time.sleep(sleeptime)
-#                 else:
-#                     c = True
+
             
             
             
@@ -786,6 +773,7 @@ class Gast:
         elif os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')):
             refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')
             taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+
             self.db_type='db'
         elif C.use_full_length or dna_region == 'unknown' or dna_region not in C.refdbs:
             if os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
@@ -848,9 +836,8 @@ class Gast:
         fastasampler_cmd += ' ' + fastasamp_filename        
         return fastasampler_cmd
         
-    def get_usearch_cmd(self, fastasamp_filename, refdb, usearch_filename, use_64bit=False  ):    
-        
 
+    def get_usearch_cmd(self, fastasamp_filename, refdb, usearch_filename, use_64bit=False  ):     
         
         if use_64bit:
             
@@ -864,7 +851,7 @@ class Gast:
             elif self.db_type == 'wdb':
                 usearch_cmd += ' --wdb ' + refdb  
             else:
-                usearch_cmd += ' --udb ' + refdb  
+                usearch_cmd += ' --udb ' + refdb                 
             usearch_cmd += ' --uc ' + usearch_filename 
             usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
             usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
@@ -875,7 +862,6 @@ class Gast:
                 usearch_cmd = C.usearch6_cmd_local
                 usearch_cmd = C.usearch5_cmd
                 
-            
             usearch_cmd += ' -usearch_global ' + fastasamp_filename
             usearch_cmd += ' -gapopen 6I/1E'
             usearch_cmd += ' -uc_allhits'
@@ -885,10 +871,6 @@ class Gast:
             usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
             usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
             usearch_cmd += ' -id ' + str(C.pctid_threshold)
-        
-        
-
-        
         
         
         return usearch_cmd
@@ -1122,7 +1104,7 @@ class Gast:
                 
     def get_fasta_from_database(self):
         pass
-        
+
     def get_qstat_id_list(self, site):
     
         # ['139239', '0.55500', 'usearch', 'avoorhis', 'r', '01/22/2012', '09:00:39', 'all.q@grendel-07.bpcservers.pr', '1']
@@ -1191,7 +1173,7 @@ class Gast:
                 elif code == 'r':
                     print my_working_id_list[0],"is running..."
                     wait_counter = 0  # gets reset to '0' when id is stll running
-                
+
                 else:
                     print('Unknown qstat code: ' + str(code))
             elif my_working_id_list:  
@@ -1208,4 +1190,4 @@ class Gast:
             if wait_counter >= maxwaittime:
                 print('FAIL','Max Count exceeded: ',maxwaittime)
                 sys.exit('Max Count exceeded')
-            
+

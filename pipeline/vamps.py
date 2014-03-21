@@ -214,7 +214,8 @@ class Vamps:
         """
         Loads files into vampsdb tables.
         """
-        ret_value = ''
+
+        ret_value=''
         for key in self.iterator:
             (files, ds_count, gast_dir) = self.gather_files_per_key(key)
             if ds_count:
@@ -225,7 +226,7 @@ class Vamps:
             else:
                 print "no tagtax file found or no dataset_count -- continuing to next dataset..."
         return 'SUCCESS'
-        
+
     def gather_files_per_key(self, key):
     
         file_collector={}
@@ -246,6 +247,7 @@ class Vamps:
                 file_collector['original_fa_file'] = os.path.join(out_gast_dir,'unique.fa')
             else:
                 file_collector['original_fa_file'] = os.path.join(out_gast_dir,'fasta.fa')
+
             if self.runobj.fasta_file:
                 grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
             else:
@@ -723,7 +725,8 @@ class Vamps:
         
         logger.info("Finishing VAMPS info()")
 
-    def load_database(self,key, out_gast_dir, file_collector):
+
+    def load_database(self, key, out_gast_dir, file_collector):
         """
         
         """
@@ -824,6 +827,7 @@ class Vamps:
             execute_error=True
         if execute_error:
             return 'ERROR: loading summed(junk)_data_cube table'    
+
         #
         #  TAXONOMY
         #
@@ -849,7 +853,8 @@ class Vamps:
             print "distinct taxes file not found for dataset "+key
             execute_error=True
         if execute_error:
-            return 'ERROR: loading taxonomy table'     
+            return 'ERROR: loading taxonomy table'   
+
         #
         #  SEQUENCES
         #
@@ -877,7 +882,8 @@ class Vamps:
             print "sequences file not found for dataset "+key  
             execute_error=True
         if execute_error:
-            return 'ERROR: loading sequences table' 
+            return 'ERROR: loading sequences table'     
+
         #
         #  EXPORT
         #
@@ -894,7 +900,9 @@ class Vamps:
                             VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
                             % (export_table,
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
+
                 #myconn.execute_no_fetch(qExport) 
+
                 try:
                     cursor.execute(qExport)
                 except:
@@ -906,7 +914,8 @@ class Vamps:
             print "export file not found for dataset "+key
             execute_error=True
         if execute_error:
-            return 'ERROR: loading export table' 
+            return 'ERROR: loading export table'    
+
         #
         #  PROJECTS_DATASETS
         #
@@ -945,7 +954,8 @@ class Vamps:
             print "project_datasets file not found for dataset "+key 
             execute_error=True
         if execute_error:
-            return 'ERROR: loading datasets table(s)' 
+            return 'ERROR: loading datasets table(s)'     
+
         #
         # INFO
         #
@@ -984,7 +994,8 @@ class Vamps:
             print "upload_info file not found for dataset "+key 
             execute_error=True
         if execute_error:
-            return 'ERROR: loading info table' 
+            return 'ERROR: loading info table'          
+
         #
         # USERS
         #
@@ -1008,5 +1019,3 @@ class Vamps:
         #self.conn.commit()
         cursor.close()
         return 'SUCCESS'
-        
-        

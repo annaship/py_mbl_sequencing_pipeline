@@ -165,7 +165,6 @@ def wait_for_cluster_to_finish(my_running_id_list):
                 logger.debug('Unknown qstat code ' + str(code))
         else:
             my_working_id_list = my_working_id_list[1:]
-            
             logger.debug('id finished ' + str(my_working_id_list))
  
         if not my_working_id_list:
@@ -280,7 +279,8 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
     """
     This should be available to write status updates to vamps:vamps_upload_status.
     It is especially important for MoBeDAC uploads because the qiime site
-    will 'see' and react to the message in the db. <-- not true any longer 2014-02-01 AAV
+    will 'see' and react to the message in the db.  <-- not true any longer 2014-02-01 AAV
+
     
     """
     import ConMySQL
@@ -308,7 +308,6 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
         print "ERROR status update failed"
     else:    
         conn.commit()
-        #print "commiting",query
     
 class PipelneUtils:
     def __init__(self):
@@ -369,12 +368,12 @@ example of getting all directory name in illumina_files
         except OSError:
             if os.path.isdir(dir_name):
                 print "\nDirectory %s already exists."  % (dir_name)
-                confirm_msg = "Do you want to continue? (Yes / No) "
-                answer = raw_input(confirm_msg)
-                if answer != 'Yes':
-                    sys.exit("There was an error in the directory " + dir_name + " creation - Exiting.")
-                elif answer == 'Yes':
-                    pass
+#                 confirm_msg = "Do you want to continue? (Yes / No) "
+#                 answer = raw_input(confirm_msg)
+#                 if answer != 'Yes':
+#                     sys.exit("There was an error in the directory " + dir_name + " creation - Exiting.")
+#                 elif answer == 'Yes':
+                pass
             else:
             # There was an error on creation, so make sure we know about it
                 raise    
