@@ -19,19 +19,21 @@ class MBLPipelineFastaUtils:
     or a single fasta file
     
     """
-    def __init__(self, lane_keys, outputdir):
+    def __init__(self, lane_keys, runobj):
         self.inputFileName = {}
         self.orphans = {}
         self.lane_keys = lane_keys
-        self.outputdir = outputdir
+        self.base_dir = runobj.output_dir
+        self.trim_dir = os.path.join(self.base_dir, 'analysis/trimming')
+        #self.chimera_dir = os.path.join(self.base_dir, 'analysis/chimera')
         self.deleted_ids = {}
         for lane_key in lane_keys:
-            self.inputFileName[lane_key] = os.path.join(self.outputdir, lane_key + ".trimmed.fa")
+            self.inputFileName[lane_key] = os.path.join(self.trim_dir, lane_key + ".trimmed.fa")
             self.orphans[lane_key] = {}
-            deleted_file            = os.path.join(self.outputdir, lane_key + ".deleted.txt" )
+            deleted_file            = os.path.join(self.trim_dir, lane_key + ".deleted.txt" )
             self.deleted_ids[lane_key] = []
             if not (os.path.exists(deleted_file) and os.path.getsize(deleted_file) > 0):
-                logger("No deleted sequences for lane: " + lane_key)
+                logger.debug("No deleted sequences for lane: " + lane_key)
                 continue
             del_fh = open(deleted_file,"r")
             #deleted_id_list = self.deleted_ids[lane_key] = []
@@ -54,8 +56,8 @@ class MBLPipelineFastaUtils:
         for lane_key in self.lane_keys:
             logger.debug("write_clean_fasta_file working on lanekey: " + lane_key);
             deleted_id_list = []
-            original_trimmed_file   = os.path.join(self.outputdir, lane_key + ".trimmed.fa" )
-            new_trimmed_file_name   = os.path.join(self.outputdir, lane_key + ".newtrimmed.fa")
+            original_trimmed_file   = os.path.join(self.trim_dir, lane_key + ".trimmed.fa" )
+            new_trimmed_file_name   = os.path.join(self.trim_dir, lane_key + ".newtrimmed.fa")
             new_trimmed_file        = FastaOutput(new_trimmed_file_name)
             
             # open trimmed file and read a line             
@@ -70,7 +72,7 @@ class MBLPipelineFastaUtils:
             new_trimmed_file.close()
             
             # rename to newtrimmed => trimmed
-            os.rename(original_trimmed_file, os.path.join(self.outputdir, lane_key + ".trimmed_with_chimera.fa" ))
+            os.rename(original_trimmed_file, os.path.join(self.trim_dir, lane_key + ".trimmed_with_chimera.fa" ))
             os.rename(new_trimmed_file_name, original_trimmed_file )
             
             
@@ -84,8 +86,8 @@ class MBLPipelineFastaUtils:
         for lane_key in self.lane_keys:
             
             deleted_id_list = []
-            original_names_file = os.path.join(self.outputdir,lane_key + ".names" )
-            new_names_file      = os.path.join(self.outputdir, lane_key + ".newnames")
+            original_names_file = os.path.join(self.trim_dir,lane_key + ".names" )
+            new_names_file      = os.path.join(self.trim_dir, lane_key + ".newnames")
             
             newnames_fh = open( new_names_file,     "w" )
             names_fh    = open( original_names_file,"r" )
@@ -127,7 +129,7 @@ class MBLPipelineFastaUtils:
             names_fh.close()
             
             # rename to newnames => names
-            os.rename(original_names_file, os.path.join(self.outputdir, lane_key + ".names_dirty" ))
+            os.rename(original_names_file, os.path.join(self.trim_dir, lane_key + ".names_dirty" ))
             os.rename(new_names_file, original_names_file )            
             
                     
@@ -140,9 +142,9 @@ class MBLPipelineFastaUtils:
         for lane_key in self.lane_keys:
        
             deleted_id_list = []
-            new_unique_file_name    = os.path.join(self.outputdir, lane_key +".newunique.fa")
+            new_unique_file_name    = os.path.join(self.trim_dir, lane_key +".newunique.fa")
             new_unique_file         = FastaOutput(new_unique_file_name)            
-            original_unique_file    = os.path.join(self.outputdir, lane_key + '.unique.fa')
+            original_unique_file    = os.path.join(self.trim_dir, lane_key + '.unique.fa')
 
             deleted_id_list = self.deleted_ids[lane_key]
             if len(deleted_id_list) == 0:
@@ -162,7 +164,7 @@ class MBLPipelineFastaUtils:
             new_unique_file.close()
             
             # rename to newuniques => uniques
-            os.rename(original_unique_file, os.path.join(self.outputdir, lane_key + ".unique_dirty.fa" ))
+            os.rename(original_unique_file, os.path.join(self.trim_dir, lane_key + ".unique_dirty.fa" ))
             os.rename(new_unique_file_name, original_unique_file ) 
             
             
@@ -172,10 +174,10 @@ class MBLPipelineFastaUtils:
            Thes file have already had their ids checked from the deleted file
         """
         for lane_key in self.lane_keys:
-            original_abundance_file = os.path.join(self.outputdir, lane_key + ".abund.fa" )  
-            new_abundance_file      = os.path.join(self.outputdir, lane_key + ".newabund.fa")            
-            new_names_file          = os.path.join(self.outputdir, lane_key + ".names")
-            new_unique_file         = os.path.join(self.outputdir, lane_key + ".unique.fa") 
+            original_abundance_file = os.path.join(self.trim_dir, lane_key + ".abund.fa" )  
+            new_abundance_file      = os.path.join(self.trim_dir, lane_key + ".newabund.fa")            
+            new_names_file          = os.path.join(self.trim_dir, lane_key + ".names")
+            new_unique_file         = os.path.join(self.trim_dir, lane_key + ".unique.fa") 
             names = {}
             uniques = {}
             
@@ -208,7 +210,7 @@ class MBLPipelineFastaUtils:
                 abundfa.write(new_abundance_file,'a')
             
             # rename to newuniques => uniques
-            os.rename(original_abundance_file, os.path.join(self.outputdir, lane_key + ".abund_dirty.fa" ))
+            os.rename(original_abundance_file, os.path.join(self.trim_dir, lane_key + ".abund_dirty.fa" ))
             os.rename(new_abundance_file, original_abundance_file )            
      
             
@@ -220,8 +222,8 @@ class MBLPipelineFastaUtils:
         # primers
         # run primers
         for lane_key in self.lane_keys:
-            abundance_file      = os.path.join(self.outputdir, lane_key + ".abund.fa")            
-            names_file          = os.path.join(self.outputdir, lane_key + ".names")
-            unique_file         = os.path.join(self.outputdir, lane_key + ".unique.fa")     
-            deleted_file        = os.path.join(self.outputdir, lane_key + ".deleted.txt")
+            abundance_file      = os.path.join(self.trim_dir, lane_key + ".abund.fa")            
+            names_file          = os.path.join(self.trim_dir, lane_key + ".names")
+            unique_file         = os.path.join(self.trim_dir, lane_key + ".unique.fa")     
+            deleted_file        = os.path.join(self.trim_dir, lane_key + ".deleted.txt")
             

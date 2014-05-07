@@ -163,12 +163,19 @@ def chimera(runobj):
     # lets read the trim status file out here and keep those details out of the Chimera code
     idx_keys = get_keys(runobj)
     #new_lane_keys = convert_unicode_dictionary_to_str(json.loads(open(runobj.trim_status_file_name,"r").read()))["new_lane_keys"]
+    # Open run STATUS File here.
+    # open in append mode because we may start the run in the middle
+    # say at the gast stage and don't want to over write.
+    # if we re-run trimming we'll get two trim status reports
+    runobj.run_status_file_h = open(runobj.run_status_file_name, "a")
     
     mychimera = Chimera(runobj)
-    
-    c_den    = mychimera.chimera_denovo(idx_keys)
+    logger.debug("\nStarting DeNovo Chimera")
+    c_den    = mychimera.chimera_denovo()
+    logger.debug("Ending DeNovo Chimera")
     if c_den[0] == 'SUCCESS':
-        chimera_cluster_ids += c_den[2]
+        chimera_cluster_ids += c_den[2]   # add a list to a list
+        logger.debug("chimera_cluster_ids: "+' '.join(chimera_cluster_ids))
         chimera_code='PASS'
     elif c_den[0] == 'NOREGION':
         chimera_code='NOREGION'
@@ -176,8 +183,10 @@ def chimera(runobj):
         chimera_code = 'FAIL'
     else:
         chimera_code='FAIL'
-    
-    c_ref    = mychimera.chimera_reference(idx_keys)
+
+    logger.debug("Chimera DeNovo Code: "+chimera_code)
+    logger.debug("\nStarting Reference Chimera")
+    c_ref    = mychimera.chimera_reference()
     
     if c_ref[0] == 'SUCCESS':
         chimera_cluster_ids += c_ref[2]
@@ -220,14 +229,18 @@ def chimera(runobj):
         runobj.chimera_status_file_h.write("2-CHIMERA ERROR: \n")
         runobj.run_status_file_h.write("2-CHIMERA ERROR: \n")
         sys.exit("2-Chimera checking Failed")
-    sleep(2)   
+    
+    sleep(2) 
+    
     if  chimera_code == 'PASS' and  chimera_cluster_code[0] == 'SUCCESS':
-        mychimera.write_chimeras_to_deleted_file(idx_keys)
+        logger.info("Writing Chimeras to deleted files")
+        mychimera.write_chimeras_to_deleted_file()
+
         # should also recreate fasta
         # then read chimera files and place (or replace) any chimeric read_id
         # into the deleted file.
         
-        mymblutils = MBLPipelineFastaUtils(idx_keys, mychimera.outdir)
+        mymblutils = MBLPipelineFastaUtils(idx_keys, runobj)
         
         # write new cleaned files that remove chimera if apropriate
         # these are in fasta_mbl_pipeline.py
@@ -252,7 +265,8 @@ def chimera(runobj):
         # runkeys
         # primers
         # run primers
-        mymblutils.write_clean_files_to_database()
+
+        #mymblutils.write_clean_files_to_database()
         
     # def is in utils.py: appends
     #zip_up_directory(runobj.run_date, runobj.output_dir, 'a')
@@ -577,6 +591,7 @@ def gast(runobj):
             write_status_to_vamps_db( runobj.site, runobj.run, "GAST ERROR", "gast2tax failed" )
     elif runobj.vamps_user_upload:
         write_status_to_vamps_db( runobj.site, runobj.run, result_code['status'], result_code['message'] )
+        # write has_tax=1 to INFO-TAX.config
             
 def cluster(runobj):
     """
@@ -616,9 +631,16 @@ def vampsupload(runobj):
     # Create files
     myvamps.create_vamps_files()
     # put files in db
-    myvamps.load_vamps_db()
+    result_code = myvamps.load_vamps_db()
     
-    
+    if result_code[:5] == 'ERROR':
+        logger.error("load_vamps_db failed") 
+        sys.exit("load_vamps_db failed")
+        if runobj.vamps_user_upload:
+            write_status_to_vamps_db( runobj.site, runobj.run, "GAST_ERROR", result_code )
+    elif runobj.vamps_user_upload:
+        print "Finished loading VAMPS data",result_code
+        write_status_to_vamps_db( runobj.site, runobj.run, 'GAST_SUCCESS', 'Loading VAMPS Finished' )
     # check here for completion of 
     # 1-file creation
     # 2-data appears in vamps

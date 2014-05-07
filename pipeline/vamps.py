@@ -62,7 +62,7 @@ class Vamps:
             if self.runobj.mobedac:
                 dir_prefix = 'mobedac_' + self.runobj.user + '_' + self.runobj.run
             else:
-                dir_prefix = self.runobj.user + '_' + self.runobj.run + '_gast'
+                dir_prefix = self.runobj.user + '_' + self.runobj.run
         else:
             site = ''
             dir_prefix = self.runobj.run
@@ -110,7 +110,7 @@ class Vamps:
             db_name    = 'vamps'
             db_home = '/xraid2-2/vampsweb/vamps/'
         else:
-            db_host    = 'vampsdev'
+            db_host    = 'bpcweb7'
             db_name    = 'vamps'
             db_home = '/xraid2-2/vampsweb/vampsdev/'
         obj=ConMySQL.New(db_host, db_name, db_home)
@@ -214,14 +214,19 @@ class Vamps:
         """
         Loads files into vampsdb tables.
         """
+
+        ret_value=''
         for key in self.iterator:
             (files, ds_count, gast_dir) = self.gather_files_per_key(key)
             if ds_count:
                 if self.runobj.load_vamps_database:
-                     self.load_database(key, gast_dir, files)
+                     ret_value = self.load_database(key, gast_dir, files)
+                     if ret_value[:5] == 'ERROR':
+                        return ret_value
             else:
                 print "no tagtax file found or no dataset_count -- continuing to next dataset..."
-            
+        return 'SUCCESS'
+
     def gather_files_per_key(self, key):
     
         file_collector={}
@@ -238,8 +243,11 @@ class Vamps:
         if self.runobj.vamps_user_upload:
             
             file_collector['unique_file'] = os.path.join(out_gast_dir,'unique.fa')
-            file_collector['original_fa_file'] = os.path.join(out_gast_dir,'fasta.fa')
-            
+            if self.runobj.project[:3] == 'MBE':   # Mobedac: use uniques in export
+                file_collector['original_fa_file'] = os.path.join(out_gast_dir,'unique.fa')
+            else:
+                file_collector['original_fa_file'] = os.path.join(out_gast_dir,'fasta.fa')
+
             if self.runobj.fasta_file:
                 grep_cmd = ['grep','-c','>',self.runobj.fasta_file]
             else:
@@ -717,7 +725,8 @@ class Vamps:
         
         logger.info("Finishing VAMPS info()")
 
-    def load_database(self,key,out_gast_dir, file_collector):
+
+    def load_database(self, key, out_gast_dir, file_collector):
         """
         
         """
@@ -725,6 +734,7 @@ class Vamps:
         print "Starting load VAMPS data"
 
         # USER: vamps_db_tables
+        execute_error = False
         if self.runobj.vamps_user_upload:
             user = self.runobj.user
             project = self.runobj.project
@@ -775,10 +785,18 @@ class Vamps:
                             line[8],line[9],line[10],line[11],line[12],line[13],line[14],line[15])
                 #myconn.execute_no_fetch(qDataCube)
                 #print qDataCube
-                rows_affected = cursor.execute(qDataCube)
+                try:
+                    rows_affected = cursor.execute(qDataCube)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit()  
         else:
             print "taxes file not found for dataset "+key
-            
+            execute_error=True
+        if execute_error:
+            return 'ERROR: loading data_cube table'
             
         #
         # SUMMED (JUNK) DATA_CUBE
@@ -797,10 +815,19 @@ class Vamps:
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
                 #myconn.execute_no_fetch(qSummedCube) 
                 #print qSummedCube 
-                cursor.execute(qSummedCube)
+                try:
+                    cursor.execute(qSummedCube)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit()  
         else:
             print "summed taxes file not found for dataset "+key
-                
+            execute_error=True
+        if execute_error:
+            return 'ERROR: loading summed(junk)_data_cube table'    
+
         #
         #  TAXONOMY
         #
@@ -815,9 +842,19 @@ class Vamps:
                             VALUES('%s','%s','%s')" \
                             % (taxonomy_table, line[0],line[1],line[2])
                 #myconn.execute_no_fetch(qTaxonomy)
-                cursor.execute(qTaxonomy)
+                try:
+                    cursor.execute(qTaxonomy)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit()  
         else:
             print "distinct taxes file not found for dataset "+key
+            execute_error=True
+        if execute_error:
+            return 'ERROR: loading taxonomy table'   
+
         #
         #  SEQUENCES
         #
@@ -834,9 +871,19 @@ class Vamps:
                             % (sequences_table,
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8],line[9],line[10])
                 #myconn.execute_no_fetch(qSequences) 
-                cursor.execute(qSequences)
+                try:
+                    cursor.execute(qSequences)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit()  
         else:
-            print "sequences file not found for dataset "+key    
+            print "sequences file not found for dataset "+key  
+            execute_error=True
+        if execute_error:
+            return 'ERROR: loading sequences table'     
+
         #
         #  EXPORT
         #
@@ -849,14 +896,26 @@ class Vamps:
                 #line = line[1:] # remove leading empty tab
                 # t.read_id, t.project, t.dataset, g.refhvr_ids, x.distance, x.taxonomy, t.sequence, x.rank," " t.entry_date
                 # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
-                qSequences = "insert ignore into %s (read_id, project, dataset, refhvr_ids, distance, taxonomy, sequence, rank, date_trimmed)\
+                qExport = "insert ignore into %s (read_id, project, dataset, refhvr_ids, distance, taxonomy, sequence, rank, date_trimmed)\
                             VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
                             % (export_table,
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
-                #myconn.execute_no_fetch(qSequences) 
-                cursor.execute(qSequences)
+
+                #myconn.execute_no_fetch(qExport) 
+
+                try:
+                    cursor.execute(qExport)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit() 
         else:
-            print "export file not found for dataset "+key      
+            print "export file not found for dataset "+key
+            execute_error=True
+        if execute_error:
+            return 'ERROR: loading export table'    
+
         #
         #  PROJECTS_DATASETS
         #
@@ -873,14 +932,30 @@ class Vamps:
                             % (datasets_table,
                             line[0],line[1],line[2],line[3],line[4],line[5])
                 #myconn.execute_no_fetch(qDatasets) 
-                cursor.execute(qDatasets)
+                try:
+                    cursor.execute(qDatasets)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit() 
                 
                 qDatasets = "update %s set has_tax='1' where project='%s'" \
                             % (datasets_table, line[0])
                 #myconn.execute_no_fetch(qDatasets)
-                cursor.execute(qDatasets)
+                try:
+                    cursor.execute(qDatasets)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit() 
         else:
-            print "project_datasets file not found for dataset "+key      
+            print "project_datasets file not found for dataset "+key 
+            execute_error=True
+        if execute_error:
+            return 'ERROR: loading datasets table(s)'     
+
         #
         # INFO
         #
@@ -897,14 +972,30 @@ class Vamps:
                             % (users_info_table,
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7])
                 #myconn.execute_no_fetch(qInfo) 
-                cursor.execute(qInfo)
+                try:
+                    cursor.execute(qInfo)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit() 
                 
                 qInfo = "update %s set has_tax='1' where project_name='%s'" \
                             % (users_info_table, line[0])
                 #myconn.execute_no_fetch(qInfo) 
-                cursor.execute(qInfo)
+                try:
+                    cursor.execute(qInfo)
+                except:
+                    self.conn.rollback()  
+                    execute_error=True
+                else:
+                    self.conn.commit() 
         else:
-            print "upload_info file not found for dataset "+key          
+            print "upload_info file not found for dataset "+key 
+            execute_error=True
+        if execute_error:
+            return 'ERROR: loading info table'          
+
         #
         # USERS
         #
@@ -914,11 +1005,17 @@ class Vamps:
                     VALUES('%s','%s')" \
                     % (users_table, project, user)
         #myconn.execute_no_fetch(qUser) 
-        cursor.execute(qUser)
-             
-            
+        try:
+            cursor.execute(qUser)
+        except:
+            self.conn.rollback()  
+            execute_error=True
+        else:
+            self.conn.commit()      
+        if execute_error:
+            return 'ERROR: loading info table'     
         logger.info("Finished load VAMPS data")
         
-        self.conn.commit()
+        #self.conn.commit()
         cursor.close()
-        
+        return 'SUCCESS'
