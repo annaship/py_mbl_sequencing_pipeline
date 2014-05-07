@@ -99,7 +99,6 @@ class IlluminaFiles:
                 print "Problems with program_name = %s, file_name = %s" % (program_name, file_name)
                 raise  
 
-
     def partial_overlap_reads(self):
         print "Extract partial_overlap V4V5 reads:"
         for idx_key in self.runobj.samples.keys():
