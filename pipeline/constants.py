@@ -10,6 +10,8 @@
 #"dna_region","amp_operator","seq_operator","barcode_index","overlap","insert_size","file_prefix",
 #"read_length","primer_suite","first_name","last_name","email","institution","project_title",
 #"project_description","funding","env_sample_source_id","dataset_description"
+from collections import defaultdict
+
 csv_header_list = {
 'illumina' :    ["run",    "data_owner",    "run_key",    "lane",    "dataset",    "project",    "tubelabel",    "barcode",   
                             "adaptor",    "dna_region",    "amp_operator",    "seq_operator",    "barcode_index",    "overlap",    "insert_size",    
@@ -44,6 +46,25 @@ primer_suites   = ["Archaeal V6 Suite", "Archaeal V6mod Suite", "Archaeal V6-V4 
                    "Relman", "ti_v3v6", "ti_v6", "topo", "v6v4", "v6_dutch", "Vibrio V4"]
 dna_regions     = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", 
                     "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6", "its1"]
+
+#K = [G,T]
+#M = [A,C]
+#R = [A,G]
+#S = [G,C]
+#W = [A,T]
+#Y = [C,T]
+#todo: add to env454 "combined_primer"
+primers_dict = defaultdict(dict)
+primers_dict["Archaeal V6 Suite"]["proximal_primer"]     = "AATTGGANTCAACGCCGG"
+primers_dict["Archaeal V6 Suite"]["distal_primer"]       = "CGRCRGCCATGYACCWC"
+primers_dict["Archaeal V6mod Suite"]["proximal_primer"]  = "AATTGGCGGGGGAGCAC"
+primers_dict["Archaeal V6mod Suite"]["distal_primer"]    = "GCCATGCACC[A,T]CCTCT"
+primers_dict["Archaeal V4-V5 Suite"]["proximal_primer"]  = "G[C,T][C,T]TAAA..[A,G][C,T][C,T][C,T]GTAGC"
+primers_dict["Archaeal V4-V5 Suite"]["distal_primer"]    = "CCGGCGTTGA.TCCAATT"
+primers_dict["Bacterial V4-V5 Suite"]["proximal_primer"] = "CCAGCAGC[C,T]GCGGTAA."
+primers_dict["Bacterial V4-V5 Suite"]["distal_primer"]   = "CCGTC[A,T]ATT[C,T].TTT[G,A]A.T"
+primers_dict["Fungal ITS1 Suite"]["proximal_primer"]     = "GTAAAAGTCGTAACAAGGTTTC"
+primers_dict["Fungal ITS1 Suite"]["distal_primer"]       = "GTTCAAAGA[C,T]TCGATGATTCAC"
 
 
 VALIDATE_STEP           = "validate"
