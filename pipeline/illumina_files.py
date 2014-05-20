@@ -107,7 +107,7 @@ class IlluminaFiles:
             if self.utils.is_local():
                 program_name = C.partial_overlap_cmd_local        
             try:
-                call([program_name, "--enforce-Q30-check", ini_file_name])           
+                call([program_name, "--enforce-Q30-check --marker-gene-stringent", ini_file_name])           
 #                 call([program_name, ini_file_name])           
 #                 call([program_name, ini_file_name, idx_key])
 #                 call([program_name, "--fast-merge", ini_file_name, idx_key])
