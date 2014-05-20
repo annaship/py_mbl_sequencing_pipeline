@@ -10,6 +10,7 @@ import fastalib as fa
 from subprocess import call
 import ast
 from pipeline.utils import Dirs, PipelneUtils
+from collections import defaultdict
 import constants as C
 
 "TODO: add tests and test case"
@@ -107,7 +108,14 @@ class IlluminaFiles:
             if self.utils.is_local():
                 program_name = C.partial_overlap_cmd_local        
             try:
+<<<<<<< HEAD
                 call([program_name, "--enforce-Q30-check --marker-gene-stringent", ini_file_name])           
+=======
+#                print('program_name, "--enforce-Q30-check", ini_file_name: ')
+#                print program_name 
+#                print ini_file_name
+                call([program_name, "--enforce-Q30-check", ini_file_name])           
+>>>>>>> FETCH_HEAD
 #                 call([program_name, ini_file_name])           
 #                 call([program_name, ini_file_name, idx_key])
 #                 call([program_name, "--fast-merge", ini_file_name, idx_key])
@@ -159,18 +167,22 @@ class IlluminaFiles:
         distal_primer   = ""
         primers         = {}
         for idx_key in self.runobj.samples.keys():
-            if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal V4-V5'):
-                proximal_primer = "G[C,T][C,T]TAAA..[A,G][C,T][C,T][C,T]GTAGC"
-                distal_primer   = "CCGGCGTTGA.TCCAATT"
-            elif self.runobj.samples[idx_key].primer_suite.startswith('Bacterial V4-V5'):
-                proximal_primer = "CCAGCAGC[C,T]GCGGTAA."
-                distal_primer   = "CCGTC[A,T]ATT[C,T].TTT[G,A]A.T"
-            elif self.runobj.samples[idx_key].primer_suite.startswith('Archaeal V6mod'):
-                proximal_primer = "AATTGGCGGGGGAGCAC"
-                distal_primer   = "GCCATGCACC[A,T]CCTCT"
-            elif self.runobj.samples[idx_key].primer_suite.startswith('Fungal ITS1'):
-                proximal_primer = "GTAAAAGTCGTAACAAGGTTTC"
-                distal_primer   = "GTTCAAAGA[C,T]TCGATGATTCAC"
+            if self.runobj.samples[idx_key].primer_suite in C.primers_dict:
+                proximal_primer = C.primers_dict[self.runobj.samples[idx_key].primer_suite]["proximal_primer"]
+                distal_primer = C.primers_dict[self.runobj.samples[idx_key].primer_suite]["distal_primer"]
+
+#            if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal V4-V5'):
+#                proximal_primer = "G[C,T][C,T]TAAA..[A,G][C,T][C,T][C,T]GTAGC"
+#                distal_primer   = "CCGGCGTTGA.TCCAATT"
+#            elif self.runobj.samples[idx_key].primer_suite.startswith('Bacterial V4-V5'):
+#                proximal_primer = "CCAGCAGC[C,T]GCGGTAA."
+#                distal_primer   = "CCGTC[A,T]ATT[C,T].TTT[G,A]A.T"
+#            elif self.runobj.samples[idx_key].primer_suite.startswith('Archaeal V6mod'):
+#                proximal_primer = "AATTGGCGGGGGAGCAC"
+#                distal_primer   = "GCCATGCACC[A,T]CCTCT"
+#            elif self.runobj.samples[idx_key].primer_suite.startswith('Fungal ITS1'):
+#                proximal_primer = "GTAAAAGTCGTAACAAGGTTTC"
+#                distal_primer   = "GTTCAAAGA[C,T]TCGATGATTCAC"
             else:
                 print "ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'" % (self.runobj.samples[idx_key].primer_suite)
             primers[idx_key] = (proximal_primer, distal_primer) 

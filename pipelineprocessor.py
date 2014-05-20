@@ -229,7 +229,9 @@ def chimera(runobj):
         runobj.chimera_status_file_h.write("2-CHIMERA ERROR: \n")
         runobj.run_status_file_h.write("2-CHIMERA ERROR: \n")
         sys.exit("2-Chimera checking Failed")
-    sleep(2)   
+    
+    sleep(2) 
+    
     if  chimera_code == 'PASS' and  chimera_cluster_code[0] == 'SUCCESS':
         logger.info("Writing Chimeras to deleted files")
         mychimera.write_chimeras_to_deleted_file()
