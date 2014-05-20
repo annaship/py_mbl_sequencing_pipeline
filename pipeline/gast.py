@@ -190,8 +190,6 @@ class Gast:
                 taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
                 self.db_type='wdb'
             
-            #use_64bit_usearch = False
-            #if self.runobj.use64bit and self.runobj.use_full_length == True:
             if self.runobj.use_full_length == True:
             #if self.runobj.project[:3] == 'MBE':
                 #use_64bit_usearch = True
@@ -268,7 +266,7 @@ class Gast:
                         else:
                             subprocess.call(fs_cmd, shell=True)
                         
-                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, self.runobj.use64bit)
+                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
     
                         logger.debug("usearch command: "+us_cmd)
 
@@ -325,7 +323,7 @@ class Gast:
                     gast_file_list = [clustergast_filename_single]
                     print usearch_filename, clustergast_filename_single
                     
-                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename, self.runobj.use64bit)
+                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename)
                     print us_cmd
                     subprocess.call(us_cmd, shell=True)
                     grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
@@ -840,7 +838,7 @@ class Gast:
     def get_usearch_cmd(self, fastasamp_filename, refdb, usearch_filename, use_64bit=False  ):     
         
         if use_64bit:
-            
+            # We don't have use of 64bit usearch anymore
             usearch_cmd = C.usearch64_cmd
             usearch_cmd += ' --global '
             usearch_cmd += ' --query ' + fastasamp_filename

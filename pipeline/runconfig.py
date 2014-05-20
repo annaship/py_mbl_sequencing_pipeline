@@ -196,10 +196,9 @@ class RunConfig:
                 self.maximumLength = general_config['maximum_length']
             except:
                 self.maximumLength = C.maximumLength
-            try:
-                self.use64bit       = general_config['use64bit']
-            except:
-                self.use64bit = False
+            
+            self.use64bit = False  # we dont have use of this anymore
+            
             try:
                 self.fasta_file     = general_config['fasta_file'] 
             except:
