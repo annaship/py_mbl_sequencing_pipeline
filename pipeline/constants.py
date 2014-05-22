@@ -187,7 +187,7 @@ trim_lengths = {
     
 ############# defaults for CHIMERA checking #####################
 # if its not in this list chimera checking will be skipped
-regions_to_chimera_check = ['v6v4','v3v5','v4v5','v4v6','v3v1','v1v3','v5v3']
+regions_to_chimera_check = ['v6v4','v3v5','v4v5','v4v6','v3v1','v1v3','v5v3', 'ITS1']
 cluster_max_wait                = 1*60*60  # 1 hour
 cluster_check_interval          = 2
 cluster_initial_check_interval  = 10
