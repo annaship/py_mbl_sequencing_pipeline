@@ -125,6 +125,10 @@ class IlluminaFiles:
 #             print "HERE: program_name = " % (program_name)   
 #             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
             
+    def create_job_array_script(self, command_line):
+        ini_files = get_all_files_by_ext(self.out_file_path, "ini")
+        
+        
     def filter_mismatches(self, max_mismatch = 3):
         print "Filter mismatches if more then %s" % (max_mismatch)
         n = 0        
