@@ -236,8 +236,8 @@ nonchimeric_suffix = "nonchimeric.fa"
 unique_suffix      = "unique"
 ############# defaults for GAST ################################################################
 usearch_cmd        = '/bioware/usearch/5.2.236/x86/usearch'     #usearch5 32bit
-usearch6_cmd       = '/bioware/usearch/6.0.203/x86/usearch'     #usearch6 32bit
-usearch64_cmd      = ''  #usearch6 64bit
+usearch6_cmd       = '/bioware/usearch/6.0.217/x86/usearch'     #usearch6 32bit
+usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
 # usearch6_cmd        = '/bioware/uclust/usearch6'
 #usearch5_cmd        = '/bioware/uclust/usearch5.2.32_i86linux32'
 #usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
