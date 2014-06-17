@@ -109,7 +109,11 @@ class IlluminaFiles:
             if self.utils.is_local():
                 program_name = C.partial_overlap_cmd_local        
             try:
-                call([program_name, "--enforce-Q30-check", "--marker-gene-stringent", ini_file_name])           
+                if (self.runobj.samples[idx_key].dna_region == "ITS1"):
+                    call([program_name, "--enforce-Q30-check", "--marker-gene-stringent", ini_file_name])
+                else:
+                    call([program_name, "--enforce-Q30-check", ini_file_name])
+                               
 #                 call([program_name, ini_file_name])           
 #                 call([program_name, ini_file_name, idx_key])
 #                 call([program_name, "--fast-merge", ini_file_name, idx_key])
@@ -125,6 +129,10 @@ class IlluminaFiles:
 #             print "HERE: program_name = " % (program_name)   
 #             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
             
+    def create_job_array_script(self, command_line):
+        ini_files = get_all_files_by_ext(self.out_file_path, "ini")
+        
+        
     def filter_mismatches(self, max_mismatch = 3):
         print "Filter mismatches if more then %s" % (max_mismatch)
         n = 0        
