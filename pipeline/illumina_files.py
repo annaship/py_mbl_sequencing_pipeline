@@ -44,8 +44,8 @@ class IlluminaFiles:
         else:
             lane_name = ''
         
-        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
-
+        dirs      = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
+        self.dirs = dirs
         self.out_file_path = dirs.check_dir(dirs.analysis_dir)
         self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
         
@@ -103,6 +103,8 @@ class IlluminaFiles:
 
     def partial_overlap_reads(self):
         print "Extract partial_overlap V4V5 reads:"
+        self.create_job_array_script("")
+
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = C.partial_overlap_cmd
@@ -129,9 +131,51 @@ class IlluminaFiles:
 #             print "HERE: program_name = " % (program_name)   
 #             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
             
+    def get_all_dna_regions(self):
+        pass
     def create_job_array_script(self, command_line):
-        ini_files = get_all_files_by_ext(self.out_file_path, "ini")
-        
+        ini_files = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+        print ini_files
+        ini_count = len(ini_files)
+        script_file_name = "merge_on_cluster_" + self.runobj.run + "_" + self.runobj.lane_name
+#        if (self.runobj.samples[idx_key].dna_region == "ITS1"):
+#            add_arg = "--marker-gene-stringent"
+#        else:
+#            add_arg = ""
+        add_arg = ""                       
+        text = (
+                '''
+#!/bin/bash
+ 
+#$ -cwd
+#$ -S /bin/bash
+#$ -N $script_name
+# Giving the name of the output log file
+#$ -o $script_name.sge_script.sh.log
+# Combining output/error messages into one file
+#$ -j y
+# Send mail to these users
+#$ -M $username@mbl.edu
+# Send mail at job end; -m eas sends on end, abort, suspend.
+#$ -m eas
+#$ -t 1-%s
+# Now the script will iterate $ini_count times.
+
+  ini_list=(ini_files)
+  echo $ini_list1
+  i=\$(expr \$SGE_TASK_ID - 1)
+  #echo \$i
+  source ~/.bashrc
+  module load bioware
+
+  # echo "merge-illumina-pairs --enforce-Q30-check $ADD_ARG \${ini_list1[\$i]}"
+  echo "merge-illumina-pairs --enforce-Q30-check %s \${ini_list1[\$i]}"
+
+                ''' % (ini_count, add_arg)
+                )
+        print text
+        self.open_write_close(script_file_name, text)
+
         
     def filter_mismatches(self, max_mismatch = 3):
         print "Filter mismatches if more then %s" % (max_mismatch)

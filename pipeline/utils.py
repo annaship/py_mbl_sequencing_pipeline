@@ -447,15 +447,8 @@ example of getting all directory name in illumina_files
         return files
         
     def get_all_files_by_ext(self, walk_dir_name, extension):
-        files = {}
-        for dirname, dirnames, filenames in os.walk(walk_dir_name):
-            for file_name in filenames:
-                full_name = os.path.join(dirname, file_name)
-                (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
-                if (file_extension == extension):
-                    files[full_name] = (file_base, file_extension)
-    #        print "len(files) = %s" % len(files)
-        return files
+        return [file for file in os.listdir(walk_dir_name) if file.endswith(extension)]
+        
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"
     print revcomp("GTTCAAAGAYTCGATGATTCAC")
