@@ -101,11 +101,46 @@ class IlluminaFiles:
             except:
                 print "Problems with program_name = %s, file_name = %s" % (program_name, file_name)
                 raise  
+    
+    def call_sh_script(self, script_name):
+        try:
+            call([script_name])
+        except:
+            print "Problems with script_name = %s" % (script_name)
+            raise  
+        
+    def perfect_reads_cluster(self):
+        print "Extract perfect V6 reads:"
+        program_name = C.perfect_overlap_cmd
+        if self.utils.is_local():
+            program_name = C.perfect_overlap_cmd_local
+        primer_suite = self.get_config_values('primer_suite')
+        if ("Archaeal" in list(primer_suite)):
+            add_arg = " --archaea"
+        else: 
+            add_arg = ""
+        script_file_name = self.create_job_array_script(program_name + add_arg)
+        self.call_sh_script(script_file_name)
 
+                          
+    def partial_overlap_reads_cluster(self):
+        print "Extract partial_overlap V4V5 reads:"
+        program_name = C.partial_overlap_cmd
+        if self.utils.is_local():
+            program_name = C.partial_overlap_cmd_local       
+        dna_region = self.get_config_values('dna_region')
+        if ("ITS1" in list(dna_region)):
+            add_arg = "--marker-gene-stringent"
+        else:
+            add_arg = ""     
+        command_line = program_name + " --enforce-Q30-check " + add_arg
+        script_file_name = self.create_job_array_script(command_line)
+        self.call_sh_script(script_file_name)
+
+
+                    
     def partial_overlap_reads(self):
         print "Extract partial_overlap V4V5 reads:"
-        self.create_job_array_script("")
-
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = C.partial_overlap_cmd
@@ -141,23 +176,12 @@ class IlluminaFiles:
         return username + "@mbl.edu"
                 
     def create_job_array_script(self, command_line):
-        ini_count        = 0
         ini_files_list   = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
         ini_files        = " ".join(ini_files_list)
         ini_count        = len(ini_files_list)
-        script_file_name = "merge_on_cluster_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        script_file_name = "merge_on_cluster_" + command_line + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         log_file_name    = script_file_name + ".sge_script.sh.log"
         email_mbl        = self.make_users_email()
-        dna_region       = self.get_config_values('dna_region')
-        if ("ITS1" in list(dna_region)):
-            add_arg = "--marker-gene-stringent"
-        else:
-            add_arg = ""
-#todo: get email of a person who run that
-# Send mail to these users
-#$ -M $username@mbl.edu
-# Send mail at job end; -m eas sends on end, abort, suspend.
-#$ -m eas
         text = (
                 '''#!/bin/bash
 #$ -cwd
@@ -184,6 +208,7 @@ class IlluminaFiles:
 ''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, add_arg)
                 )
         self.open_write_close(script_file_name, text)
+        return script_file_name
 #         print text
 
         
