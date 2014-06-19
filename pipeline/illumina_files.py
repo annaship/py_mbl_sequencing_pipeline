@@ -13,6 +13,7 @@ import ast
 from pipeline.utils import Dirs, PipelneUtils
 from collections import defaultdict
 import constants as C
+import getpass
 
 "TODO: add tests and test case"
 #from collections import defaultdict
@@ -135,6 +136,10 @@ class IlluminaFiles:
         config_path_data = [v for k, v in self.runobj.configPath.items()]
         return set([a[key] for a in config_path_data if key in a.keys()])
         
+    def make_users_email(self):
+        username = getpass.getuser() 
+        return username + "@mbl.edu"
+                
     def create_job_array_script(self, command_line):
         ini_count        = 0
         ini_files_list   = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
@@ -142,7 +147,7 @@ class IlluminaFiles:
         ini_count        = len(ini_files_list)
         script_file_name = "merge_on_cluster_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         log_file_name    = script_file_name + ".sge_script.sh.log"
-#         dna_region       = self.get_all_dna_regions()
+        email_mbl        = self.make_users_email()
         dna_region       = self.get_config_values('dna_region')
         if ("ITS1" in list(dna_region)):
             add_arg = "--marker-gene-stringent"
@@ -162,7 +167,10 @@ class IlluminaFiles:
 #$ -o %s
 # Combining output/error messages into one file
 #$ -j y
-
+# Send mail to these users
+#$ -M %s
+# Send mail at job end; -m eas sends on end, abort, suspend.
+#$ -m eas
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
@@ -173,7 +181,7 @@ class IlluminaFiles:
   module load bioware
     
   echo "merge-illumina-pairs --enforce-Q30-check %s ${ini_list[$i]}"  
-''' % (script_file_name, log_file_name, ini_count, ini_count, ini_files, add_arg)
+''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, add_arg)
                 )
         self.open_write_close(script_file_name, text)
 #         print text
