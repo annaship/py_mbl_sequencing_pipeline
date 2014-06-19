@@ -384,7 +384,8 @@ def illumina_files(runobj):
     if runobj.do_perfect: 
         illumina_files.perfect_reads()
     else:
-        illumina_files.partial_overlap_reads()
+#         illumina_files.partial_overlap_reads()
+        illumina_files.partial_overlap_reads_cluster()
         illumina_files.filter_mismatches()
     illumina_files.uniq_fa()
 #     illumina_chimera(runobj)

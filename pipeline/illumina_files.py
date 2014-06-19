@@ -104,6 +104,7 @@ class IlluminaFiles:
     
     def call_sh_script(self, script_name):
         try:
+            call(['chmod', '0774', script_name])
             call([script_name])
         except:
             print "Problems with script_name = %s" % (script_name)
@@ -136,7 +137,6 @@ class IlluminaFiles:
         command_line = program_name + " --enforce-Q30-check " + add_arg
         script_file_name = self.create_job_array_script(command_line)
         self.call_sh_script(script_file_name)
-
 
                     
     def partial_overlap_reads(self):
@@ -179,7 +179,10 @@ class IlluminaFiles:
         ini_files_list   = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
         ini_files        = " ".join(ini_files_list)
         ini_count        = len(ini_files_list)
-        script_file_name = "merge_on_cluster_" + command_line + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        print command_line
+        command_file_name = os.path.basename(command_line.split(" ")[0])
+        print command_file_name
+        script_file_name = os.path.join(self.dirs.output_dir, "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh")
         log_file_name    = script_file_name + ".sge_script.sh.log"
         email_mbl        = self.make_users_email()
         text = (
@@ -199,13 +202,14 @@ class IlluminaFiles:
 # Now the script will iterate %s times.
 
   ini_list=(%s)
+  
   i=$(expr $SGE_TASK_ID - 1)
 #   echo "i = $i"
   source ~/.bashrc
   module load bioware
     
-  echo "merge-illumina-pairs --enforce-Q30-check %s ${ini_list[$i]}"  
-''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, add_arg)
+  echo "%s ${ini_list[$i]}"  
+''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line)
                 )
         self.open_write_close(script_file_name, text)
         return script_file_name
@@ -304,8 +308,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             ini_file_name = os.path.join(self.out_file_path,  idx_key + ".ini")
             self.open_write_close(ini_file_name, text)
 
-    def open_write_close(self, ini_file_name, text):
-        ini_file = open(ini_file_name, "w")
+    def open_write_close(self, script_file_name, text):
+        ini_file = open(script_file_name, "w")
         ini_file.write(text)
         ini_file.close()
  
