@@ -1,5 +1,5 @@
 import os, sys
-from subprocess import check_output
+from subprocess import check_output, call
 import constants as C
 from time import sleep
 import datetime
@@ -337,6 +337,16 @@ class PipelneUtils:
             return True
         else:
             return False
+
+    def check_if_array_job_is_done(self, job_name):
+        cluster_done = False
+        check_qstat_cmd_line = "qstat -r | grep %s | wc -l" % job_name
+        print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
+        
+        res = check_output([check_qstat_cmd_line])
+        print "RES = %s" % res
+          
+
 
 class Dirs:
     """get input dir from args, create all other dirs

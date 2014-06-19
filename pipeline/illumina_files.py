@@ -122,7 +122,6 @@ class IlluminaFiles:
             add_arg = ""
         script_file_name = self.create_job_array_script(program_name + add_arg)
         self.call_sh_script(script_file_name)
-
                           
     def partial_overlap_reads_cluster(self):
         print "Extract partial_overlap V4V5 reads:"
@@ -135,9 +134,10 @@ class IlluminaFiles:
         else:
             add_arg = ""     
         command_line = program_name + " --enforce-Q30-check " + add_arg
-        script_file_name = self.create_job_array_script(command_line)
-        self.call_sh_script(script_file_name)
-
+        script_file_name      = self.create_job_array_script(command_line)
+        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+        self.call_sh_script(script_file_name_full)        
+        self.utils.check_if_array_job_is_done(script_file_name_full)
                     
     def partial_overlap_reads(self):
         print "Extract partial_overlap V4V5 reads:"
@@ -181,7 +181,7 @@ class IlluminaFiles:
         ini_count         = len(ini_files_list)
         command_file_name = os.path.basename(command_line.split(" ")[0])
         script_file_name  = "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
-        script_file_name_full = os.path.join(self.dirs.analysis_dir, "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh")
+        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         log_file_name     = script_file_name + ".sge_script.sh.log"
         email_mbl         = self.make_users_email()
         text = (
@@ -213,7 +213,7 @@ class IlluminaFiles:
 #''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line, command_line)
                 )
         self.open_write_close(script_file_name_full, text)
-        return script_file_name_full
+        return script_file_name
 
         
     def filter_mismatches(self, max_mismatch = 3):
