@@ -132,47 +132,51 @@ class IlluminaFiles:
 #             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
             
     def get_all_dna_regions(self):
-        pass
+        config_path_data = [v for k, v in self.runobj.configPath.items()]
+        return set([a['dna_region'] for a in config_path_data if 'dna_region' in a.keys()])
+        
     def create_job_array_script(self, command_line):
-        ini_files = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-        print ini_files
-        ini_count = len(ini_files)
-        script_file_name = "merge_on_cluster_" + self.runobj.run + "_" + self.runobj.lane_name
-#        if (self.runobj.samples[idx_key].dna_region == "ITS1"):
-#            add_arg = "--marker-gene-stringent"
-#        else:
-#            add_arg = ""
-        add_arg = ""                       
-        text = (
-                '''
-#!/bin/bash
- 
-#$ -cwd
-#$ -S /bin/bash
-#$ -N $script_name
-# Giving the name of the output log file
-#$ -o $script_name.sge_script.sh.log
-# Combining output/error messages into one file
-#$ -j y
+        ini_files1        = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+        ini_files        = " ".join(ini_files1)
+        ini_count        = len(ini_files1)
+        script_file_name = "merge_on_cluster_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        log_file_name    = script_file_name + ".sge_script.sh.log"
+        dna_region       = self.get_all_dna_regions()
+        if ("ITS1" in list(dna_region)):
+            add_arg = "--marker-gene-stringent"
+        else:
+            add_arg = ""
+#todo: get email of a person who run that
 # Send mail to these users
 #$ -M $username@mbl.edu
 # Send mail at job end; -m eas sends on end, abort, suspend.
 #$ -m eas
-#$ -t 1-%s
-# Now the script will iterate $ini_count times.
+        text = (
+                '''#!/bin/bash
+#$ -cwd
+#$ -S /bin/bash
+#$ -N %s
+# Giving the name of the output log file
+#$ -o %s
+# Combining output/error messages into one file
+#$ -j y
 
-  ini_list=(ini_files)
-  echo $ini_list1
-  i=\$(expr \$SGE_TASK_ID - 1)
-  #echo \$i
+#$ -t 1-%s
+# Now the script will iterate %s times.
+
+  ini_list=(%s)
+  echo $ini_list
+  i=$(expr $SGE_TASK_ID - 1)
+  #echo $i
   source ~/.bashrc
   module load bioware
 
-  # echo "merge-illumina-pairs --enforce-Q30-check $ADD_ARG \${ini_list1[\$i]}"
-  echo "merge-illumina-pairs --enforce-Q30-check %s \${ini_list1[\$i]}"
+  # echo "merge-illumina-pairs --enforce-Q30-check $ADD_ARG ${ini_list1[$i]}"
+  echo "merge-illumina-pairs --enforce-Q30-check %s ${ini_list1[$i]}"
 
-                ''' % (ini_count, add_arg)
+                ''' % (script_file_name, log_file_name, ini_count, ini_count, ini_files, add_arg)
                 )
+#        .strip()
         print text
         self.open_write_close(script_file_name, text)
 
