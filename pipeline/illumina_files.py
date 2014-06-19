@@ -136,9 +136,10 @@ class IlluminaFiles:
         return set([a[key] for a in config_path_data if key in a.keys()])
         
     def create_job_array_script(self, command_line):
-        ini_files1        = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-        ini_files        = " ".join(ini_files1)
-        ini_count        = len(ini_files1)
+        ini_count        = 0
+        ini_files_list   = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+        ini_files        = " ".join(ini_files_list)
+        ini_count        = len(ini_files_list)
         script_file_name = "merge_on_cluster_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         log_file_name    = script_file_name + ".sge_script.sh.log"
 #         dna_region       = self.get_all_dna_regions()
@@ -166,28 +167,16 @@ class IlluminaFiles:
 # Now the script will iterate %s times.
 
   ini_list=(%s)
-  echo "ini_list = $ini_list"
-  echo "SGE_TASK_ID = $SGE_TASK_ID"
   i=$(expr $SGE_TASK_ID - 1)
-  echo "i = $i"
+#   echo "i = $i"
   source ~/.bashrc
   module load bioware
     
-  echo "merge-illumina-pairs --enforce-Q30-check  ${ini_list[$i]}"
-  
-  #echo $ini_list
-  #i=$(expr $SGE_TASK_ID - 1)
-  #echo $i
-  #source ~/.bashrc
-  #module load bioware
-
-  #echo "merge-illumina-pairs --enforce-Q30-check %s ${ini_list[$i]}"
-
-                ''' % (script_file_name, log_file_name, ini_count, ini_count, ini_files, add_arg)
+  echo "merge-illumina-pairs --enforce-Q30-check %s ${ini_list[$i]}"  
+''' % (script_file_name, log_file_name, ini_count, ini_count, ini_files, add_arg)
                 )
-#        .strip()
-        print text
         self.open_write_close(script_file_name, text)
+#         print text
 
         
     def filter_mismatches(self, max_mismatch = 3):
