@@ -105,7 +105,7 @@ class IlluminaFiles:
     def call_sh_script(self, script_name):
         try:
             call(['chmod', '0774', script_name])
-            call([script_name], cwd=(self.dirs.analysis_dir))
+            call(['qsub', script_name], cwd=(self.dirs.analysis_dir))
         except:
             print "Problems with script_name = %s" % (script_name)
             raise  
@@ -180,7 +180,8 @@ class IlluminaFiles:
         ini_files         = " ".join(ini_files_list)
         ini_count         = len(ini_files_list)
         command_file_name = os.path.basename(command_line.split(" ")[0])
-        script_file_name  = os.path.join(self.dirs.analysis_dir, "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh")
+        script_file_name  = "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        script_file_name_full = os.path.join(self.dirs.analysis_dir, "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh")
         log_file_name     = script_file_name + ".sge_script.sh.log"
         email_mbl         = self.make_users_email()
         text = (
@@ -208,9 +209,11 @@ class IlluminaFiles:
     
   echo "%s ${ini_list[$i]}"  
 ''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line)
+#  %s ${ini_list[$i]}  
+#''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line, command_line)
                 )
-        self.open_write_close(script_file_name, text)
-        return script_file_name
+        self.open_write_close(script_file_name_full, text)
+        return script_file_name_full
 
         
     def filter_mismatches(self, max_mismatch = 3):
