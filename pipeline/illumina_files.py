@@ -105,7 +105,7 @@ class IlluminaFiles:
     def call_sh_script(self, script_name):
         try:
             call(['chmod', '0774', script_name])
-            call([script_name])
+            call([script_name], cwd=(self.dirs.analysis_dir))
         except:
             print "Problems with script_name = %s" % (script_name)
             raise  
@@ -116,7 +116,7 @@ class IlluminaFiles:
         if self.utils.is_local():
             program_name = C.perfect_overlap_cmd_local
         primer_suite = self.get_config_values('primer_suite')
-        if ("Archaeal" in list(primer_suite)):
+        if any("Archaeal" in s for s in primer_suite):
             add_arg = " --archaea"
         else: 
             add_arg = ""
@@ -176,15 +176,13 @@ class IlluminaFiles:
         return username + "@mbl.edu"
                 
     def create_job_array_script(self, command_line):
-        ini_files_list   = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-        ini_files        = " ".join(ini_files_list)
-        ini_count        = len(ini_files_list)
-        print command_line
+        ini_files_list    = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+        ini_files         = " ".join(ini_files_list)
+        ini_count         = len(ini_files_list)
         command_file_name = os.path.basename(command_line.split(" ")[0])
-        print command_file_name
-        script_file_name = os.path.join(self.dirs.output_dir, "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh")
-        log_file_name    = script_file_name + ".sge_script.sh.log"
-        email_mbl        = self.make_users_email()
+        script_file_name  = os.path.join(self.dirs.analysis_dir, "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh")
+        log_file_name     = script_file_name + ".sge_script.sh.log"
+        email_mbl         = self.make_users_email()
         text = (
                 '''#!/bin/bash
 #$ -cwd
@@ -213,7 +211,6 @@ class IlluminaFiles:
                 )
         self.open_write_close(script_file_name, text)
         return script_file_name
-#         print text
 
         
     def filter_mismatches(self, max_mismatch = 3):

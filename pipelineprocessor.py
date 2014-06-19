@@ -382,7 +382,8 @@ def illumina_files(runobj):
     illumina_files_demultiplex_only(runobj)
     illumina_files = IlluminaFiles(runobj)    
     if runobj.do_perfect: 
-        illumina_files.perfect_reads()
+#         illumina_files.perfect_reads()
+        illumina_files.perfect_reads_cluster()
     else:
 #         illumina_files.partial_overlap_reads()
         illumina_files.partial_overlap_reads_cluster()
