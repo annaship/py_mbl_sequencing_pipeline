@@ -377,7 +377,7 @@ class PipelneUtils:
           
     def get_time_now(self):
         """date and hour only!"""
-        return time.strftime("%m/%d/%Y %H%M", time.localtime())
+        return time.strftime("%m/%d/%Y %H:%M", time.localtime())
 # '2009-01-05 22'
 
 

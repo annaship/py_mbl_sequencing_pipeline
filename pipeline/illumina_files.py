@@ -214,9 +214,9 @@ class IlluminaFiles:
   module load bioware
     
   echo "%s ${file_list[$i]}"  
-''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
-#   %s ${file_list[$i]}  
-# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
+  %s ${file_list[$i]}  
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
+# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
                 )
         self.open_write_close(script_file_name_full, text)
         return script_file_name
@@ -233,24 +233,6 @@ class IlluminaFiles:
         script_file_name_full = os.path.join(files_dir, script_file_name)
         self.call_sh_script(script_file_name_full, files_dir)  
         return script_file_name              
-        
-        n = 0        
-        files = self.get_all_files()
-        for full_name in files.keys():    
-            if files[full_name][0].endswith('_MERGED'):
-                n +=1   
-#                print "%s fasta file: %s" % (n, full_name)
-
-#                 output_flag = "--output " + full_name + "_FILTERED"
-# TODO:    Remove!!!
-#                 output_flag = "-o " + full_name + "_FILTERED"           
-#                 output_flag = "-o TTAGGC_NNNNTGACT_1_MERGED_FILTERED"           
-
-#                 print "output_flag = %s" % (output_flag)
-#                 print "%s %s %s" % (program_name, full_name, output_flag)                
-#                 call([program_name, full_name, output_flag])
-                call([program_name, full_name])
-
 
     def filter_mismatches(self, max_mismatch = 3):
         print "Filter mismatches if more then %s" % (max_mismatch)
@@ -273,7 +255,21 @@ class IlluminaFiles:
 #                 call([program_name, full_name, output_flag])
                 call([program_name, full_name])
 
-                    
+    def uniq_fa_cluster(self):
+        print "Uniqueing fasta files"      
+        command_line = C.fastaunique_cmd
+        if self.utils.is_local():
+            command_line = C.fastaunique_cmd_local   
+        files_dir = self.dirs.reads_overlap_dir   
+                
+        file_list             = self.dirs.get_all_files_by_ext(files_dir, C.filtered_suffix)
+        if len(file_list) == 0:
+            file_list         = self.dirs.get_all_files_by_ext(files_dir, ".fa")
+        script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
+        script_file_name_full = os.path.join(files_dir, script_file_name)
+        self.call_sh_script(script_file_name_full, files_dir)  
+        return script_file_name                           
+                                       
     def uniq_fa(self):
         n = 0        
         print "Uniqueing fasta files"      

@@ -388,17 +388,16 @@ def illumina_files(runobj):
     else:
 #         illumina_files.partial_overlap_reads()
 #         pass
-        script_file_name = illumina_files.partial_overlap_reads_cluster()
-         
-#         utils.check_if_array_job_is_done(script_file_name)        
+        script_file_name = illumina_files.partial_overlap_reads_cluster()         
         utils.run_until_done_on_cluster(script_file_name)
         
         script_file_name = illumina_files.filter_mismatches_cluster()
-#         utils.check_if_array_job_is_done(script_file_name)        
         utils.run_until_done_on_cluster(script_file_name)
         
 #         illumina_files.filter_mismatches()
 #     illumina_files.uniq_fa()
+    script_file_name = illumina_files.uniq_fa_cluster()
+    utils.run_until_done_on_cluster(script_file_name)
 #     illumina_chimera(runobj)
     elapsed = (time.time() - start)
     print "illumina_files time = %s" % str(elapsed)
