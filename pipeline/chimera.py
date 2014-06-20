@@ -238,10 +238,7 @@ class Chimera:
 #     
 #     import os
 # [os.rename(f, f.replace('_', '-')) for f in os.listdir('.') if not f.startswith('.')]
-    def get_time_now(self):
-        """date and hour only!"""
-        return time.strftime("%m/%d/%Y %H", time.localtime())
-# '2009-01-05 22'
+
         
           
     def check_if_cluster_is_done(self, time_before):

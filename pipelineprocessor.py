@@ -79,7 +79,7 @@ def validate(runobj):
     #v = MetadataUtils(run, validate=True)
     
     #print 'Validates:  Configfile and Run Object'
-    #runobj.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime())+"\tConfigFile Validated\n")
+    #runobj.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime.time())+"\tConfigFile Validated\n")
 
     
 
@@ -274,19 +274,19 @@ def chimera(runobj):
 def illumina_chimera(runobj):
     utils = PipelneUtils()
 
-    start = time()
+    start = time.time()
     mychimera = Chimera(runobj)
-#     elapsed = (time() - start)
+#     elapsed = (time.time() - start)
 #     print elapsed
     print "Preparing input files (replacing \"frequency:\" with \";size=\" and capitalize reads)"
 
-#     start = time()
+#     start = time.time()
 #     mychimera.illumina_freq_to_size_in_chg()
-#     elapsed = (time() - start)
+#     elapsed = (time.time() - start)
 #     print "1a) illumina_freq_to_size_in_chg time: %s" % elapsed
-    start = time()
+    start = time.time()
     mychimera.call_illumina_sed("from_frequency_to_size")
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "call_illumina_sed from_frequency_to_size time: %s" % elapsed
 #     
     print "START chimera checking"
@@ -299,8 +299,8 @@ def illumina_chimera(runobj):
 #     print c_den
 #     
     """run after cluster is done with it work:"""
-    start = time()  
-    time_before = mychimera.get_time_now()
+    start = time.time()  
+    time_before = utils.get_time_now()
     print "time_before = %s" % time_before
     print "Waiting for the cluster..."
     while True:
@@ -313,30 +313,30 @@ def illumina_chimera(runobj):
         if (cluster_done):
             break
     
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "Cluster is done with both chimera checkings in: %s" % elapsed     
     
     mychimera.illumina_rm_size_files()
 
-#     start = time()
+#     start = time.time()
 #     mychimera.illumina_size_to_freq_in_chimer()
-#     elapsed = (time() - start)
+#     elapsed = (time.time() - start)
 #     print "2a) illumina_size_to_freq_in_chimer time: %s" % elapsed
-    start = time()
+    start = time.time()
     mychimera.call_illumina_sed("from_size_to_frequency")
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "call_illumina_sed from_size_to_frequency time: %s" % elapsed
     
-#     start = time()
+#     start = time.time()
 #     print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
 #     mychimera.check_chimeric_stats()
-#     elapsed = (time() - start)
+#     elapsed = (time.time() - start)
 #     print "check_chimeric_stats time: %s" % elapsed
     
-    start = time()
+    start = time.time()
     print "Creating nonchimeric files in %s" % mychimera.indir
     mychimera.move_out_chimeric()
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "move_out_chimeric time: %s" % elapsed
     
     
@@ -344,61 +344,65 @@ def illumina_chimera_after_cluster(runobj):
     mychimera = Chimera(runobj)
 
     mychimera.illumina_rm_size_files()
-    start = time()
+    start = time.time()
     mychimera.illumina_size_to_freq_in_chimer()
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "illumina_size_to_freq_in_chimer time: %s" % elapsed
     
-#     start = time()
+#     start = time.time()
 #     print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
 #     mychimera.check_chimeric_stats()
-#     elapsed = (time() - start)
+#     elapsed = (time.time() - start)
 #     print "check_chimeric_stats time: %s" % elapsed
     
-    start = time()
+    start = time.time()
     print "Creating nonchimeric files in %s" % mychimera.indir
     mychimera.move_out_chimeric()
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "move_out_chimeric time: %s" % elapsed
     print "illumina_chimera_after_cluster time = %s" % str(elapsed)
 
 def illumina_chimera_only(runobj):  
-    start = time()
+    start = time.time()
     illumina_chimera(runobj)
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "illumina_chimera_only time = %s" % str(elapsed)
 
 
 def illumina_files_demultiplex_only(runobj):  
-    start = time()
+    start = time.time()
     illumina_files = IlluminaFiles(runobj)
     illumina_files.open_dataset_files()
     illumina_files.split_files(compressed = runobj.compressed)
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "illumina_files demultiplex only time = %s" % str(elapsed)
         
 def illumina_files(runobj):  
-    start = time()
+    utils = PipelneUtils()
+    start = time.time()
 #     illumina_files_demultiplex_only(runobj)
     illumina_files = IlluminaFiles(runobj)    
     if runobj.do_perfect: 
 #         illumina_files.perfect_reads()
-        illumina_files.perfect_reads_cluster()
+        script_file_name = illumina_files.perfect_reads_cluster()
     else:
 #         illumina_files.partial_overlap_reads()
-        illumina_files.partial_overlap_reads_cluster()
+        script_file_name = illumina_files.partial_overlap_reads_cluster()
+        
+    utils.check_if_array_job_is_done(script_file_name)        
+    utils.run_until_done_on_cluster(script_file_name)
 #         illumina_files.filter_mismatches()
 #     illumina_files.uniq_fa()
 #     illumina_chimera(runobj)
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "illumina_files time = %s" % str(elapsed)
         
 def env454run_info_upload(runobj):
 
     my_read_csv = dbUpload(runobj)
-    start = time()
+    start = time.time()
     my_read_csv.put_run_info()
-    elapsed = (time() - start)
+    elapsed = (time.time() - start)
     print "put_run_info time = %s" % str(elapsed)
     
 def env454upload(runobj):  
@@ -409,7 +413,7 @@ def env454upload(runobj):
         2) Upload env454 data into raw, trim, gast etc tables from files
     """
     
-    whole_start = time()
+    whole_start = time.time()
 
 #    my_read_csv = readCSV(run)
 #    my_read_csv.read_csv()
@@ -447,53 +451,53 @@ def env454upload(runobj):
             insert_taxonomy_time = 0
             insert_sequence_uniq_info_ill_time = 0
             
-            start = time()
+            start = time.time()
 
             my_env454upload.insert_seq(sequences)
-            elapsed = (time() - start)
+            elapsed = (time.time() - start)
             insert_seq_time = elapsed
             logger.debug("seq_in_file = %s" % seq_in_file)
             logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
 #            print "insert_seq() took ", elapsed, " time to finish"
-            start = time()
+            start = time.time()
             my_env454upload.get_seq_id_dict(sequences)
-            elapsed = (time() - start)
+            elapsed = (time.time() - start)
             get_seq_id_dict_time = elapsed
             logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
             
             while fasta.next():
 #                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
-                start = time()
+                start = time.time()
 #                print "Inserting pdr info"
 #                for attr in dir(fasta):
 #                  print "obj.%s = %s" % (attr, getattr(fasta, attr))
 
                 my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
-                elapsed = (time() - start)
+                elapsed = (time.time() - start)
                 insert_pdr_info_time += elapsed
 #                print "insert_pdr_info() took ", elapsed, " time to finish"                
 
-                start = time()
+                start = time.time()
 #                print "Inserting taxonomy"
                 my_env454upload.insert_taxonomy(fasta, gast_dict)
 
-                elapsed = (time() - start)
+                elapsed = (time.time() - start)
                 insert_taxonomy_time += elapsed
 
 #                print "tax_id = ", tax_id ,"; insert_taxonomy() took ", elapsed, " time to finish"                
 #                print "tax_id = ", tax_id            
 
-                start = time()
+                start = time.time()
 #                print "Inserting sequence_uniq_info_ill"
                 my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
-                elapsed = (time() - start)
+                elapsed = (time.time() - start)
                 insert_sequence_uniq_info_ill_time += elapsed
 
             seq_in_file = fasta.total_seq
             my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
             total_seq += seq_in_file
             logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
-            logger.debug("insert_taxonomy_time() took %s time to finish" % insert_taxonomy_time)
+            logger.debug("insert_taxonomy_time.time() took %s time to finish" % insert_taxonomy_time)
             logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
 
         except:                       # catch everything
@@ -503,7 +507,7 @@ def env454upload(runobj):
 #    print "total_seq = %s" % total_seq
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
-    whole_elapsed = (time() - whole_start)
+    whole_elapsed = (time.time() - whole_start)
     print "The whole_upload took %s s" % whole_elapsed
     
     # for vamps 'new_lane_keys' will be prefix 

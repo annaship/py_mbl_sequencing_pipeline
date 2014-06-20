@@ -1,7 +1,7 @@
 import os, sys
 import subprocess
 import constants as C
-from time import sleep
+import time
 import datetime
 
 from contextlib import closing
@@ -131,7 +131,7 @@ def wait_for_cluster_to_finish(my_running_id_list):
 
     counter =0
 
-    sleep(C.cluster_initial_check_interval)
+    time.sleep(C.cluster_initial_check_interval)
     
     while my_working_id_list:
     
@@ -173,7 +173,7 @@ def wait_for_cluster_to_finish(my_running_id_list):
             #print 'IN not got one',
         #    return ('SUCCESS','not got one','')
                 
-        sleep(C.cluster_check_interval)
+        time.sleep(C.cluster_check_interval)
         counter = counter + C.cluster_check_interval
         if counter >= C.cluster_max_wait:
             return ('FAIL','Max Time exceeded',C.cluster_max_wait)
@@ -341,8 +341,7 @@ class PipelneUtils:
     def check_if_array_job_is_done(self, job_name):
         cluster_done = False
         check_qstat_cmd_line = "qstat -r | grep %s | wc -l" % job_name
-        print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
-        
+        print "check_qstat_cmd_line = %s" % check_qstat_cmd_line        
         try:
             p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
             (output, err) = p.communicate()
@@ -356,9 +355,30 @@ class PipelneUtils:
         except:
             print "%s can be done only on a cluster." % job_name
             raise        
-#         res = check_output([check_qstat_cmd_line])
-#         print "RES = %s" % res
+        return cluster_done
+
+    def run_until_done_on_cluster(self, job_name):
+        start = time.time()  
+        time_before = self.get_time_now()
+        print "time_before = %s" % time_before
+        print "Waiting for the cluster..."
+        while True:
+            if self.is_local():
+                time.sleep(1)        
+            else:
+                time.sleep(120)        
+            cluster_done = self.check_if_array_job_is_done(job_name)
+            print "cluster_done = %s" % cluster_done
+            if (cluster_done):
+                break
+        
+        elapsed = (time.time() - start)
+        print "Cluster is done with both chimera checkings in: %s" % elapsed             
           
+    def get_time_now(self):
+        """date and hour only!"""
+        return time.strftime("%m/%d/%Y %H", time.localtime())
+# '2009-01-05 22'
 
 
 class Dirs:
