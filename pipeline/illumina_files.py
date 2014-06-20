@@ -208,10 +208,10 @@ class IlluminaFiles:
   source ~/.bashrc
   module load bioware
     
-  echo "%s ${ini_list[$i]}"  
-''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line)
-#  %s ${ini_list[$i]}  
-#''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line, command_line)
+  %s ${ini_list[$i]}  
+''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line, command_line)
+#   echo "%s ${ini_list[$i]}"  
+# ''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line)
                 )
         self.open_write_close(script_file_name_full, text)
         return script_file_name
