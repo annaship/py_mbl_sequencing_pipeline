@@ -347,7 +347,7 @@ class PipelneUtils:
             p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
             (output, err) = p.communicate()
             num_proc = int(output)
-            print "qstat is running %s '%' processes" % (num_proc, job_name)
+            print "qstat is running %s '%s' processes" % (num_proc, job_name)
     #         pprint(p)
             
             if (num_proc == 0):
