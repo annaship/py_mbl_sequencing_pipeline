@@ -376,7 +376,7 @@ def illumina_files_demultiplex_only(runobj):
     illumina_files.split_files(compressed = runobj.compressed)
     elapsed = (time.time() - start)
     print "illumina_files demultiplex only time = %s" % str(elapsed)
-        
+
 def illumina_files(runobj):  
     utils = PipelneUtils()
     start = time.time()
@@ -389,8 +389,9 @@ def illumina_files(runobj):
 #         illumina_files.partial_overlap_reads()
         script_file_name = illumina_files.partial_overlap_reads_cluster()
         
-    utils.check_if_array_job_is_done(script_file_name)        
-    utils.run_until_done_on_cluster(script_file_name)
+        utils.check_if_array_job_is_done(script_file_name)        
+        utils.run_until_done_on_cluster(script_file_name)
+#         script_file_name = illumina_files.filter_mismatches_cluster()
 #         illumina_files.filter_mismatches()
 #     illumina_files.uniq_fa()
 #     illumina_chimera(runobj)

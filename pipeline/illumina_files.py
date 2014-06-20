@@ -133,9 +133,11 @@ class IlluminaFiles:
         if ("ITS1" in list(dna_region)):
             add_arg = "--marker-gene-stringent"
         else:
-            add_arg = ""     
-        command_line = program_name + " --enforce-Q30-check " + add_arg
-        script_file_name      = self.create_job_array_script(command_line)
+            add_arg = ""
+#         TODO: do the same for perfect reads     
+        command_line          = program_name + " --enforce-Q30-check " + add_arg
+        file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full)  
         return script_file_name      
@@ -176,13 +178,13 @@ class IlluminaFiles:
         username = getpass.getuser() 
         return username + "@mbl.edu"
                 
-    def create_job_array_script(self, command_line):
-        ini_files_list    = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+    def create_job_array_script(self, command_line, dir_to_run, ini_files_list):
+#         ini_files_list    = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
         ini_files         = " ".join(ini_files_list)
         ini_count         = len(ini_files_list)
         command_file_name = os.path.basename(command_line.split(" ")[0])
-        script_file_name  = "merge_on_cluster_" + command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
-        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+        script_file_name  = command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        script_file_name_full = os.path.join(dir_to_run, script_file_name)
         log_file_name     = script_file_name + ".sge_script.sh.log"
         email_mbl         = self.make_users_email()
         text = (
