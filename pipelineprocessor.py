@@ -387,11 +387,15 @@ def illumina_files(runobj):
         script_file_name = illumina_files.perfect_reads_cluster()
     else:
 #         illumina_files.partial_overlap_reads()
-        script_file_name = illumina_files.partial_overlap_reads_cluster()
-        
+        pass
+#         script_file_name = illumina_files.partial_overlap_reads_cluster()
+#         
+#         utils.check_if_array_job_is_done(script_file_name)        
+#         utils.run_until_done_on_cluster(script_file_name)
+        script_file_name = illumina_files.filter_mismatches_cluster()
         utils.check_if_array_job_is_done(script_file_name)        
         utils.run_until_done_on_cluster(script_file_name)
-#         script_file_name = illumina_files.filter_mismatches_cluster()
+        
 #         illumina_files.filter_mismatches()
 #     illumina_files.uniq_fa()
 #     illumina_chimera(runobj)

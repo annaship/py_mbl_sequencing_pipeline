@@ -182,10 +182,9 @@ class IlluminaFiles:
         username = getpass.getuser() 
         return username + "@mbl.edu"
                 
-    def create_job_array_script(self, command_line, dir_to_run, ini_files_list):
-#         ini_files_list    = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-        ini_files         = " ".join(ini_files_list)
-        ini_count         = len(ini_files_list)
+    def create_job_array_script(self, command_line, dir_to_run, files_list):
+        files_string         = " ".join(files_list)
+        files_list_size         = len(files_list)
         command_file_name = os.path.basename(command_line.split(" ")[0])
         script_file_name  = command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         script_file_name_full = os.path.join(dir_to_run, script_file_name)
@@ -207,22 +206,50 @@ class IlluminaFiles:
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
-  ini_list=(%s)
+  file_list=(%s)
   
   i=$(expr $SGE_TASK_ID - 1)
 #   echo "i = $i"
   source ~/.bashrc
   module load bioware
     
-  echo "%s ${ini_list[$i]}"  
-''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line)
-#   %s ${ini_list[$i]}  
-# ''' % (script_file_name, log_file_name, email_mbl, ini_count, ini_count, ini_files, command_line, command_line)
+  echo "%s ${file_list[$i]}"  
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
+#   %s ${file_list[$i]}  
+# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
                 )
         self.open_write_close(script_file_name_full, text)
         return script_file_name
 
+    def filter_mismatches_cluster(self, max_mismatch = 3):
+        print "Filter mismatches if more then %s" % (max_mismatch)
+        command_line = C.filter_mismatch_cmd
+        if self.utils.is_local():
+            command_line = C.filter_mismatch_cmd_local        
+        file_list             = self.dirs.get_all_files_by_ext(self.dirs.reads_overlap_dir, "_MERGED")
+        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
+        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+        return script_file_name              
         
+        n = 0        
+        files = self.get_all_files()
+        for full_name in files.keys():    
+            if files[full_name][0].endswith('_MERGED'):
+                n +=1   
+#                print "%s fasta file: %s" % (n, full_name)
+
+#                 output_flag = "--output " + full_name + "_FILTERED"
+# TODO:    Remove!!!
+#                 output_flag = "-o " + full_name + "_FILTERED"           
+#                 output_flag = "-o TTAGGC_NNNNTGACT_1_MERGED_FILTERED"           
+
+#                 print "output_flag = %s" % (output_flag)
+#                 print "%s %s %s" % (program_name, full_name, output_flag)                
+#                 call([program_name, full_name, output_flag])
+                call([program_name, full_name])
+
+
     def filter_mismatches(self, max_mismatch = 3):
         print "Filter mismatches if more then %s" % (max_mismatch)
         n = 0        
