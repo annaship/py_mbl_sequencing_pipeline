@@ -225,11 +225,13 @@ class IlluminaFiles:
         print "Filter mismatches if more then %s" % (max_mismatch)
         command_line = C.filter_mismatch_cmd
         if self.utils.is_local():
-            command_line = C.filter_mismatch_cmd_local        
-        file_list             = self.dirs.get_all_files_by_ext(self.dirs.reads_overlap_dir, "_MERGED")
-        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
-        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
-        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+            command_line = C.filter_mismatch_cmd_local    
+        files_dir = self.dirs.reads_overlap_dir   
+                
+        file_list             = self.dirs.get_all_files_by_ext(files_dir, "_MERGED")
+        script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
+        script_file_name_full = os.path.join(files_dir, script_file_name)
+        self.call_sh_script(script_file_name_full, files_dir)  
         return script_file_name              
         
         n = 0        
