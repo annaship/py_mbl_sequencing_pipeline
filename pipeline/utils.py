@@ -1,5 +1,5 @@
 import os, sys
-from subprocess import check_output, call
+import subprocess
 import constants as C
 from time import sleep
 import datetime
@@ -343,8 +343,21 @@ class PipelneUtils:
         check_qstat_cmd_line = "qstat -r | grep %s | wc -l" % job_name
         print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
         
-        res = check_output([check_qstat_cmd_line])
-        print "RES = %s" % res
+        try:
+            p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
+            (output, err) = p.communicate()
+            num_proc = int(output)
+            print "qstat is running %s '%' processes" % (num_proc, job_name)
+    #         pprint(p)
+            
+            if (num_proc == 0):
+                cluster_done = True
+    #         print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
+        except:
+            print "%s can be done only on a cluster." % job_name
+            raise        
+#         res = check_output([check_qstat_cmd_line])
+#         print "RES = %s" % res
           
 
 

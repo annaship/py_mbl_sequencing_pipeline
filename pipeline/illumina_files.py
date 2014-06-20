@@ -137,7 +137,7 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full)        
-        self.utils.check_if_array_job_is_done(script_file_name_full)
+        self.utils.check_if_array_job_is_done(script_file_name)
                     
     def partial_overlap_reads(self):
         print "Extract partial_overlap V4V5 reads:"

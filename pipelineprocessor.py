@@ -379,7 +379,7 @@ def illumina_files_demultiplex_only(runobj):
         
 def illumina_files(runobj):  
     start = time()
-    illumina_files_demultiplex_only(runobj)
+#     illumina_files_demultiplex_only(runobj)
     illumina_files = IlluminaFiles(runobj)    
     if runobj.do_perfect: 
 #         illumina_files.perfect_reads()
@@ -387,8 +387,8 @@ def illumina_files(runobj):
     else:
 #         illumina_files.partial_overlap_reads()
         illumina_files.partial_overlap_reads_cluster()
-        illumina_files.filter_mismatches()
-    illumina_files.uniq_fa()
+#         illumina_files.filter_mismatches()
+#     illumina_files.uniq_fa()
 #     illumina_chimera(runobj)
     elapsed = (time() - start)
     print "illumina_files time = %s" % str(elapsed)

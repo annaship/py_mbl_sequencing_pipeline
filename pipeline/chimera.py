@@ -262,7 +262,7 @@ class Chimera:
                 cluster_done = True
     #         print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
         except:
-            print "Chimera checking can be dan only on grendel."
+            print "Chimera checking can be done only on a cluster."
             raise
 
         return cluster_done
