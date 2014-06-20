@@ -102,13 +102,13 @@ class IlluminaFiles:
                 print "Problems with program_name = %s, file_name = %s" % (program_name, file_name)
                 raise  
     
-    def call_sh_script(self, script_name):
+    def call_sh_script(self, script_name_w_path, where_to_run):
         try:
-            call(['chmod', '0774', script_name])
-            call(['qsub', script_name], cwd=(self.dirs.analysis_dir))
+            call(['chmod', '0774', script_name_w_path])
+            call(['qsub', script_name_w_path], cwd=(where_to_run))
 #             pass
         except:
-            print "Problems with script_name = %s" % (script_name)
+            print "Problems with script_name = %s" % (script_name_w_path)
             raise  
         
     def perfect_reads_cluster(self):
@@ -121,8 +121,12 @@ class IlluminaFiles:
             add_arg = " --archaea"
         else: 
             add_arg = ""
-        script_file_name = self.create_job_array_script(program_name + add_arg)
-        self.call_sh_script(script_file_name)
+        command_line          = program_name + add_arg
+        file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
+        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+        return script_file_name              
                           
     def partial_overlap_reads_cluster(self):
         print "Extract partial_overlap V4V5 reads:"
@@ -134,12 +138,12 @@ class IlluminaFiles:
             add_arg = "--marker-gene-stringent"
         else:
             add_arg = ""
-#         TODO: do the same for perfect reads     
+#         TODO: this part is the same in perfect overlap - move into a method    
         command_line          = program_name + " --enforce-Q30-check " + add_arg
         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
-        self.call_sh_script(script_file_name_full)  
+        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
         return script_file_name      
                     
     def partial_overlap_reads(self):
