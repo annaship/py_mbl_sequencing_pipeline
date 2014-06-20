@@ -297,7 +297,7 @@ def illumina_chimera(runobj):
 #     c_den = 
     mychimera.chimera_checking("ref")
 #     print c_den
-#     
+#     todo: use run_until_done_on_cluster from utils
     """run after cluster is done with it work:"""
     start = time.time()  
     time_before = utils.get_time_now()

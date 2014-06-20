@@ -373,7 +373,7 @@ class PipelneUtils:
                 break
         
         elapsed = (time.time() - start)
-        print "Cluster is done with both chimera checkings in: %s" % elapsed             
+        print "Cluster is done with %s in: %s" % (job_name, elapsed)             
           
     def get_time_now(self):
         """date and hour only!"""
