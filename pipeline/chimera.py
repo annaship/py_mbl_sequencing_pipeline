@@ -103,10 +103,7 @@ class Chimera:
     def get_chimera_file_names(self, cur_dirname):
         cur_file_names = []        
         for dirname, dirnames, filenames in os.walk(cur_dirname):
-            for filename in filenames:
-                if (self.is_chimera_check_file(filename)):
-#                     print "filename = %s" % filename
-                    cur_file_names.append(filename)
+            cur_file_names = [filename for filename in filenames if (self.is_chimera_check_file(filename))]
         return cur_file_names
 
 #     def illumina_frequency_size(self, in_or_out = "", find = "frequency:", replace = ";size="):
@@ -186,7 +183,7 @@ class Chimera:
             self.illumina_sed(lines, target_name, regex, tuple_name.replace, tuple_name.uppercase)
 
     def illumina_freq_to_size_in_chg(self):
-#         TODO: refactor
+#         TODO: not used?
         find1    = "frequency:"
         replace1 = ";size="
         regex1   = re.compile(r"%s" % find1)        
@@ -204,11 +201,13 @@ class Chimera:
             with open(file_name + change_from_suffix, "r") as sources:
                 lines = sources.readlines()
             with open(file_name + change_to_suffix, "w") as target:
+#                 line2 = [regex1.sub(replace1, line) if line.startswith(">") else line.upper() for line in lines]
                 for line in lines:
                     if line.startswith(">"):
                         line1 = regex1.sub(replace1, line)
                     else:
                         line1 = line.upper()
+#                     print line1
                     target.write(line1)  
 
 

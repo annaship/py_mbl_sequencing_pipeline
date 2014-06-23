@@ -368,7 +368,6 @@ def illumina_chimera_only(runobj):
     elapsed = (time.time() - start)
     print "illumina_chimera_only time = %s" % str(elapsed)
 
-
 def illumina_files_demultiplex_only(runobj):  
     start = time.time()
     illumina_files = IlluminaFiles(runobj)
@@ -385,9 +384,11 @@ def illumina_files(runobj):
     if runobj.do_perfect: 
 #         illumina_files.perfect_reads()
         script_file_name = illumina_files.perfect_reads_cluster()
+        utils.run_until_done_on_cluster(script_file_name)
     else:
 #         illumina_files.partial_overlap_reads()
 #         pass
+# TODO: test utils.run_until_done_on_cluster(illumina_files.partial_overlap_reads_cluster())
         script_file_name = illumina_files.partial_overlap_reads_cluster()         
         utils.run_until_done_on_cluster(script_file_name)
         
