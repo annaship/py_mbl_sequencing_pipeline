@@ -467,6 +467,7 @@ example of getting all directory name in illumina_files
     
     def create_gast_name_dirs(self, name_iterator):
         gast_name_dirs = []
+#         gast_name_dirs1 = [self.check_dir(os.path.join(self.gast_dir, key)) for key in name_iterator]
         for key in name_iterator:
             #gast_name_dirs.append(self.check_and_make_dir(os.path.join(self.gast_dir, key)))
             gast_name_dirs.append(self.check_dir(os.path.join(self.gast_dir, key)))
