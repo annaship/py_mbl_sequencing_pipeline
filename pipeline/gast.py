@@ -183,20 +183,20 @@ class Gast:
                 dna_region = 'unknown'
                 
             (refdb, taxdb) = self.get_reference_databases(dna_region)
-            if self.runobj.use_full_length == True:
+            #if self.runobj.use_full_length == True:
             #if self.runobj.project[:3] == 'MBE':
                 # for some reason usearch64 doeasnt like the .udb file
-                refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
-                taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
-                self.db_type='wdb'
-            
-            if self.runobj.use_full_length == True:
+             #   refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
+             #   taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
+             #   self.db_type='wdb'
+            #
+            #if self.runobj.use_full_length == True:
             #if self.runobj.project[:3] == 'MBE':
                 #use_64bit_usearch = True
                 # for some reason usearch64 doeasnt like the .udb file
-                refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
-                taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
-                self.db_type='wdb'
+             #   refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
+             #   taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
+              #  self.db_type='wdb'
                 
             
             if os.path.exists(unique_file) and (os.path.getsize(unique_file) > 0):
