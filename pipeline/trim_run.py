@@ -306,7 +306,9 @@ class TrimRun( object ):
                         # format is on one line ( created from reg fasta in upload_file.php: 
                         #  >FRZPY5Q02G73IH	37 37 37 37 37 37 37 37 37 37
                         try:
-                            q_scores = subprocess.check_output("grep "+ id +" " + self.indir + "/QUALFILE_CLEAN.TXT", shell=True).strip().split("\t")[1].split()                    
+                            txt = "grep "+ id +" " + self.indir + "/QUALFILE_CLEAN.TXT"
+                            #logger.debug("Q-text: "+txt)
+                            q_scores = subprocess.check_output(txt, shell=True).strip().split()[1:]                    
                             logger.debug("Q-Scores: "+str(q_scores))
                             q_scores = [int(q) for q in q_scores]
                             
@@ -530,8 +532,8 @@ class TrimRun( object ):
                     if os.path.exists(self.indir + "/qualfile_qual_clean"):
                         # for vamps uploads use '_clean' file 
                         # format is on one line ( created from reg fasta in upload_file.php: 
-                        #  >FRZPY5Q02G73IH	37 37 37 37 37 37 37 37 37 37
-                        q_scores = subprocess.check_output("grep "+ id +" " + self.indir + "/qualfile_qual_clean", shell=True).strip().split("\t")[1].split()                    
+                        #  >FRZPY5Q02G73IH\t37\s37 37 37 37 37 37 37 37 37
+                        q_scores = subprocess.check_output("grep "+ id +" " + self.indir + "/qualfile_qual_clean", shell=True).strip().split()[1:].split()                    
                         q_scores = [int(q) for q in q_scores]
                         
                     else:
@@ -600,7 +602,7 @@ class TrimRun( object ):
     # 5. trim distal
     # 6. check length and other things
     ################################################################### 
-    def do_trim(self, read_id, lane, raw_sequence, quality_scores=None):
+    def do_trim(self, read_id, lane, raw_sequence, quality_scores=[]):
     
         trim_collector = {}    
         logger.debug("\nTrimming read " + read_id)

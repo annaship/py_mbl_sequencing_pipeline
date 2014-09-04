@@ -190,7 +190,7 @@ def get_qstat_id_list():
     # 5) code r=running, Ew=Error
     qstat_cmd = 'qstat'
     qstat_codes={}
-    output = check_output(qstat_cmd)
+    output = subprocess.check_output(qstat_cmd)
     #print output
     output_list = output.strip().split("\n")[2:]
     qstat_codes['id'] = [n.split()[0] for n in output_list]
