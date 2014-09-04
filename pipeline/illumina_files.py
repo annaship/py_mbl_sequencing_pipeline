@@ -210,8 +210,9 @@ class IlluminaFiles:
   
   i=$(expr $SGE_TASK_ID - 1)
 #   echo "i = $i"
-  . /etc/profile.d/modules.sh
-  . /xraid/bioware/bioware-loader.sh
+  # . /etc/profile.d/modules.sh
+  # . /xraid/bioware/bioware-loader.sh
+  . /xraid/bioware/Modules/etc/profile.modules
   module load bioware
     
   echo "%s ${file_list[$i]}"  
