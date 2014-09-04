@@ -183,20 +183,20 @@ class Gast:
                 dna_region = 'unknown'
                 
             (refdb, taxdb) = self.get_reference_databases(dna_region)
-            #if self.runobj.use_full_length == True:
-            #if self.runobj.project[:3] == 'MBE':
-                # for some reason usearch64 doeasnt like the .udb file
-             #   refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
-             #   taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
-             #   self.db_type='wdb'
-            #
-            #if self.runobj.use_full_length == True:
-            #if self.runobj.project[:3] == 'MBE':
-                #use_64bit_usearch = True
-                # for some reason usearch64 doeasnt like the .udb file
-             #   refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
-             #   taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
-              #  self.db_type='wdb'
+#            if self.runobj.use_full_length == True:
+#             #if self.runobj.project[:3] == 'MBE':
+#                 # for some reason usearch64 doeasnt like the .udb file
+#                 refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
+#                 taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
+#                 self.db_type='wdb'
+#             
+#             if self.runobj.use_full_length == True:
+#             #if self.runobj.project[:3] == 'MBE':
+#                 #use_64bit_usearch = True
+#                 # for some reason usearch64 doeasnt like the .udb file
+#                 refdb = '/groups/vampsweb/blastdbs/refssu.wdb'
+#                 taxdb = '/groups/vampsweb/blastdbs/refssu.tax'
+#                 self.db_type='wdb'
                 
             
             if os.path.exists(unique_file) and (os.path.getsize(unique_file) > 0):
@@ -210,8 +210,8 @@ class Gast:
                     calcnode_cmd = [calcnodes, '-t', str(facount), '-n', str(cluster_nodes), '-f', '1']
                     
                     calcout = subprocess.check_output(calcnode_cmd).strip()
-                    logger.debug("calcout:\n"+calcout)
-                    print "facount: "+str(facount)
+                    #logger.debug("calcout:\n"+calcout)
+                    logger.debug("facount: "+str(facount)+"\n")
                     #calcout:
                     # node=1 start=1 end=1 rows=1
                     # node=2 start=2 end=2 rows=1
@@ -266,7 +266,7 @@ class Gast:
                         else:
                             subprocess.call(fs_cmd, shell=True)
                         
-                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename)
+                        us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, self.runobj.use64bit)
     
                         logger.debug("usearch command: "+us_cmd)
 
@@ -323,7 +323,7 @@ class Gast:
                     gast_file_list = [clustergast_filename_single]
                     print usearch_filename, clustergast_filename_single
                     
-                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename)
+                    us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename, self.runobj.use64bit)
                     print us_cmd
                     subprocess.call(us_cmd, shell=True)
                     grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
@@ -464,8 +464,9 @@ class Gast:
                 for line in names_fh:
                     s = line.strip().split("\t")
                     
-                    index_read = s[0]                
-                    copies[index_read] = s[1].split(',')
+                    index_read = s[0]  
+                    if len(s) >1:
+                        copies[index_read] = s[1].split(',')
                     
                     if index_read in nonhits:
                         nonhits[index_read] += 1
@@ -535,8 +536,11 @@ class Gast:
                 # 
                 #######################################   
                 for read in sorted(nonhits.iterkeys()):                
-                    for d in copies[read]: 
-                        gast_fh.write( d+"\t0\t1\t0\t0\n")
+                    if read in copies:
+                        for d in copies[read]: 
+                            gast_fh.write( d+"\t0\t1\t0\t0\n")
+                    else:
+                        logger.info(read+' not in copies: Skipping')
                         
                         
                 gast_fh.close()
@@ -840,20 +844,30 @@ class Gast:
         if use_64bit:
             # We don't have use of 64bit usearch anymore
             usearch_cmd = C.usearch64_cmd
-            usearch_cmd += ' --global '
-            usearch_cmd += ' --query ' + fastasamp_filename
-            usearch_cmd += ' --iddef 3'
-            usearch_cmd += ' --gapopen 6I/1E'
-            if self.db_type == 'db':
-                usearch_cmd += ' --db ' + refdb  
-            elif self.db_type == 'wdb':
-                usearch_cmd += ' --wdb ' + refdb  
-            else:
-                usearch_cmd += ' --udb ' + refdb                 
-            usearch_cmd += ' --uc ' + usearch_filename 
-            usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
-            usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
-            usearch_cmd += ' --id ' + str(C.pctid_threshold)
+            usearch_cmd += ' -usearch_global ' + fastasamp_filename
+            usearch_cmd += ' -gapopen 6I/1E'
+            usearch_cmd += ' -uc_allhits'
+            usearch_cmd += ' -db ' + refdb  
+            usearch_cmd += ' -strand both'   
+            usearch_cmd += ' -uc ' + usearch_filename 
+            usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
+            usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
+            usearch_cmd += ' -id ' + str(C.pctid_threshold)
+            
+ #            usearch_cmd += ' --global '
+#             usearch_cmd += ' --query ' + fastasamp_filename
+#             usearch_cmd += ' --iddef 3'
+#             usearch_cmd += ' --gapopen 6I/1E'
+#             if self.db_type == 'db':
+#                 usearch_cmd += ' --db ' + refdb  
+#             elif self.db_type == 'wdb':
+#                 usearch_cmd += ' --wdb ' + refdb  
+#             else:
+#                 usearch_cmd += ' --udb ' + refdb                 
+#             usearch_cmd += ' --uc ' + usearch_filename 
+#             usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
+#             usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
+#             usearch_cmd += ' --id ' + str(C.pctid_threshold)
         else:
             usearch_cmd = C.usearch6_cmd
             if self.utils.is_local():
@@ -1188,4 +1202,3 @@ class Gast:
             if wait_counter >= maxwaittime:
                 print('FAIL','Max Count exceeded: ',maxwaittime)
                 sys.exit('Max Count exceeded')
-

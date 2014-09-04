@@ -202,18 +202,23 @@ def chimera(runobj):
     runobj.chimera_status_file_h = open(runobj.chimera_status_file_name,"w")
     if chimera_code == 'PASS':  
         
-        chimera_cluster_code = wait_for_cluster_to_finish(chimera_cluster_ids) 
-        if chimera_cluster_code[0] == 'SUCCESS':
-            logger.info("Chimera checking finished successfully")
-            runobj.chimera_status_file_h.write("CHIMERA SUCCESS\n")
-            runobj.run_status_file_h.write("CHIMERA SUCCESS\n")
-            
+        if runobj.use_cluster:
+            chimera_cluster_code = wait_for_cluster_to_finish(chimera_cluster_ids) 
+            if chimera_cluster_code[0] == 'SUCCESS':
+                logger.info("Chimera checking finished successfully")
+                runobj.chimera_status_file_h.write("CHIMERA SUCCESS\n")
+                runobj.run_status_file_h.write("CHIMERA SUCCESS\n")
+                
+            else:
+                logger.info("3-Chimera checking Failed")
+                runobj.chimera_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
+                runobj.run_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
+                sys.exit("3-Chimera checking Failed")
         else:
-            logger.info("3-Chimera checking Failed")
-            runobj.chimera_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
-            runobj.run_status_file_h.write("3-CHIMERA ERROR: "+str(chimera_cluster_code[1])+" "+str(chimera_cluster_code[2])+"\n")
-            sys.exit("3-Chimera checking Failed")
-            
+            chimera_cluster_code = ['SUCCESS','Not using cluster']
+            logger.info("Chimera checking finished without using cluster")
+            runobj.chimera_status_file_h.write("CHIMERA SUCCESS--no cluster\n")
+            runobj.run_status_file_h.write("CHIMERA SUCCESS--no cluster\n")
     elif chimera_code == 'NOREGION':
         logger.info("No regions found that need chimera checking")
         runobj.chimera_status_file_h.write("CHIMERA CHECK NOT NEEDED\n")

@@ -24,7 +24,7 @@ class Chimera:
         self.runobj     = runobj
         self.run_keys   = self.runobj.run_keys
         self.rundate    = self.runobj.run
-        
+        self.use_cluster = self.runobj.use_cluster
         self.chg_suffix         = ".chg"
         self.chimeras_suffix    = ".chimeras"      
         self.ref_suffix         = ".db"      
@@ -532,72 +532,73 @@ class Chimera:
         cluster_id_list = []
 
 
-        
+
         for idx_key in self.idx_keys:
             input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa')  
-            output_file_name = os.path.join(self.outdir, idx_key +'.chimera.denovo')
-            #open(output_file_name, 'a').close()  # make sure file exists
-            log_file = os.path.join(self.outdir,idx_key+".denovo.log")
+            if os.path.isfile(input_file_name):
+                output_file_name = os.path.join(self.outdir, idx_key +'.chimera.denovo')
+                #open(output_file_name, 'a').close()  # make sure file exists
+                log_file = os.path.join(self.outdir,idx_key+".denovo.log")
 
-            dna_region       = self.runobj.samples[idx_key].dna_region
-            logger.debug("dna_region = %s" % dna_region)
-            if self.runobj.vamps_user_upload:
-                # VAMPS users can chimera check regardless of region chosen
-                chimera_region_found = True
-            else:
-                if dna_region in C.regions_to_chimera_check:
+                dna_region       = self.runobj.samples[idx_key].dna_region
+                logger.debug("dna_region = %s" % dna_region)
+                if self.runobj.vamps_user_upload:
+                    # VAMPS users can chimera check regardless of region chosen
                     chimera_region_found = True
                 else:
-                    logger.debug('region not checked: ' +  dna_region)
-                    continue
-             
- 
-            print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
- 
-#             uchime_cmd = C.clusterize_cmd
-#             uchime_cmd += " "
-#             uchime_cmd += self.usearch_cmd
-#             uchime_cmd += " --uchime "
-#             uchime_cmd += input_file_name
-#             uchime_cmd += " --uchimeout "
-#             uchime_cmd += output_file_name
-#             uchime_cmd += " --abskew "
-#             uchime_cmd += self.abskew
-            
-            uchime_cmd = C.clusterize_cmd
-            uchime_cmd += " "
-            uchime_cmd += " -log "
-            uchime_cmd += log_file
-            uchime_cmd += " "
-            uchime_cmd += self.usearch_cmd
-            uchime_cmd += " -uchime_denovo "
-            uchime_cmd += input_file_name
-            uchime_cmd += " -uchimeout "
-            uchime_cmd += output_file_name
+                    if dna_region in C.regions_to_chimera_check:
+                        chimera_region_found = True
+                    else:
+                        logger.debug('region not checked: ' +  dna_region)
+                        continue
 
-            logger.debug("uchime_denovo_cmd = %s" % (uchime_cmd))
-             
-            try:
-                logger.info("chimera denovo command: " + str(uchime_cmd))
-#                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
+
+    #             uchime_cmd = C.clusterize_cmd
+    #             uchime_cmd += " "
+    #             uchime_cmd += self.usearch_cmd
+    #             uchime_cmd += " --uchime "
+    #             uchime_cmd += input_file_name
+    #             uchime_cmd += " --uchimeout "
+    #             uchime_cmd += output_file_name
+    #             uchime_cmd += " --abskew "
+    #             uchime_cmd += self.abskew
+                uchime_cmd=''
+                if self.use_cluster:
+                    uchime_cmd += C.clusterize_cmd
+                    uchime_cmd += " "
+                    uchime_cmd += " -log "
+                    uchime_cmd += log_file
+                    uchime_cmd += " "
+                uchime_cmd += self.usearch_cmd
+                uchime_cmd += " -uchime_denovo "
+                uchime_cmd += input_file_name
+                uchime_cmd += " -uchimeout "
+                uchime_cmd += output_file_name
+
+                logger.debug("uchime_denovo_cmd = %s" % (uchime_cmd))
                  
+                try:
+                    logger.info("chimera denovo command: " + str(uchime_cmd))
+    #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                     
 
-                #output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
-                print "output[idx_key] = %s" % output[idx_key]
-                print output[idx_key].split()[2]
-                cluster_id_list.append(output[idx_key].split()[2])
+                    #output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
+                    print "output[idx_key] = %s" % output[idx_key]
+                    print output[idx_key].split()[2]
+                    cluster_id_list.append(output[idx_key].split()[2])
 
- 
-  
- 
-            except OSError, e:
-                print "Problems with this command: %s" % (uchime_cmd)
-                if self.utils.is_local():
-                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
-                else:
-                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
-                    raise                  
+
+
+                except OSError, e:
+                    print "Problems with this command: %s" % (uchime_cmd)
+                    if self.utils.is_local():
+                        print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                    else:
+                        print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                        raise                  
                                 
 # ???
         if not chimera_region_found:            
@@ -615,7 +616,7 @@ class Chimera:
             return ('ERROR', 'uchime ref returned no cluster IDs', cluster_id_list) 
 
     def chimera_reference(self):
-     
+
         chimera_region_found = False
         output = {}
         cluster_id_list = []
@@ -632,7 +633,7 @@ class Chimera:
                     logger.debug('region not checked: ' + dna_region)                    
                     continue
 
-             
+
             input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa') 
             output_file_name    = os.path.join(self.outdir,idx_key+".chimera.ref") 
             #open(output_file_name, 'a').close()  # make sure file exists
@@ -640,58 +641,62 @@ class Chimera:
             logger.debug("OUT FILE NAME: " + output_file_name)     
              
             #out_file_name = self.prefix[idx_key] + ".chimeras.db"      
-            input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa') 
-            output_file_name    = os.path.join(self.outdir,idx_key+".chimera.ref") 
-            #open(output_file_name, 'a').close()  # make sure file exists
-            log_file = os.path.join(self.outdir,idx_key+".ref.log") 
-            logger.debug("OUT FILE NAME: " + output_file_name)
-            # which ref db to use?
-            ref_db = ''
-            if dna_region.upper() == 'ITS':
-                logger.debug("got an ITS dna region so using refdb: " + self.its_refdb)
-                ref_db = self.its_refdb
-            else:
-                logger.debug("using standard refdb: " + self.refdb)
-                ref_db = self.refdb
-                 
-            uchime_cmd = C.clusterize_cmd
-            uchime_cmd += " "
-            uchime_cmd += " -log "
-            uchime_cmd += log_file
-            uchime_cmd += " "
-            uchime_cmd += self.usearch_cmd
-            uchime_cmd += " -uchime_ref "
-            uchime_cmd += input_file_name
-            uchime_cmd += " -uchimeout "
-            uchime_cmd += output_file_name
-            uchime_cmd += " -db "
-            uchime_cmd += ref_db
-            uchime_cmd += " -strand "
-            uchime_cmd += "plus"
-
-            logger.debug("uchime_ref_cmd = %s" % (uchime_cmd))  
-                          
-            try:
-                logger.info("chimera reference command: " + str(uchime_cmd))
-                output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
-                #print 'outsplit',output[idx_key].split()[2]
-                cluster_id_list.append(output[idx_key].split()[2])
-                #print 'Have %d bytes in output' % len(output)
-                #print 'ref',idx_key,output,len(output)
-                if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
-                    logger.debug(idx_key + " uchime ref seems to have been submitted successfully")                    
+            input_file_name  = os.path.join(self.indir,  idx_key +'.abund.fa')
+            if os.path.isfile(input_file_name):
+                output_file_name    = os.path.join(self.outdir,idx_key+".chimera.ref") 
+                #open(output_file_name, 'a').close()  # make sure file exists
+                log_file = os.path.join(self.outdir,idx_key+".ref.log") 
+                logger.debug("OUT FILE NAME: " + output_file_name)
+                # which ref db to use?
+                ref_db = ''
+                if dna_region.upper() == 'ITS':
+                    logger.debug("got an ITS dna region so using refdb: " + self.its_refdb)
+                    ref_db = self.its_refdb
                 else:
-                    print >>sys.stderr, "uchime ref may be broke"
-                
-            except OSError, e:
-                print >>sys.stderr, "Execution of chimera_reference failed: %s" % (uchime_cmd, e)
-                raise
+                    logger.debug("using standard refdb: " + self.refdb)
+                    ref_db = self.refdb
+                     
+                uchime_cmd=''
+                if self.use_cluster:
+                    uchime_cmd = C.clusterize_cmd
+                    uchime_cmd += " "
+                    uchime_cmd += " -log "
+                    uchime_cmd += log_file
+                    uchime_cmd += " "
+                uchime_cmd += self.usearch_cmd
+                uchime_cmd += " -uchime_ref "
+                uchime_cmd += input_file_name
+                uchime_cmd += " -uchimeout "
+                uchime_cmd += output_file_name
+                uchime_cmd += " -db "
+                uchime_cmd += ref_db
+                uchime_cmd += " -strand "
+                uchime_cmd += "plus"
+
+                logger.debug("uchime_ref_cmd = %s" % (uchime_cmd))  
+                              
+                try:
+                    logger.info("chimera reference command: " + str(uchime_cmd))
+                    output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
+                    #print 'outsplit',output[idx_key].split()[2]
+                    cluster_id_list.append(output[idx_key].split()[2])
+                    #print 'Have %d bytes in output' % len(output)
+                    #print 'ref',idx_key,output,len(output)
+                    if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
+                        logger.debug(idx_key + " uchime ref seems to have been submitted successfully")                    
+                    else:
+                        if self.use_cluster:
+                            print >>sys.stderr, "uchime ref may be broke"
+                    
+                except OSError, e:
+                    print >>sys.stderr, "Execution of chimera_reference failed: %s" % (uchime_cmd, e)
+                    raise
  
         if not chimera_region_found:            
             return ('NOREGION','No regions found that need checking','')
                
         for idx_key in output:
-            if len(output[idx_key]) > 50 or len(output[idx_key]) < 40:
+            if (len(output[idx_key]) > 50 or len(output[idx_key]) < 40) and self.use_cluster:
                 return ('ERROR','uchime ref may have broken or empty',idx_key)  
          
         return ('SUCCESS','uchime ref seems to have been submitted successfully',cluster_id_list)

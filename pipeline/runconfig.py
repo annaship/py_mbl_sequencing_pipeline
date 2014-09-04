@@ -165,7 +165,7 @@ class RunConfig:
         self.maximumLength  = general_config.get('maximumLength', C.maximumLength)
         self.minAvgQual     = general_config.get('minAvgQual',    C.minAvgQual)
         self.force_runkey   = general_config.get('force_runkey', None)
-        self.use_cluster    = general_config['use_cluster']
+        
         try:
             self.idx_keys           = general_config['idx_keys']
         except:
@@ -197,8 +197,16 @@ class RunConfig:
             except:
                 self.maximumLength = C.maximumLength
             
-            self.use64bit = False  # we dont have use of this anymore
-            
+            try:
+                self.use64bit = general_config['use64bit'] 
+                if self.use64bit:
+                    self.use_cluster    = False
+                else:
+                    self.use_cluster    = general_config['use_cluster']
+            except:
+                self.use64bit    = False
+                self.use_cluster = False
+                
             try:
                 self.fasta_file     = general_config['fasta_file'] 
             except:
