@@ -24,7 +24,10 @@ class Chimera:
         self.runobj     = runobj
         self.run_keys   = self.runobj.run_keys
         self.rundate    = self.runobj.run
-        self.use_cluster = self.runobj.use_cluster
+        try:
+            self.use_cluster = self.runobj.use_cluster
+        except:
+            self.use_cluster = True
         self.chg_suffix         = ".chg"
         self.chimeras_suffix    = ".chimeras"      
         self.ref_suffix         = ".db"      
