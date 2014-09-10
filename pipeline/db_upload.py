@@ -242,6 +242,8 @@ class dbUpload:
     
     def get_gasta_result(self, filename):
         gast_file_name = self.gast_filename(filename)
+        print "current gast_file_name = %s." % gast_file_name
+        
         try:
             with open(gast_file_name) as fd:
                 gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
