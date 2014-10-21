@@ -55,8 +55,6 @@ dna_regions     = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "
 #Y = [C,T]
 #todo: add to env454 "combined_primer"
 primers_dict = defaultdict(dict)
-primers_dict["Archaeal V6 Suite"]["proximal_primer"]     = "AATTGGANTCAACGCCGG"
-primers_dict["Archaeal V6 Suite"]["distal_primer"]       = "CGRCRGCCATGYACCWC"
 primers_dict["Archaeal V6mod Suite"]["proximal_primer"]  = "AATTGGCGGGGGAGCAC"
 primers_dict["Archaeal V6mod Suite"]["distal_primer"]    = "GCCATGCACC[A,T]CCTCT"
 primers_dict["Archaeal V4-V5 Suite"]["proximal_primer"]  = "G[C,T][C,T]TAAA..[A,G][C,T][C,T][C,T]GTAGC"
@@ -65,6 +63,12 @@ primers_dict["Bacterial V4-V5 Suite"]["proximal_primer"] = "CCAGCAGC[C,T]GCGGTAA
 primers_dict["Bacterial V4-V5 Suite"]["distal_primer"]   = "CCGTC[A,T]ATT[C,T].TTT[G,A]A.T"
 primers_dict["Fungal ITS1 Suite"]["proximal_primer"]     = "GTAAAAGTCGTAACAAGGTTTC"
 primers_dict["Fungal ITS1 Suite"]["distal_primer"]       = "GTTCAAAGA[C,T]TCGATGATTCAC"
+
+# hard coded in analyze-illumina-v6-overlaps
+primers_dict["Archaeal V6 Suite"]["proximal_primer"]  = "A.TCAACGCCGG"
+primers_dict["Archaeal V6 Suite"]["distal_primer"]    = "G[A,T]GGT[G,A]"
+primers_dict["Bacterial v6 Suite"]["proximal_primer"] = "AGGTG."
+primers_dict["Bacterial v6 Suite"]["distal_primer"]   = "[AG]AACCT[CT]A.C"
 
 
 VALIDATE_STEP           = "validate"

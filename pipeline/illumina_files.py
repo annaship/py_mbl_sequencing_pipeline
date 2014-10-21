@@ -294,7 +294,7 @@ class IlluminaFiles:
             if self.runobj.samples[idx_key].primer_suite in C.primers_dict:
                 proximal_primer = C.primers_dict[self.runobj.samples[idx_key].primer_suite]["proximal_primer"]
                 distal_primer = C.primers_dict[self.runobj.samples[idx_key].primer_suite]["distal_primer"]
-                print "proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
+#                 print "proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
             else:
                 print "ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'" % (self.runobj.samples[idx_key].primer_suite)
             primers[idx_key] = (proximal_primer, distal_primer) 
@@ -302,7 +302,6 @@ class IlluminaFiles:
         return primers
         
     def create_inis(self):
-        primers = self.get_primers()
         for idx_key in self.runobj.samples.keys():
             run_key = idx_key.split('_')[1].replace("N", ".");
             email = self.runobj.samples[idx_key].email
@@ -320,8 +319,9 @@ pair_1 = %s
 pair_2 = %s
 """ % (idx_key, email, self.out_file_path, self.results_path, idx_key + "_R1.fastq", idx_key + "_R2.fastq")
 
-            "That's for v4v5 miseq illumina" 
-            if not self.runobj.do_perfect:    
+            "That's for parital overlap (v4v5 miseq illumina)" 
+            if not self.runobj.do_perfect:
+                primers = self.get_primers()    
                 text += """
 # following section is optional
 [prefixes]
