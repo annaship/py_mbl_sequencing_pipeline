@@ -57,9 +57,9 @@ class IlluminaFiles:
 #        print "compressed = %s" %       compressed
 #        compressed = ast.literal_eval(compressed)     
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
-        correct_file_names = self.get_correct_file_names(in_files_r1, compressed)
-        if (len(correct_file_names) > 0):
-            self.read1(correct_file_names, compressed)
+#         correct_file_names = self.get_correct_file_names(in_files_r1)
+        if (len(in_files_r1) > 0):
+            self.read1(in_files_r1, compressed)
             self.read2(in_files_r2, compressed)
             self.create_inis()
         else:
@@ -346,7 +346,9 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
         in_files_r2 = []
         "TODO: exclude dir with new created files from the loop"
         for dirname, dirnames, filenames in os.walk(f_input_file_path):
-            for filename in filenames:
+            correct_file_names = self.get_correct_file_names(filenames)
+
+            for filename in correct_file_names:
                 if filename.find('_R1_') > 0:
                     in_files_r1.append(os.path.join(dirname, filename))
                 elif filename.find('_R2_') > 0:
@@ -355,16 +357,16 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                     sys.stderr.write("No read number in the file name: %s\n" % filename)
         return (in_files_r1, in_files_r2)
     
-    def get_correct_file_names(self, file_r1, compressed):
+    def get_correct_file_names(self, filenames):
         correct_file_names = [];
-        for file_r1 in file_r1:
-            print "FFF1: file %s" % file_r1
-            index_sequence = self.get_index(file_r1)
+        for file1 in filenames:
+            print "FFF1: file %s" % file1
+            index_sequence = self.get_index(file1)
 #             self.runobj.run_keys
 #             
             good_run_key_lane_names = [x for x in self.runobj.run_keys if x.startswith(index_sequence)]
             if len(good_run_key_lane_names) > 0:
-                correct_file_names.append(file_r1)
+                correct_file_names.append(file1)
         return set(correct_file_names)
         
     def read1(self, files_r1, compressed):
