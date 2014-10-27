@@ -57,7 +57,8 @@ class IlluminaFiles:
 #        print "compressed = %s" %       compressed
 #        compressed = ast.literal_eval(compressed)     
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
-        self.read1(in_files_r1, compressed)
+        correct_file_names = self.get_correct_file_names(in_files_r1, compressed)
+        self.read1(correct_file_names, compressed)
         self.read2(in_files_r2, compressed)
         self.create_inis()
         self.close_dataset_files()
@@ -348,6 +349,18 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 else:
                     sys.stderr.write("No read number in the file name: %s\n" % filename)
         return (in_files_r1, in_files_r2)
+    
+    def get_correct_file_names(self, file_r1, compressed):
+        correct_file_names = [];
+        for file_r1 in file_r1:
+            print "FFF1: file %s" % file_r1
+            index_sequence = self.get_index(file_r1)
+#             self.runobj.run_keys
+#             
+            good_run_key_lane_names = [x for x in self.runobj.run_keys if x.startswith(index_sequence)]
+            if len(good_run_key_lane_names) > 0:
+                correct_file_names.append(file_r1)
+        return set(correct_file_names)
         
     def read1(self, files_r1, compressed):
         """ loop through the fastq_file_names
@@ -355,14 +368,12 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             2) collect the relevant part of id
         """
         for file_r1 in files_r1:
-            print "FFF1: file %s" % file_r1
-            index_sequence = self.get_index(file_r1)
+            print "====\nFFF1: file %s" % file_r1
             f_input  = fq.FastQSource(file_r1, compressed)
             while f_input.next():
                 e = f_input.entry
-                ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
-#                ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
-                if ini_run_key in self.runobj.samples.keys() and int(e.pair_no) == 1:
+                ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
+                if int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
                         self.out_files[dataset_file_name_base_r1].store_entry(e)
