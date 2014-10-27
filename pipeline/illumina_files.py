@@ -58,10 +58,15 @@ class IlluminaFiles:
 #        compressed = ast.literal_eval(compressed)     
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
         correct_file_names = self.get_correct_file_names(in_files_r1, compressed)
-        self.read1(correct_file_names, compressed)
-        self.read2(in_files_r2, compressed)
-        self.create_inis()
+        if (len(correct_file_names) > 0):
+            self.read1(correct_file_names, compressed)
+            self.read2(in_files_r2, compressed)
+            self.create_inis()
+        else:
+            print "ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes."
         self.close_dataset_files()
+
+            
 
 #        self.perfect_reads()
 #        self.uniq_fa()
@@ -370,9 +375,10 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
         for file_r1 in files_r1:
             print "====\nFFF1: file %s" % file_r1
             f_input  = fq.FastQSource(file_r1, compressed)
+            index_sequence = self.get_index(file_r1)
             while f_input.next():
                 e = f_input.entry
-                ini_run_key  = e.index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
+                ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
                 if int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
