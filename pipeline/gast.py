@@ -59,7 +59,7 @@ class Gast:
 #                self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
 
         "For VAMPS-user-uload:"
-        os.environ['SGE_ROOT'] ='/usr/local/sge'
+        os.environ['SGE_ROOT'] ='/opt/sge'
         os.environ['SGE_CELL'] ='grendel'
         path                   = os.environ['PATH']
         os.environ['PATH']     = '/usr/local/sge/bin/lx24-amd64:'+path
@@ -220,8 +220,9 @@ class Gast:
                     #gast_file_list = []
                     'Create empty files'
                     
-                    for line in lines:
+                    for line in lines:                        
                         i += 1
+                        logger.debug("\n\n>>>>>>>>>Count: "+str(i))
                         if i >= cluster_nodes:
                             continue
                         script_filename      = os.path.join(gast_dir, qsub_prefix + str(i))
@@ -246,7 +247,7 @@ class Gast:
                             qstat_name = "gast" + key + '_' + self.runobj.run + "_" + str(i)
                             fh.write("#!/bin/sh\n\n")
                             
-                            # don't need these commands unless running qsub directly
+                            # don't need these commands unless running qsub directly (w/o clusterize)
                             #fh.write("#$ -j y\n" )
                             #fh.write("#$ -o " + log_file + "\n")
                             #fh.write("#$ -N " + qstat_name + "\n\n")
@@ -279,10 +280,10 @@ class Gast:
                         grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename)
     
                         logger.debug("grep command: "+grep_cmd)
-                        if self.use_cluster:  
+                        if self.use_cluster:
+                            logger.debug("using grendel cluster for usearch")
                             fh.write(grep_cmd + "\n")
                             fh.close()
-                            
                             # make script executable and run it
                             os.chmod(script_filename, stat.S_IRWXU)
                             #qsub_cmd = clusterize + " " + script_filename
@@ -293,15 +294,14 @@ class Gast:
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
                             #qsub_cmd = C.qsub_cmd + " " + script_filename
                             logger.debug("qsub command: "+qsub_cmd)
-                            print "qsub command: "+qsub_cmd
                             proc = subprocess.check_output(qsub_cmd, shell=True)
-                            print 'proc:',proc
+                            logger.debug('proc: '+proc)
                             try:
                                 qsub_id = proc.split()[2]
                                 # Your job 990889 ("clustergast_sub_46") has been submitted
                                 qsub_id_list.append(qsub_id)
                             except:
-                                print 'Could not split proc - Continuing on...'
+                                logger.debug('Could not split proc - Continuing on...')
 
                             # proc.communicate will block - probably not what we want
                             #(stdout, stderr) = proc.communicate() #block the last onehere
@@ -309,8 +309,9 @@ class Gast:
                             time.sleep(0.1)
         
                         else:
+                            logger.debug("NOT using cluster for usearch")
                             subprocess.call(grep_cmd, shell=True)
-                            print grep_cmd
+                            logger.debug(grep_cmd)
                 
                 else:
                     """works only if custer_nodes = 0 or False. In constants.py it's 100
@@ -649,7 +650,6 @@ class Gast:
                 
                 
             if self.use_cluster:
-                
                 clusterize = C.clusterize_cmd
                 # create script - each file gets script
                 script_filename = os.path.join(gast_dir, qsub_prefix + str(key_counter))
@@ -697,17 +697,16 @@ class Gast:
                 subprocess.call(qsub_cmd, shell=True)
                 
                 logger.debug("qsub command: "+qsub_cmd)
-                print "gast2tax qsub command: "+qsub_cmd
                 #subprocess.call(qsub_cmd, shell=True)
                 #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 proc = subprocess.check_output(qsub_cmd, shell=True)
-                print 'proc:',proc
+                logger.debug('proc: '+proc)
                 try:
                     qsub_id = proc.split()[2]
                     # Your job 990889 ("clustergast_sub_46") has been submitted
                     qsub_id_list.append(qsub_id)
                 except:
-                    print 'Could not split proc - Continuing on...'
+                    logger.debug('Could not split proc - Continuing on...')
 
                 
             else:

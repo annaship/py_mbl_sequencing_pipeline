@@ -196,17 +196,15 @@ class RunConfig:
                 self.maximumLength = general_config['maximum_length']
             except:
                 self.maximumLength = C.maximumLength
-            
+            try:
+                self.use_cluster    = general_config['use_cluster']
+            except:
+                self.use_cluster = False
             try:
                 self.use64bit = general_config['use64bit'] 
-                if self.use64bit:
-                    self.use_cluster    = False
-                else:
-                    self.use_cluster    = general_config['use_cluster']
             except:
-                self.use64bit    = False
-                self.use_cluster = False
-                
+                self.use64bit = False
+                    
             try:
                 self.fasta_file     = general_config['fasta_file'] 
             except:

@@ -1,8 +1,8 @@
 2012-09-21
 The pipeline should:
 I)   work for 454 and Illumina platforms
-II)  work for MBL upload and user's upload
-III) upload data on env454 and on VAMPS
+II)  work for MBL upload and VAMPS user's upload
+III) upload data onto env454 and on VAMPS
 
 0) create ini file out of VAMPS submission tables
 1) filter data by quality ("trimming") + chimera checking
