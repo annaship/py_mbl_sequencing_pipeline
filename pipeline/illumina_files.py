@@ -367,7 +367,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             good_run_key_lane_names = [x for x in self.runobj.run_keys if x.startswith(index_sequence)]
             if len(good_run_key_lane_names) > 0:
                 correct_file_names.append(file1)
-        return set(correct_file_names)
+        result = set(correct_file_names) 
+        return sorted(list(result))
         
     def read1(self, files_r1, compressed):
         """ loop through the fastq_file_names
