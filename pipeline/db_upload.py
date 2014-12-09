@@ -11,18 +11,21 @@ from pipeline.utils import Dirs, PipelneUtils
 try:
     import MySQLdb
 except MySQLdb.Error, e:
-    print """
+    message = """
     MySQLdb ERROR
       To load the correct module, try running these commands before running the pipeline:
        
 source /xraid/bioware/Modules/etc/profile.modules
 module load bioware
     """
-    print "Error %d: %s" % (e.args[0], e.args[1])
+    PipelneUtils.print_both(message)
+    PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
     raise
 except:                       # catch everything
-    print "Unexpected:"         # handle unexpected exceptions
-    print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+    PipelneUtils.print_both("Unexpected:")
+#     print "Unexpected:"         # handle unexpected exceptions
+    PipelneUtils.print_both(sys.exc_info()[0])
+#     print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
     raise          
 
 #     sys.exit("""
@@ -47,20 +50,24 @@ class MyConnection:
         self.lastrowid = None
         
         try:           
-            
-            print "=" * 40
-            print "host = " + str(host) + ", db = "  + str(db)            
-            print "=" * 40
+            PipelneUtils.print_both("=" * 40)
+            PipelneUtils.print_both("host = " + str(host) + ", db = "  + str(db))
+            PipelneUtils.print_both("=" * 40)
+#             print "=" * 40
+#             print "host = " + str(host) + ", db = "  + str(db)            
+#             print "=" * 40
 
             self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf"))
             self.cursor = self.conn.cursor()
                    
         except MySQLdb.Error, e:
-            print "Error %d: %s" % (e.args[0], e.args[1])
+            PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
             raise
         except:                       # catch everything
-            print "Unexpected:"         # handle unexpected exceptions
-            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+            PipelneUtils.print_both("Unexpected:")
+            PipelneUtils.print_both(sys.exc_info()[0])
+#             print "Unexpected:"         # handle unexpected exceptions
+#             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
 
     def execute_fetch_select(self, sql):
@@ -162,12 +169,12 @@ class dbUpload:
 #             if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == C.filtered_suffix)):
             if (full_name.endswith(self.nonchimeric_suffix)):                
                 fa_files.append(full_name)
-                print full_name
+                self.pipelne_utils.print_both(full_name)
                 self.suffix_used = self.nonchimeric_suffix
                 next 
             elif (full_name.endswith(self.fa_unique_suffix)):
                 fa_files.append(full_name)
-                print full_name
+                self.pipelne_utils.print_both(full_name)
                 self.suffix_used = self.fa_unique_suffix                
         return fa_files
         
@@ -187,7 +194,8 @@ class dbUpload:
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
         seq_id     = self.my_conn.execute_no_fetch(my_sql)
-        print "sequences in file: %s" % (len(sequences))
+#         print "sequences in file: %s" % (len(sequences))
+        self.pipelne_utils.print_both("sequences in file: %s" % (len(sequences)))
         return seq_id
         
     def get_seq_id_dict(self, sequences):
@@ -214,7 +222,7 @@ class dbUpload:
     def insert_pdr_info(self, fasta, run_info_ill_id):
         res_id = ""
         if (not run_info_ill_id):
-            print "ERROR: There is no run info yet, please check if it's uploaded to env454"
+            self.pipelne_utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
             
         # ------- insert sequence info per run/project/dataset --------
         seq_upper = fasta.seq.upper()
@@ -229,7 +237,7 @@ class dbUpload:
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
         except:
-            print "Offensive query: %s" % my_sql
+            self.pipelne_utils.print_both("Offensive query: %s" % my_sql)
             raise
         
     def gast_filename(self, filename):
@@ -242,7 +250,7 @@ class dbUpload:
     
     def get_gasta_result(self, filename):
         gast_file_name = self.gast_filename(filename)
-        print "current gast_file_name = %s." % gast_file_name
+        self.pipelne_utils.print_both("current gast_file_name = %s." % gast_file_name)
         
         try:
             with open(gast_file_name) as fd:
@@ -279,8 +287,8 @@ class dbUpload:
                     self.tax_id_dict[taxonomy] = tax_id
                 return tax_id
         else:
-            print "ERROR: can't read gast files! No taxonomy information will be processed."
-            logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")
+            self.pipelne_utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed.")
+#             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")
 
             
             
@@ -364,11 +372,11 @@ class dbUpload:
         
     def insert_project(self, content_row, contact_id):
         if (not contact_id):
-            print "ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS"        
+            self.pipelne_utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")        
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
         ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
-        print my_sql
+        self.pipelne_utils.print_both(my_sql)
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
@@ -403,7 +411,7 @@ class dbUpload:
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id)
         
-        print "insert run_info sql = %s" % my_sql
+        self.pipelne_utils.print_both("insert run_info sql = %s" % my_sql)
         
         self.my_conn.execute_no_fetch(my_sql)
 
@@ -522,9 +530,9 @@ class dbUpload:
             file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
             return file_seq_orig_count
         except IOError as e:
-            print "Can't open file %s, error = %s" % (self.unique_file_counts, e)         
+            self.pipelne_utils.print_both("Can't open file %s, error = %s" % (self.unique_file_counts, e))         
         except Exception:
-            print "Unexpected error from 'count_seq_from_file':", sys.exc_info()[0]
+            self.pipelne_utils.print_both("Unexpected error from 'count_seq_from_file':", sys.exc_info()[0])
             raise
         
     def count_seq_from_files_grep(self):
@@ -550,9 +558,9 @@ class dbUpload:
         file_seq_orig_count = self.count_seq_from_files_grep()
         
         if (file_seq_orig_count == file_seq_db_count):
-            print "All sequences from files made it to the db: %s == %s" % (file_seq_orig_count, file_seq_db_count)
+            self.pipelne_utils.print_both("All sequences from files made it to the db: %s == %s" % (file_seq_orig_count, file_seq_db_count))
         else:
-            print "Oops, amount of sequences from files not equal to the one in the db.\nIn file: %s != in db: %s\n==============" % (file_seq_orig_count, file_seq_db_count)
+            self.pipelne_utils.print_both("Oops, amount of sequences from files not equal to the one in the db.\nIn file: %s != in db: %s\n==============" % (file_seq_orig_count, file_seq_db_count))
             
     def put_seq_statistics_in_file(self, filename, seq_in_file):
         pipelne_utils   = PipelneUtils()
