@@ -14,7 +14,7 @@ from pipeline.utils import Dirs, PipelneUtils
 from collections import defaultdict
 import constants as C
 import getpass
-from pipeline.pipelinelogging import logger
+# from pipeline.pipelinelogging import logger
 
 "TODO: add tests and test case"
 #from collections import defaultdict
@@ -66,7 +66,7 @@ class IlluminaFiles:
         else:
 #             print "ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes."
 #             logger.debug("ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes.")
-            self.print_both("ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes.")
+            self.utils.print_both("ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes.")
         self.close_dataset_files()
 
             
@@ -96,7 +96,7 @@ class IlluminaFiles:
         return files
     
     def perfect_reads(self):
-        self.print_both("Extract perfect V6 reads:")
+        self.utils.print_both("Extract perfect V6 reads:")
         for idx_key in self.runobj.samples.keys():
             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = C.perfect_overlap_cmd
@@ -108,7 +108,7 @@ class IlluminaFiles:
                 else: 
                     call([program_name, file_name])
             except:
-                self.print_both("Problems with program_name = %s, file_name = %s" % (program_name, file_name))
+                self.utils.print_both("Problems with program_name = %s, file_name = %s" % (program_name, file_name))
                 raise  
     
     def call_sh_script(self, script_name_w_path, where_to_run):
@@ -117,11 +117,11 @@ class IlluminaFiles:
             call(['qsub', script_name_w_path], cwd=(where_to_run))
 #             pass
         except:
-            self.print_both("Problems with script_name = %s" % (script_name_w_path))
+            self.utils.print_both("Problems with script_name = %s" % (script_name_w_path))
             raise  
         
     def perfect_reads_cluster(self):
-        self.print_both("Extract perfect V6 reads:")
+        self.utils.print_both("Extract perfect V6 reads:")
         program_name = C.perfect_overlap_cmd
         if self.utils.is_local():
             program_name = C.perfect_overlap_cmd_local
@@ -138,7 +138,7 @@ class IlluminaFiles:
         return script_file_name              
                           
     def partial_overlap_reads_cluster(self):
-        self.print_both("Extract partial_overlap V4V5 reads:")
+        self.utils.print_both("Extract partial_overlap V4V5 reads:")
         program_name = C.partial_overlap_cmd
         if self.utils.is_local():
             program_name = C.partial_overlap_cmd_local       
@@ -156,7 +156,7 @@ class IlluminaFiles:
         return script_file_name      
                     
     def partial_overlap_reads(self):
-        self.print_both("Extract partial_overlap V4V5 reads:")
+        self.utils.print_both("Extract partial_overlap V4V5 reads:")
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = C.partial_overlap_cmd
@@ -174,11 +174,11 @@ class IlluminaFiles:
             except Exception:
 #                 except Exception, err:
                 message = traceback.format_exc()
-                self.print_both(message)
+                self.utils.print_both(message)
     #or
 #     print sys.exc_info()[0]
 
-                self.print_both("Problems with program_name = %s" % (program_name))
+                self.utils.print_both("Problems with program_name = %s" % (program_name))
                 raise  
                 
 #             print "HERE: program_name = " % (program_name)   
@@ -234,7 +234,7 @@ class IlluminaFiles:
         return script_file_name
 
     def filter_mismatches_cluster(self, max_mismatch = 3):
-        self.print_both("Filter mismatches if more then %s" % (max_mismatch))
+        self.utils.print_both("Filter mismatches if more then %s" % (max_mismatch))
         command_line = C.filter_mismatch_cmd
         if self.utils.is_local():
             command_line = C.filter_mismatch_cmd_local    
@@ -247,7 +247,7 @@ class IlluminaFiles:
         return script_file_name              
 
     def filter_mismatches(self, max_mismatch = 3):
-        self.print_both("Filter mismatches if more then %s" % (max_mismatch))
+        self.utils.print_both("Filter mismatches if more then %s" % (max_mismatch))
         n = 0        
         files = self.get_all_files()
         for full_name in files.keys():    
@@ -268,7 +268,7 @@ class IlluminaFiles:
                 call([program_name, full_name])
 
     def uniq_fa_cluster(self):
-        self.print_both("Uniqueing fasta files"      )
+        self.utils.print_both("Uniqueing fasta files"      )
         command_line = C.fastaunique_cmd
         if self.utils.is_local():
             command_line = C.fastaunique_cmd_local   
@@ -284,7 +284,7 @@ class IlluminaFiles:
                                        
     def uniq_fa(self):
         n = 0        
-        self.print_both("Uniqueing fasta files")
+        self.utils.print_both("Uniqueing fasta files")
         files = self.get_all_files()
         for full_name in files.keys():    
 #             if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED_FILTERED'):
@@ -306,7 +306,7 @@ class IlluminaFiles:
                 distal_primer = C.primers_dict[self.runobj.samples[idx_key].primer_suite]["distal_primer"]
 #                 print "proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
             else:
-                self.print_both("ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'" % (self.runobj.samples[idx_key].primer_suite))
+                self.utils.print_both("ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'" % (self.runobj.samples[idx_key].primer_suite))
             primers[idx_key] = (proximal_primer, distal_primer) 
             
         return primers
@@ -359,7 +359,7 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                     in_files_r2.append(os.path.join(dirname, filename))
                 else:
                     sys.stderr.write("No read number in the file name: %s\n" % filename)
-        self.print_both("FFF0: in_files_r1 %s\n, in_files_r2 %s" % (in_files_r1, in_files_r2))                    
+        self.utils.print_both("FFF0: in_files_r1 %s\n, in_files_r2 %s" % (in_files_r1, in_files_r2))                    
         return (in_files_r1, in_files_r2)
     
     def get_correct_file_names(self, filenames):
@@ -379,7 +379,7 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             2) collect the relevant part of id
         """
         for file_r1 in files_r1:
-            self.print_both("====\nFFF1: file %s" % file_r1)
+            self.utils.print_both("====\nFFF1: file %s" % file_r1)
             f_input  = fq.FastQSource(file_r1, compressed)
             index_sequence = self.get_index(file_r1)
             while f_input.next():
@@ -400,7 +400,7 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
     def read2(self, files_r2, compressed):
         "3) e.pair_no = 2, find id from 2), assign dataset_name"
         for file_r2 in files_r2:
-            self.print_both("FFF2: file %s" % file_r2)
+            self.utils.print_both("FFF2: file %s" % file_r2)
             f_input  = fq.FastQSource(file_r2, compressed)
             while f_input.next():
                 e = f_input.entry
@@ -418,7 +418,3 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
         if file_name_parts[0].startswith("IDX"):
             index = file_name_parts[1]
         return index
-
-    def print_both(self, message):
-            print message
-            logger.debug(message)

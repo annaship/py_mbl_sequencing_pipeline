@@ -380,6 +380,9 @@ class PipelneUtils:
         return time.strftime("%m/%d/%Y %H:%M", time.localtime())
 # '2009-01-05 22'
 
+    def print_both(self, message):
+        print message
+        logger.debug(message)
 
 class Dirs:
     """get input dir from args, create all other dirs
