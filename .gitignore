@@ -18,6 +18,7 @@ analysis
 unique_file_counts_test
 temp
 test
+pipeline.log
 
 # Result files #
 ################
