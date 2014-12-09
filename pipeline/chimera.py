@@ -248,20 +248,20 @@ class Chimera:
         check_qstat_cmd_line = "qstat | grep \"%s\" | grep usearch | wc -l" % time_before
 #         check_qstat_cmd_line = "qstat | grep usearch"
 
-        print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
+        self.utils.print_both("check_qstat_cmd_line = %s" % check_qstat_cmd_line)
         
         try:
             p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
             (output, err) = p.communicate()
             num_proc = int(output)
-            print "qstat is running %s 'usearch' processes" % num_proc
+            self.utils.print_both("qstat is running %s 'usearch' processes" % num_proc)
     #         pprint(p)
             
             if (num_proc == 0):
                 cluster_done = True
     #         print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
         except:
-            print "Chimera checking can be done only on a cluster."
+            self.utils.print_both("Chimera checking can be done only on a cluster.")
             raise
 
         return cluster_done
@@ -295,8 +295,8 @@ class Chimera:
             db_cmd_append     = " -db " + ref_db   
             dir_cmd_append    = " -strand plus"
         else:
-            print "Incorrect method, should be \"denovo\" or \"ref\"" 
-        print "output_file_name = %s" % output_file_name 
+            self.utils.print_both("Incorrect method, should be \"denovo\" or \"ref\"") 
+        self.utils.print_both("output_file_name = %s" % output_file_name) 
 
 
         uchime_cmd = C.clusterize_cmd
@@ -348,18 +348,19 @@ class Chimera:
 #             print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
             
             uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
-            print "\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd)
+            self.utils.print_both("\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd))
             
             try:
                 logger.info("chimera checking command: " + str(uchime_cmd))
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             except OSError, e:
-                print "Problems with this command: %s" % (uchime_cmd)
+                self.utils.print_both("Problems with this command: %s" % (uchime_cmd))
                 if self.utils.is_local():
                     print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
                 else:
                     print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                    self.utils.print_both("Execution of %s failed: %s" % (uchime_cmd, e))
                     raise                  
                                
 # ???
@@ -380,7 +381,7 @@ class Chimera:
 #                 TODO: run ones for each file_base = ".".join(file_name.split(".")[0:3]) (for txt and db)
                 if file_name.endswith(both_or_denovo):                    
                     file_name_path = os.path.join(self.outdir, file_name)        
-                    print "Get ids from %s" % file_name_path
+                    self.utils.print_both("Get ids from %s" % file_name_path)
                     read_fasta     = fa.ReadFasta(file_name_path)
                     ids.update(set(read_fasta.ids))
         return ids
@@ -470,13 +471,13 @@ class Chimera:
             file_ratio[file_basename] = (percent_ref, ratio)
             # percent_ref = int(percent_ref or 0)
             if (percent_ref > 15):
-                print "=" * 50
+                self.utils.print_both("=" * 50)
             
-                print file_basename
+                self.utils.print_both(file_basename)
                 # print "all_lines_file_name = %s, ref_lines_file_name = %s, denovo_lines_file_name = %s" % (all_lines_file_name, ref_lines_file_name, denovo_lines_file_name)
-                print "all_lines = %s, ref_lines = %s, denovo_lines = %s" % (all_lines, ref_lines, denovo_lines)
-                print "ratio = %s" % ratio 
-                print "percent_ref = %s, percent_denovo = %s" % (percent_ref, percent_denovo)
+                self.utils.print_both("all_lines = %s, ref_lines = %s, denovo_lines = %s" % (all_lines, ref_lines, denovo_lines))
+                self.utils.print_both("ratio = %s" % ratio) 
+                self.utils.print_both("percent_ref = %s, percent_denovo = %s" % (percent_ref, percent_denovo))
         return file_ratio
         
         
@@ -507,7 +508,7 @@ class Chimera:
             file_open = open(file_name)
             return len([l for l in file_open.readlines() if l.startswith('>')])
         except IOError, e:
-            print e
+            self.utils.print_both(e)
             return 0
             # print "%s\nThere is no such file: %s" % (e, file_name)
         else:
@@ -556,7 +557,7 @@ class Chimera:
                         continue
 
 
-                print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
+                self.utils.print_both("input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name))
 
     #             uchime_cmd = C.clusterize_cmd
     #             uchime_cmd += " "
@@ -589,18 +590,19 @@ class Chimera:
 
                     #output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
-                    print "output[idx_key] = %s" % output[idx_key]
-                    print output[idx_key].split()[2]
+                    self.utils.print_both("output[idx_key] = %s" % output[idx_key])
+                    self.utils.print_both(output[idx_key].split()[2])
                     cluster_id_list.append(output[idx_key].split()[2])
 
 
 
                 except OSError, e:
-                    print "Problems with this command: %s" % (uchime_cmd)
+                    self.utils.print_both("Problems with this command: %s" % (uchime_cmd))
                     if self.utils.is_local():
                         print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
                     else:
                         print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                        self.utils.print_both("Execution of %s failed: %s" % (uchime_cmd, e))
                         raise                  
                                 
 # ???
@@ -690,9 +692,11 @@ class Chimera:
                     else:
                         if self.use_cluster:
                             print >>sys.stderr, "uchime ref may be broke"
+                            self.utils.print_both("uchime ref may be broke")
                     
                 except OSError, e:
                     print >>sys.stderr, "Execution of chimera_reference failed: %s" % (uchime_cmd, e)
+                    self.utils.print_both("Execution of chimera_reference failed: %s" % (uchime_cmd, e))
                     raise
  
         if not chimera_region_found:            
