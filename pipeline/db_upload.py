@@ -64,10 +64,10 @@ class MyConnection:
             PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
             raise
         except:                       # catch everything
-            PipelneUtils.print_both("Unexpected:")
-            PipelneUtils.print_both(sys.exc_info()[0])
-#             print "Unexpected:"         # handle unexpected exceptions
-#             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+#             PipelneUtils.print_both("Unexpected:")
+#             PipelneUtils.print_both(sys.exc_info()[0])
+            print "Unexpected:"         # handle unexpected exceptions
+            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
 
     def execute_fetch_select(self, sql):
