@@ -503,6 +503,7 @@ class Chimera:
             raise
     
     def get_fa_lines_count(self, file_name):
+        # todo: use fastalib to get cnt?
         # return fa.SequenceSource(file_name, lazy_init = False).total_seq
         try:
             file_open = open(file_name)
