@@ -24,8 +24,10 @@ sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pi
 from suites.primer import PrimerSuite 
 from pipeline.primer_utils import *
 from pipeline.utils import *
-from fastalib import *
-from fastqlib import *
+import IlluminaUtils.lib.fastqlib as fq
+#import fastqlib as fq
+import IlluminaUtils.lib.fastalib as fa
+#import fastalib as fa
 from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
 #from pipeline.utils import Dirs, PipelneUtils

@@ -1,13 +1,15 @@
 import sys
 import os
 import traceback
-sys.path.append("/xraid/bioware/linux/seqinfo/bin")
-sys.path.append("/Users/ashipunova/bin/illumina-utils")
-sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
-sys.path.append("/bioware/merens-illumina-utils")
+#sys.path.append("/xraid/bioware/linux/seqinfo/bin")
+#sys.path.append("/Users/ashipunova/bin/illumina-utils")
+#sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
+#sys.path.append("/bioware/merens-illumina-utils")
 # sys.path.append("/bioware/pythonmodules/illumina-utils/")
-import fastqlib as fq
-import fastalib as fa
+import IlluminaUtils.lib.fastqlib as fq
+#import fastqlib as fq
+import IlluminaUtils.lib.fastalib as fa
+#import fastalib as fa
 from subprocess import call
 import ast
 from pipeline.utils import Dirs, PipelneUtils
