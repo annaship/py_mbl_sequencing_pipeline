@@ -228,7 +228,8 @@ cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/illumina-utils/s
 
 ############# defaults for illumina ################################################################ 
 # perfect_overlap_cmd       = "analyze-illumina-v6-overlaps"
-perfect_overlap_cmd       = "iu-merge-pairs"
+# perfect_overlap_cmd       = "iu-merge-pairs"
+perfect_overlap_cmd       = "iu-analyze-v6-complete-overlaps"
 perfect_overlap_cmd_local = perfect_overlap_cmd    
 # perfect_overlap_cmd_local = cmd_path_local + perfect_overlap_cmd    
 # partial_overlap_cmd       = "merge-illumina-pairs"

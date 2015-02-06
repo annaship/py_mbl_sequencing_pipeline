@@ -132,8 +132,8 @@ class IlluminaFiles:
             add_arg = " --archaea"
         else: 
             add_arg = ""
-#         command_line          = program_name + add_arg
-        command_line          = program_name + " --enforce-Q30-check --retain-only-overlap " + add_arg 
+        command_line          = program_name + add_arg
+#         command_line          = program_name + " --enforce-Q30-check --retain-only-overlap " + add_arg 
         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
