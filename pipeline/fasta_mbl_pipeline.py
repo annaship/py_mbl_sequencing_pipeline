@@ -3,7 +3,8 @@ import sys,os
 # sys.path.append("/bioware/pythonmodules/illumina-utils/")
 sys.path.append("/bioware/merens-illumina-utils")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
-from fastalib import *
+import IlluminaUtils.lib.fastalib as fa
+#import fastalib as fa
 from pipeline.Fasta import sfasta
 from pipeline.utils import *
 from time import sleep

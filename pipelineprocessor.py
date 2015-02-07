@@ -44,7 +44,8 @@ from inspect import currentframe, getframeinfo
 
 import logging
 import json    
-import fastalib as u
+import IlluminaUtils.lib.fastalib as fa
+#import fastalib as fa
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
 # from pipeline.utils import Dirs

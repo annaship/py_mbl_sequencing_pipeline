@@ -12,7 +12,8 @@ sys.path.append("/Users/ashipunova/bin/illumina-utils")
 sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
 sys.path.append("/bioware/merens-illumina-utils")
 
-import fastalib as fa
+#import fastalib as fa
+import IlluminaUtils.lib.fastalib as fa
 import pipeline.constants as C
 import json
 
@@ -503,6 +504,7 @@ class Chimera:
             raise
     
     def get_fa_lines_count(self, file_name):
+        # todo: use fastalib to get cnt?
         # return fa.SequenceSource(file_name, lazy_init = False).total_seq
         try:
             file_open = open(file_name)

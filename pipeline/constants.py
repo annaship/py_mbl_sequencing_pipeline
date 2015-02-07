@@ -227,12 +227,19 @@ output_root_mbl_local   = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test
 cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts/"
 
 ############# defaults for illumina ################################################################ 
-perfect_overlap_cmd       = "analyze-illumina-v6-overlaps"
-perfect_overlap_cmd_local = cmd_path_local + perfect_overlap_cmd    
-partial_overlap_cmd       = "merge-illumina-pairs"
-partial_overlap_cmd_local = cmd_path_local + partial_overlap_cmd          
-filter_mismatch_cmd       = "filter-merged-reads" 
-filter_mismatch_cmd_local = cmd_path_local + filter_mismatch_cmd          
+# perfect_overlap_cmd       = "analyze-illumina-v6-overlaps"
+# perfect_overlap_cmd       = "iu-merge-pairs"
+perfect_overlap_cmd       = "iu-analyze-v6-complete-overlaps"
+perfect_overlap_cmd_local = perfect_overlap_cmd    
+# perfect_overlap_cmd_local = cmd_path_local + perfect_overlap_cmd    
+# partial_overlap_cmd       = "merge-illumina-pairs"
+partial_overlap_cmd       = "iu-merge-pairs"
+partial_overlap_cmd_local = partial_overlap_cmd          
+# partial_overlap_cmd_local = cmd_path_local + partial_overlap_cmd          
+# filter_mismatch_cmd       = "filter-merged-reads" 
+filter_mismatch_cmd       = "iu-filter-merged-reads" 
+filter_mismatch_cmd_local = filter_mismatch_cmd          
+# filter_mismatch_cmd_local = cmd_path_local + filter_mismatch_cmd          
 
 ################################################################################################  
 filtered_suffix    = "MERGED-MAX-MISMATCH-3" #result of filter-merged-reads

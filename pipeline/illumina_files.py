@@ -1,13 +1,15 @@
 import sys
 import os
 import traceback
-sys.path.append("/xraid/bioware/linux/seqinfo/bin")
-sys.path.append("/Users/ashipunova/bin/illumina-utils")
-sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
-sys.path.append("/bioware/merens-illumina-utils")
+#sys.path.append("/xraid/bioware/linux/seqinfo/bin")
+#sys.path.append("/Users/ashipunova/bin/illumina-utils")
+#sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
+#sys.path.append("/bioware/merens-illumina-utils")
 # sys.path.append("/bioware/pythonmodules/illumina-utils/")
-import fastqlib as fq
-import fastalib as fa
+import IlluminaUtils.lib.fastqlib as fq
+#import fastqlib as fq
+import IlluminaUtils.lib.fastalib as fa
+#import fastalib as fa
 from subprocess import call
 import ast
 from pipeline.utils import Dirs, PipelneUtils
@@ -131,6 +133,7 @@ class IlluminaFiles:
         else: 
             add_arg = ""
         command_line          = program_name + add_arg
+#         command_line          = program_name + " --enforce-Q30-check --retain-only-overlap " + add_arg 
         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
@@ -148,7 +151,7 @@ class IlluminaFiles:
         else:
             add_arg = ""
 #         TODO: this part is the same in perfect overlap - move into a method    
-        command_line          = program_name + " --enforce-Q30-check " + add_arg
+        command_line          = program_name + " --enforce-Q30-check " + add_arg 
         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)

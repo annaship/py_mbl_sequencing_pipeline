@@ -8,9 +8,11 @@ import os
 sys.path.append("../")
 #from mock import Mock 
 import pipeline.db_upload as dbup
-sys.path.append("/bioware/pythonmodules/illumina-utils/")
-sys.path.append("/Users/ashipunova/bin/illumina-utils")
-import fastalib as u
+#sys.path.append("/bioware/pythonmodules/illumina-utils/")
+#sys.path.append("/Users/ashipunova/bin/illumina-utils")
+#import fastalib as u
+import IlluminaUtils.lib.fastalib as fa
+#import fastalib as fa
 import shutil
 
 from pipeline.run import Run

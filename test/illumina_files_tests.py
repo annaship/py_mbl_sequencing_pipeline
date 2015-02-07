@@ -7,7 +7,8 @@ sys.path.append("../")
 import pipeline.illumina_files as ill_f
 
 from pipeline.run import Run
-import test.test_factory as fake_data_object
+# local: import test.test_factory as fake_data_object
+import test_factory as fake_data_object
 
 """
 to run: python pipeline/test/illumina_files_tests.py -v
@@ -17,8 +18,9 @@ class IlluminaFilesTestCase(unittest.TestCase):
     @classmethod  
     def setUpClass(cls):
         data_object   = fake_data_object.data_object
-        root_dir      = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
-        cls.file_path = os.path.join(root_dir, data_object['general']['platform'], data_object['general']['run'], 'lane_1/analysis') 
+        #local: root_dir      = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
+        root_dir = '/workspace/ashipunova/illumina/pipeline/py_mbl_sequencing_pipeline/test'
+	cls.file_path = os.path.join(root_dir, data_object['general']['platform'], data_object['general']['run'], 'lane_1/analysis') 
         if os.path.isdir(cls.file_path):
             shutil.rmtree(cls.file_path)         
         pi_path             = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
