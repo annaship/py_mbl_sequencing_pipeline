@@ -16,16 +16,14 @@ import sys, os, stat
 import shutil
 #import hashlib
 sys.path.append("/bioware/linux/seqinfo/bin/")
-# sys.path.append("/bioware/pythonmodules/illumina-utils/")
-sys.path.append("/bioware/merens-illumina-utils")
 sys.path.append("/Users/ashipunova/bin/illumina-utils")
 sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
 
 from suites.primer import PrimerSuite 
 from pipeline.primer_utils import *
 from pipeline.utils import *
-from fastalib import *
-from fastqlib import *
+from IlluminaUtils.lib.fastalib import *
+from IlluminaUtils.lib.fastqlib import *
 from pipeline.Fasta import sfasta
 from pipeline.anchortrimming_mbl import *
 #from pipeline.utils import Dirs, PipelneUtils

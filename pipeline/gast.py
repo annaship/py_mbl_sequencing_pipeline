@@ -555,6 +555,7 @@ class Gast:
                 concat = {}
                 #print clustergast_filename_single
                 'create content for the gast_concat table'
+                # M01925:91:000000000-A7PJY:1:1102:19152:21839	DQ874340_1_1390	0.007	264I151M975I	99
                 for line in open(clustergast_filename_single, 'r'):
                     data = line.strip().split("\t")
                     id = data[0]
