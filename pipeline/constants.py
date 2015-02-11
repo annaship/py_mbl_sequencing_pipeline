@@ -69,9 +69,9 @@ primers_dict["Fungal ITS1 Suite"]["distal_primer"]       = "GTTCAAAGA[C,T]TCGATG
 primers_dict["Archaeal V6 Suite"]["proximal_primer"]  = "A.TCAACGCCGG"
 primers_dict["Archaeal V6 Suite"]["distal_primer"]    = "G[A,T]GGT[G,A]"
 primers_dict["Bacterial v6 Suite"]["proximal_primer"] = "AGGTG."
-primers_dict["Bacterial v6 Suite"]["distal_primer"]   = "[AG]AACCT[CT]A.C"
-primers_dict["Eukaryal V4 Suite"]["proximal_primer"] = "CCAGCA[CG]C[CT]GCGGTAATTCC"
-primers_dict["Eukaryal V4 Suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[CT][AG]A"
+primers_dict["Bacterial v6 Suite"]["distal_primer"]   = "[A,G]AACCT[CT]A.C"
+primers_dict["Eukaryal V4 Suite"]["proximal_primer"] = "CCAGCA[C,G]C[C,T]GCGGTAATTCC"
+primers_dict["Eukaryal V4 Suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G]A"
 
 
 VALIDATE_STEP           = "validate"
