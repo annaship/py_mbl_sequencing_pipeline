@@ -7,10 +7,10 @@ from pipeline.utils import Dirs, PipelneUtils
 from pipeline.utils import *
 from pprint import pprint
 from collections import defaultdict, namedtuple
-sys.path.append("/xraid/bioware/linux/seqinfo/bin")
-sys.path.append("/Users/ashipunova/bin/illumina-utils")
-sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
-sys.path.append("/bioware/merens-illumina-utils")
+# sys.path.append("/xraid/bioware/linux/seqinfo/bin")
+# sys.path.append("/Users/ashipunova/bin/illumina-utils")
+# sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
+# sys.path.append("/bioware/merens-illumina-utils")
 
 #import fastalib as fa
 import IlluminaUtils.lib.fastalib as fa
