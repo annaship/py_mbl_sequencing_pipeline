@@ -128,7 +128,7 @@ class IlluminaFiles:
         if self.utils.is_local():
             program_name = C.perfect_overlap_cmd_local
         primer_suite = self.get_config_values('primer_suite')
-        if any("Archaeal" in s for s in primer_suite):
+        if any("Archaeal".lower() in s for s in primer_suite):
             add_arg = " --archaea"
         else: 
             add_arg = ""
