@@ -105,7 +105,7 @@ class IlluminaFiles:
             if self.utils.is_local():
                 program_name = C.perfect_overlap_cmd_local                    
             try:
-                if self.runobj.samples[idx_key].primer_suite.startswith('Archaeal'):
+                if self.runobj.samples[idx_key].primer_suite.lower().startswith('archaeal'):
                     call([program_name, file_name, "--archaea"]) 
                 else: 
                     call([program_name, file_name])
@@ -304,17 +304,14 @@ class IlluminaFiles:
         distal_primer   = ""
         primers         = {}
         for idx_key in self.runobj.samples.keys():
-#             print "\n====\n"
-#             print idx_key
-#             print self.runobj.samples[idx_key].primer_suite
-#             print self.runobj.samples[idx_key].primer_suite in C.primers_dict
-            
-            if self.runobj.samples[idx_key].primer_suite in C.primers_dict:
-                proximal_primer = C.primers_dict[self.runobj.samples[idx_key].primer_suite]["proximal_primer"]
-                distal_primer = C.primers_dict[self.runobj.samples[idx_key].primer_suite]["distal_primer"]
+            primer_suite = self.runobj.samples[idx_key].primer_suite.lower()
+
+            if primer_suite in C.primers_dict:
+                proximal_primer = C.primers_dict[primer_suite]["proximal_primer"]
+                distal_primer = C.primers_dict[primer_suite]["distal_primer"]
 #                 print "proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
             else:
-                self.utils.print_both("ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'\n" % (self.runobj.samples[idx_key].primer_suite))
+                self.utils.print_both("ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'\n" % (primer_suite))
             primers[idx_key] = (proximal_primer, distal_primer) 
             
         return primers
