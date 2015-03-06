@@ -244,7 +244,10 @@ class Chimera:
 #     import os
 # [os.rename(f, f.replace('_', '-')) for f in os.listdir('.') if not f.startswith('.')]
 
-        
+    def check_if_chimera_dir_empty(self):
+        if not os.listdir(self.outdir):
+            self.utils.print_both('ERROR: Did not find files in %s, something is wrong. First check if you ran the command on a cluster. Exiting.\n' % self.outdir)
+            sys.exit()
           
     def check_if_cluster_is_done(self, time_before):
         cluster_done = False

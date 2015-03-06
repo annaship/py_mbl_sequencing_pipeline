@@ -322,6 +322,8 @@ def illumina_chimera(runobj):
     elapsed = (time.time() - start)
     print "Cluster is done with both chimera checkings in: %s" % elapsed     
     
+    mychimera.check_if_chimera_dir_empty()
+    
     mychimera.illumina_rm_size_files()
 
 #     start = time.time()
