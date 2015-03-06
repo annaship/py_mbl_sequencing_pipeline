@@ -301,7 +301,7 @@ class Chimera:
             db_cmd_append     = " -db " + ref_db   
             dir_cmd_append    = " -strand plus"
         else:
-            self.utils.print_both("Incorrect method, should be \"denovo\" or \"ref\"") 
+            self.utils.print_both("Error: Incorrect method, should be \"denovo\" or \"ref\"") 
         self.utils.print_both("output_file_name = %s" % output_file_name) 
 
 
@@ -361,12 +361,12 @@ class Chimera:
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             except OSError, e:
-                self.utils.print_both("Problems with this command: %s" % (uchime_cmd))
+                self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
                 if self.utils.is_local():
-                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                    print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
                 else:
-                    print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
-                    self.utils.print_both("Execution of %s failed: %s" % (uchime_cmd, e))
+                    print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
+                    self.utils.print_both("Error: Execution of %s failed: %s" % (uchime_cmd, e))
                     raise                  
                                
 # ???
@@ -604,12 +604,12 @@ class Chimera:
 
 
                 except OSError, e:
-                    self.utils.print_both("Problems with this command: %s" % (uchime_cmd))
+                    self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
                     if self.utils.is_local():
-                        print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
+                        print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
                     else:
-                        print >>sys.stderr, "Execution of %s failed: %s" % (uchime_cmd, e)
-                        self.utils.print_both("Execution of %s failed: %s" % (uchime_cmd, e))
+                        print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
+                        self.utils.print_both("Error: Execution of %s failed: %s" % (uchime_cmd, e))
                         raise                  
                                 
 # ???
@@ -698,12 +698,12 @@ class Chimera:
                         logger.debug(idx_key + " uchime ref seems to have been submitted successfully")                    
                     else:
                         if self.use_cluster:
-                            print >>sys.stderr, "uchime ref may be broke"
-                            self.utils.print_both("uchime ref may be broke")
+                            print >>sys.stderr, "Error: uchime ref may be broke"
+                            self.utils.print_both("Error: uchime ref may be broke")
                     
                 except OSError, e:
-                    print >>sys.stderr, "Execution of chimera_reference failed: %s" % (uchime_cmd, e)
-                    self.utils.print_both("Execution of chimera_reference failed: %s" % (uchime_cmd, e))
+                    print >>sys.stderr, "Error: Execution of chimera_reference failed: %s" % (uchime_cmd, e)
+                    self.utils.print_both("Error: Execution of chimera_reference failed: %s" % (uchime_cmd, e))
                     raise
  
         if not chimera_region_found:            
