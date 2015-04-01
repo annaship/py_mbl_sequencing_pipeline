@@ -249,9 +249,17 @@ filtered_suffix    = "MERGED-MAX-MISMATCH-3" #result of filter-merged-reads
 nonchimeric_suffix = "nonchimeric.fa"
 unique_suffix      = "unique"
 ############# defaults for GAST ################################################################
-usearch_cmd        = '/bioware/usearch/5.2.236/x86/usearch'     #usearch5 32bit
-usearch6_cmd       = '/bioware/usearch/6.0.217/x86/usearch'     #usearch6 32bit
-usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
+# usearch_cmd        = '/bioware/usearch/5.2.236/x86/usearch'     #usearch5 32bit
+# usearch6_cmd       = '/bioware/usearch/6.0.217/x86/usearch'     #usearch6 32bit
+# usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
+# usearch6_cmd_local     = cmd_path_local + 'usearch'
+
+usearch_cmd        = 'vsearch'
+usearch6_cmd       = usearch_cmd
+usearch64_cmd      = usearch_cmd 
+usearch6_cmd_local = cmd_path_local + 'vsearch'
+
+
 fastasampler_cmd    = '/bioware/seqinfo/bin/fastasampler'
 calcnodes_cmd       = '/bioware/seqinfo/bin/calcnodes'
 mysqlimport_cmd     = '/usr/bin/mysqlimport'
@@ -261,7 +269,6 @@ clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
 fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
 #local commands
-usearch6_cmd_local     = cmd_path_local + 'usearch'
 fastasampler_cmd_local = cmd_path_local + 'fastasampler'
 calcnodes_cmd_local    = cmd_path_local + 'calcnodes'
 mysqlimport_cmd_local  = '/usr/local/mysql/bin/mysqlimport'
