@@ -350,7 +350,9 @@ class Chimera:
                 continue
             
 #             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
-            ref_db     = self.get_ref_db(dna_region)
+#             ref_db     = self.get_ref_db(dna_region)
+            ref_db     = "/groups/g454/blastdbs/rRNA16S.gold.fa"
+
 #             print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
             
             uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
