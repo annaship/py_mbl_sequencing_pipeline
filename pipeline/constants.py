@@ -249,13 +249,17 @@ filtered_suffix    = "MERGED-MAX-MISMATCH-3" #result of filter-merged-reads
 nonchimeric_suffix = "nonchimeric.fa"
 unique_suffix      = "unique"
 ############# defaults for GAST ################################################################
-usearch_cmd        = '/bioware/usearch/5.2.236/x86/usearch'     #usearch5 32bit
-usearch6_cmd       = '/bioware/usearch/6.0.217/x86/usearch'     #usearch6 32bit
-#usearch64_cmd      = '/bioware/usearch/6.0.217/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
-usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
-# usearch6_cmd        = '/bioware/uclust/usearch6'
-#usearch5_cmd        = '/bioware/uclust/usearch5.2.32_i86linux32'
-#usearch64           = '/bioware/uclust/usearch6.0.192_i86linux64'
+# usearch_cmd        = '/bioware/usearch/5.2.236/x86/usearch'     #usearch5 32bit
+# usearch6_cmd       = '/bioware/usearch/6.0.217/x86/usearch'     #usearch6 32bit
+# usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
+# usearch6_cmd_local     = cmd_path_local + 'usearch'
+
+usearch_cmd        = 'vsearch'
+usearch6_cmd       = usearch_cmd
+usearch64_cmd      = usearch_cmd 
+usearch6_cmd_local = cmd_path_local + 'vsearch'
+
+
 fastasampler_cmd    = '/bioware/seqinfo/bin/fastasampler'
 calcnodes_cmd       = '/bioware/seqinfo/bin/calcnodes'
 mysqlimport_cmd     = '/usr/bin/mysqlimport'
@@ -265,7 +269,6 @@ clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
 fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
 #local commands
-usearch6_cmd_local     = cmd_path_local + 'usearch'
 fastasampler_cmd_local = cmd_path_local + 'fastasampler'
 calcnodes_cmd_local    = cmd_path_local + 'calcnodes'
 mysqlimport_cmd_local  = '/usr/local/mysql/bin/mysqlimport'
@@ -311,7 +314,8 @@ refdbs = {'unknown':'refssu_all',
         }
 
 """ Use '_6' for usearch6 """    
-chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.udb'
+# chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.udb'
+chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.fasta'
 chimera_checking_refdb       = '/groups/g454/blastdbs/rRNA16S.gold.fasta'
 chimera_checking_its_refdb_6 = '/groups/g454/blastdbs/fungalITS.udb'
 chimera_checking_its_refdb   = '/groups/g454/blastdbs/fungalITS.fa'
