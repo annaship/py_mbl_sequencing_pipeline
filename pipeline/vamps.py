@@ -84,10 +84,10 @@ class Vamps:
         self.use_cluster = self.runobj.use_cluster
         
         
-        os.environ['SGE_ROOT']='/usr/local/sge'
+        os.environ['SGE_ROOT']='/opt/sge'
         os.environ['SGE_CELL']='grendel'
         path = os.environ['PATH']
-        os.environ['PATH'] = path + ':/usr/local/sge/bin/lx24-amd64'
+        os.environ['PATH'] = path + ':/opt/sge/bin/lx24-amd64'
         #First step is to check for (or create via mothur)
         # a uniques fasta file and a names file 
         # one for each dataset.

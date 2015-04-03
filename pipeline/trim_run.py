@@ -63,7 +63,7 @@ class TrimRun( object ):
         
         self.analysis_dir = dirs.check_dir(dirs.analysis_dir)        
         self.trimming_dir = dirs.check_dir(dirs.trimming_dir)
-        
+        self.gast_dir = dirs.check_dir(dirs.gast_dir)
         
         # do something with 'run'.
         self.run = self.runobj.run
@@ -91,10 +91,10 @@ class TrimRun( object ):
         self.fa ={}
         self.statsFileName     = 'run_trim_stats'
         
-        os.environ['SGE_ROOT']='/usr/local/sge'
+        os.environ['SGE_ROOT']='/opt/sge'
         os.environ['SGE_CELL']='grendel'
         path = os.environ['PATH']
-        os.environ['PATH'] = '/usr/local/sge/bin/lx24-amd64:'+path
+        os.environ['PATH'] = '/opt/sge/bin/lx24-amd64:'+path
         
         self.runbin={}
 #         print 'SAMPLES: '

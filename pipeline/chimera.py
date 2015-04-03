@@ -50,8 +50,10 @@ class Chimera:
             dir_prefix = self.runobj.user + '_' + self.runobj.run
             self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
             self.idx_keys = convert_unicode_dictionary_to_str(json.loads(open(self.runobj.trim_status_file_name,"r").read()))["new_lane_keys"] 
+            self.analysis_dir = self.dirs.check_dir(self.dirs.analysis_dir)  
             self.indir  = self.dirs.check_dir(self.dirs.trimming_dir)
-            self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)
+            self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)        
+            self.gast_dir = self.dirs.check_dir(self.dirs.gast_dir)
         else:
             site = ''
             dir_prefix = self.runobj.run
@@ -68,6 +70,11 @@ class Chimera:
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
 #         pprint(self.run_keys)
 #         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
+        
+        os.environ['SGE_ROOT'] ='/opt/sge'
+        os.environ['SGE_CELL'] ='grendel'
+        path                   = os.environ['PATH']
+        os.environ['PATH']     = '/opt/sge/bin/lx24-amd64:'+path
         
     def make_chimera_input_illumina_file_names(self):
         input_file_names = {} 
@@ -593,13 +600,16 @@ class Chimera:
                 try:
                     logger.info("chimera denovo command: " + str(uchime_cmd))
     #                 subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                     
-
+                 
+                    self.utils.print_both("chimera denovo command: " + str(uchime_cmd))
                     #output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
-                    self.utils.print_both("output[idx_key] = %s" % output[idx_key])
-                    self.utils.print_both(output[idx_key].split()[2])
+                    self.utils.print_both("chimera denovo result: " + str(output[idx_key]))
+                    #self.utils.print_both("output[idx_key] = %s" % output[idx_key])
+                    #if idx_key in output and len(output[idx_key].split()) > 1:
+                    #self.utils.print_both(output[idx_key].split()[2])
                     cluster_id_list.append(output[idx_key].split()[2])
+
 
 
 
@@ -622,6 +632,7 @@ class Chimera:
 #                 return ('ERROR','uchime ref may have broken or empty', idx_key)  
          
         # finally
+        self.utils.print_both('Finished Chimera Denovo')
         if cluster_id_list: 
             return ('SUCCESS', 'uchime ref seems to have been submitted successfully', cluster_id_list)
         else:
@@ -712,7 +723,7 @@ class Chimera:
         for idx_key in output:
             if (len(output[idx_key]) > 50 or len(output[idx_key]) < 40) and self.use_cluster:
                 return ('ERROR','uchime ref may have broken or empty',idx_key)  
-         
+        self.utils.print_both('Finished Chimera Reference')
         return ('SUCCESS','uchime ref seems to have been submitted successfully',cluster_id_list)
         
             

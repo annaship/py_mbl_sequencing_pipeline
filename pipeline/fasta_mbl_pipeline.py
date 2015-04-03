@@ -6,6 +6,7 @@ sys.path.append("/Users/ashipunova/bin/illumina-utils")
 import IlluminaUtils.lib.fastalib as fa
 #import fastalib as fa
 from pipeline.Fasta import sfasta
+
 from pipeline.utils import *
 from time import sleep
 # class to receive fasta file
@@ -59,10 +60,10 @@ class MBLPipelineFastaUtils:
             deleted_id_list = []
             original_trimmed_file   = os.path.join(self.trim_dir, lane_key + ".trimmed.fa" )
             new_trimmed_file_name   = os.path.join(self.trim_dir, lane_key + ".newtrimmed.fa")
-            new_trimmed_file        = FastaOutput(new_trimmed_file_name)
+            new_trimmed_file        = fa.FastaOutput(new_trimmed_file_name)
             
             # open trimmed file and read a line             
-            trimmedfasta = SequenceSource(original_trimmed_file)
+            trimmedfasta = fa.SequenceSource(original_trimmed_file)
             logger.debug("write_clean_fasta_file about to check trimmedfasta file");
             deleted_id_list = self.deleted_ids[lane_key]
             if len(deleted_id_list) == 0:
@@ -144,7 +145,7 @@ class MBLPipelineFastaUtils:
        
             deleted_id_list = []
             new_unique_file_name    = os.path.join(self.trim_dir, lane_key +".newunique.fa")
-            new_unique_file         = FastaOutput(new_unique_file_name)            
+            new_unique_file         = fa.FastaOutput(new_unique_file_name)            
             original_unique_file    = os.path.join(self.trim_dir, lane_key + '.unique.fa')
 
             deleted_id_list = self.deleted_ids[lane_key]
@@ -152,7 +153,7 @@ class MBLPipelineFastaUtils:
                 continue
 
             # open unique file and read a line             
-            uniquesfasta = SequenceSource(original_unique_file)
+            uniquesfasta = fa.SequenceSource(original_unique_file)
             while uniquesfasta.next():
                 #print uniquesfasta.id,self.orphans[lane_key]
                 
@@ -192,7 +193,7 @@ class MBLPipelineFastaUtils:
                 
                 names[lst[0]] = lst[1].split(',')
             #print names  
-            fasta = SequenceSource(new_unique_file)
+            fasta = fa.SequenceSource(new_unique_file)
             
             
             while fasta.next():
