@@ -849,6 +849,7 @@ class Gast:
             usearch_cmd += ' -uc_allhits'
             usearch_cmd += ' -db ' + refdb  
             usearch_cmd += ' -strand both'   
+            usearch_cmd += ' -notrunclabels'
             usearch_cmd += ' -uc ' + usearch_filename 
             usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
             usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
@@ -878,7 +879,8 @@ class Gast:
             usearch_cmd += ' -gapopen 6I/1E'
             usearch_cmd += ' -uc_allhits'
             usearch_cmd += ' -db ' + refdb  
-            usearch_cmd += ' -strand both'   
+            usearch_cmd += ' -strand both'
+            usearch_cmd += ' -notrunclabels'
             usearch_cmd += ' -uc ' + usearch_filename 
             usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
             usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
