@@ -258,8 +258,8 @@ class Chimera:
           
     def check_if_cluster_is_done(self, time_before):
         cluster_done = False
-        check_qstat_cmd_line = "qstat | grep \"%s\" | grep usearch | wc -l" % time_before
-#         check_qstat_cmd_line = "qstat | grep usearch"
+        check_qstat_cmd_line = "qstat | grep \"%s\" | grep vsearch | wc -l" % time_before
+#         check_qstat_cmd_line = "qstat | grep vsearch"
 
         self.utils.print_both("check_qstat_cmd_line = %s" % check_qstat_cmd_line)
         
@@ -267,7 +267,7 @@ class Chimera:
             p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
             (output, err) = p.communicate()
             num_proc = int(output)
-            self.utils.print_both("qstat is running %s 'usearch' processes" % num_proc)
+            self.utils.print_both("qstat is running %s 'vsearch' processes" % num_proc)
     #         pprint(p)
             
             if (num_proc == 0):
@@ -382,7 +382,7 @@ class Chimera:
         if not chimera_region_found:            
             return ('NOREGION', 'No regions found that need checking', '')
         else:
-            return ("The usearch commands were created")
+            return ("The vsearch commands were created")
         
     def get_chimeric_ids(self):
         ids = set()
