@@ -253,8 +253,8 @@ unique_suffix      = "unique"
 # usearch6_cmd       = '/bioware/usearch/6.0.217/x86/usearch'     #usearch6 32bit
 # usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
 # usearch6_cmd_local     = cmd_path_local + 'usearch'
-
-usearch_cmd        = 'vsearch'
+# use the whole path here please
+usearch_cmd        = '/bioware/seqinfo/bin/vsearch'
 usearch6_cmd       = usearch_cmd
 usearch64_cmd      = usearch_cmd 
 usearch6_cmd_local = cmd_path_local + 'vsearch'

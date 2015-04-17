@@ -173,7 +173,7 @@ class MBLPipelineFastaUtils:
     def write_clean_abundance_file(self):
         """
         Writes the abundance file from the new names file and new unique file.
-           Thes file have already had their ids checked from the deleted file
+           These files have already had their ids checked from the deleted file
         """
         for lane_key in self.lane_keys:
             original_abundance_file = os.path.join(self.trim_dir, lane_key + ".abund.fa" )  

@@ -136,6 +136,7 @@ class Gast:
         key_counter    = 0
         gast_file_list = []
         qsub_id_list=[]
+        num_keys = len(self.iterator)
         cluster_nodes  = C.cluster_nodes
         logger.info("Cluster nodes set to: "+str(cluster_nodes))
         for key in self.iterator:
@@ -222,7 +223,7 @@ class Gast:
                     
                     for line in lines:                        
                         i += 1
-                        logger.debug("\n\n>>>>>>>>>Count: "+str(i))
+                        logger.debug("\n\n>>>>>>>>> Count: "+str(i)+'/'+str(cluster_nodes)+ " Dataset Count:"+str(key_counter)+'/'+str(num_keys))
                         if i >= cluster_nodes:
                             continue
                         script_filename      = os.path.join(gast_dir, qsub_prefix + str(i))
@@ -768,38 +769,28 @@ class Gast:
         print  'dna_region ', dna_region 
         # try this first:
         
-        if os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')):
-            refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')
-            taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
-            self.db_type='udb'
-        elif os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')):
-            refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')
-            taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
-
+       #  if os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')):
+#             refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')
+#             taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
+#             self.db_type='udb'
+        
+        refdb = os.path.join(self.refdb_dir, 'refssu.fa')
+        taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
+        self.db_type='db'
+        if C.use_full_length or dna_region == 'unknown' or dna_region not in C.refdbs:
+            refdb = os.path.join(self.refdb_dir, 'refssu.fa')
+            taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
             self.db_type='db'
-        elif C.use_full_length or dna_region == 'unknown' or dna_region not in C.refdbs:
-            if os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
-                refdb = os.path.join(self.refdb_dir, 'refssu.udb')
-                taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
-                self.db_type='udb'
-            elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.fa')):
-                refdb = os.path.join(self.refdb_dir, 'refssu.fa')
-                taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
-                self.db_type='db'
         else:
             
             # try udb first
             if dna_region in C.refdbs:
-                if os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region]+".udb")):
-                    refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region]+".udb")
-                    taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
-                    self.db_type='udb'
-                elif os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region])):
+                if os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region])):
                     refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region])
                     taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
                     self.db_type='db'
                 else:
-                    print 'could not find refdb '+os.path.join(self.refdb_dir, C.refdbs[dna_region])+".udb - Using full length"
+                    #print 'could not find refdb '+os.path.join(self.refdb_dir, C.refdbs[dna_region])+".udb - Using full length"
                     refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                     taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
                     self.db_type='db'
@@ -807,10 +798,7 @@ class Gast:
                 refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.fa')
                 taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
                 self.db_type='db'
-            elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.udb')):
-                refdb = os.path.join(self.refdb_dir, 'refssu.udb')
-                taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
-                self.db_type='udb'
+            
             elif os.path.exists(os.path.join(self.refdb_dir, 'refssu.fa')):
             
                 refdb = os.path.join(self.refdb_dir, 'refssu.fa')
