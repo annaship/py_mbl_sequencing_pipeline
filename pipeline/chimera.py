@@ -46,6 +46,10 @@ class Chimera:
             lane_name = ''
 
         if self.runobj.vamps_user_upload:
+            os.environ['SGE_ROOT'] ='/opt/sge'
+            os.environ['SGE_CELL'] ='grendel'
+            path                   = os.environ['PATH']
+            os.environ['PATH']     = '/opt/sge/bin/lx24-amd64:'+path
             site       = self.runobj.site
             dir_prefix = self.runobj.user + '_' + self.runobj.run
             self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
@@ -54,6 +58,7 @@ class Chimera:
             self.indir  = self.dirs.check_dir(self.dirs.trimming_dir)
             self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)        
             self.gast_dir = self.dirs.check_dir(self.dirs.gast_dir)
+
         else:
             site = ''
             dir_prefix = self.runobj.run
@@ -71,10 +76,7 @@ class Chimera:
 #         pprint(self.run_keys)
 #         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
         
-        os.environ['SGE_ROOT'] ='/opt/sge'
-        os.environ['SGE_CELL'] ='grendel'
-        path                   = os.environ['PATH']
-        os.environ['PATH']     = '/opt/sge/bin/lx24-amd64:'+path
+
         
     def make_chimera_input_illumina_file_names(self):
         input_file_names = {} 

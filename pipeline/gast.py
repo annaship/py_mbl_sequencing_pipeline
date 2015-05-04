@@ -223,7 +223,7 @@ class Gast:
                     
                     for line in lines:                        
                         i += 1
-                        logger.debug("\n\n>>>>>>>>> Count: "+str(i)+'/'+str(cluster_nodes)+ " Dataset Count:"+str(key_counter)+'/'+str(num_keys))
+                        logger.debug("\n\n>>>>>>>>> Count: "+str(i)+'/'+str(cluster_nodes)+ " -- Dataset Count:"+str(key_counter)+'/'+str(num_keys))
                         if i >= cluster_nodes:
                             continue
                         script_filename      = os.path.join(gast_dir, qsub_prefix + str(i))
@@ -270,9 +270,8 @@ class Gast:
                         
                         us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, self.runobj.use64bit)
     
-                        logger.debug("usearch command: "+us_cmd)
+                        logger.debug("vsearch command: "+us_cmd)
 
-                        #print 'usearch', us_cmd
                         if self.use_cluster:
                             fh.write(us_cmd + "\n")
                         else:
@@ -282,7 +281,7 @@ class Gast:
     
                         logger.debug("grep command: "+grep_cmd)
                         if self.use_cluster:
-                            logger.debug("using grendel cluster for usearch")
+                            logger.debug("using grendel cluster for vsearch")
                             fh.write(grep_cmd + "\n")
                             fh.close()
                             # make script executable and run it
@@ -310,7 +309,7 @@ class Gast:
                             time.sleep(0.1)
         
                         else:
-                            logger.debug("NOT using cluster for usearch")
+                            logger.debug("NOT using cluster for vsearch")
                             subprocess.call(grep_cmd, shell=True)
                             logger.debug(grep_cmd)
                 
@@ -843,20 +842,7 @@ class Gast:
             usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
             usearch_cmd += ' -id ' + str(C.pctid_threshold)
             
- #            usearch_cmd += ' --global '
-#             usearch_cmd += ' --query ' + fastasamp_filename
-#             usearch_cmd += ' --iddef 3'
-#             usearch_cmd += ' --gapopen 6I/1E'
-#             if self.db_type == 'db':
-#                 usearch_cmd += ' --db ' + refdb  
-#             elif self.db_type == 'wdb':
-#                 usearch_cmd += ' --wdb ' + refdb  
-#             else:
-#                 usearch_cmd += ' --udb ' + refdb                 
-#             usearch_cmd += ' --uc ' + usearch_filename 
-#             usearch_cmd += ' --maxaccepts ' + str(C.max_accepts)
-#             usearch_cmd += ' --maxrejects ' + str(C.max_rejects)
-#             usearch_cmd += ' --id ' + str(C.pctid_threshold)
+
         else:
             usearch_cmd = C.usearch6_cmd
             if self.utils.is_local():
