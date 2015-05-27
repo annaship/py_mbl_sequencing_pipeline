@@ -392,7 +392,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 e = f_input.entry
                 # todo: a fork with or without NNNN
                 # ini_run_key  = index_sequence + "_" + e.sequence[0:5] + "_" + e.lane_number
-                ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
+#                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
+                ini_run_key = self.get_ini_run_key(e, index_sequence)
                 if int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
@@ -404,6 +405,12 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                         self.id_dataset_idx[id2] = ini_run_key
                 else:
                     self.out_files["unknown"].store_entry(e)
+                    
+    def get_ini_run_key(self, e, index_sequence, has_ns = "True"):
+        if has_ns:
+            return (index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number)
+        else:
+            return (index_sequence + "_" + e.sequence[0:5] + "_" + e.lane_number)
                     
     def read2(self, files_r2, compressed):
         "3) e.pair_no = 2, find id from 2), assign dataset_name"
