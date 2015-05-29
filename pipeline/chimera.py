@@ -12,8 +12,9 @@ from collections import defaultdict, namedtuple
 # sys.path.append("/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts")
 # sys.path.append("/bioware/merens-illumina-utils")
 
-#import fastalib as fa
+import IlluminaUtils.lib.fastqlib as fq
 import IlluminaUtils.lib.fastalib as fa
+
 import pipeline.constants as C
 import json
 

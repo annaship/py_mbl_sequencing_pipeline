@@ -319,7 +319,7 @@ class IlluminaFiles:
     def create_inis(self):
         for idx_key in self.runobj.samples.keys():
             run_key = idx_key.split('_')[1].replace("N", ".");
-            #todo: check if work w/o NNNN
+            "todo: check if works w/o NNNN when there is a proper csv"
             email = self.runobj.samples[idx_key].email
 #        for dataset in self.dataset_emails.keys():
 #            dataset_idx_base = dataset + "_" + self.dataset_index[dataset]
@@ -390,10 +390,11 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             index_sequence = self.get_index(file_r1)
             while f_input.next():
                 e = f_input.entry
-                # todo: a fork with or without NNNN
-                # ini_run_key  = index_sequence + "_" + e.sequence[0:5] + "_" + e.lane_number
-#                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number                
-                ini_run_key = self.get_ini_run_key(e, index_sequence)
+                # todo: a fork with or without NNNN, add an argument
+                #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
+                has_ns = "NNNN" in self.runobj.run_keys             
+#                 has_ns = True             
+                ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number 
                 if int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
@@ -406,11 +407,11 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 else:
                     self.out_files["unknown"].store_entry(e)
                     
-    def get_ini_run_key(self, e, index_sequence, has_ns = "True"):
+    def get_run_key(self, e_sequence, has_ns = "True"):
         if has_ns:
-            return (index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number)
+            return ("NNNN" + e_sequence[4:9])
         else:
-            return (index_sequence + "_" + e.sequence[0:5] + "_" + e.lane_number)
+            return e_sequence[0:5]
                     
     def read2(self, files_r2, compressed):
         "3) e.pair_no = 2, find id from 2), assign dataset_name"
