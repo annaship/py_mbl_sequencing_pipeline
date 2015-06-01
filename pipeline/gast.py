@@ -58,11 +58,11 @@ class Gast:
 ##                program_name = "/Users/ashipunova/bin/illumina-utils/analyze-illumina-v6-overlaps"        
 #                self.refdb_dir = "/Users/ashipunova/bin/illumina-utils/"
 
-        "For VAMPS-user-uload:"
-        os.environ['SGE_ROOT'] ='/opt/sge'
-        os.environ['SGE_CELL'] ='grendel'
-        path                   = os.environ['PATH']
-        os.environ['PATH']     = '/usr/local/sge/bin/lx24-amd64:'+path
+        #"For VAMPS-user-uload:"
+        #os.environ['SGE_ROOT'] ='/opt/sge'
+        #os.environ['SGE_CELL'] ='grendel'
+        #path                   = os.environ['PATH']
+        #os.environ['PATH']     = '/usr/local/sge/bin/lx24-amd64:'+path
         
         # limiting datasets for testing
         self.limit = 400
