@@ -392,7 +392,7 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 e = f_input.entry
                 # todo: a fork with or without NNNN, add an argument
                 #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
-                has_ns = "NNNN" in self.runobj.run_keys             
+                has_ns = any("NNNN" in s for s in self.runobj.run_keys)           
 #                 has_ns = True             
                 ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number 
                 if int(e.pair_no) == 1:
