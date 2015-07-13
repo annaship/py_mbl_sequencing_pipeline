@@ -305,9 +305,9 @@ class TrimRun( object ):
                         #  >FRZPY5Q02G73IH	37 37 37 37 37 37 37 37 37 37
                         try:
                             txt = "grep "+ id +" " + self.indir + "/QUALFILE_CLEAN.TXT"
-                            #logger.debug("Q-text: "+txt)
+                            logger.debug("Q-text: "+txt)
                             q_scores = subprocess.check_output(txt, shell=True).strip().split()[1:]                    
-                            logger.debug("Q-Scores: "+str(q_scores))
+                            #logger.debug("Q-Scores: "+str(q_scores))
                             q_scores = [int(q) for q in q_scores]
                             
                         except:
@@ -362,7 +362,7 @@ class TrimRun( object ):
                     self.number_of_good_sequences += 1
                     logger.debug(record.id + " Passed")
                 else:
-                    logger.debug(id + " 2-Deleted:" + delete_reason)
+                    logger.debug(id + " deleted:" + delete_reason)
                         
         # count up some things
         count_uniques = 0
@@ -576,7 +576,7 @@ class TrimRun( object ):
                     self.number_of_good_sequences += 1
                     logger.debug(record.id + " Passed")
                 else:
-                    logger.debug(id + " 2-Deleted:" + delete_reason)
+                    logger.debug(id + " deleted:" + delete_reason)
                         
         # count up some things
         count_uniques = 0
@@ -685,7 +685,7 @@ class TrimRun( object ):
 
         # if we could not find a proximal but we wanted to find them then fail the sequence                
         if not exactLeft and proximals_exist:
-                logger.debug('proximal primer not found...deleted reason: proximal')                        
+                logger.debug('proximal primer not found...deleted: proximal')                        
                 delete_reason = DELETED_PROXIMAL
                 self.deleted_count_for_proximal += 1
                                        
@@ -758,7 +758,9 @@ class TrimRun( object ):
         #
         ###################################################################
         if(quality_scores and not delete_reason):
+            # check_for_quality() is in utils.py
             average_score = check_for_quality(raw_sequence, trimmed_sequence, quality_scores)
+            logger.debug('average quality is '+str(average_score))
             if average_score < self.runobj.minAvgQual:
                 delete_reason = DELETED_QUALITY
                 self.deleted_count_for_quality += 1
