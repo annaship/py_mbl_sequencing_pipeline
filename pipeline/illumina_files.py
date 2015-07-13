@@ -16,6 +16,8 @@ from pipeline.utils import Dirs, PipelneUtils
 from collections import defaultdict
 import constants as C
 import getpass
+# import time
+
 # from pipeline.pipelinelogging import logger
 
 "TODO: add tests and test case"
@@ -412,7 +414,13 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             return ("NNNN" + e_sequence[4:9])
         else:
             return e_sequence[0:5]
-                    
+    
+    def remove_end_ns_strip(self, e_sequence):
+        if e_sequence.endswith('N'):
+            return e_sequence.rstrip('N')
+        else:
+            return e_sequence
+        
     def read2(self, files_r2, compressed):
         "3) e.pair_no = 2, find id from 2), assign dataset_name"
         for file_r2 in files_r2:
@@ -420,6 +428,12 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             f_input  = fq.FastQSource(file_r2, compressed)
             while f_input.next():
                 e = f_input.entry
+                
+#                 start = time.time()  
+#                 time_before = self.utils.get_time_now()
+                e.sequence = self.remove_end_ns_strip(e.sequence)
+#                 elapsed = (time.time() - start)
+#                 print "remove_end_ns_strip with strip is done in: %s" % (elapsed)      
                 
                 if (int(e.pair_no) == 2) and (e.header_line in self.id_dataset_idx):
                     file_name = self.id_dataset_idx[e.header_line] + "_R2"
