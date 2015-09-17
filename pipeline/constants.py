@@ -71,7 +71,8 @@ primers_dict["archaeal v6 suite"]["distal_primer"]    = "G[A,T]GGT[G,A]"
 primers_dict["bacterial v6 suite"]["proximal_primer"] = "AGGTG."
 primers_dict["bacterial v6 suite"]["distal_primer"]   = "[A,G]AACCT[CT]A.C"
 primers_dict["eukaryal v4 suite"]["proximal_primer"] = "CCAGCA[C,G]C[C,T]GCGGTAATTCC"
-primers_dict["eukaryal v4 suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G]A"
+# primers_dict["eukaryal v4 suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G]A"
+primers_dict["eukaryal v4 suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G][A,G]"
 
 
 VALIDATE_STEP           = "validate"
