@@ -118,10 +118,13 @@ class IlluminaFiles:
     def call_sh_script(self, script_name_w_path, where_to_run):
         try:
             call(['chmod', '0774', script_name_w_path])
-            call(['qsub', script_name_w_path], cwd=(where_to_run))
+            if self.utils.is_local():
+                self.utils.print_both("call(['qsub', script_name_w_path], cwd=(where_to_run))")
+            else:
+                call(['qsub', script_name_w_path], cwd=(where_to_run))
 #             pass
         except:
-            self.utils.print_both("Problems with script_name = %s" % (script_name_w_path))
+            self.utils.print_both("Problems with script_name = %s or qsub" % (script_name_w_path))
             raise  
         
     def perfect_reads_cluster(self):
@@ -140,7 +143,8 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
-        self.utils.chmod_all(self.dirs.analysis_dir)        
+        self.utils.print_both("self.dirs.chmod_all(self.dirs.analysis_dir)")
+        self.dirs.chmod_all(self.dirs.analysis_dir)        
         return script_file_name              
                           
     def partial_overlap_reads_cluster(self):
@@ -159,7 +163,8 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
-        self.utils.chmod_all(self.dirs.analysis_dir)        
+        self.utils.print_both("self.dirs.chmod_all(self.dirs.analysis_dir)")
+        self.dirs.chmod_all(self.dirs.analysis_dir)        
         
         return script_file_name      
                     
@@ -251,8 +256,10 @@ class IlluminaFiles:
         file_list             = self.dirs.get_all_files_by_ext(files_dir, "_MERGED")
         script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
         script_file_name_full = os.path.join(files_dir, script_file_name)
-        self.call_sh_script(script_file_name_full, files_dir)  
-        self.utils.chmod_all(files_dir)        
+        self.call_sh_script(script_file_name_full, files_dir)
+        self.utils.print_both("self.dirs.chmod_all(files_dir)")
+        print files_dir
+        self.dirs.chmod_all(files_dir)        
         
         return script_file_name              
 
@@ -290,7 +297,7 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
         script_file_name_full = os.path.join(files_dir, script_file_name)
         self.call_sh_script(script_file_name_full, files_dir)  
-        self.utils.chmod_all(files_dir)        
+        self.dirs.chmod_all(files_dir)        
         return script_file_name                           
                                        
     def uniq_fa(self):

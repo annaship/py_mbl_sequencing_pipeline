@@ -11,6 +11,7 @@ from string import maketrans
 import collections
 sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
 from pipeline.pipelinelogging import logger
+from subprocess import call
 
 base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
 
@@ -497,7 +498,7 @@ example of getting all directory name in illumina_files
         return [file for file in os.listdir(walk_dir_name) if file.endswith(extension)]
     
     def chmod_all(self, dir_name):
-        call(['chmod', '--recursive ug+w', dir_name])
+        call(['chmod', '-R', 'ug+w', dir_name])
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"
