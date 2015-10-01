@@ -498,7 +498,12 @@ example of getting all directory name in illumina_files
         return [file for file in os.listdir(walk_dir_name) if file.endswith(extension)]
     
     def chmod_all(self, dir_name):
+      try:
         call(['chmod', '-R', 'ug+w', dir_name])
+      except Exception:
+        print "call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name)
+        print Exception         
+        pass
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"
