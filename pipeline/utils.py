@@ -501,7 +501,7 @@ example of getting all directory name in illumina_files
       try:
         call(['chmod', '-R', 'ug+w', dir_name])
       except Exception:
-        print "call(['chmod', '-R', 'g+w', %s]) didn't work: \n" % (dir_name)
+        print "call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name)
         print Exception         
         pass
         
