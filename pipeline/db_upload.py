@@ -58,7 +58,10 @@ class MyConnection:
 #             print "host = " + str(host) + ", db = "  + str(db)            
 #             print "=" * 40
 
-            self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf"))
+            if self.utils.is_local():
+              self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf_server"))
+            else:
+              self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf"))
             self.cursor = self.conn.cursor()
                    
         except MySQLdb.Error, e:

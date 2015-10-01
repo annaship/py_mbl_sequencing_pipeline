@@ -140,6 +140,7 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+        self.utils.chmod_all(self.dirs.analysis_dir)        
         return script_file_name              
                           
     def partial_overlap_reads_cluster(self):
@@ -158,6 +159,8 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+        self.utils.chmod_all(self.dirs.analysis_dir)        
+        
         return script_file_name      
                     
     def partial_overlap_reads(self):
@@ -249,6 +252,8 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
         script_file_name_full = os.path.join(files_dir, script_file_name)
         self.call_sh_script(script_file_name_full, files_dir)  
+        self.utils.chmod_all(files_dir)        
+        
         return script_file_name              
 
     def filter_mismatches(self, max_mismatch = 3):
@@ -285,6 +290,7 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
         script_file_name_full = os.path.join(files_dir, script_file_name)
         self.call_sh_script(script_file_name_full, files_dir)  
+        self.utils.chmod_all(files_dir)        
         return script_file_name                           
                                        
     def uniq_fa(self):

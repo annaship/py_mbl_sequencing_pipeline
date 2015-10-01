@@ -495,11 +495,11 @@ example of getting all directory name in illumina_files
         
     def get_all_files_by_ext(self, walk_dir_name, extension):
         return [file for file in os.listdir(walk_dir_name) if file.endswith(extension)]
+    
+    def chmod_all(self, dir_name):
+        call(['chmod', '--recursive ug+w', dir_name])
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"
     print revcomp("GTTCAAAGAYTCGATGATTCAC")
-
-
-
 
