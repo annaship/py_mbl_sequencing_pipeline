@@ -127,7 +127,7 @@ class Vamps:
             if ds_count:
                  (tax_collector, read_id_lookup) = self.taxonomy(key, ds_count, files)
                  refid_collector = self.sequences(key, tax_collector, read_id_lookup, files)   
-                 self.exports(key, refid_collector, tax_collector, read_id_lookup, files)
+                 #self.exports(key, refid_collector, tax_collector, read_id_lookup, files)
                  self.projects(key, ds_count, files)
                  self.info(key, files)
             else:
@@ -248,7 +248,7 @@ class Vamps:
                 taxa = items[1]
                 if taxa[-3:] == ';NA':
                     taxa = taxa[:-3]
-                read_id=items[0]
+                read_id=items[0]  # this is the whole id from mothur -> won't match the clean id 
                 read_id_lookup[read_id]=taxa
                 
                 # the count here is the frequency of the taxon in the datasets
@@ -465,10 +465,12 @@ class Vamps:
                 defline_items = f.id.split('|')
                 id = defline_items[0]                
                 cnt = defline_items[1].split(':')[1]
-                seq = f.seq
+                seq = f.seq.upper()
                 if id in read_id_lookup:
+                    print 'FOUND TAX'
                     tax = read_id_lookup[id]
                 else: 
+                    print 'NO TAX'
                     tax = ''
                     
                 if tax in tax_collector:
@@ -513,69 +515,8 @@ class Vamps:
         fill vamps_exports.txt file
     
         """
-        logger.info("Starting vamps_upload: exports")
-        print "Starting vamps_upload: exports"
-        if self.runobj.vamps_user_upload:
-            project = self.runobj.project
-            dataset = key
-        else:
-            if self.runobj.platform == 'illumina':
-                project = self.runobj.samples[key].project
-                dataset = self.runobj.samples[key].dataset
-            elif self.runobj.platform == '454':
-                pass
-            else:
-                pass
-        project = project[0].capitalize() + project[1:]
-        project_dataset = project+'--'+dataset
-        date_trimmed = 'unknown'
-        dataset_description = dataset    
         
-        fh = open(file_collector['export_file'],'w')
-        # t.read_id, t.project, t.dataset, g.refhvr_ids, x.distance, x.taxonomy, t.sequence, x.rank," " t.entry_date
-        fh.write("\t".join(["HEADER","read_id","project","dataset","refhvr_ids","distance","taxonomy","sequence", "rank","entry_date"] )+"\n")
-        today     = str(datetime.date.today())
-        # open original fasta file
-        if os.path.exists(file_collector['original_fa_file']) and os.path.getsize(file_collector['original_fa_file']) > 0:
-            f = FastaReader(file_collector['original_fa_file'])
-            while f.next():
-                datarow = ['']
-                id = f.id.split('|')[0]
-                seq = f.seq
-                if id in read_id_lookup:
-                    tax = read_id_lookup[id]
-                else: 
-                    tax = ''
-                if tax in tax_collector:
-                    rank = tax_collector[tax]['rank']
-                else:
-                    rank = 'NA'
-                
-                if id in refid_collector:
-                    distance = refid_collector[id]['distance']
-                    refhvr_ids = refid_collector[id]['refhvr_ids']
-                else:
-                    distance = '1.0'
-                    refhvr_ids = '0'
-                datarow.append(id)
-                datarow.append(project)
-                datarow.append(dataset)
-                datarow.append(refhvr_ids)
-                datarow.append(distance)
-                datarow.append(tax)
-                datarow.append(seq)
-                
-                datarow.append(rank)
-                datarow.append(today)
-                          
-                
-                
-                w = "\t".join(datarow)
-                #print 'w',w
-                fh.write(w+"\n")
-                
-            fh.close()    
-        logger.info("Finishing VAMPS exports()")
+        logger.info("Skipping VAMPS exports()")
         
     def projects(self, key, dataset_count, file_collector):
         """
@@ -815,34 +756,34 @@ class Vamps:
         #
         #  EXPORT
         #
-        print "loading "+key+": export"
-        if os.path.exists(file_collector['export_file']):
-            for line in open(file_collector['export_file'],'r'):
-                line = line.strip().split("\t")
-                if line[0]=='HEADER':
-                    continue
-                #line = line[1:] # remove leading empty tab
-                # t.read_id, t.project, t.dataset, g.refhvr_ids, x.distance, x.taxonomy, t.sequence, x.rank," " t.entry_date
-                # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
-                qExport = "insert ignore into %s (read_id, project, dataset, refhvr_ids, distance, taxonomy, sequence, rank, date_trimmed)\
-                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                            % (export_table,
-                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
-
-                #myconn.execute_no_fetch(qExport) 
-
-                try:
-                    cursor.execute(qExport)
-                except:
-                    self.conn.rollback()  
-                    execute_error=True
-                else:
-                    self.conn.commit() 
-        else:
-            print "export file not found for dataset "+key
-            execute_error=True
-        if execute_error:
-            return 'ERROR: loading export table'    
+#         print "loading "+key+": export"
+#         if os.path.exists(file_collector['export_file']):
+#             for line in open(file_collector['export_file'],'r'):
+#                 line = line.strip().split("\t")
+#                 if line[0]=='HEADER':
+#                     continue
+#                 #line = line[1:] # remove leading empty tab
+#                 # t.read_id, t.project, t.dataset, g.refhvr_ids, x.distance, x.taxonomy, t.sequence, x.rank," " t.entry_date
+#                 # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
+#                 qExport = "insert ignore into %s (read_id, project, dataset, refhvr_ids, distance, taxonomy, sequence, rank, date_trimmed)\
+#                             VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+#                             % (export_table,
+#                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
+# 
+#                 #myconn.execute_no_fetch(qExport) 
+# 
+#                 try:
+#                     cursor.execute(qExport)
+#                 except:
+#                     self.conn.rollback()  
+#                     execute_error=True
+#                 else:
+#                     self.conn.commit() 
+#         else:
+#             print "export file not found for dataset "+key
+#             execute_error=True
+#         if execute_error:
+#             return 'ERROR: loading export table'    
 
         #
         #  PROJECTS_DATASETS
