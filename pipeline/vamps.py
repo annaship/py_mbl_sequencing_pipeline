@@ -280,7 +280,10 @@ class Vamps:
             rank = C.ranks[len(taxa)-1]
             for i in range(len(C.ranks)):                
                 if len(taxa) <= i:
-                    taxa.append(C.ranks[i] + "_NA")
+                    if C.ranks[i] == 'orderx':
+                    	taxa.append("order_NA")
+                    else:
+                    	taxa.append(C.ranks[i] + "_NA")
 
             tax_collector[tax] = {}
 
@@ -463,14 +466,14 @@ class Vamps:
             while f.next():
                 datarow = ['']
                 defline_items = f.id.split('|')
-                id = defline_items[0]                
-                cnt = defline_items[1].split(':')[1]
+                id = defline_items[0].split()[0]                
+                cnt = defline_items[-1].split(':')[1]
                 seq = f.seq.upper()
                 if id in read_id_lookup:
-                    print 'FOUND TAX'
+                    print 'FOUND TAX for sequences file'
                     tax = read_id_lookup[id]
                 else: 
-                    print 'NO TAX'
+                    print 'NO TAX for sequences file'
                     tax = ''
                     
                 if tax in tax_collector:

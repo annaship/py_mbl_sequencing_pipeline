@@ -280,8 +280,10 @@ tax_database_dir_local = cmd_path_local
 ref_database_dir    = '/groups/g454/blastdbs/gast_distributions/'
 tax_database_dir    = '/groups/g454/blastdbs/gast_distributions/'
 # these are symlinks to above
-vamps_ref_database_dir    = '/groups/vampsweb/blastdbs/'
-vamps_tax_database_dir    = '/groups/vampsweb/blastdbs/'
+vamps_ref_database_dir    = '/groups/vampsweb/blastdbs/gast_distributions/'
+vamps_tax_database_dir    = '/groups/vampsweb/blastdbs/gast_distributions/'
+#vamps_ref_database_dir    = '/groups/vampsweb/blastdbs/'
+#vamps_tax_database_dir    = '/groups/vampsweb/blastdbs/'
 
 max_accepts         = 10
 max_rejects         = 0

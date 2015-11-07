@@ -517,7 +517,7 @@ class Gast:
                         #print 'deleling', read_id
                     #print 'nonhits', nonhits
                     if read_id not in copies:
-                        logger.info(read_id+' not in names file: Skipping')
+                        logger.info(read_id+' not in names copies: Skipping')
                         continue
                         
                     # give the same ref and dist for each duplicate
@@ -784,8 +784,8 @@ class Gast:
             
             # try udb first
             if dna_region in C.refdbs:
-                if os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region])):
-                    refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region])
+                if os.path.exists(os.path.join(self.refdb_dir, C.refdbs[dna_region]+'.fa')):
+                    refdb = os.path.join(self.refdb_dir, C.refdbs[dna_region]+'.fa')
                     taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
                     self.db_type='db'
                 else:
@@ -821,6 +821,7 @@ class Gast:
             fastasampler = C.fastasampler_cmd_local
         fastasampler_cmd = fastasampler
         fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
+        fastasampler_cmd += " -delim '|' "
         fastasampler_cmd += ' ' + unique_file
         fastasampler_cmd += ' ' + fastasamp_filename        
         return fastasampler_cmd
@@ -835,8 +836,8 @@ class Gast:
             usearch_cmd += ' -gapopen 6I/1E'
             usearch_cmd += ' -uc_allhits'
             usearch_cmd += ' -db ' + refdb  
-            usearch_cmd += ' -strand both'   
-            usearch_cmd += ' -notrunclabels'
+            usearch_cmd += ' -strand plus'   
+            #usearch_cmd += ' -notrunclabels'
             usearch_cmd += ' -uc ' + usearch_filename 
             usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
             usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
@@ -853,8 +854,8 @@ class Gast:
             usearch_cmd += ' -gapopen 6I/1E'
             usearch_cmd += ' -uc_allhits'
             usearch_cmd += ' -db ' + refdb  
-            usearch_cmd += ' -strand both'
-            usearch_cmd += ' -notrunclabels'
+            usearch_cmd += ' -strand plus'
+            #usearch_cmd += ' -notrunclabels'
             usearch_cmd += ' -uc ' + usearch_filename 
             usearch_cmd += ' -maxaccepts ' + str(C.max_accepts)
             usearch_cmd += ' -maxrejects ' + str(C.max_rejects)
@@ -898,10 +899,11 @@ class Gast:
         #while (my $line = <TAX>) 
         n=1
         for line in  open(tax_file, 'r'):
-        
+            
             # 0=ref_id, 1 = taxa, 2 = count
             data=line.strip().split("\t")
-    
+            if data[0] == 'refhvr_id':
+                continue
             copies = []
     
             # foreach instance of that taxa
