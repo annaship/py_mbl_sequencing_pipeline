@@ -454,7 +454,7 @@ class Vamps:
         
         
         fh = open(file_collector['sequences_file'],'w')
-        fh.write("\t".join(["HEADER","project","dataset","taxonomy","refhvr_ids", "rank",
+        fh.write("\t".join(["HEADER","sequence","project","dataset","taxonomy","refhvr_ids", "rank",
                             "seq_count","frequency","distance","read_id","project_dataset"] )+"\n")
         
         
@@ -738,18 +738,21 @@ class Vamps:
                     continue
                 #line = line[1:] # remove leading empty tab
                 # project dataset taxonomy        refhvr_ids	rank    seq_count frequency  distance  read_id project_dataset    
-                qSequences = "insert ignore into %s (sequence,project, dataset, taxonomy,refhvr_ids,rank,seq_count,frequency,distance,rep_id, project_dataset)\
-                            VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
-                            % (sequences_table,
-                            line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8],line[9],line[10])
-                #myconn.execute_no_fetch(qSequences) 
-                try:
-                    cursor.execute(qSequences)
-                except:
-                    self.conn.rollback()  
-                    execute_error=True
+                if len(line) == 11:
+                    qSequences = "insert ignore into %s (sequence,project, dataset, taxonomy,refhvr_ids,rank,seq_count,frequency,distance,rep_id, project_dataset)\
+                                VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')" \
+                                % (sequences_table,
+                                line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8],line[9],line[10])
+                    #myconn.execute_no_fetch(qSequences) 
+                    try:
+                        cursor.execute(qSequences)
+                    except:
+                        self.conn.rollback()  
+                        execute_error=True
+                    else:
+                        self.conn.commit()
                 else:
-                    self.conn.commit()  
+                    logger.info("Sequences line error: "+"\t".join(line))
         else:
             print "sequences file not found for dataset "+key  
             execute_error=True
