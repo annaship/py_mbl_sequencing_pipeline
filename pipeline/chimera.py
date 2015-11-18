@@ -615,7 +615,7 @@ class Chimera:
                     #self.utils.print_both(output[idx_key].split()[2])
                     items = output[idx_key].split()
                     if len(items) > 2:
-                        cluster_id_list.append(output[idx_key].split()[2])
+                        cluster_id_list.append(items[2])
 
 
 
