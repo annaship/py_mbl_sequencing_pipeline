@@ -338,7 +338,14 @@ class PipelneUtils:
             return True
         else:
             return False
-
+            
+    def is_vamps(self):
+        print os.uname()[1]
+        dev_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private']
+        if os.uname()[1] in dev_comps:
+            return True
+        else:
+            return False
     def check_if_array_job_is_done(self, job_name):
         cluster_done = False
         check_qstat_cmd_line = "qstat -r | grep %s | wc -l" % job_name
@@ -440,6 +447,8 @@ example of getting all directory name in illumina_files
         if is_user_upload:
             if site == 'vamps':
                 root_dir  = C.output_root_vamps_users
+            elif site == 'new_vamps':
+                root_dir  = C.output_root_newvamps_users
             else:
                 root_dir  = C.output_root_vampsdev_users
                 

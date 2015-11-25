@@ -7,8 +7,8 @@
 #
 # Please read the COPYING file.
 #
-import sys, os
-#sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
+import sys,os
+#sys.path.append('./py_mbl_sequencing_pipeline')
 sys.path.append(os.path.join(os.path.dirname(__file__),'..'))
 from pipeline.sample import Sample
 from pipeline.configurationexception import ConfigurationException
@@ -27,7 +27,7 @@ def configDictionaryFromFile_ini(config_file_path):
     configDict = {}
     user_config = ConfigParser.ConfigParser()
     user_config.read(config_file_path)
-    
+    #print "config_file_path:",config_file_path
     for section in user_config.sections():
         section_dict = configDict[section] = {}
         for option in user_config.options(section):
@@ -64,7 +64,7 @@ class RunConfig:
         # for vamps user uploads: the config info is a dictionary
         #v = MetadataUtils(args)
         
-    	if type(config_info)==dict:
+        if type(config_info)==dict:
             config_dict = config_info
                  
  #        elif self.args.platform == 'illumina':
@@ -158,7 +158,7 @@ class RunConfig:
         general_config = configDict['general']
         print    'General Config0:',general_config
         #if general_config['gast_data_source'] != 'database':
-        self.run       = general_config['run']
+        self.run             = general_config['run']
         self.platform       = general_config.get('platform', "unknown")
         self.input_dir      = general_config.get('input_dir', None)
         self.require_distal = general_config.get('require_distal', True)
@@ -174,7 +174,19 @@ class RunConfig:
  
  
         if self.vamps_user_upload:
-            self.user           = general_config['user']           
+            self.site               = general_config['site']
+            if self.site == 'new_vamps':
+                self.project_dir    = general_config['project_dir']
+                self.node_db        = general_config['node_db']
+                self.process_dir  = general_config['process_dir']
+                self.hostname     = general_config['hostname']
+                self.ref_db_dir   = general_config['ref_db_dir']
+                self.config_file  = general_config['config_file']
+                self.project  = general_config['project']
+                self.env_source_id  = general_config['env_source_id']
+                
+            self.user           = general_config['user']  
+            #self.datasets       =   configDict['datasets']
             
             self.input_files    = general_config['input_files'] 
             #self.project        = general_config['project'] 
@@ -183,7 +195,7 @@ class RunConfig:
             self.domain         = general_config['domain']
             
             
-            self.site               = general_config['site']
+            
             self.load_vamps_database = general_config['load_vamps_database']
             try:
                 self.require_distal = general_config['require_distal']
@@ -307,10 +319,9 @@ class RunConfig:
         	# key = lane_run_key[:1]+'_'+lane_run_key[2:]
             
             lane_run_dict = configDict[lane_run_key]
-            #print 'CD ',configDict
             
             sample = Sample(lane_run_key)
-            #print 'sample',sample
+            
             
             # has defaults -not required
             try:
@@ -397,7 +408,7 @@ class RunConfig:
                 #sample.key = key
                 self.run_keys.append(key)
                 # a dictionary of samples
-            	self.samples[key] = sample
+                self.samples[key] = sample
             else:
                 if self.platform == 'illumina':
                     # req specifically for illumina

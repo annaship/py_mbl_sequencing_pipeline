@@ -3,10 +3,10 @@ import sys, os,stat
 import time
 import shutil
 import datetime
-from pipeline.pipelinelogging import logger
+
 import constants as C
-from pipeline.utils import Dirs, PipelneUtils
-#from pipeline.db_upload import MyConnection
+
+
 import ConMySQL
 
 class FastaReader:
@@ -55,11 +55,20 @@ class Vamps:
     def __init__(self, run_object = None, idx_keys=None):
 
         self.runobj 	 = run_object
+        if self.runobj.site == 'vamps' or self.runobj.site == 'vampsdev' or self.runobj.site == 'new_vamps':
+            sys.path.append('/groups/vampsweb/py_mbl_sequencing_pipeline')
+        else:
+            sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
+        from pipeline.pipelinelogging import logger
+        from pipeline.utils import Dirs
         
-        
+        self.logger = logger
+        self.logger.info('STARTING VAMPS')
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
-            if self.runobj.mobedac:
+            if site == 'new_vamps':  # vampsdev and vamps and new_vamps NOT local installation
+                dir_prefix = self.runobj.project_dir
+            elif self.runobj.mobedac:
                 dir_prefix = 'mobedac_' + self.runobj.user + '_' + self.runobj.run
             else:
                 dir_prefix = self.runobj.user + '_' + self.runobj.run
@@ -157,10 +166,10 @@ class Vamps:
         file_collector['gast_concat_file'] = os.path.join(out_gast_dir,'gast_concat')
         file_collector['tagtax_file'] = os.path.join(out_gast_dir,'tagtax_terse')
         if not os.path.exists(file_collector['gast_concat_file']):
-                logger.warning("Could not find gast_concat_file file: "+file_collector['gast_concat_file'])
+                self.logger.warning("Could not find gast_concat_file file: "+file_collector['gast_concat_file'])
                  
         if not os.path.exists(file_collector['tagtax_file']):
-            logger.warning("Could not find tagtax_file file: "+file_collector['tagtax_file'])
+            self.logger.warning("Could not find tagtax_file file: "+file_collector['tagtax_file'])
         #print key,self.runobj.platform
         
         if self.runobj.vamps_user_upload:
@@ -191,7 +200,7 @@ class Vamps:
                 sys.exit("no usable platform found")
             
         if not os.path.exists(file_collector['unique_file']):
-            logger.error("Could not find unique_file: "+file_collector['unique_file'])
+            self.logger.error("Could not find unique_file: "+file_collector['unique_file'])
             
         # get dataset_count here from unique_file
         # the dataset_count should be from the non-unique file
@@ -222,7 +231,7 @@ class Vamps:
         """
         fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy files
         """
-        logger.info("Starting vamps_upload: taxonomy")
+        self.logger.info("Starting vamps_upload: taxonomy")
         print "Starting vamps_upload: taxonomy"
         # SUMMED create a look-up
         if self.runobj.vamps_user_upload:
@@ -421,7 +430,7 @@ class Vamps:
         
         """
         
-        logger.info("Starting vamps_upload: sequences")
+        self.logger.info("Starting vamps_upload: sequences")
         print "Starting vamps_upload: sequences"
         if self.runobj.vamps_user_upload:
             project = self.runobj.project
@@ -510,7 +519,7 @@ class Vamps:
                 
                 
             fh.close()
-        logger.info("")
+        self.logger.info("")
         return refid_collector
         
     def exports(self, key, refid_collector, tax_collector, read_id_lookup, file_collector):
@@ -519,13 +528,13 @@ class Vamps:
     
         """
         
-        logger.info("Skipping VAMPS exports()")
+        self.logger.info("Skipping VAMPS exports()")
         
     def projects(self, key, dataset_count, file_collector):
         """
         fill vamps_projects_datasets.txt file
         """
-        logger.info("Starting vamps_upload: projects_datasets")
+        self.logger.info("Starting vamps_upload: projects_datasets")
         if self.runobj.vamps_user_upload:
             project = self.runobj.project
             dataset = key
@@ -549,19 +558,22 @@ class Vamps:
         fh.write("\t"+"\t".join([project, dataset, dataset_count, has_tax, date_trimmed, dataset_description] )+"\n")
         
         fh.close()
-        logger.info("Finishing VAMPS projects()")
+        self.logger.info("Finishing VAMPS projects()")
         
         
     def info(self, key, file_collector):
         """
         fill vamps_project_info.txt file
         """
-        logger.info("Starting vamps_upload: projects_info")
+        self.logger.info("Starting vamps_upload: projects_info")
         print "Starting vamps_upload: projects_info"
         if self.runobj.vamps_user_upload:
             user = self.runobj.user
             project = self.runobj.project
-            sample_source_id = self.runobj.env_source_id
+            try:
+                sample_source_id = self.runobj.env_source_id
+            except:
+                sample_source_id = 100
         else:
             if self.runobj.platform == 'illumina':
                 user = self.runobj.samples[key].data_owner
@@ -595,14 +607,14 @@ class Vamps:
         self.conn.commit()
         cursor.close()
         
-        logger.info("Finishing VAMPS info()")
+        self.logger.info("Finishing VAMPS info()")
 
 
     def load_database(self, key, out_gast_dir, file_collector):
         """
         
         """
-        logger.info("Starting load VAMPS data")
+        self.logger.info("Starting load VAMPS data")
         print "Starting load VAMPS data"
 
         # USER: vamps_db_tables
@@ -752,7 +764,7 @@ class Vamps:
                     else:
                         self.conn.commit()
                 else:
-                    logger.info("Sequences line error: "+"\t".join(line))
+                    self.logger.info("Sequences line error: "+"\t".join(line))
         else:
             print "sequences file not found for dataset "+key  
             execute_error=True
@@ -889,7 +901,7 @@ class Vamps:
             self.conn.commit()      
         if execute_error:
             return 'ERROR: loading info table'     
-        logger.info("Finished load VAMPS data")
+        self.logger.info("Finished load VAMPS data")
         
         #self.conn.commit()
         cursor.close()

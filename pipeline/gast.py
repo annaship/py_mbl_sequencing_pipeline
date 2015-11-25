@@ -8,9 +8,7 @@ import constants as C
 import re
 import json  
 from types import *
-sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
-from pipeline.pipelinelogging import logger
-from pipeline.utils import Dirs, PipelneUtils
+
 
 
 class Gast:
@@ -22,19 +20,29 @@ class Gast:
     """
     Name = "GAST"
     def __init__(self, run_object = None, idx_keys=[]):                       
-        self.runobj = run_object       
+        self.runobj = run_object
+        if self.runobj.site == 'vamps' or self.runobj.site == 'vampsdev' or self.runobj.site == 'new_vamps':
+            sys.path.append('/groups/vampsweb/py_mbl_sequencing_pipeline')
+        else:
+            sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
+        
+        from pipeline.pipelinelogging import logger
+        from pipeline.utils import Dirs, PipelneUtils
+        self.logger = logger
         self.test   = True
         self.utils  = PipelneUtils()
         
-       
+        print 'SITE', self.runobj.site
         self.use_cluster = self.runobj.use_cluster
         if self.runobj.vamps_user_upload:        
             self.idx_keys  = [self.runobj.user+self.runobj.run]
             self.refdb_dir = C.vamps_ref_database_dir
             self.iterator  = self.runobj.datasets
             site = self.runobj.site
-
-            dir_prefix=self.runobj.user+'_'+self.runobj.run
+            if site == 'new_vamps':  # vampsdev and vamps and new_vamps NOT local installation
+                dir_prefix = self.runobj.project_dir
+            else:
+                dir_prefix = self.runobj.user+'_'+self.runobj.run
         else:
             self.idx_keys  = idx_keys
             self.iterator  = self.idx_keys
@@ -90,7 +98,7 @@ class Gast:
                VAMPS: The uniques and names files have previously been created in trim_run.py.
                Illumina: The uniques and names files have been created by illumina_files.py
         """
-        logger.info("Starting Clustergast")
+        self.logger.info("Starting Clustergast")
         
         self.runobj.run_status_file_h.write(json.dumps({'status':'STARTING_CLUSTERGAST'})+"\n")
         # Step1: create empty gast table in database: gast_<rundate>
@@ -108,13 +116,16 @@ class Gast:
         calcnodes = C.calcnodes_cmd
         if self.utils.is_local():
             calcnodes = C.calcnodes_cmd_local
-        
+            clusterize = C.clusterize_cmd
+        elif self.utils.is_vamps():
+            calcnodes = C.calcnodes_cmd_vamps
+            clusterize = C.clusterize_cmd_vamps
 #        sqlImportCommand = C.mysqlimport_cmd
 #        if self.utils.is_local():
 #            sqlImportCommand = C.mysqlimport_cmd_local
         
         #qsub = '/usr/local/sge/bin/lx24-amd64/qsub'
-        clusterize = C.clusterize_cmd
+        
 
         ###################################################################
         # use fasta.uniques file
@@ -128,9 +139,9 @@ class Gast:
         qsub_prefix = 'clustergast_sub_'
         gast_prefix = 'gast_'
         if self.use_cluster:
-            logger.info("Using cluster for clustergast")
+            self.logger.info("Using cluster for clustergast")
         else:
-            logger.info("Not using cluster")
+            self.logger.info("Not using cluster")
             
             
         key_counter    = 0
@@ -138,7 +149,7 @@ class Gast:
         qsub_id_list=[]
         num_keys = len(self.iterator)
         cluster_nodes  = C.cluster_nodes
-        logger.info("Cluster nodes set to: "+str(cluster_nodes))
+        self.logger.info("xCluster nodes set to: "+str(cluster_nodes))
         for key in self.iterator:
             key_counter += 1
             print "\nDirectory", str(key_counter), key
@@ -180,7 +191,7 @@ class Gast:
             else:            
                 dna_region = self.runobj.dna_region
             if not dna_region:
-                logger.error("clustergast: We have no DNA Region: Setting dna_region to 'unknown'")
+                self.logger.error("clustergast: We have no DNA Region: Setting dna_region to 'unknown'")
                 dna_region = 'unknown'
                 
             (refdb, taxdb) = self.get_reference_databases(dna_region)
@@ -205,14 +216,14 @@ class Gast:
                 i = 0
                 if cluster_nodes:
                     grep_cmd = ['grep', '-c', '>', unique_file]
-                    logger.debug( ' '.join(grep_cmd) )
+                    self.logger.debug( ' '.join(grep_cmd) )
                     facount = subprocess.check_output(grep_cmd).strip()
-                    logger.debug( key+' count '+facount)
+                    self.logger.debug( key+' count '+facount)
                     calcnode_cmd = [calcnodes, '-t', str(facount), '-n', str(cluster_nodes), '-f', '1']
                     
                     calcout = subprocess.check_output(calcnode_cmd).strip()
-                    #logger.debug("calcout:\n"+calcout)
-                    logger.debug("facount: "+str(facount)+"\n")
+                    #self.logger.debug("calcout:\n"+calcout)
+                    self.logger.debug("facount: "+str(facount)+"\n")
                     #calcout:
                     # node=1 start=1 end=1 rows=1
                     # node=2 start=2 end=2 rows=1
@@ -223,7 +234,7 @@ class Gast:
                     
                     for line in lines:                        
                         i += 1
-                        logger.debug("\n\n>>>>>>>>> Count: "+str(i)+'/'+str(cluster_nodes)+ " -- Dataset Count:"+str(key_counter)+'/'+str(num_keys))
+                        self.logger.debug("\n\n>>>>>>>>> Count: "+str(i)+'/'+str(cluster_nodes)+ " -- Dataset Count:"+str(key_counter)+'/'+str(num_keys))
                         if i >= cluster_nodes:
                             continue
                         script_filename      = os.path.join(gast_dir, qsub_prefix + str(i))
@@ -261,7 +272,7 @@ class Gast:
                         fs_cmd = self.get_fastasampler_cmd(unique_file, fastasamp_filename, start, end)
                         
     
-                        logger.debug("fastasampler command: "+fs_cmd)
+                        self.logger.debug("fastasampler command: "+fs_cmd)
                         
                         if self.use_cluster:
                             fh.write(fs_cmd + "\n")
@@ -270,7 +281,7 @@ class Gast:
                         
                         us_cmd = self.get_usearch_cmd(fastasamp_filename, refdb, usearch_filename, self.runobj.use64bit)
     
-                        logger.debug("vsearch command: "+us_cmd)
+                        self.logger.debug("vsearch command: "+us_cmd)
 
                         if self.use_cluster:
                             fh.write(us_cmd + "\n")
@@ -279,29 +290,39 @@ class Gast:
                         
                         grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename)
     
-                        logger.debug("grep command: "+grep_cmd)
+                        self.logger.debug("grep command: "+grep_cmd)
                         if self.use_cluster:
-                            logger.debug("using grendel cluster for vsearch")
+                            self.logger.debug("using grendel cluster for vsearch")
                             fh.write(grep_cmd + "\n")
                             fh.close()
                             # make script executable and run it
-                            os.chmod(script_filename, stat.S_IRWXU)
+                            #print script_filename
+                            
+                            #os.chmod(script_filename, stat.S_IRWXU)
+                            subprocess.Popen('chmod +x '+script_filename, shell=True)
                             #qsub_cmd = clusterize + " " + script_filename
                             opts = " -n 8 "
-                            qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
-
+                            #qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
+                            qsub_cmd =clusterize + ' -log ' + log_file + ' '+  script_filename
                             # on vamps and vampsdev qsub cannot be run - unless you call it from the
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
                             #qsub_cmd = C.qsub_cmd + " " + script_filename
-                            logger.debug("qsub command: "+qsub_cmd)
+                            self.logger.debug("qsub command: "+qsub_cmd)
+                            #print 'qsub CMD:',qsub_cmd
                             proc = subprocess.check_output(qsub_cmd, shell=True)
-                            logger.debug('proc: '+proc)
+                            self.logger.debug('proc: '+proc)
+                            #print 'proc: ',proc
                             try:
-                                qsub_id = proc.split()[2]
+                                lines = proc.split("\n")
+                                for line in lines:
+                                    #print 'LINE',line
+                                    items = line.split()
+                                    if items[0] == 'Your' and items[1] == 'job':
+                                        qsub_id = items[2]
                                 # Your job 990889 ("clustergast_sub_46") has been submitted
-                                qsub_id_list.append(qsub_id)
+                                        qsub_id_list.append(qsub_id)
                             except:
-                                logger.debug('Could not split proc - Continuing on...')
+                                self.logger.debug('Could not split proc - Continuing on...')
 
                             # proc.communicate will block - probably not what we want
                             #(stdout, stderr) = proc.communicate() #block the last onehere
@@ -309,9 +330,9 @@ class Gast:
                             time.sleep(0.1)
         
                         else:
-                            logger.debug("NOT using cluster for vsearch")
+                            self.logger.debug("NOT using cluster for vsearch")
                             subprocess.call(grep_cmd, shell=True)
-                            logger.debug(grep_cmd)
+                            self.logger.debug(grep_cmd)
                 
                 else:
                     """works only if custer_nodes = 0 or False. In constants.py it's 100
@@ -322,16 +343,16 @@ class Gast:
                     usearch_filename= os.path.join(gast_dir, "uc")
                     clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
                     gast_file_list = [clustergast_filename_single]
-                    print usearch_filename, clustergast_filename_single
+                    #print usearch_filename, clustergast_filename_single
                     
                     us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename, self.runobj.use64bit)
-                    print us_cmd
+                    #print us_cmd
                     subprocess.call(us_cmd, shell=True)
                     grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
-                    print grep_cmd
+                    #print grep_cmd
                     subprocess.call(grep_cmd, shell=True)
             else:
-                logger.warning( "unique_file not found or zero size: "+unique_file)
+                self.logger.warning( "unique_file not found or zero size: "+unique_file)
                 
 
         if self.use_cluster:
@@ -359,41 +380,44 @@ class Gast:
             # now concatenate all the clustergast_files into one file (if they were split)
             if cluster_nodes:
                 # gast file
+                
                 clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
+                print "Concatenating ds.gast_x files into"+clustergast_filename_single
                 clustergast_fh = open(clustergast_filename_single, 'w')
                 # have to turn off cluster above to be able to 'find' these files for concatenation
                 for n in range(1, C.cluster_nodes-1):
                     #cmd = "cat "+ gast_dir + key+".gast_" + str(n) + " >> " + gast_dir + key+".gast"
                     file = os.path.join(gast_dir, key+".gast_" + str(n))
+                    self.logger.info('ds.gast file:'+file)
                     if(os.path.exists(file)):                    
                         shutil.copyfileobj(open(file, 'rb'), clustergast_fh)
                     else:
-                        logger.info( "Could not find file: "+os.path.basename(file)+" Skipping")
+                        self.logger.info( "Could not find file: "+os.path.basename(file)+" Skipping")
 
                 clustergast_fh.flush()
                 clustergast_fh.close()
             
                 
-        if not self.test:    
-            # remove tmp files
-            for n in range(i+1):
-                #print "Trying to remove "+os.path.join(gast_dir, "uc_"+str(n))
-                if os.path.exists(os.path.join(gast_dir, "uc_"+str(n))):
-                    os.remove(os.path.join(gast_dir, "uc_"+str(n)))
-                    pass
-                #print "Trying to remove "+os.path.join(gast_dir, "samp_"+str(n))
-                if os.path.exists(os.path.join(gast_dir, "samp_"+str(n))):    
-                    os.remove(os.path.join(gast_dir, "samp_"+str(n)))
-                    pass
-                #print "Trying to remove "+os.path.join(self.gast_dir, key+".gast_"+str(n))
-                if os.path.exists(os.path.join(gast_dir, key+".gast_"+str(n))):    
-                    os.remove(os.path.join(gast_dir, key+".gast_"+str(n)))
-                    pass
+#         if not self.test:    
+#             # remove tmp files
+#             for n in range(i+1):
+#                 #print "Trying to remove "+os.path.join(gast_dir, "uc_"+str(n))
+#                 if os.path.exists(os.path.join(gast_dir, "uc_"+str(n))):
+#                     os.remove(os.path.join(gast_dir, "uc_"+str(n)))
+#                     pass
+#                 #print "Trying to remove "+os.path.join(gast_dir, "samp_"+str(n))
+#                 if os.path.exists(os.path.join(gast_dir, "samp_"+str(n))):    
+#                     os.remove(os.path.join(gast_dir, "samp_"+str(n)))
+#                     pass
+#                 #print "Trying to remove "+os.path.join(self.gast_dir, key+".gast_"+str(n))
+#                 if os.path.exists(os.path.join(gast_dir, key+".gast_"+str(n))):    
+#                     os.remove(os.path.join(gast_dir, key+".gast_"+str(n)))
+#                     pass
                     
                     
         
         print "Finished clustergast"
-        logger.info("Finished clustergast")
+        self.logger.info("Finished clustergast")
         #sys.exit()
         return {'status':"GAST_SUCCESS", 'message':"Clustergast Finished"}    
         
@@ -434,22 +458,22 @@ class Gast:
             else:            
                 dna_region = self.runobj.dna_region
             if not dna_region:
-                logger.error("gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'")
+                self.logger.error("gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'")
                 self.runobj.run_status_file_h.write(json.dumps({'status':'WARNING', 'message':"gast_cleanup: We have no DNA Region: Setting dna_region to 'unknown'"})+"\n")
                 dna_region = 'unknown'
             # find gast_dir
             
             'Check in Dirs'            
             if not os.path.exists(gast_dir):
-                logger.error("Could not find gast directory: "+gast_dir+" Exiting")
+                self.logger.error("Could not find gast directory: "+gast_dir+" Exiting")
                 sys.exit()
                 
             'create in Dirs'
             clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
             try:
-                logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename_single)))
+                self.logger.debug('gast filesize:'+str(os.path.getsize(clustergast_filename_single)))
             except:
-                logger.debug('gast filesize: zero')
+                self.logger.debug('gast filesize: zero')
                 
             gast_filename          = os.path.join(gast_dir, "gast")
             gastconcat_filename    = os.path.join(gast_dir, "gast_concat")  
@@ -508,7 +532,7 @@ class Gast:
                         alignment   = s[3]
                         frequency   = s[4]
                     else:
-                        logger.debug("gast_cleanup: wrong field count")
+                        self.logger.debug("gast_cleanup: wrong field count")
                     #print read_id, refhvr_id
                     # if this was in the gast table zero it out because it had a valid hit
                     # so we don't insert them as non-hits later
@@ -517,7 +541,7 @@ class Gast:
                         #print 'deleling', read_id
                     #print 'nonhits', nonhits
                     if read_id not in copies:
-                        logger.info(read_id+' not in names copies: Skipping')
+                        self.logger.info(read_id+' not in names copies: Skipping')
                         continue
                         
                     # give the same ref and dist for each duplicate
@@ -541,7 +565,7 @@ class Gast:
                         for d in copies[read]: 
                             gast_fh.write( d+"\t0\t1\t0\t0\n")
                     else:
-                        logger.info(read+' not in copies: Skipping')
+                        self.logger.info(read+' not in copies: Skipping')
                         
                         
                 gast_fh.close()
@@ -587,12 +611,12 @@ class Gast:
                 gastconcat_fh.close()
            
             else:
-                logger.warning("No clustergast file found:"+clustergast_filename_single+"\nContinuing on ...")
+                self.logger.warning("No clustergast file found:"+clustergast_filename_single+"\nContinuing on ...")
                 self.runobj.run_status_file_h.write(json.dumps({'status':'WARNING', 'message':"No clustergast file found: "+clustergast_filename_single+" Continuing"})+"\n")
   
             
         print "Finished gast_cleanup"   
-        logger.info("Finished gast_cleanup")
+        self.logger.info("Finished gast_cleanup")
         return {'status':"GAST_SUCCESS", 'message':"gast_cleanup finished"}
 
     def gast2tax(self):
@@ -642,7 +666,7 @@ class Gast:
             else:            
                 dna_region = self.runobj.dna_region
             if not dna_region:
-                logger.error("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
+                self.logger.error("gast2tax: We have no DNA Region: Setting dna_region to 'unknown'")
                 self.runobj.run_status_file_h.write(json.dumps({'status':'WARNING', 'message':"gast2tax: We have no DNA Region: Setting dna_region to 'unknown'"})+"\n")
                 dna_region = 'unknown'
             max_gast_distance = C.max_gast_distance['default']
@@ -651,7 +675,7 @@ class Gast:
                 
                 
             if self.use_cluster:
-                clusterize = C.clusterize_cmd
+                
                 # create script - each file gets script
                 script_filename = os.path.join(gast_dir, qsub_prefix + str(key_counter))
                 fh = open(script_filename, 'w')
@@ -663,11 +687,16 @@ class Gast:
                 #fh.write("#$ -N " + qstat_name + "\n\n")
 
                 # setup environment
-                fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
-                fh.write("module load bioware\n")
-                fh.write("export PYTHONPATH=/xraid2-2/vampsweb/"+self.runobj.site+"/:$PYTHONPATH\n\n")
-                py_pipeline_base = '/bioware/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline/pipeline/'
-                gast2tax_cmd = [py_pipeline_base+"gast2tax.py",
+                #fh.write("source /xraid/bioware/Modules/etc/profile.modules\n")
+                #fh.write("module load bioware\n")
+                #fh.write("export PYTHONPATH=/groups/vampsweb//:$PYTHONPATH\n\n")
+                if self.utils.is_vamps():
+                    pipeline_base = C.py_pipeline_base_vamps
+                    clusterize = C.clusterize_cmd_vamps
+                else:
+                    pipeline_base = C.py_pipeline_base
+                    clusterize = C.clusterize_cmd
+                gast2tax_cmd = [pipeline_base+"gast2tax.py",
                                 '-dna',dna_region,
                                 '-key',key,
                                 "-max",str(max_gast_distance),
@@ -686,7 +715,8 @@ class Gast:
                 os.chmod(script_filename, stat.S_IRWXU)
 
                 opts = " -n 8 "
-                qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
+                #qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
+                qsub_cmd = clusterize + " -log " + log_file + " " + script_filename
                 # -log /xraid2-2/vampsweb/"+self.runobj.site+"/clusterize.log
                 
                 # on vamps and vampsdev qsub cannot be run - unless you call it from the
@@ -697,17 +727,17 @@ class Gast:
                 
                 subprocess.call(qsub_cmd, shell=True)
                 
-                logger.debug("qsub command: "+qsub_cmd)
+                self.logger.debug("qsub command: "+qsub_cmd)
                 #subprocess.call(qsub_cmd, shell=True)
                 #proc = subprocess.Popen(qsub_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 proc = subprocess.check_output(qsub_cmd, shell=True)
-                logger.debug('proc: '+proc)
+                self.logger.debug('proc: '+proc)
                 try:
                     qsub_id = proc.split()[2]
                     # Your job 990889 ("clustergast_sub_46") has been submitted
                     qsub_id_list.append(qsub_id)
                 except:
-                    logger.debug('Could not split proc - Continuing on...')
+                    self.logger.debug('Could not split proc - Continuing on...')
 
                 
             else:
@@ -745,11 +775,11 @@ class Gast:
 #                 #print temp_file_list
 #                 if os.path.exists(tagtax_long_filename) and os.path.getsize(tagtax_long_filename) > 100:
 #                     # remove from tmp list
-#                     logger.debug("Found file: "+tagtax_long_filename+" - Continuing")
+#                     self.logger.debug("Found file: "+tagtax_long_filename+" - Continuing")
 #                     c = True
 #                 else:
-#                     logger.info("waiting for tagtax files to fill...")
-#                     logger.info("\ttime: "+str(counter3 * sleeptime))
+#                     self.logger.info("waiting for tagtax files to fill...")
+#                     self.logger.info("\ttime: "+str(counter3 * sleeptime))
 #                     time.sleep(sleeptime)
                     
                     
@@ -807,18 +837,20 @@ class Gast:
                 refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                 taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
                 self.db_type='db'
-                logger.error("Could not find reference database in "+self.refdb_dir+" - Using full length")
+                self.logger.error("Could not find reference database in "+self.refdb_dir+" - Using full length")
                 
             
                 
-        logger.info('tax_file: '+taxdb)
-        logger.info('ref_file: '+refdb) 
+        self.logger.info('tax_file: '+taxdb)
+        self.logger.info('ref_file: '+refdb) 
         return (refdb, taxdb)   
           
     def get_fastasampler_cmd(self, unique_file, fastasamp_filename, start, end):
         fastasampler = C.fastasampler_cmd
         if self.utils.is_local():
             fastasampler = C.fastasampler_cmd_local
+        elif self.utils.is_vamps():
+            fastasampler = C.fastasampler_cmd_vamps
         fastasampler_cmd = fastasampler
         fastasampler_cmd += ' -n '+ str(start)+','+ str(end)
         fastasampler_cmd += " -delim '|' "
@@ -849,6 +881,8 @@ class Gast:
             if self.utils.is_local():
                 usearch_cmd = C.usearch6_cmd_local
                 usearch_cmd = C.usearch5_cmd
+            elif self.utils.is_vamps():
+                usearch_cmd = C.vsearch_cmd_vamps
                 
             usearch_cmd += ' -usearch_global ' + fastasamp_filename
             usearch_cmd += ' -gapopen 6I/1E'
@@ -886,7 +920,10 @@ class Gast:
         grep_cmd += " sort -k1,1b -k2,2gr |"
         # append to clustergast file:
         # split_defline adds frequency to gastv6 file (last field)
+        
         tophit_cmd = "/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline/pipeline/clustergast_tophit"
+        if self.utils.is_vamps():
+            tophit_cmd = C.tophit_cmd_vamps
         grep_cmd += " "+tophit_cmd + " -split_defline_frequency "+use_full_length+" >> " + clustergast_filename
     
         return grep_cmd  
@@ -927,7 +964,7 @@ class Gast:
         from py_mbl_sequencing_pipeline.pipeline.taxonomy import Taxonomy, consensus
         #results = uc_results
         results = {}
- 
+        
         try:
             self.runobj.run_status_file_h.write(json.dumps({'status':"STARTING_ASSIGN_TAXONOMY: "+key})+"\n")
         except:
@@ -941,8 +978,9 @@ class Gast:
         tagtax_long_fh = open(tagtax_long_filename, 'w')
         tagtax_long_fh.write("\t".join(["read_id", "taxonomy", "distance", "rank", "refssu_count", "vote", "minrank", "taxa_counts", "max_pcts", "na_pcts", "refhvr_ids"])+"\n")
         gast_file          = os.path.join(gast_dir, "gast"+dna_region)
+        print gast_file
         if not os.path.exists(gast_file):
-            logger.info("gast:assign_taxonomy: Could not find gast file: "+gast_file+". Returning")
+            self.logger.info("gast:assign_taxonomy: Could not find gast file: "+gast_file+". Returning")
             return results
         
         for line in  open(gast_file, 'r'): 
@@ -1041,7 +1079,7 @@ class Gast:
 #         #mothur_cmd = site_base+"/clusterize_vamps -site vampsdev -rd "+user+"_"+runcode+"_gast -rc "+runcode+" -u "+user+" /bioware/mothur/mothur \"#unique.seqs(fasta="+fasta_file+");\"";    
 #         subprocess.call(mothur_cmd, shell=True)
     def check_for_unique_files(self, keys):
-        logger.info("Checking for uniques file")
+        self.logger.info("Checking for uniques file")
         for key in keys:
             if self.runobj.vamps_user_upload:
                 # one fasta file or (one project and dataset from db)
@@ -1076,12 +1114,12 @@ class Gast:
                     unique_file = os.path.join(self.reads_dir, file_prefix+"-PERFECT_reads.fa.unique")
                     if os.path.exists(unique_file):
                         if os.path.getsize(unique_file) > 0:
-                            logger.debug( "GAST: Found uniques file: "+unique_file)
+                            self.logger.debug( "GAST: Found uniques file: "+unique_file)
                         else:
-                            logger.warning( "GAST: Found uniques file BUT zero size "+unique_file)
+                            self.logger.warning( "GAST: Found uniques file BUT zero size "+unique_file)
                             continue
                     else:
-                        logger.error( "GAST: NO uniques file found "+unique_file)
+                        self.logger.error( "GAST: NO uniques file found "+unique_file)
                         
                         
                 if self.runobj.platform == '454':
@@ -1120,6 +1158,7 @@ class Gast:
         return qstat_codes  
         
     def waiting_on_cluster(self, site, my_working_id_list):
+        print 'my_working_id_list',my_working_id_list
         c = False
         maxwaittime = C.maxwaittime  # 50000 seconds
         sleeptime   = C.sleeptime    # 5 seconds

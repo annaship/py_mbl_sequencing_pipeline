@@ -25,7 +25,10 @@ import types
 def run_gast2tax(args):
 
     #sys.path.append("/xraid2-2/vampsweb/"+args.site+"/")
-    sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline')
+    if args.site == 'vamps' or args.site == 'vampsdev' or args.site == 'new_vamps':
+        sys.path.append('/groups/vampsweb')
+    else:
+        sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline')
     #from pipeline.utils import *
     from py_mbl_sequencing_pipeline.pipeline.gast import Gast
     import py_mbl_sequencing_pipeline.pipeline.constants as C
@@ -43,6 +46,7 @@ def run_gast2tax(args):
         runobj.vamps_user_upload = args.vamps_user_upload
         runobj.platform = args.platform
         runobj.site = args.site
+        runobj.project_dir = ''
         key = args.key
         
         runobj.datasets = []

@@ -54,6 +54,8 @@ from pipeline.db_upload import MyConnection, dbUpload
 # the main loop for performing each of the user's supplied steps
 def process(runobj, steps):
     
+    
+    
     requested_steps = steps.split(",")            
     if 'clean' in requested_steps and len(requested_steps) > 1:
         sys.exit("The clean step cannot be combined with other steps - Exiting")
@@ -70,6 +72,7 @@ def process(runobj, steps):
     for step in C.existing_steps:
         if step in requested_steps:
             # call the method in here
+            print 'RUN',step
             step_method = globals()[step]
             step_method(runobj)
 
@@ -548,7 +551,7 @@ def env454upload(runobj):
 
 def gast(runobj):  
     
-    
+    logger.info("STARTING GAST()")
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file
     # that was just created in vamps_gast.py
@@ -621,6 +624,15 @@ def cluster(runobj):
     """
     pass
     
+    
+def new_vamps(runobj):
+    """
+    
+    """
+    logger.info("STARTING NEW_VAMPS()")
+    idx_keys = get_keys(runobj)
+    myvamps = Vamps(runobj, idx_keys)
+    myvamps.create_vamps_files()
     
     
 def vampsupload(runobj):

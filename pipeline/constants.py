@@ -80,6 +80,7 @@ TRIM_STEP               = "trim"
 CHIMERA_STEP            = "chimera"
 GAST_STEP               = "gast"
 VAMPSUPLOAD             = "vampsupload"
+NEW_VAMPS               = "new_vamps"
 CLUSTER_STEP            = "cluster"
 DELETE_RUN              = "delete"
 ENV454UPLOAD            = "env454upload"
@@ -91,7 +92,7 @@ ILLUMINA_FILES_DEM_STEP = 'illumina_files_demultiplex_only'
 ILLUMINA_CHIMERA_ONLY_STEP = 'illumina_chimera_only'
 ILLUMINA_CHIMERA_AFTER_CLUSTER = 'illumina_chimera_after_cluster'
 
-existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ILLUMINA_CHIMERA_ONLY_STEP, ILLUMINA_CHIMERA_AFTER_CLUSTER, ILLUMINA_FILES_DEM_STEP, ILLUMINA_FILES_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, STATUS_STEP, CLEAN_STEP]
+existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STEP, ILLUMINA_CHIMERA_ONLY_STEP, ILLUMINA_CHIMERA_AFTER_CLUSTER, ILLUMINA_FILES_DEM_STEP, ILLUMINA_FILES_STEP, ENV454RUN_INFO_UPLOAD, ENV454UPLOAD, VAMPSUPLOAD, NEW_VAMPS, STATUS_STEP, CLEAN_STEP]
 
 ########### RUN CONFIG #############################################################################
 input_file_formats = ['sff', 'fasta', 'fasta-mbl', 'fastq', 'fastq-illumina', 'fastq-sanger']
@@ -220,16 +221,18 @@ subdirs = {'analysis_dir' : 'analysis',
 
 #root:
 #VAMPS users
-output_root_vampsdev_users = '/groups/vampsweb/vampsdev/tmp/'
-output_root_vamps_users = '/groups/vampsweb/vamps/tmp/'
-
+output_root_vampsdev_users      = '/groups/vampsweb/vampsdev/tmp/'
+output_root_vamps_users         = '/groups/vampsweb/vamps/tmp/'
+#New VAMPS
+output_root_newvamps_users      = '/groups/vampsweb/vampsdev_user_data/'
+new_vamps_database = 'vamps2'
 #MBL
 output_root_mbl         = '/groups/g454/run_new_pipeline/'
 
 output_root_mbl_local   = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test' 
 # cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/"
 cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts/"
-
+cmd_path_vamps          = "/groups/vampsweb/seqinfobin/"
 ############# defaults for illumina ################################################################ 
 # perfect_overlap_cmd       = "analyze-illumina-v6-overlaps"
 # perfect_overlap_cmd       = "iu-merge-pairs"
@@ -259,7 +262,7 @@ usearch_cmd        = '/bioware/seqinfo/bin/vsearch'
 usearch6_cmd       = usearch_cmd
 usearch64_cmd      = usearch_cmd 
 usearch6_cmd_local = cmd_path_local + 'vsearch'
-
+py_pipeline_base = '/bioware/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline/pipeline/'
 
 fastasampler_cmd    = '/bioware/seqinfo/bin/fastasampler'
 calcnodes_cmd       = '/bioware/seqinfo/bin/calcnodes'
@@ -276,7 +279,17 @@ mysqlimport_cmd_local  = '/usr/local/mysql/bin/mysqlimport'
 fastaunique_cmd_local  = cmd_path_local + 'fastaunique'
 ref_database_dir_local = cmd_path_local
 tax_database_dir_local = cmd_path_local
+# VAMPS commands
+fastasampler_cmd_vamps  = cmd_path_vamps + 'fastasampler'
+fastaunique_cmd_vamps   = cmd_path_vamps + 'fastaunique'
+calcnodes_cmd_vamps     = cmd_path_vamps + 'calcnodes'
+vsearch_cmd_vamps       = cmd_path_vamps + 'vsearch'
+tophit_cmd_vamps        = cmd_path_vamps + 'clustergast_tophit'
+clusterize_cmd_vamps    = cmd_path_vamps + 'clusterize_vamps'
+py_pipeline_base_vamps = '/groups/vampsweb/py_mbl_sequencing_pipeline/pipeline/'
 
+
+#####
 ref_database_dir    = '/groups/g454/blastdbs/gast_distributions/'
 tax_database_dir    = '/groups/g454/blastdbs/gast_distributions/'
 # these are symlinks to above
