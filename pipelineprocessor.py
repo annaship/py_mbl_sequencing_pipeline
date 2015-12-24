@@ -587,32 +587,15 @@ def env454upload_modular(runobj):
             logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
             
             while fasta.next():
-#                sequence_ill_id = my_env454upload.get_sequence_id(fasta.seq)
-                start = time.time()
-#                print "Inserting pdr info"
-#                for attr in dir(fasta):
-#                  print "obj.%s = %s" % (attr, getattr(fasta, attr))
+                wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
+                insert_pdr_info_time += timeit.timeit(wrapped, number=1)
 
-                my_env454upload.insert_pdr_info(fasta, run_info_ill_id)
-                elapsed = (time.time() - start)
-                insert_pdr_info_time += elapsed
-#                print "insert_pdr_info() took ", elapsed, " time to finish"                
+                wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
+                insert_taxonomy_time += timeit.timeit(wrapped, number=1)
 
-                start = time.time()
-#                print "Inserting taxonomy"
-                my_env454upload.insert_taxonomy(fasta, gast_dict)
+                wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
+                insert_taxonomy_time += timeit.timeit(wrapped, number=1)
 
-                elapsed = (time.time() - start)
-                insert_taxonomy_time += elapsed
-
-#                print "tax_id = ", tax_id ,"; insert_taxonomy() took ", elapsed, " time to finish"                
-#                print "tax_id = ", tax_id            
-
-                start = time.time()
-#                print "Inserting sequence_uniq_info_ill"
-                my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict)
-                elapsed = (time.time() - start)
-                insert_sequence_uniq_info_ill_time += elapsed
 
             seq_in_file = fasta.total_seq
             my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
