@@ -594,7 +594,7 @@ def env454upload_modular(runobj):
                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
 
                 wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-                insert_taxonomy_time += timeit.timeit(wrapped, number=1)
+                insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
 
 
             seq_in_file = fasta.total_seq
