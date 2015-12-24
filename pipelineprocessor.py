@@ -447,12 +447,13 @@ def env454upload(runobj):
             logger.debug("\n----------------\nfilename = %s" % filename)
             fasta_file_path = filename
 #             TODO: one filter for basename for v4v5 and v6
-            filename_base   = "-".join(filename.split("/")[-1].split("-")[:-1])
+            filename_base_no_suff = "-".join(filename.split("/")[-1].split("-")[:-1])
+            filename_basename     = os.path.basename(filename)
             if (filename.find(C.filtered_suffix) > 0):
 #                For v4v5 illumia
-                filename_base   = "_".join(filename.split("/")[-1].split("_")[:3])                
-            run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base)
-            gast_dict       = my_env454upload.get_gasta_result(filename)
+                filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])                
+            run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
+            gast_dict       = my_env454upload.get_gasta_result(filename_basename)
             read_fasta      = u.ReadFasta(fasta_file_path)
 #             sequences       = read_fasta.sequences
             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
