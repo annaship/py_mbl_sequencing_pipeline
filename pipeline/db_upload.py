@@ -199,7 +199,6 @@ class dbUpload:
         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
         read_fasta.close()
         return sequences
-
         
     def insert_seq(self, sequences):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
@@ -502,26 +501,36 @@ class dbUpload:
         self.my_conn.execute_no_fetch(my_sql)
 
 
-    def count_sequence_pdr_info_ill(self):
-        primer_suite = self.get_primer_suite_name()
-        lane         = self.get_lane().pop()   
 
-        my_sql = """SELECT count(sequence_pdr_info_ill_id) 
-                    FROM sequence_pdr_info_ill 
-                      JOIN run_info_ill USING(run_info_ill_id) 
-                      JOIN run USING(run_id) 
-                      JOIN primer_suite using(primer_suite_id) 
-                    WHERE run = '%s' 
-                      AND lane = %s
-                      AND primer_suite = '%s'
-                      """ % (self.rundate, lane, primer_suite)
-        res    = self.my_conn.execute_fetch_select(my_sql)
-        if res:
-            return int(res[0][0])   
+    def count_sequence_pdr_info_ill(self):
+        results = {}
+        primer_suites = self.get_primer_suite_name()
+        lane          = self.get_lane().pop()
+        for primer_suite in primer_suites:
+            primer_suite_lane = primer_suite + ", lane " + lane
+            my_sql = """SELECT count(sequence_pdr_info_ill_id) 
+                        FROM sequence_pdr_info_ill 
+                          JOIN run_info_ill USING(run_info_ill_id) 
+                          JOIN run USING(run_id) 
+                          JOIN primer_suite using(primer_suite_id) 
+                        WHERE run = '%s' 
+                          AND lane = %s
+                          AND primer_suite = '%s'
+                          """ % (self.rundate, lane, primer_suite)
+            res    = self.my_conn.execute_fetch_select(my_sql)
+            try:
+                if (int(res[0][0]) > 0):
+                    results[primer_suite_lane] = int(res[0][0])
+#                     results.append(int(res[0][0]))
+            except Exception:
+                self.utils.print_both("Unexpected error from 'count_sequence_pdr_info_ill':", sys.exc_info()[0])
+                raise                
+        return results
+#             int(res[0][0])   
     
     def get_primer_suite_name(self):
-        primer_suite = [v.primer_suite for v in self.runobj.samples.itervalues()]
-        return list(set(primer_suite))[0]
+        primer_suites = [v.primer_suite for v in self.runobj.samples.itervalues()]
+        return list(set(primer_suites))
         
     def get_project_names(self):
         projects = [v.project for v in self.runobj.samples.itervalues()]
@@ -564,15 +573,16 @@ class dbUpload:
 
 
     def check_seq_upload(self):
-        file_seq_db_count   = self.count_sequence_pdr_info_ill()
+        file_seq_db_counts   = self.count_sequence_pdr_info_ill()
 #        print "file_seq_db_count = %s" % file_seq_db_count
 #         file_seq_orig_count = self.count_seq_from_file()
         file_seq_orig_count = self.count_seq_from_files_grep()
         
-        if (file_seq_orig_count == file_seq_db_count):
-            self.utils.print_both("All sequences from files made it to the db: %s == %s" % (file_seq_orig_count, file_seq_db_count))
-        else:
-            self.utils.print_both("Oops, amount of sequences from files not equal to the one in the db.\nIn file: %s != in db: %s\n==============" % (file_seq_orig_count, file_seq_db_count))
+        for pr_suite, file_seq_db_count in file_seq_db_counts.iteritems():
+            if (file_seq_orig_count == file_seq_db_count):
+                self.utils.print_both("All sequences from files made it to the db for %s: %s == %s\n" % (pr_suite, file_seq_orig_count, file_seq_db_count))
+            else:
+                self.utils.print_both("Oops, amount of sequences from files not equal to the one in the db for %.\nIn file: %s != in db: %s\n==============" % (pr_suite, file_seq_orig_count, file_seq_db_count))
             
     def put_seq_statistics_in_file(self, filename, seq_in_file):
 #        if os.path.exists(file_full):
