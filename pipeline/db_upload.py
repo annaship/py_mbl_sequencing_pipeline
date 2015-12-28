@@ -329,10 +329,10 @@ class dbUpload:
     
     def put_run_info(self, content = None):
 
-        values = list(set([run_key.split('_')[1] for run_key in self.runobj.run_keys]))
-        self.insert_bulk_data('run_key', values)
-        values = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
-        self.insert_bulk_data('dna_region', values)
+        run_keys = list(set([run_key.split('_')[1] for run_key in self.runobj.run_keys]))
+        self.insert_bulk_data('run_key', run_keys)
+        dna_regions = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
+        self.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
 #         self.insert_test_contact()
        
