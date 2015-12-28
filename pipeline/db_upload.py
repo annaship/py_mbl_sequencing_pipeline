@@ -7,6 +7,7 @@ from shlex import split
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
+import IlluminaUtils.lib.fastalib as fastalib
 
 try:
     import MySQLdb
@@ -192,6 +193,13 @@ class dbUpload:
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])
+        
+    def make_seq_upper(self, filename):
+        read_fasta = fastalib.ReadFasta(filename)
+        sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
+        read_fasta.close()
+        return sequences
+
         
     def insert_seq(self, sequences):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"

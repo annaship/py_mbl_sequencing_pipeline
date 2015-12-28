@@ -45,7 +45,7 @@ from inspect import currentframe, getframeinfo
 
 import logging
 import json    
-import IlluminaUtils.lib.fastalib as u
+import IlluminaUtils.lib.fastalib as fastalib
 #import fastalib as fa
 from pipeline.fasta_mbl_pipeline import MBLPipelineFastaUtils
 from pipeline.db_upload import MyConnection, dbUpload 
@@ -452,14 +452,14 @@ def env454upload(runobj):
                 filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])                
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
             gast_dict       = my_env454upload.get_gasta_result(filename_basename)
-            read_fasta      = u.ReadFasta(fasta_file_path)
+            read_fasta      = fastalib.ReadFasta(fasta_file_path)
 #             sequences       = read_fasta.sequences
             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
 
             if not (len(sequences)):
                 continue            
             read_fasta.close()
-            fasta           = u.SequenceSource(fasta_file_path, lazy_init = False) 
+            fasta           = fastalib.SequenceSource(fasta_file_path, lazy_init = False) 
 
             insert_seq_time      = 0   
             get_seq_id_dict_time = 0
@@ -526,13 +526,10 @@ def env454upload(runobj):
     whole_elapsed = (time.time() - whole_start)
     print "The whole_upload took %s s" % whole_elapsed
 
-    
-    
 def wrapper(func, *args, **kwargs):
     def wrapped():
         return func(*args, **kwargs)
     return wrapped
-
 
 def env454upload_modular(runobj):  
     """
@@ -558,13 +555,16 @@ def env454upload_modular(runobj):
             filename_basename     = os.path.basename(filename)
             run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
             gast_dict       = my_env454upload.get_gasta_result(filename_basename)
-            read_fasta      = u.ReadFasta(filename)
-            sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
-
+            sequences       = my_env454upload.make_seq_upper(filename)
             if not (len(sequences)):
-                continue            
-            read_fasta.close()
-            fasta           = u.SequenceSource(filename, lazy_init = False) 
+                continue                    
+#             read_fasta      = fastalib.ReadFasta(filename)
+#             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
+# 
+#             if not (len(sequences)):
+#                 continue            
+#             read_fasta.close()
+            fasta           = fastalib.SequenceSource(filename, lazy_init = False) 
 
             insert_seq_time      = 0   
             get_seq_id_dict_time = 0
