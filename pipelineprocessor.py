@@ -616,89 +616,19 @@ def get_filename_base_no_suff(filename):
         filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])
     return filename_base_no_suff 
           
-    
 
-def env454upload_gast(runobj):  
-    """
-    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
-    For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
-    TODO: 
-        2) Upload env454 data into raw, trim, gast etc tables from files
-    """
-    
-    whole_start = time.time()
+def env454upload_seq(runobj):
+    pass
 
-    my_env454upload = dbUpload(runobj)
-    filenames   = my_env454upload.get_fasta_file_names()
-    if not filenames:
-        logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
-        
-    seq_in_file = 0
-    total_seq   = 0
-    for filename in filenames:
-        try:
-            logger.debug("\n----------------\nfilename = %s" % filename)
-#             fasta_file_path = filename
-            filename_base_no_suff = get_filename_base_no_suff(filename)
-# #             TODO: one filter for basename for v4v5 and v6
-#             filename_base_no_suff = "-".join(filename.split("/")[-1].split("-")[:-1])
-            filename_basename     = os.path.basename(filename)
-#             if (filename.find(C.filtered_suffix) > 0):
-# #                For v4v5 illumia
-#                 filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])                
-            run_info_ill_id = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
-            gast_dict       = my_env454upload.get_gasta_result(filename_basename)
-            read_fasta      = u.ReadFasta(filename)
-            sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
+def env454upload_pdr_info(runobj):
+    pass
 
-            if not (len(sequences)):
-                continue            
-            read_fasta.close()
-            fasta                = u.SequenceSource(filename, lazy_init = False) 
+def env454upload_gast(runobj):
+    pass
 
-            insert_seq_time      = 0   
-            get_seq_id_dict_time = 0
-            insert_pdr_info_time = 0
-            insert_taxonomy_time = 0
-            insert_sequence_uniq_info_ill_time = 0
-            
-            wrapped = wrapper(my_env454upload.insert_seq, sequences)
-            insert_seq_time = timeit.timeit(wrapped, number=1)
-            logger.debug("seq_in_file = %s" % seq_in_file)
-            logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
+def env454upload_sequence_uniq_info_ill(runobj):
+    pass
 
-            wrapped = wrapper(my_env454upload.get_seq_id_dict, sequences)
-            get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
-            logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
-            
-            while fasta.next():
-                wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
-                insert_pdr_info_time += timeit.timeit(wrapped, number=1)
-
-                wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
-                insert_taxonomy_time += timeit.timeit(wrapped, number=1)
-
-                wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-                insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
-
-
-            seq_in_file = fasta.total_seq
-            my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
-            total_seq += seq_in_file
-            logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
-            logger.debug("insert_taxonomy_time.time() took %s time to finish" % insert_taxonomy_time)
-            logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
-
-        except:                       # catch everything
-            print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
-            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
-            raise                       # re-throw caught exception   
-#    print "total_seq = %s" % total_seq
-    my_env454upload.check_seq_upload()
-    logger.debug("total_seq = %s" % total_seq)
-    whole_elapsed = (time.time() - whole_start)
-    print "The whole_upload took %s s" % whole_elapsed
-    
 
 def gast(runobj):  
     
