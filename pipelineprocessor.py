@@ -417,14 +417,8 @@ def illumina_files(runobj):
         
 def env454run_info_upload(runobj):
     my_read_csv = dbUpload(runobj)
-    start = time.time()
-    my_read_csv.put_run_info()
-    elapsed = (time.time() - start)
-    print "put_run_info time = %s" % str(elapsed)
-    
-#     my_read_csv = dbUpload(runobj)
-#     wrapped   = wrapper(my_read_csv.put_run_info)
-#     print "put_run_info time = %s" % timeit.timeit(wrapped, number=1) 
+    wrapped   = wrapper(my_read_csv.put_run_info)
+    print "put_run_info time = %s" % timeit.timeit(wrapped, number=1) 
     
 def env454upload(runobj):  
     """

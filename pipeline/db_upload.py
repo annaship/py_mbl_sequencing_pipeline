@@ -334,25 +334,15 @@ class dbUpload:
         dna_regions = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
         self.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
-#         self.insert_test_contact()
-       
-#        --------- indiv_inserts --------- 
 
-#        for k, v in content.items():
-#            print k, v['dataset'], v
         for key in self.runobj.samples:
             value = self.runobj.samples[key]
-#            print dict(run.samples[key])
-#            print key, value.dataset
             self.get_contact_v_info()
-#            self.insert_contact()
             contact_id = self.get_contact_id(value.data_owner)
             self.insert_project(value, contact_id)
             self.insert_dataset(value) 
 
             self.insert_run_info(value)
-#            self.insert_primer()
-#        return content[1].keys()
 
     def insert_bulk_data(self, key, values):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
