@@ -552,63 +552,51 @@ def env454upload_modular(runobj):
     filenames   = my_env454upload.get_fasta_file_names()
     if not filenames:
         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
-        
-    total_seq   = 0
-    
+  
     env454upload_seq(my_env454upload, filenames)
     sequences = [my_env454upload.make_seq_upper(filename) for filename in filenames]
 #     get_seq_id_dict
     wrapped = wrapper(my_env454upload.get_seq_id_dict, sequences[0])
     get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
     logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
-    env454upload_pdr_info(my_env454upload, filenames)
+       
+    total_seq = env454upload_all_but_seq(my_env454upload, filenames)
 
-    for filename in filenames:
-        try:
-            logger.debug("\n----------------\nfilename = %s" % filename)
-            filename_basename     = os.path.basename(filename)
-            gast_dict       = my_env454upload.get_gasta_result(filename_basename)
-            if not (len(sequences)):
-                continue                    
-            fasta           = fastalib.SequenceSource(filename, lazy_init = False) 
+#     for filename in filenames:
+#         try:
+#             logger.debug("\n----------------\nfilename = %s" % filename)
+#             filename_basename     = os.path.basename(filename)
+#             gast_dict       = my_env454upload.get_gasta_result(filename_basename)
+#             if not (len(sequences)):
+#                 continue                    
+#             fasta           = fastalib.SequenceSource(filename, lazy_init = False) 
 
 #             insert_seq_time      = 0   
-            get_seq_id_dict_time = 0
-            insert_taxonomy_time = 0
-            insert_sequence_uniq_info_ill_time = 0
-            
-#             wrapped = wrapper(my_env454upload.insert_seq, sequences)
-#             insert_seq_time = timeit.timeit(wrapped, number=1)
-#             logger.debug("seq_in_file = %s" % seq_in_file)
-#             logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
-
-#             wrapped = wrapper(my_env454upload.get_seq_id_dict, sequences)
-#             get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
-#             logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
+#             get_seq_id_dict_time = 0
+#             insert_taxonomy_time = 0
+#             insert_sequence_uniq_info_ill_time = 0
 #             
-            while fasta.next():
-#                 wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
-#                 insert_pdr_info_time += timeit.timeit(wrapped, number=1)
-
-                wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
-                insert_taxonomy_time += timeit.timeit(wrapped, number=1)
-
-                wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-                insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+            
+#             while fasta.next():
+#                 wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
+#                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
+# 
+#                 wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
+#                 insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
 
 
-            seq_in_file = fasta.total_seq
-            logger.debug("seq_in_file = %s" % seq_in_file)
-            my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
-            total_seq += seq_in_file
+#             seq_in_file = fasta.total_seq
+#             logger.debug("seq_in_file = %s" % seq_in_file)
+#             my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
+#             total_seq += seq_in_file
 #             logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
-            logger.debug("insert_taxonomy_time.time() took %s time to finish" % insert_taxonomy_time)
-            logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
+#             logger.debug("insert_taxonomy_time.time() took %s time to finish" % insert_taxonomy_time)
+#             logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
 
-        except:                       # catch everything
-            print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
-            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
-            raise                       # re-throw caught exception   
+#         except:                       # catch everything
+#             print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
+#             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+#             raise                       # re-throw caught exception   
 #    print "total_seq = %s" % total_seq
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
@@ -630,26 +618,70 @@ def env454upload_seq(my_env454upload, filenames):
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
 
-def env454upload_pdr_info(my_env454upload, filenames):
+def env454upload_all_but_seq(my_env454upload, filenames):
+    insert_pdr_info_time = 0
+    insert_taxonomy_time = 0
+    insert_sequence_uniq_info_ill_time = 0
+    total_seq = 0
+
+    start_c = time.time()
     try:
-        start_c = time.time()
         for filename in filenames:
-            insert_pdr_info_time  = 0
+            gast_dict             = my_env454upload.get_gasta_result(os.path.basename(filename))
+            
             filename_base_no_suff = get_filename_base_no_suff(filename)
             
             run_info_ill_id       = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
             
             fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
+            seq_in_file           = fasta.total_seq
+            logger.debug("seq_in_file = %s" % seq_in_file)
+            my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
+            total_seq += seq_in_file
+            
+            
             start_fasta_next = time.time()
             while fasta.next():
+                wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
+                insert_taxonomy_time += timeit.timeit(wrapped, number=1)
+
+                wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
+                insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+
                 wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
                 insert_pdr_info_time += timeit.timeit(wrapped, number=1)
             s_elapsed = (time.time() - start_fasta_next)
             print "The start_fasta_next took %s s" % s_elapsed
 
         logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
+        logger.debug("insert_taxonomy_time.time() took %s time to finish" % insert_taxonomy_time)
+        logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
         s_elapsed = (time.time() - start_c)
         print "The start_c took %s s" % s_elapsed
+        return total_seq
+
+
+
+# def env454upload_pdr_info(my_env454upload, filenames):
+#     try:
+#         start_c = time.time()
+#         for filename in filenames:
+#             insert_pdr_info_time  = 0
+#             filename_base_no_suff = get_filename_base_no_suff(filename)
+#             
+#             run_info_ill_id       = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
+#             
+#             fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
+#             start_fasta_next = time.time()
+#             while fasta.next():
+#                 wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
+#                 insert_pdr_info_time += timeit.timeit(wrapped, number=1)
+#             s_elapsed = (time.time() - start_fasta_next)
+#             print "The start_fasta_next took %s s" % s_elapsed
+# 
+#         logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
+#         s_elapsed = (time.time() - start_c)
+#         print "The start_c took %s s" % s_elapsed
 
         
     except:                       # catch everything
