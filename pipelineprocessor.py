@@ -531,12 +531,18 @@ def wrapper(func, *args, **kwargs):
         return func(*args, **kwargs)
     return wrapped
 
+def get_filename_base_no_suff(filename):
+    filename_base_no_suff = "-".join(filename.split("/")[-1].split("-")[:-1])
+    if (filename.find(C.filtered_suffix) > 0):
+#       For v4v5 illumia
+        filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])
+    return filename_base_no_suff 
+
 def env454upload_modular(runobj):  
     """
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
-    TODO: 
-        2) Upload env454 data into raw, trim, gast etc tables from files
+    TODO?: 
     """
     
     whole_start = time.time()
@@ -558,12 +564,6 @@ def env454upload_modular(runobj):
             sequences       = my_env454upload.make_seq_upper(filename)
             if not (len(sequences)):
                 continue                    
-#             read_fasta      = fastalib.ReadFasta(filename)
-#             sequences       = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
-# 
-#             if not (len(sequences)):
-#                 continue            
-#             read_fasta.close()
             fasta           = fastalib.SequenceSource(filename, lazy_init = False) 
 
             insert_seq_time      = 0   
@@ -609,14 +609,6 @@ def env454upload_modular(runobj):
     whole_elapsed = (time.time() - whole_start)
     print "The whole_upload took %s s" % whole_elapsed
     
-def get_filename_base_no_suff(filename):
-    filename_base_no_suff = "-".join(filename.split("/")[-1].split("-")[:-1])
-    if (filename.find(C.filtered_suffix) > 0):
-#       For v4v5 illumia
-        filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])
-    return filename_base_no_suff 
-          
-
 def env454upload_seq(runobj):
     pass
 
@@ -624,6 +616,9 @@ def env454upload_pdr_info(runobj):
     pass
 
 def env454upload_gast(runobj):
+    pass
+
+def env454upload_taxonomy(runobj):
     pass
 
 def env454upload_sequence_uniq_info_ill(runobj):
