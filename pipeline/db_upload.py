@@ -259,7 +259,7 @@ class dbUpload:
         gast_file_name = os.path.join(self.gast_dir, filename + '.gast')
         return  gast_file_name
     
-    def get_gasta_result(self, filename):
+    def get_gast_result(self, filename):
         gast_file_name = self.gast_filename(filename)
         self.utils.print_both("current gast_file_name = %s." % gast_file_name)
         
@@ -299,9 +299,7 @@ class dbUpload:
                 return tax_id
         else:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed.")
-#             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")
-
-            
+#             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
             
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         if gast_dict:
@@ -572,7 +570,9 @@ class dbUpload:
             if (file_seq_orig_count == file_seq_db_count):
                 self.utils.print_both("All sequences from files made it to the db for %s: %s == %s\n" % (pr_suite, file_seq_orig_count, file_seq_db_count))
             else:
-                self.utils.print_both("Oops, amount of sequences from files not equal to the one in the db for %.\nIn file: %s != in db: %s\n==============" % (pr_suite, file_seq_orig_count, file_seq_db_count))
+                self.utils.print_both("Warning: Amount of sequences from files not equal to the one in the db for %s: %s != %s\n" % (pr_suite, file_seq_orig_count, file_seq_db_count))
+#                 
+#                 ("Oops, amount of sequences from files not equal to the one in the db for %.\nIn file: %s != in db: %s\n==============" % (pr_suite, file_seq_orig_count, file_seq_db_count))
             
     def put_seq_statistics_in_file(self, filename, seq_in_file):
 #        if os.path.exists(file_full):
