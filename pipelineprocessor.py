@@ -432,6 +432,7 @@ def env454upload(runobj):
      
     """
     
+    full_upload = True
     whole_start     = time.time()
 
     my_env454upload = dbUpload(runobj)
@@ -445,7 +446,7 @@ def env454upload(runobj):
     get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
     logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
        
-    total_seq = env454upload_all_but_seq(my_env454upload, filenames)
+    total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
@@ -470,6 +471,8 @@ def env454upload_no_seq(runobj):
     TODO: It's a dupliacate of env454upload! Needed refactoring.
     """
     
+    full_upload = False
+    
     whole_start     = time.time()
 
     my_env454upload = dbUpload(runobj)
@@ -483,7 +486,7 @@ def env454upload_no_seq(runobj):
     get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
     logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
        
-    total_seq = env454upload_all_but_seq(my_env454upload, filenames)
+    total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
@@ -505,7 +508,7 @@ def env454upload_seq(my_env454upload, filenames, sequences):
             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
 
-def env454upload_all_but_seq(my_env454upload, filenames):
+def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
     insert_pdr_info_time = 0
     insert_taxonomy_time = 0
     insert_sequence_uniq_info_ill_time = 0
@@ -514,7 +517,7 @@ def env454upload_all_but_seq(my_env454upload, filenames):
     start_c = time.time()
     try:
         for filename in filenames:
-            gast_dict             = my_env454upload.get_gasta_result(os.path.basename(filename))
+            gast_dict             = my_env454upload.get_gast_result(os.path.basename(filename))
             
             filename_base_no_suff = get_filename_base_no_suff(filename)
             
@@ -523,14 +526,15 @@ def env454upload_all_but_seq(my_env454upload, filenames):
             fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
             seq_in_file           = fasta.total_seq
             logger.debug("seq_in_file = %s" % seq_in_file)
-            my_env454upload.put_seq_statistics_in_file(filename, fasta.total_seq)
+            my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
             total_seq += seq_in_file
             
             
             start_fasta_next = time.time()
             while fasta.next():
-                wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
-                insert_pdr_info_time += timeit.timeit(wrapped, number=1)
+                if (full_upload):
+                    wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
+                    insert_pdr_info_time += timeit.timeit(wrapped, number=1)
 
                 wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
