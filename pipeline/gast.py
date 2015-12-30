@@ -117,9 +117,15 @@ class Gast:
         if self.utils.is_local():
             calcnodes = C.calcnodes_cmd_local
             clusterize = C.clusterize_cmd
-        elif self.utils.is_vamps():
+        elif self.utils.is_vamps():   # new vamps
             calcnodes = C.calcnodes_cmd_vamps
             clusterize = C.clusterize_cmd_vamps
+        elif self.runobj.site == 'vamps' or self.runobj.site == 'vampsdev' or self.runobj.site == 'new_vamps':
+            calcnodes = C.calcnodes_cmd_vamps
+            clusterize = C.clusterize_cmd_vamps
+        else:
+            calcnodes = C.calcnodes_cmd 
+            clusterize = C.clusterize_cmd
 #        sqlImportCommand = C.mysqlimport_cmd
 #        if self.utils.is_local():
 #            sqlImportCommand = C.mysqlimport_cmd_local
@@ -303,7 +309,7 @@ class Gast:
                             #qsub_cmd = clusterize + " " + script_filename
                             opts = " -n 8 "
                             #qsub_cmd = clusterize + " -log " + log_file + " -n 8 " + script_filename
-                            qsub_cmd =clusterize + ' -log ' + log_file + ' '+  script_filename
+                            qsub_cmd = clusterize + ' -log ' + log_file + ' '+  script_filename
                             # on vamps and vampsdev qsub cannot be run - unless you call it from the
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
                             #qsub_cmd = C.qsub_cmd + " " + script_filename
@@ -692,6 +698,9 @@ class Gast:
                 #fh.write("export PYTHONPATH=/groups/vampsweb//:$PYTHONPATH\n\n")
                 if self.utils.is_vamps():
                     pipeline_base = C.py_pipeline_base_vamps
+                    clusterize = C.clusterize_cmd_vamps
+                elif self.runobj.site == 'vamps' or self.runobj.site == 'vampsdev' or self.runobj.site == 'new_vamps':
+                    calcnodes = C.calcnodes_cmd_vamps
                     clusterize = C.clusterize_cmd_vamps
                 else:
                     pipeline_base = C.py_pipeline_base
