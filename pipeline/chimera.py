@@ -706,6 +706,8 @@ class Chimera:
                 logger.debug("uchime_ref_cmd = %s" % (uchime_cmd))  
                               
                 try:
+
+                    logger.info("vsearch version: " % (self.utils.get_vsearch_version))
                     logger.info("chimera reference command: " + str(uchime_cmd))
                     output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
                     #print 'outsplit',output[idx_key].split()[2]
