@@ -314,6 +314,11 @@ class PipelneUtils:
     def __init__(self):
         pass
 
+    def get_vsearch_version(self):
+        import commands
+        return commands.getstatusoutput('vsearch --help | head -1')
+
+
     def write_seq_frequencies_in_file(self, out_file, fa_file_name, seq_in_file):
         try: 
             with open(out_file, "a") as myfile:

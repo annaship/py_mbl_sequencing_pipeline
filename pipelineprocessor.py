@@ -539,8 +539,13 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                 wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
 
-                wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-                insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+                if (full_upload):
+                    wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
+                    insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+                else:
+                    wrapped = wrapper(my_env454upload.update_sequence_uniq_info_ill, fasta, gast_dict)
+                    insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+                    
 
             logger.debug("start_fasta_loop took %s time to finish" % (time.time() - start_fasta_next))
 
@@ -555,19 +560,10 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception             
       
-def env454upload_gast(runobj):
-    pass
-
-def env454upload_taxonomy(runobj):
-    pass
-
-def env454upload_sequence_uniq_info_ill(runobj):
-    pass
-
-
 def gast(runobj):  
     
     logger.info("STARTING GAST()")
+#     logger.info("vsearch version: " % utils.get_vsearch_version)
     # for vamps 'new_lane_keys' will be prefix 
     # of the uniques and names file
     # that was just created in vamps_gast.py
