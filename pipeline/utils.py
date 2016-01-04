@@ -318,7 +318,10 @@ class PipelneUtils:
         import commands
         return commands.getstatusoutput('vsearch --help | head -1')
 
+    def flatten_list_of_lists(self, mylist):
+        return [item for sublist in mylist for item in sublist]
 
+    
     def write_seq_frequencies_in_file(self, out_file, fa_file_name, seq_in_file):
         try: 
             with open(out_file, "a") as myfile:

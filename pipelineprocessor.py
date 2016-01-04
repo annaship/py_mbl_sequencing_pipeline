@@ -431,7 +431,8 @@ def env454upload(runobj):
     sequence_uniq_info_ill
      
     """
-    
+    utils = PipelneUtils()
+
     full_upload = True
     whole_start     = time.time()
 
@@ -441,8 +442,10 @@ def env454upload(runobj):
         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
   
     sequences = [my_env454upload.make_seq_upper(filename) for filename in filenames]
-    env454upload_seq(my_env454upload, filenames, sequences[0])
-    wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences[0])
+    sequences = utils.flatten_list_of_lists(sequences)
+
+    env454upload_seq(my_env454upload, filenames, sequences)
+    wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
     get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
     logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
        
