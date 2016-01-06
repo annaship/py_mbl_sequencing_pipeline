@@ -329,16 +329,6 @@ class PipelneUtils:
         except Exception:
             print Exception            
     
-    def get_all_files(self, out_file_path):
-        files = {}
-        for dirname, dirnames, filenames in os.walk(out_file_path):
-            for file_name in filenames:
-                full_name = os.path.join(dirname, file_name)
-                (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
-                files[full_name] = (file_base, file_extension)
-#        print "len(files) = %s" % len(files)
-        return files    
-
     def is_local(self):
         print os.uname()[1]
         dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local", "Annas-MacBook.local"]

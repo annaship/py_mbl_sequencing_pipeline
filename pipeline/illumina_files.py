@@ -88,17 +88,7 @@ class IlluminaFiles:
     def close_dataset_files(self):
         [o_file[1].close() for o_file in self.out_files.iteritems()] 
         return
-   
-    def get_all_files(self):
-        files = {}
-        for dirname, dirnames, filenames in os.walk(self.out_file_path):
-            for file_name in filenames:
-                full_name = os.path.join(dirname, file_name)
-                (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
-                files[full_name] = (file_base, file_extension)
-#        print "len(files) = %s" % len(files)
-        return files
-    
+      
     def perfect_reads(self):
         self.utils.print_both("Extract perfect V6 reads:")
         for idx_key in self.runobj.samples.keys():
@@ -265,7 +255,7 @@ class IlluminaFiles:
     def filter_mismatches(self, max_mismatch = 3):
         self.utils.print_both("Filter mismatches if more then %s" % (max_mismatch))
         n = 0        
-        files = self.get_all_files()
+        files = self.dirs.get_all_files()
         for full_name in files.keys():    
             if files[full_name][0].endswith('_MERGED'):
                 n +=1   
@@ -303,7 +293,7 @@ class IlluminaFiles:
     def uniq_fa(self):
         n = 0        
         self.utils.print_both("Uniqueing fasta files")
-        files = self.get_all_files()
+        files = self.dirs.get_all_files()
         for full_name in files.keys():    
 #             if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED_FILTERED'):
             if files[full_name][1] == ".fa" or files[full_name][0].endswith(C.filtered_suffix):

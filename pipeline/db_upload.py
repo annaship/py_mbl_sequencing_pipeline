@@ -135,12 +135,12 @@ class dbUpload:
         else:
             lane_name = ''
         
-        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
+        self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
  
         
-        self.analysis_dir = dirs.check_dir(dirs.analysis_dir)
-        self.fasta_dir    = dirs.check_dir(dirs.reads_overlap_dir)
-        self.gast_dir     = dirs.check_dir(dirs.gast_dir)
+        self.analysis_dir = self.dirs.check_dir(self.dirs.analysis_dir)
+        self.fasta_dir    = self.dirs.check_dir(self.dirs.reads_overlap_dir)
+        self.gast_dir     = self.dirs.check_dir(self.dirs.gast_dir)
 
         host_name     = runobj.database_host
         database_name = runobj.database_name
@@ -152,8 +152,8 @@ class dbUpload:
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
 
-        self.unique_file_counts = dirs.unique_file_counts
-        dirs.delete_file(self.unique_file_counts)
+        self.unique_file_counts = self.dirs.unique_file_counts
+        self.dirs.delete_file(self.unique_file_counts)
         self.seq_id_dict = {}
         self.tax_id_dict = {}
         self.run_id      = None
@@ -167,7 +167,7 @@ class dbUpload:
    
     def get_fasta_file_names(self):
         fa_files = []
-        files = self.utils.get_all_files(self.fasta_dir)
+        files = self.dirs.get_all_files(self.fasta_dir)
 
         for full_name in files.keys():
                 
@@ -251,16 +251,23 @@ class dbUpload:
             self.utils.print_both("Offensive query: %s" % my_sql)
             raise
         
+    def make_gast_files_dict(self):
+        self.dirs.get_all_files(self.gast_dir, "gast")
+        
+        
     def gast_filename(self, filename):
+#         todo: if filename in make_gast_files_dict, use it full path
         gast_file_name = ""
 #         if (filename.find(self.nonchimeric_suffix) > 0):
 # #          TCTCGT_NNNNCGCAG_3_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa    
 #             filename = filename.replace(self.nonchimeric_suffix, "")
         gast_file_name = os.path.join(self.gast_dir, filename + '.gast')
+#         str: /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/illumina/20151109/lane_1_B/analysis/gast/TTAGGC_NNNNGCTAC_1-PERFECT_reads.fa.unique.gast
         return  gast_file_name
     
     def get_gast_result(self, filename):
         gast_file_name = self.gast_filename(filename)
+#         gast_file_name    str: /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/illumina/20151109/lane_1_B/analysis/gast/TTAGGC_NNNNGCTAC_1-PERFECT_reads.fa.unique.gast    
         self.utils.print_both("current gast_file_name = %s." % gast_file_name)
         
         try:
