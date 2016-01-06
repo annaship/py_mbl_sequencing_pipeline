@@ -265,12 +265,7 @@ class dbUpload:
     
     def get_gast_result(self, filename):
         gast_file_name = self.gast_filename(filename)
-#         gast_file_name    str: /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/illumina/20151109/lane_1_B/analysis/gast/TTAGGC_NNNNGCTAC_1-PERFECT_reads.fa.unique.gast    
-        try:
-            self.utils.print_both("current gast_file_name = %s." % gast_file_name)
-        except:
-            self.utils.print_both("There is no gast files under %s for %s." % (self.gast_dir, filename))
-            raise
+        self.utils.print_both("current gast_file_name = %s." % gast_file_name)
         
         try:
             with open(gast_file_name) as fd:
@@ -284,13 +279,14 @@ class dbUpload:
             if e.errno == 2:
                 # suppress "No such file or directory" error
                 pass            
-        except OSError, e:
-                # reraise the exception, as it's an unexpected error
-                raise
-        
-    """TODO: why run_info_ill
-    1    1529    2164    8    6951    2411    83            19    JV    JV    GCCTAA    0    230    6_FP1BermC_6_14_10_CGCTC    101    23
-    """
+#         except OSError, e:
+        except TypeError, e:
+            self.utils.print_both("Check if there is a gast file under %s for %s." % (self.gast_dir, filename))
+            pass            
+        except:
+            # reraise the exception, as it's an unexpected error
+            raise
+
     def insert_taxonomy(self, fasta, gast_dict):
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
