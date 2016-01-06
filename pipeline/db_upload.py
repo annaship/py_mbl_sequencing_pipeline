@@ -252,23 +252,25 @@ class dbUpload:
             raise
         
     def make_gast_files_dict(self):
-        self.dirs.get_all_files(self.gast_dir, "gast")
+        return self.dirs.get_all_files(self.gast_dir, "gast")
         
         
     def gast_filename(self, filename):
 #         todo: if filename in make_gast_files_dict, use it full path
-        gast_file_name = ""
-#         if (filename.find(self.nonchimeric_suffix) > 0):
-# #          TCTCGT_NNNNCGCAG_3_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa    
-#             filename = filename.replace(self.nonchimeric_suffix, "")
-        gast_file_name = os.path.join(self.gast_dir, filename + '.gast')
-#         str: /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/illumina/20151109/lane_1_B/analysis/gast/TTAGGC_NNNNGCTAC_1-PERFECT_reads.fa.unique.gast
-        return  gast_file_name
+        gast_file_names = self.make_gast_files_dict()
+        gast_file_name_path = ""
+        for gast_file_name_path, tpls in gast_file_names.iteritems():
+            if any(t.endswith(filename) for t in tpls):
+                return gast_file_name_path 
     
     def get_gast_result(self, filename):
         gast_file_name = self.gast_filename(filename)
 #         gast_file_name    str: /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/illumina/20151109/lane_1_B/analysis/gast/TTAGGC_NNNNGCTAC_1-PERFECT_reads.fa.unique.gast    
-        self.utils.print_both("current gast_file_name = %s." % gast_file_name)
+        try:
+            self.utils.print_both("current gast_file_name = %s." % gast_file_name)
+        except:
+            self.utils.print_both("There is no gast files under %s for %s." % (self.gast_dir, filename))
+            raise
         
         try:
             with open(gast_file_name) as fd:
