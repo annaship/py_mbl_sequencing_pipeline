@@ -147,7 +147,7 @@ class dbUpload:
         
         self.filenames   = []
         self.my_conn     = MyConnection(host = 'newbpcdb2', db="env454")
-#         self.my_conn     = MyConnection()    
+#         self.my_conn     = MyConnection()
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -213,9 +213,15 @@ class dbUpload:
         id_name    = self.sequence_table_name + "_id" 
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
-        res        = self.my_conn.execute_fetch_select(my_sql)
-        self.seq_id_dict = dict((y, int(x)) for x, y in res)
+        try:
+            my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
+            res        = self.my_conn.execute_fetch_select(my_sql)
+            self.seq_id_dict = dict((y, int(x)) for x, y in res)
+        except:
+            if len(sequences) == 0:
+                self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
+            raise
+
 
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
