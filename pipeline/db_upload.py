@@ -77,9 +77,13 @@ class MyConnection:
 
     def execute_fetch_select(self, sql):
         if self.cursor:
+          try:
             self.cursor.execute(sql)
             res = self.cursor.fetchall ()
-            return res
+          except:
+            self.utils.print_both(("ERROR: query = %s") % sql)
+            raise
+          return res
 
     def execute_no_fetch(self, sql):
         if self.cursor:
