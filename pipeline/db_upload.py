@@ -64,7 +64,7 @@ class MyConnection:
             else:
               self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf"))
             self.cursor = self.conn.cursor()
-            self.escape = self.conn.escape(sql = "")
+            # self.escape = self.conn.escape()
                    
         except MySQLdb.Error, e:
             self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
@@ -79,7 +79,7 @@ class MyConnection:
     def execute_fetch_select(self, sql):
         if self.cursor:
           try:
-            sql = self.escape(sql)
+            sql = self.conn.escape(sql)
             self.cursor.execute(sql)
             res = self.cursor.fetchall ()
           except:
