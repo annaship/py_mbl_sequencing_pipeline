@@ -78,6 +78,7 @@ class MyConnection:
     def execute_fetch_select(self, sql):
         if self.cursor:
           try:
+            sql = conn.escape(sql)
             self.cursor.execute(sql)
             res = self.cursor.fetchall ()
           except:
