@@ -398,8 +398,7 @@ class dbUpload:
                        refssu_count = '%s',
                        rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
                        refhvr_ids = '%s'
-                       WHERE sequence_ill_id = %s
-                   """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), sequence_ill_id)
+                   """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
                     
             # my_sql = """UPDATE IGNORE sequence_uniq_info_ill
             #             SET updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
