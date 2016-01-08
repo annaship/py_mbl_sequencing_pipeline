@@ -318,6 +318,7 @@ class dbUpload:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
             
+# todo: combine insert and update DRY
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
@@ -347,6 +348,9 @@ class dbUpload:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
             sequence_ill_id = self.seq_id_dict[seq_upper]
+            
+            print sequence_ill_id
+            
             if taxonomy in self.tax_id_dict:
                 try:
                     taxonomy_id = self.tax_id_dict[taxonomy] 
@@ -362,6 +366,7 @@ class dbUpload:
                             refhvr_ids = '%s'
                         WHERE sequence_ill_id = %s
                      """ % (taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), sequence_ill_id)
+            print my_sql
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
     
