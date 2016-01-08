@@ -353,28 +353,15 @@ class dbUpload:
                 except Exception, e:
                     logger.debug("Error = %s" % e)
                     raise
-                    
-            if sequence_ill_id:
-              my_sql = """UPDATE IGNORE sequence_uniq_info_ill                        
-                          SET updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-                              taxonomy_id = %s,
-                              gast_distance = '%s',
-                              refssu_count = '%s',
-                              rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
-                              refhvr_ids = '%s'
-                          WHERE sequence_ill_id = %s
-                       """ % (taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), sequence_ill_id)
-            else: 
-              my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
-                     (
-                      %s,
-                      %s,
-                      '%s',
-                      '%s',
-                      (SELECT rank_id FROM rank WHERE rank = '%s'),
-                      '%s'                
-                     )
-                     """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+            my_sql = """UPDATE IGNORE sequence_uniq_info_ill                        
+                        SET updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+                            taxonomy_id = %s,
+                            gast_distance = '%s',
+                            refssu_count = '%s',
+                            rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
+                            refhvr_ids = '%s'
+                        WHERE sequence_ill_id = %s
+                     """ % (taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), sequence_ill_id)
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
     
