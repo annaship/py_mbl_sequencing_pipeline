@@ -379,8 +379,6 @@ class dbUpload:
                 except Exception, e:
                     logger.debug("Error = %s" % e)
                     raise
-                    INSERT INTO table (a,b,c) VALUES (1,2,3)
-                      ON DUPLICATE KEY UPDATE c=c+1;
                       
             my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
