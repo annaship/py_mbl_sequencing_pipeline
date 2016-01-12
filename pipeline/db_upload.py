@@ -3,6 +3,7 @@ import os
 import constants as C
 from subprocess import Popen, PIPE
 from shlex import split
+import cPickle as pickle
 
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
@@ -215,14 +216,48 @@ class dbUpload:
         self.utils.print_both("sequences in file: %s" % (len(sequences)))
         return seq_id
         
+    def chop_seq_list(self, sequences):
+        new_list = []
+        all_seq  = []
+        current_size = int(0)
+        kilobyte  = 1024
+        megabyte  = kilobyte * 1024
+        gygabyte  = megabyte * 1024
+        chunksize = int(0.8 * gygabyte)
+
+#         chunksize = int(kilobyte)
+        
+        for s in sequences:
+            new_list.append(s)
+            current_size = int(sys.getsizeof(pickle.dumps(new_list)))
+            if current_size >= chunksize:
+                all_seq.append(new_list)
+                new_list = []
+                current_size = 0
+        all_seq.append(new_list)
+        return all_seq
+
+
+        
     def get_seq_id_dict(self, sequences):
         id_name    = self.sequence_table_name + "_id" 
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
+        
+#         make_compress_seq_part(self):
+        chopped_seq_list = self.chop_seq_list(sequences)
+
+                
+        
+#         '), COMPRESS('.join([val_tmpl % key for key in sequences])
         try:
-            my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
-            res        = self.my_conn.execute_fetch_select(my_sql)
-            self.seq_id_dict = dict((y, int(x)) for x, y in res)
+            for short_seq_arr in chopped_seq_list:
+                my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in short_seq_arr]))
+                """TODO:
+                take no more then 1000? seq  
+                """
+                res        = self.my_conn.execute_fetch_select(my_sql)
+                self.seq_id_dict.update(dict((y, int(x)) for x, y in res))
         except:
             if len(sequences) == 0:
                 self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
