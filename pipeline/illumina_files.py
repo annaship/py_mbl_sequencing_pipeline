@@ -434,7 +434,7 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 
 #                 start = time.time()  
 #                 time_before = self.utils.get_time_now()
-                e.sequence = self.remove_end_ns_strip(e.sequence)
+#                 e.sequence = self.remove_end_ns_strip(e.sequence)
 #                 elapsed = (time.time() - start)
 #                 print "remove_end_ns_strip with strip is done in: %s" % (elapsed)      
                 
