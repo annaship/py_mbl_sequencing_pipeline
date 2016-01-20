@@ -427,39 +427,40 @@ def get_sequences(my_env454upload, filenames):
     return utils.flatten_list_of_lists(sequences)
 
   
-    
-def env454upload(runobj):  
-    """
-    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
-    For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables)
-    Tables:
-    sequence_ill
-    sequence_pdr_info_ill
-    taxonomy
-    sequence_uniq_info_ill
-     
-    """
-
-    full_upload = True
-    whole_start     = time.time()
-
-    my_env454upload = dbUpload(runobj)
-    filenames       = my_env454upload.get_fasta_file_names()
-    if not filenames:
-        logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
-  
-    sequences = get_sequences(my_env454upload, filenames)
-
-    env454upload_seq(my_env454upload, filenames, sequences)
-    wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
-    get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
-    logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
-       
-    total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
-    my_env454upload.check_seq_upload()
-    logger.debug("total_seq = %s" % total_seq)
-    whole_elapsed = (time.time() - whole_start)
-    print "The whole upload took %s s" % whole_elapsed
+#     
+# def env454upload(runobj):  
+#     """
+#     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
+#     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables)
+#     Tables:
+#     sequence_ill
+#     sequence_pdr_info_ill
+#     taxonomy
+#     sequence_uniq_info_ill
+#      
+#     """
+# 
+#     full_upload = True
+#     whole_start     = time.time()
+# 
+#     my_env454upload = dbUpload(runobj)
+#     filenames       = my_env454upload.get_fasta_file_names()
+#     if not filenames:
+#         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
+#   
+# #     sequences = get_sequences(my_env454upload, filenames)
+#     for filename in filenames:
+#         sequences = my_env454upload.make_seq_upper(filename)
+#         env454upload_seq(my_env454upload, filename, sequences)
+#         wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
+#         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
+#         logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
+#        
+#     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
+#     my_env454upload.check_seq_upload()
+#     logger.debug("total_seq = %s" % total_seq)
+#     whole_elapsed = (time.time() - whole_start)
+#     print "The whole upload took %s s" % whole_elapsed
 
 def wrapper(func, *args, **kwargs):
     def wrapped():
@@ -472,50 +473,93 @@ def get_filename_base_no_suff(filename):
 #       For v4v5 illumia
         filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])
     return filename_base_no_suff 
+# 
+# def env454upload_no_seq(runobj):  
+#     """
+#     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
+#     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
+#     TODO: It's a dupliacate of env454upload! Needed refactoring.
+#     """
+#     
+#     full_upload = False
+#     
+#     whole_start     = time.time()
+# 
+#     my_env454upload = dbUpload(runobj)
+#     filenames       = my_env454upload.get_fasta_file_names()
+#     if not filenames:
+#         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
+#   
+#     for filename in filenames:
+#         sequences = my_env454upload.make_seq_upper(filename)
+#         wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
+#         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
+#         logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
+#         
+#     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
+#     my_env454upload.check_seq_upload()
+#     logger.debug("total_seq = %s" % total_seq)
+#     whole_elapsed = (time.time() - whole_start)
+#     print "The whole_upload took %s s" % whole_elapsed
+
+def env454upload(runobj):  
+    full_upload = True
+    env454upload_main(runobj, full_upload)
 
 def env454upload_no_seq(runobj):  
+    full_upload = False
+    env454upload_main(runobj, full_upload)
+
+def env454upload_main(runobj, full_upload):
     """
     Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
-    For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables) 
-    TODO: It's a dupliacate of env454upload! Needed refactoring.
+    For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables)
+    Tables:
+    sequence_ill
+    sequence_pdr_info_ill
+    taxonomy
+    sequence_uniq_info_ill
+
     """
-    
-    full_upload = False
-    
+
     whole_start     = time.time()
 
     my_env454upload = dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
     if not filenames:
         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
-  
+
+#     sequences = get_sequences(my_env454upload, filenames)
     for filename in filenames:
         sequences = my_env454upload.make_seq_upper(filename)
+        if full_upload:
+            env454upload_seq(my_env454upload, filename, sequences)
         wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
         logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
-        
+
     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
-    print "The whole_upload took %s s" % whole_elapsed
+    print "The whole upload took %s s" % whole_elapsed
+  
     
-def env454upload_seq(my_env454upload, filenames, sequences):
-    for filename in filenames:
-        try:
-            logger.debug("\n----------------\nfilename = %s" % filename)
+def env454upload_seq(my_env454upload, filename, sequences):
+#     for filename in filenames:
+    try:
+        logger.debug("\n----------------\nfilename = %s" % filename)
 #             sequences = my_env454upload.make_seq_upper(filename)
-            if not (len(sequences)):
-                logger.debug("There is 0 sequences in filename = %s" % filename)
-                continue           
-            wrapped = wrapper(my_env454upload.insert_seq, sequences)
-            insert_seq_time = timeit.timeit(wrapped, number=1)
-            logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
-        except:                       # catch everything
-            print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
-            print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
-            raise                       # re-throw caught exception   
+        if not (len(sequences)):
+            logger.debug("There is 0 sequences in filename = %s" % filename)
+#             continue           
+        wrapped = wrapper(my_env454upload.insert_seq, sequences)
+        insert_seq_time = timeit.timeit(wrapped, number=1)
+        logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
+    except:                       # catch everything
+        print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
+        print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+        raise                       # re-throw caught exception   
 
 def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
     insert_pdr_info_time = 0

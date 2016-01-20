@@ -212,7 +212,7 @@ class dbUpload:
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
         seq_id     = self.my_conn.execute_no_fetch(my_sql)
 #         print "sequences in file: %s" % (len(sequences))
-        self.utils.print_both("sequences in file: %s" % (len(sequences)))
+        self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
         return seq_id
         
     def get_seq_id_dict(self, sequences):
