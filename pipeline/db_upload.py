@@ -152,8 +152,8 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        self.my_conn     = MyConnection(host = 'newbpcdb2.mbl.edu', db="env454")
-#         self.my_conn     = MyConnection()
+#         self.my_conn     = MyConnection(host = 'newbpcdb2.mbl.edu', db="env454")
+        self.my_conn     = MyConnection()
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -204,7 +204,7 @@ class dbUpload:
         read_fasta = fastalib.ReadFasta(filename)
         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
         read_fasta.close()
-        return sequences
+        return sequences 
         
     def insert_seq(self, sequences):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
@@ -222,7 +222,8 @@ class dbUpload:
         try:
             my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
             res        = self.my_conn.execute_fetch_select(my_sql)
-            self.seq_id_dict = dict((y, int(x)) for x, y in res)
+            one_seq_id_dict = dict((y, int(x)) for x, y in res)
+            self.seq_id_dict.update(one_seq_id_dict)
         except:
             if len(sequences) == 0:
                 self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)

@@ -489,11 +489,12 @@ def env454upload_no_seq(runobj):
     if not filenames:
         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
   
-    sequences = get_sequences(my_env454upload, filenames)
-    wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
-    get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
-    logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
-       
+    for filename in filenames:
+        sequences = my_env454upload.make_seq_upper(filename)
+        wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
+        get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
+        logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
+        
     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
     my_env454upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
