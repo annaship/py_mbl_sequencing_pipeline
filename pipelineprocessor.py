@@ -454,7 +454,7 @@ def get_sequences(my_env454upload, filenames):
 #         env454upload_seq(my_env454upload, filename, sequences)
 #         wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
 #         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
-#         logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
+#         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 #        
 #     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
 #     my_env454upload.check_seq_upload()
@@ -494,7 +494,7 @@ def get_filename_base_no_suff(filename):
 #         sequences = my_env454upload.make_seq_upper(filename)
 #         wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
 #         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
-#         logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
+#         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 #         
 #     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
 #     my_env454upload.check_seq_upload()
@@ -536,7 +536,7 @@ def env454upload_main(runobj, full_upload):
             env454upload_seq(my_env454upload, filename, sequences)
         wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
-        logger.debug("get_seq_id_dict() took %s time to finish" % get_seq_id_dict_time)
+        logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 
     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
     my_env454upload.check_seq_upload()
@@ -555,7 +555,7 @@ def env454upload_seq(my_env454upload, filename, sequences):
 #             continue           
         wrapped = wrapper(my_env454upload.insert_seq, sequences)
         insert_seq_time = timeit.timeit(wrapped, number=1)
-        logger.debug("insert_seq() took %s time to finish" % insert_seq_time)
+        logger.debug("insert_seq() took %s sec to finish" % insert_seq_time)
     except:                       # catch everything
         print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
@@ -600,12 +600,12 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                     insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
                     
 
-            logger.debug("start_fasta_loop took %s time to finish" % (time.time() - start_fasta_next))
+            logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
 
-        logger.debug("insert_pdr_info() took %s time to finish" % insert_pdr_info_time)
-        logger.debug("insert_taxonomy_time.time() took %s time to finish" % insert_taxonomy_time)
-        logger.debug("insert_sequence_uniq_info_ill() took %s time to finish" % insert_sequence_uniq_info_ill_time)
-        logger.debug("env454upload_all_but_seq() took %s time to finish" % (time.time() - start_c))
+        logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
+        logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
+        logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
+        logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
         return total_seq
         
     except:                       # catch everything
