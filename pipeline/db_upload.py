@@ -153,7 +153,6 @@ class dbUpload:
         
         self.filenames   = []
         self.my_conn     = MyConnection(host = 'newbpcdb2.mbl.edu', db="env454")
-#         self.my_conn     = MyConnection()
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -215,7 +214,6 @@ class dbUpload:
     #         print "sequences in file: %s" % (len(sequences))
             self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
             return seq_id
-        except mysql_exceptions.OperationalError as err:
             if err.errno == 1582:
                 self.utils.print_both(("ERROR: _mysql_exceptions.OperationalError: (1582, \"Incorrect parameter count in the call to native function 'COMPRESS'\"), there is an empty fasta in %s") % self.fasta_dir)
             else:
