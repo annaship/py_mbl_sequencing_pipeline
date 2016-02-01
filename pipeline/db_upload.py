@@ -153,6 +153,7 @@ class dbUpload:
         
         self.filenames   = []
         self.my_conn     = MyConnection(host = 'newbpcdb2.mbl.edu', db="env454")
+        # self.my_conn     = MyConnection()
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -206,22 +207,29 @@ class dbUpload:
         return sequences 
         
     def insert_seq(self, sequences):
-        try:
-            query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
-            val_tmpl   = "'%s'"
-            my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
-            seq_id     = self.my_conn.execute_no_fetch(my_sql)
-    #         print "sequences in file: %s" % (len(sequences))
-            self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
-            return seq_id
-            if err.errno == 1582:
-                self.utils.print_both(("ERROR: _mysql_exceptions.OperationalError: (1582, \"Incorrect parameter count in the call to native function 'COMPRESS'\"), there is an empty fasta in %s") % self.fasta_dir)
-            else:
-                raise
-        except:
-            if len(sequences) == 0:
-                self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
-            raise
+      query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
+      val_tmpl   = "'%s'"
+      my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+      seq_id     = self.my_conn.execute_no_fetch(my_sql)
+      self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+      return seq_id
+    #     try:
+    #         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
+    #         val_tmpl   = "'%s'"
+    #         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+    #         seq_id     = self.my_conn.execute_no_fetch(my_sql)
+    # #         print "sequences in file: %s" % (len(sequences))
+    #         self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+    #         return seq_id
+    #     except self.my_conn.conn.cursor._mysql_exceptions.Error as err:
+    #         if err.errno == 1582:
+    #             self.utils.print_both(("ERROR: _mysql_exceptions.OperationalError: (1582, \"Incorrect parameter count in the call to native function 'COMPRESS'\"), there is an empty fasta in %s") % self.fasta_dir)
+    #         else:
+    #             raise
+    #     except:
+    #         if len(sequences) == 0:
+    #             self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
+    #         raise
         
     def get_seq_id_dict(self, sequences):
         id_name    = self.sequence_table_name + "_id" 
