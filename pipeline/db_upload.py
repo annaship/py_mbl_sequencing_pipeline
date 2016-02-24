@@ -152,7 +152,7 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        self.my_conn     = MyConnection(host = 'newbpcdb2.mbl.edu', db="env454")
+        self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
         # self.my_conn     = MyConnection()
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
