@@ -551,7 +551,7 @@ def env454upload_seq(my_env454upload, filename, sequences):
         logger.debug("\n----------------\nfilename = %s" % filename)
 #             sequences = my_env454upload.make_seq_upper(filename)
         if not (len(sequences)):
-            logger.debug("There is 0 sequences in filename = %s" % filename)
+            logger.debug("There are 0 sequences in filename = %s" % filename)
 #             continue           
         wrapped = wrapper(my_env454upload.insert_seq, sequences)
         insert_seq_time = timeit.timeit(wrapped, number=1)
