@@ -344,6 +344,7 @@ class PipelneUtils:
             return True
         else:
             return False
+            
     def check_if_array_job_is_done(self, job_name):
         cluster_done = False
         check_qstat_cmd_line = "qstat -r | grep %s | wc -l" % job_name
