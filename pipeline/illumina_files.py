@@ -141,9 +141,11 @@ class IlluminaFiles:
 #         for idx_key in self.runobj.samples.keys():
 #             ("_").join(idx_key.split('_')[0:-1]) + "_MERGED"
 # TODO: get the run_keys "projects names from "create_ini
-        merged_file_names = [idx_key.split('_')[0] + "_" + idx_key.split('_')[1] + "_MERGED" for idx_key in self.runobj.samples.keys()]
+        merged_file_names = self.dirs.get_all_files_by_ext(self.dirs.reads_overlap_dir, "_MERGED")
+ 
+#         [idx_key.split('_')[0] + "_" + idx_key.split('_')[1] + "_MERGED" for idx_key in self.runobj.samples.keys()]
         program_name = C.trim_primers_cmd    
-        script_file_name      = self.create_job_array_script(program_name, self.dirs.analysis_dir, merged_file_names)
+        script_file_name      = self.create_job_array_script(program_name, self.dirs.reads_overlap_dir, merged_file_names)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
         return script_file_name    
@@ -161,22 +163,7 @@ class IlluminaFiles:
         self.utils.print_both("Extract perfect V6 reads:")
         script_file_name = self.merge_perfect()
         trim_script_file_name = self.trim_primers_perfect()
-# #         self.trim()
-#         program_name = C.perfect_overlap_cmd
-#         if self.utils.is_local():
-#             program_name = C.perfect_overlap_cmd_local
-#         primer_suite = self.get_config_values('primer_suite')
-#         add_arg = " --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
-#         if any([s.lower().startswith("Archaeal".lower()) for s in primer_suite]):
-#             add_arg += " --archaea"
-#         command_line          = program_name + add_arg
-# #         command_line          = program_name + " --enforce-Q30-check --retain-only-overlap " + add_arg 
-#         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-#         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
-#         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
-#         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
-#         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
-        # self.dirs.chmod_all(self.dirs.analysis_dir)
+
         return script_file_name              
                           
     def partial_overlap_reads_cluster(self):
@@ -316,7 +303,7 @@ class IlluminaFiles:
                 call([program_name, full_name])
 
     def uniq_fa_cluster(self):
-        self.utils.print_both("Uniqueing fasta files"      )
+        self.utils.print_both("Uniqueing fasta files")
         command_line = C.fastaunique_cmd
         if self.utils.is_local():
             command_line = C.fastaunique_cmd_local   
@@ -325,6 +312,9 @@ class IlluminaFiles:
         file_list             = self.dirs.get_all_files_by_ext(files_dir, C.filtered_suffix)
         if len(file_list) == 0:
             file_list         = self.dirs.get_all_files_by_ext(files_dir, ".fa")
+        if len(file_list) == 0:
+            file_list         = self.dirs.get_all_files_by_ext(files_dir, "MERGED_V6_PRIMERS_REMOVED")
+        
         script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
         script_file_name_full = os.path.join(files_dir, script_file_name)
         self.call_sh_script(script_file_name_full, files_dir)  
