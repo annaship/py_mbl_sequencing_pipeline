@@ -401,6 +401,7 @@ def illumina_files(runobj):
 #         illumina_files.partial_overlap_reads()
 #         pass
 # TODO: test utils.run_until_done_on_cluster(illumina_files.partial_overlap_reads_cluster())
+        #TODO: add cutting to 251
         script_file_name = illumina_files.partial_overlap_reads_cluster()         
         utils.run_until_done_on_cluster(script_file_name)
         

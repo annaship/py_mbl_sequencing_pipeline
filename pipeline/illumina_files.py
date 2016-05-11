@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import os
 import traceback
@@ -115,18 +116,25 @@ class IlluminaFiles:
 #             pass
         except:
             self.utils.print_both("Problems with script_name = %s or qsub" % (script_name_w_path))
-            raise  
+            raise     
         
     def perfect_reads_cluster(self):
+        """
+        iu-merge-pairs anna.ini --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0
+​            Each flag is critical. ​marker-gene-stringent looks complete overlaps, retain-only-overlap gets rid of adapters, max-num-mismatches retains only perfect overlaps. 
+            This generates the test_MERGED file with all complete overlaps without any mismatches. But it has all the primers. 
+            Then we process this file with the new and shiny iu-analyze-v6-complete-overlaps script:
+        iu-trim-V6-primers test_MERGED
+
+        """
         self.utils.print_both("Extract perfect V6 reads:")
         program_name = C.perfect_overlap_cmd
         if self.utils.is_local():
             program_name = C.perfect_overlap_cmd_local
         primer_suite = self.get_config_values('primer_suite')
+        add_arg = "--marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
         if any([s.lower().startswith("Archaeal".lower()) for s in primer_suite]):
-            add_arg = " --archaea"
-        else: 
-            add_arg = ""
+            add_arg += " --archaea"
         command_line          = program_name + add_arg
 #         command_line          = program_name + " --enforce-Q30-check --retain-only-overlap " + add_arg 
         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")

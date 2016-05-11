@@ -13,39 +13,39 @@
 from collections import defaultdict
 
 csv_header_list = {
-'illumina' :    ["run",    "data_owner",    "run_key",    "lane",    "dataset",    "project",    "tubelabel",    "barcode",   
-                            "adaptor",    "dna_region",    "amp_operator",    "seq_operator",    "barcode_index",    "overlap",    "insert_size",    
-                            "read_length",    "primer_suite",    "first_name",    "last_name",    "email",    "institution",    
+'illumina' :    ["run",    "data_owner",    "run_key",    "lane",    "dataset",    "project",    "tubelabel",    "barcode",
+                            "adaptor",    "dna_region",    "amp_operator",    "seq_operator",    "barcode_index",    "overlap",    "insert_size",
+                            "read_length",    "primer_suite",    "first_name",    "last_name",    "email",    "institution",
                             "project_title",    "project_description",    "funding",    "env_sample_source_id",    "dataset_description"],
-                            
+
 '454' :         [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
-                            
-                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",               
-                            "primer_suite",   "pool",                            
-                            
-                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
+
+                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",
+                            "primer_suite",   "pool",
+
+                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",
                             "funding",          "env_sample_source_id","dataset_description" ],
 
 'ion_torrent' : [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
-                            
-                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",               
-                            "primer_suite",   "pool",                            
-                            
-                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",  
+
+                            "empcr_operator","direction",       "enzyme",       "concentration", "quant_method",    "domain",
+                            "primer_suite",   "pool",
+
+                            "first_name",       "last_name",    "email",        "institution",  "project_title",    "project_description",
                             "funding",          "env_sample_source_id","dataset_description" ]
 }
 
 known_platforms = ('illumina','454','ion_torrent','vamps')
 #primer_suites   = ["bacterialv6suite","bacterial v6 suite","bacterial_v6_suite","archaeal v6 suite","archaealv6suite","eukaryalv9suite","bacterial v4-v5 suite"]
 # todo: take from db!
-primer_suites   = ["archaeal v6 suite", "archaeal v6mod suite", "archaeal v6-v4 suite", "bacterial v3 suite", "bacterial v3-v1 suite", 
-                   "bacterial v3-v5 suite", "archaeal v4-v5 suite", "bacterial v4-v5 suite", "bacterial v4-v6 suite", "bacterial v5-v3 suite", 
-                   "bacterial v6 suite", "bacterial v6-v4 suite", "cdsiii", "eukaryal v9 suite", "eukv9_1380", 
-                   "eukv9_1389", "fungal its1 suite", "hmp v3-v1 suite", "hmp v5-v3 suite", "hmpv3v1", "hmpv5v3", 
+primer_suites   = ["archaeal v6 suite", "archaeal v6mod suite", "archaeal v6-v4 suite", "bacterial v3 suite", "bacterial v3-v1 suite",
+                   "bacterial v3-v5 suite", "archaeal v4-v5 suite", "bacterial v4-v5 suite", "bacterial v4-v6 suite", "bacterial v5-v3 suite",
+                   "bacterial v6 suite", "bacterial v6-v4 suite", "cdsiii", "eukaryal v9 suite", "eukv9_1380",
+                   "eukv9_1389", "fungal its1 suite", "hmp v3-v1 suite", "hmp v5-v3 suite", "hmpv3v1", "hmpv5v3",
                    "relman", "ti_v3v6", "ti_v6", "topo", "v6v4", "v6_dutch", "vibrio v4", "eukaryal v4 suite"]
-dna_regions     = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a", 
+dna_regions     = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a",
                     "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6", "its1"]
 
 #K = [G,T]
@@ -99,7 +99,7 @@ existing_steps = [VALIDATE_STEP, TRIM_STEP, CHIMERA_STEP, GAST_STEP, CLUSTER_STE
 input_file_formats = ['sff', 'fasta', 'fasta-mbl', 'fastq', 'fastq-illumina', 'fastq-sanger']
 
 
-                            
+
 ############# defaults for TRIMMING ################################################################
 minimumLength   = 50
 maximumLength   = ''
@@ -175,7 +175,7 @@ complementary_bases = {'A':'T',
                        'C':'G',
                        'G':'C'}
 
-#          for anchor trimming: 
+#          for anchor trimming:
 # lowenshtein distance
 max_divergence = 0.9
 
@@ -193,8 +193,8 @@ trim_lengths = {
     'v6v4a' : {'start' : -325, 'end' : -425, 'length' : 325,  'trim_type' : "internal"},
     'v3v5'  : {'start' : 375, 'end' : 450, 'length' : 350,  'trim_type' : "internal"}
     }
-################################################################################################     
-    
+################################################################################################
+
 ############# defaults for CHIMERA checking #####################
 # if its not in this list chimera checking will be skipped
 regions_to_chimera_check = ['v6v4','v3v5','v4v5','v4v6','v3v1','v1v3','v5v3', 'ITS1', 'v4']
@@ -202,9 +202,9 @@ cluster_max_wait                = 1*60*60  # 1 hour
 cluster_check_interval          = 2
 cluster_initial_check_interval  = 10
 
-################################################################################################  
+################################################################################################
 
-############# directories ################################################################ 
+############# directories ################################################################
 """
 Output path example: /groups/g454/run_new_pipeline/illumina/miseq/20121025/analysis/gast
 """
@@ -230,38 +230,34 @@ new_vamps_database = 'vamps2'
 #MBL
 output_root_mbl         = '/groups/g454/run_new_pipeline/'
 
-output_root_mbl_local   = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test' 
+output_root_mbl_local   = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
 # cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/"
 cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts/"
 cmd_path_vamps          = "/groups/vampsweb/seqinfobin/"
-############# defaults for illumina ################################################################ 
-# perfect_overlap_cmd       = "analyze-illumina-v6-overlaps"
-# perfect_overlap_cmd       = "iu-merge-pairs"
-perfect_overlap_cmd       = "iu-analyze-v6-complete-overlaps"
-perfect_overlap_cmd_local = perfect_overlap_cmd    
-# perfect_overlap_cmd_local = cmd_path_local + perfect_overlap_cmd    
-# partial_overlap_cmd       = "merge-illumina-pairs"
-partial_overlap_cmd       = "iu-merge-pairs"
-partial_overlap_cmd_local = partial_overlap_cmd          
-# partial_overlap_cmd_local = cmd_path_local + partial_overlap_cmd          
-# filter_mismatch_cmd       = "filter-merged-reads" 
-filter_mismatch_cmd       = "iu-filter-merged-reads" 
-filter_mismatch_cmd_local = filter_mismatch_cmd          
-# filter_mismatch_cmd_local = cmd_path_local + filter_mismatch_cmd          
+############# defaults for illumina ################################################################
+# perfect_overlap_cmd       = "iu-analyze-v6-complete-overlaps"
+overlap_command           = "iu-merge-pairs"
+perfect_overlap_cmd       = overlap_command
+perfect_overlap_cmd_local = perfect_overlap_cmd
+partial_overlap_cmd       = overlap_command
+partial_overlap_cmd_local = partial_overlap_cmd
+trip_primers_cmd          = "iu-trim-V6-primers"
+filter_mismatch_cmd       = "iu-filter-merged-reads"
+filter_mismatch_cmd_local = filter_mismatch_cmd
 
-################################################################################################  
+################################################################################################
 filtered_suffix    = "MERGED-MAX-MISMATCH-3" #result of filter-merged-reads
 nonchimeric_suffix = "nonchimeric.fa"
 unique_suffix      = "unique"
 ############# defaults for GAST ################################################################
 # usearch_cmd        = '/bioware/usearch/5.2.236/x86/usearch'     #usearch5 32bit
 # usearch6_cmd       = '/bioware/usearch/6.0.217/x86/usearch'     #usearch6 32bit
-# usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY 
+# usearch64_cmd      = '/bioware/usearch/7.0.1090/x86_64/usearch'  #usearch6 64bit, for non-parallel execution ONLY
 # usearch6_cmd_local     = cmd_path_local + 'usearch'
 # use the whole path here please
 usearch_cmd        = '/bioware/seqinfo/bin/vsearch'
 usearch6_cmd       = usearch_cmd
-usearch64_cmd      = usearch_cmd 
+usearch64_cmd      = usearch_cmd
 usearch6_cmd_local = cmd_path_local + 'vsearch'
 py_pipeline_base = '/bioware/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline/pipeline/'
 
@@ -327,18 +323,18 @@ refdbs = {'unknown':'refssu_all',
         'v6'    :'refv6',
         'v6a'   :'refv6a',
         'v9'    :'refv9',
-        'its1'   :'refits1'       
+        'its1'   :'refits1'
         }
 
-""" Use '_6' for usearch6 """    
+""" Use '_6' for usearch6 """
 # chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.udb'
 chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.fasta'
 chimera_checking_refdb       = '/groups/g454/blastdbs/rRNA16S.gold.fasta'
 chimera_checking_its_refdb_6 = '/groups/g454/blastdbs/fungalITS.udb'
 chimera_checking_its_refdb   = '/groups/g454/blastdbs/fungalITS.fa'
-chimera_checking_abskew      = '1.9'    
-    
-########### VAMPS UPLOAD ###########################################################################  
+chimera_checking_abskew      = '1.9'
+
+########### VAMPS UPLOAD ###########################################################################
 ranks = ('domain','phylum','class','orderx','family','genus','species','strain')
 domains = ('Archaea','Bacteria','Eukarya','Organelle','Unknown')
 database_tables = {
@@ -368,5 +364,5 @@ database_tables = {
 
 
 ####################################################################################################
-  
-    
+
+
