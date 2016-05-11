@@ -134,7 +134,20 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
-        return script_file_name     
+        return script_file_name    
+    
+    def trim_primers_perfect(self):
+        # run_key = idx_key.split('_')[1].replace("N", ".")
+#         for idx_key in self.runobj.samples.keys():
+#             ("_").join(idx_key.split('_')[0:-1]) + "_MERGED"
+# TODO: get the run_keys "projects names from "create_ini
+        merged_file_names = [idx_key.split('_')[0] + "_" + idx_key.split('_')[1] + "_MERGED" for idx_key in self.runobj.samples.keys()]
+        program_name = C.trim_primers_cmd    
+        script_file_name      = self.create_job_array_script(program_name, self.dirs.analysis_dir, merged_file_names)
+        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+        return script_file_name    
+
         
     def perfect_reads_cluster(self):
         """
@@ -147,6 +160,7 @@ class IlluminaFiles:
         """
         self.utils.print_both("Extract perfect V6 reads:")
         script_file_name = self.merge_perfect()
+        trim_script_file_name = self.trim_primers_perfect()
 # #         self.trim()
 #         program_name = C.perfect_overlap_cmd
 #         if self.utils.is_local():

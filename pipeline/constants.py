@@ -241,7 +241,7 @@ perfect_overlap_cmd       = overlap_command
 perfect_overlap_cmd_local = perfect_overlap_cmd
 partial_overlap_cmd       = overlap_command
 partial_overlap_cmd_local = partial_overlap_cmd
-trip_primers_cmd          = "iu-trim-V6-primers"
+trim_primers_cmd          = "iu-trim-V6-primers"
 filter_mismatch_cmd       = "iu-filter-merged-reads"
 filter_mismatch_cmd_local = filter_mismatch_cmd
 
