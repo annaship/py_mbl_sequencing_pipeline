@@ -164,10 +164,15 @@ class IlluminaFiles:
         script_file_name = self.merge_perfect()
         trim_script_file_name = self.trim_primers_perfect()
 
-        return script_file_name              
-                          
+        return (script_file_name, trim_script_file_name)              
+                         
+    def cut_to251(self):
+        pass
+        # TODO: add to process reads
+         
     def partial_overlap_reads_cluster(self):
         self.utils.print_both("Extract partial_overlap V4V5 reads:")
+        self.cut_to251()
         program_name = C.partial_overlap_cmd
         if self.utils.is_local():
             program_name = C.partial_overlap_cmd_local       
