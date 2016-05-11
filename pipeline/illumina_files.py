@@ -119,6 +119,23 @@ class IlluminaFiles:
             self.utils.print_both("Problems with script_name = %s or qsub" % (script_name_w_path))
             raise     
         
+#     todo: combine and DRY with partial - it's the same command, different arguments
+    def merge_perfect(self):
+        self.utils.print_both("merge perfect V6 reads:")
+        program_name = C.perfect_overlap_cmd
+        if self.utils.is_local():
+            program_name = C.perfect_overlap_cmd_local
+        primer_suite = self.get_config_values('primer_suite')
+        add_arg = " --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
+        if any([s.lower().startswith("Archaeal".lower()) for s in primer_suite]):
+            add_arg += " --archaea"
+        command_line          = program_name + add_arg
+        file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
+        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+        return script_file_name     
+        
     def perfect_reads_cluster(self):
         """
         iu-merge-pairs anna.ini --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0
@@ -129,22 +146,22 @@ class IlluminaFiles:
 
         """
         self.utils.print_both("Extract perfect V6 reads:")
-#         self.merge()
-#         self.trim()
-        program_name = C.perfect_overlap_cmd
-        if self.utils.is_local():
-            program_name = C.perfect_overlap_cmd_local
-        primer_suite = self.get_config_values('primer_suite')
-        add_arg = " --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
-        if any([s.lower().startswith("Archaeal".lower()) for s in primer_suite]):
-            add_arg += " --archaea"
-        command_line          = program_name + add_arg
-#         command_line          = program_name + " --enforce-Q30-check --retain-only-overlap " + add_arg 
-        file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
-        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
-        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
-        self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
+        script_file_name = self.merge_perfect()
+# #         self.trim()
+#         program_name = C.perfect_overlap_cmd
+#         if self.utils.is_local():
+#             program_name = C.perfect_overlap_cmd_local
+#         primer_suite = self.get_config_values('primer_suite')
+#         add_arg = " --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
+#         if any([s.lower().startswith("Archaeal".lower()) for s in primer_suite]):
+#             add_arg += " --archaea"
+#         command_line          = program_name + add_arg
+# #         command_line          = program_name + " --enforce-Q30-check --retain-only-overlap " + add_arg 
+#         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
+#         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
+#         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+#         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+#         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
         # self.dirs.chmod_all(self.dirs.analysis_dir)
         return script_file_name              
                           
