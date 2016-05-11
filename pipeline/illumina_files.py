@@ -111,6 +111,7 @@ class IlluminaFiles:
             call(['chmod', '0774', script_name_w_path])
             if self.utils.is_local():
                 self.utils.print_both("call(['qsub', script_name_w_path], cwd=(where_to_run))")
+                call(['bash', script_name_w_path], cwd=(where_to_run))                
             else:
                 call(['qsub', script_name_w_path], cwd=(where_to_run))
 #             pass
@@ -128,11 +129,13 @@ class IlluminaFiles:
 
         """
         self.utils.print_both("Extract perfect V6 reads:")
+#         self.merge()
+#         self.trim()
         program_name = C.perfect_overlap_cmd
         if self.utils.is_local():
             program_name = C.perfect_overlap_cmd_local
         primer_suite = self.get_config_values('primer_suite')
-        add_arg = "--marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
+        add_arg = " --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
         if any([s.lower().startswith("Archaeal".lower()) for s in primer_suite]):
             add_arg += " --archaea"
         command_line          = program_name + add_arg
@@ -141,7 +144,7 @@ class IlluminaFiles:
         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
-        # self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
+        self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
         # self.dirs.chmod_all(self.dirs.analysis_dir)
         return script_file_name              
                           
