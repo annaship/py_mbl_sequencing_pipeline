@@ -168,7 +168,6 @@ class IlluminaFiles:
                               
     def partial_overlap_reads_cluster(self):
         self.utils.print_both("Extract partial_overlap V4V5 reads:")
-        self.cut_to251()
         program_name = C.partial_overlap_cmd
         if self.utils.is_local():
             program_name = C.partial_overlap_cmd_local       
@@ -434,8 +433,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
 #                 has_ns = True             
                 ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number
                 if int(e.pair_no) == 1:
-                    if len(e.sequence) > 251:
-                        e.sequence = self.truncate_seq_to_251(e.sequence)
+                    if len(e.sequence) > C.trimming_length:
+                        e.sequence = self.truncate_seq(e.sequence)
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
                         self.out_files[dataset_file_name_base_r1].store_entry(e)
@@ -447,8 +446,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 else:
                     self.out_files["unknown"].store_entry(e)
                     
-    def truncate_seq_to_251(self, seq):
-        return seq[:251]
+    def truncate_seq(self, seq):
+        return seq[:C.trimming_length]
     
                     
     def get_run_key(self, e_sequence, has_ns = "True"):
@@ -478,8 +477,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
 #                 print "remove_end_ns_strip with strip is done in: %s" % (elapsed)      
                 
                 if (int(e.pair_no) == 2) and (e.header_line in self.id_dataset_idx):
-                    if len(e.sequence) > 251:
-                        e.sequence = self.truncate_seq_to_251(e.sequence)
+                    if len(e.sequence) > C.trimming_length:
+                        e.sequence = self.truncate_seq(e.sequence)
                     file_name = self.id_dataset_idx[e.header_line] + "_R2"
                     self.out_files[file_name].store_entry(e)        
                 else:
