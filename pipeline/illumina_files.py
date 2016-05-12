@@ -90,22 +90,22 @@ class IlluminaFiles:
         [o_file[1].close() for o_file in self.out_files.iteritems()] 
         return
       
-    def perfect_reads(self):
-        self.utils.print_both("Extract perfect V6 reads:")
-        for idx_key in self.runobj.samples.keys():
-            file_name = os.path.join(self.out_file_path, idx_key + ".ini")
-            program_name = C.perfect_overlap_cmd
-            if self.utils.is_local():
-                program_name = C.perfect_overlap_cmd_local       
-            try:
-                if self.runobj.samples[idx_key].primer_suite.lower().startswith('archaeal'):
-                    call([program_name, file_name, "--archaea"]) 
-                else: 
-                    call([program_name, file_name])
-            except:
-                self.utils.print_both("Problems with program_name = %s, file_name = %s" % (program_name, file_name))
-                raise  
-    
+#     def perfect_reads(self):
+#         self.utils.print_both("Extract perfect V6 reads:")
+#         for idx_key in self.runobj.samples.keys():
+#             file_name = os.path.join(self.out_file_path, idx_key + ".ini")
+#             program_name = C.perfect_overlap_cmd
+#             if self.utils.is_local():
+#                 program_name = C.perfect_overlap_cmd_local       
+#             try:
+#                 if self.runobj.samples[idx_key].primer_suite.lower().startswith('archaeal'):
+#                     call([program_name, file_name, "--archaea"]) 
+#                 else: 
+#                     call([program_name, file_name])
+#             except:
+#                 self.utils.print_both("Problems with program_name = %s, file_name = %s" % (program_name, file_name))
+#                 raise  
+#     
     def call_sh_script(self, script_name_w_path, where_to_run):
         try:
             call(['chmod', '0774', script_name_w_path])
@@ -165,11 +165,7 @@ class IlluminaFiles:
         trim_script_file_name = self.trim_primers_perfect()
 
         return (script_file_name, trim_script_file_name)              
-                         
-    def cut_to251(self):
-        pass
-        # TODO: add to process reads
-         
+                              
     def partial_overlap_reads_cluster(self):
         self.utils.print_both("Extract partial_overlap V4V5 reads:")
         self.cut_to251()
@@ -436,8 +432,10 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
                 has_ns = any("NNNN" in s for s in self.runobj.run_keys)           
 #                 has_ns = True             
-                ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number 
+                ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number
                 if int(e.pair_no) == 1:
+                    if len(e.sequence) > 251:
+                        e.sequence = self.truncate_seq_to_251(e.sequence)
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
                         self.out_files[dataset_file_name_base_r1].store_entry(e)
@@ -448,6 +446,10 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                         self.id_dataset_idx[id2] = ini_run_key
                 else:
                     self.out_files["unknown"].store_entry(e)
+                    
+    def truncate_seq_to_251(self, seq):
+        return seq[:251]
+    
                     
     def get_run_key(self, e_sequence, has_ns = "True"):
         if has_ns:
@@ -476,6 +478,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
 #                 print "remove_end_ns_strip with strip is done in: %s" % (elapsed)      
                 
                 if (int(e.pair_no) == 2) and (e.header_line in self.id_dataset_idx):
+                    if len(e.sequence) > 251:
+                        e.sequence = self.truncate_seq_to_251(e.sequence)
                     file_name = self.id_dataset_idx[e.header_line] + "_R2"
                     self.out_files[file_name].store_entry(e)        
                 else:
