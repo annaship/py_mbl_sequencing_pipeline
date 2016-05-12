@@ -137,34 +137,32 @@ class IlluminaFiles:
         return script_file_name    
     
     def trim_primers_perfect(self):
-        # run_key = idx_key.split('_')[1].replace("N", ".")
-#         for idx_key in self.runobj.samples.keys():
-#             ("_").join(idx_key.split('_')[0:-1]) + "_MERGED"
-# TODO: get the run_keys "projects names from "create_ini
+        self.utils.print_both("trim primers from perfect V6 reads:")
+        
         merged_file_names = self.dirs.get_all_files_by_ext(self.dirs.reads_overlap_dir, "_MERGED")
  
-#         [idx_key.split('_')[0] + "_" + idx_key.split('_')[1] + "_MERGED" for idx_key in self.runobj.samples.keys()]
         program_name = C.trim_primers_cmd    
         script_file_name      = self.create_job_array_script(program_name, self.dirs.reads_overlap_dir, merged_file_names)
         script_file_name_full = os.path.join(self.dirs.reads_overlap_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.reads_overlap_dir)  
         return script_file_name    
 
-        
+    """    
     def perfect_reads_cluster(self):
-        """
+        '''
         iu-merge-pairs anna.ini --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0
 ​            Each flag is critical. ​marker-gene-stringent looks complete overlaps, retain-only-overlap gets rid of adapters, max-num-mismatches retains only perfect overlaps. 
             This generates the test_MERGED file with all complete overlaps without any mismatches. But it has all the primers. 
             Then we process this file with the new and shiny iu-analyze-v6-complete-overlaps script:
         iu-trim-V6-primers test_MERGED
 
-        """
+        '''
         self.utils.print_both("Extract perfect V6 reads:")
         script_file_name      = self.merge_perfect()
         trim_script_file_name = self.trim_primers_perfect()
 
-        return (script_file_name, trim_script_file_name)              
+        return (script_file_name, trim_script_file_name)    
+    """          
                               
     def partial_overlap_reads_cluster(self):
         self.utils.print_both("Extract partial_overlap V4V5 reads:")

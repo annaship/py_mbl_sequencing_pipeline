@@ -395,8 +395,12 @@ def illumina_files(runobj):
     illumina_files = IlluminaFiles(runobj)    
     if runobj.do_perfect: 
 #         illumina_files.perfect_reads()
-        script_file_name = illumina_files.perfect_reads_cluster()
+        script_file_name = illumina_files.merge_perfect()
         utils.run_until_done_on_cluster(script_file_name)
+        
+        script_file_name = illumina_files.trim_primers_perfect()
+        utils.run_until_done_on_cluster(script_file_name)
+
     else:
 #         illumina_files.partial_overlap_reads()
 #         pass
