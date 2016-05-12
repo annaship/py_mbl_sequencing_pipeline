@@ -146,8 +146,8 @@ class IlluminaFiles:
 #         [idx_key.split('_')[0] + "_" + idx_key.split('_')[1] + "_MERGED" for idx_key in self.runobj.samples.keys()]
         program_name = C.trim_primers_cmd    
         script_file_name      = self.create_job_array_script(program_name, self.dirs.reads_overlap_dir, merged_file_names)
-        script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
-        self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+        script_file_name_full = os.path.join(self.dirs.reads_overlap_dir, script_file_name)
+        self.call_sh_script(script_file_name_full, self.dirs.reads_overlap_dir)  
         return script_file_name    
 
         
@@ -161,7 +161,7 @@ class IlluminaFiles:
 
         """
         self.utils.print_both("Extract perfect V6 reads:")
-        script_file_name = self.merge_perfect()
+        script_file_name      = self.merge_perfect()
         trim_script_file_name = self.trim_primers_perfect()
 
         return (script_file_name, trim_script_file_name)              
