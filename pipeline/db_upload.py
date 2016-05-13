@@ -57,25 +57,17 @@ class MyConnection:
             self.utils.print_both("=" * 40)
             self.utils.print_both("host = " + str(host) + ", db = "  + str(db))
             self.utils.print_both("=" * 40)
-#             print "=" * 40
-#             print "host = " + str(host) + ", db = "  + str(db)            
-#             print "=" * 40
-
+            read_default_file = os.path.expanduser("~/.my.cnf")
+            port_env = 3306
+            
             if self.utils.is_local():
                 host = "127.0.0.1"
                 if db == "env454":
                     port_env = 3308
                     read_default_file = os.path.expanduser("~/.my.cnf_server")
                 else:
-                    #         self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
-                    host     = 'localhost'
-                    db       = "test_env454"
-                    port_env = 3306
-                    read_default_file = os.path.expanduser("~/.my.cnf")
-
-                self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=read_default_file, port = port_env)
-            else:
-                self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf"))
+                    db = "test_env454"
+            self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
                    
@@ -192,7 +184,6 @@ class dbUpload:
    
    
     def get_fasta_file_names(self):
-#         TODO: make it one thing per method
         files_names = self.dirs.get_all_files(self.fasta_dir)
         self.unique_fasta_files = [f for f in files_names.keys() if f.endswith(tuple(self.suff_list))]
 # needs return because how it's called from pipelineprocesor
