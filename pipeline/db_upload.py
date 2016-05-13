@@ -132,6 +132,7 @@ class dbUpload:
         self.runobj      = runobj
         self.rundate     = self.runobj.run
         self.use_cluster = 1       
+        self.fasta_files = []
 #        if self.runobj.vamps_user_upload:
 #            site       = self.runobj.site
 #            dir_prefix = self.runobj.user + '_' + self.runobj.run
@@ -191,24 +192,28 @@ class dbUpload:
    
     def get_fasta_file_names(self):
 
-        files = self.dirs.get_all_files(self.fasta_dir)
+        files_names = self.dirs.get_all_files(self.fasta_dir)
+        suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
 #         [i for i in my_list if not i.startswith(('91', '18'))]
-        fff = [f for f in files if f.endswith((self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix))]
+        self.fasta_files = [f for f in files_names.keys() if f.endswith(tuple(suff_list))]
+        self.suffix_used = list(set([ext for f in self.fasta_files for ext in suff_list if f.endswith(ext)]))[0] 
+
+        return self.unique_fasta_files
         
 #         fa_files += [each for each in os.listdir(folder) if each.endswith('.c')]
-        fa_files1 = [f for f in files if f.endswith(self.nonchimeric_suffix)]
-        fa_files2 = [f for f in files if f.endswith(self.fa_unique_suffix)]
-        fa_files3 = [f for f in files if f.endswith(self.v6_unique_suffix)]
-        if len(fa_files1) > 0:
-            self.suffix_used = self.nonchimeric_suffix
-        if len(fa_files2) > 0:
-            self.suffix_used = self.fa_unique_suffix
-        if len(fa_files3) > 0:
-            self.suffix_used = self.v6_unique_suffix
-
-        fa_files = fa_files1 + fa_files2 + fa_files3
-
-        return fa_files
+#         fa_files1 = [f for f in files if f.endswith(self.nonchimeric_suffix)]
+#         fa_files2 = [f for f in files if f.endswith(self.fa_unique_suffix)]
+#         fa_files3 = [f for f in files if f.endswith(self.v6_unique_suffix)]
+#         if len(fa_files1) > 0:
+#             self.suffix_used = self.nonchimeric_suffix
+#         if len(fa_files2) > 0:
+#             self.suffix_used = self.fa_unique_suffix
+#         if len(fa_files3) > 0:
+#             self.suffix_used = self.v6_unique_suffix
+# 
+#         fa_files = fa_files1 + fa_files2 + fa_files3
+# 
+#         return fa_files
         
     def get_run_info_ill_id(self, filename_base):
         
