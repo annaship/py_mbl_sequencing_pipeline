@@ -44,6 +44,8 @@ class MyConnection:
     if different use my_conn = MyConnection(host, db)
     """
     def __init__(self, host="bpcweb7", db="test"):
+# , read_default_file=os.path.expanduser("~/.my.cnf"), port = 3306
+        
         self.utils  = PipelneUtils()        
         self.conn   = None
         self.cursor = None
@@ -61,11 +63,16 @@ class MyConnection:
 
             if self.utils.is_local():
                 host = "127.0.0.1"
-                read_default_file = os.path.expanduser("~/.my.cnf_server")
-                port_env = 3308
+                if db == "env454":
+                    port_env = 3308
+                    read_default_file = os.path.expanduser("~/.my.cnf_server")
+                else:
+                    port_env = 3306
+                    read_default_file = os.path.expanduser("~/.my.cnf")
+
                 self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=read_default_file, port = port_env)
             else:
-              self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf"))
+                self.conn   = MySQLdb.connect(host=host, db=db, read_default_file=os.path.expanduser("~/.my.cnf"))
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
                    
@@ -156,7 +163,9 @@ class dbUpload:
         
         self.filenames   = []
 #         self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
-        self.my_conn     = MyConnection()
+#         self.my_conn     = MyConnection()
+
+        self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -181,8 +190,11 @@ class dbUpload:
             self.suffix_used = suffix
    
     def get_fasta_file_names(self):
-#         fa_files = []
+
         files = self.dirs.get_all_files(self.fasta_dir)
+#         [i for i in my_list if not i.startswith(('91', '18'))]
+        fff = [f for f in files if f.endswith((self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix))]
+        
 #         fa_files += [each for each in os.listdir(folder) if each.endswith('.c')]
         fa_files1 = [f for f in files if f.endswith(self.nonchimeric_suffix)]
         fa_files2 = [f for f in files if f.endswith(self.fa_unique_suffix)]
