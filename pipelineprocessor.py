@@ -474,9 +474,11 @@ def wrapper(func, *args, **kwargs):
 
 def get_filename_base_no_suff(filename):
     filename_base_no_suff = "-".join(filename.split("/")[-1].split("-")[:-1])
-    if (filename.find(C.filtered_suffix) > 0):
+    if (filename.find("MERGED") > 0):
 #       For v4v5 illumia
-        filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])
+        filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3]).replace('MERGED', '1')
+#     if len(filename_base_no_suff) == 0:
+#         filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3])
     return filename_base_no_suff 
 # 
 # def env454upload_no_seq(runobj):  
