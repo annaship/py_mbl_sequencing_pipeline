@@ -155,8 +155,8 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
-        # self.my_conn     = MyConnection()
+#         self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
+        self.my_conn     = MyConnection()
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -169,27 +169,33 @@ class dbUpload:
 #        self.nonchimeras_suffix = ".nonchimeric.fa"
         self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
         self.fa_unique_suffix   = ".fa." + C.unique_suffix #.fa.unique
+        self.v6_unique_suffix   = "MERGED_V6_PRIMERS_REMOVED." + C.unique_suffix
 #         self.merge_unique_suffix = "." + C.filtered_suffix + "." + C.unique_suffix #.MERGED-MAX-MISMATCH-3.unique
         self.suffix_used        = ""
         
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
+    def get_suffix(self, fa_files, full_name, suffix):
+            fa_files.append(full_name)
+            self.utils.print_both(full_name)
+            self.suffix_used = suffix
+   
     def get_fasta_file_names(self):
-        fa_files = []
+#         fa_files = []
         files = self.dirs.get_all_files(self.fasta_dir)
+#         fa_files += [each for each in os.listdir(folder) if each.endswith('.c')]
+        fa_files1 = [f for f in files if f.endswith(self.nonchimeric_suffix)]
+        fa_files2 = [f for f in files if f.endswith(self.fa_unique_suffix)]
+        fa_files3 = [f for f in files if f.endswith(self.v6_unique_suffix)]
+        if len(fa_files1) > 0:
+            self.suffix_used = self.nonchimeric_suffix
+        if len(fa_files2) > 0:
+            self.suffix_used = self.fa_unique_suffix
+        if len(fa_files3) > 0:
+            self.suffix_used = self.v6_unique_suffix
 
-        for full_name in files.keys():
-                
-#             if (files[full_name][1] == ".unique") and ((files[full_name][0].split(".")[-1].strip() == "fa") or (files[full_name][0].split("_")[-1] == C.filtered_suffix)):
-            if (full_name.endswith(self.nonchimeric_suffix)):                
-                fa_files.append(full_name)
-                self.utils.print_both(full_name)
-                self.suffix_used = self.nonchimeric_suffix
-                next 
-            elif (full_name.endswith(self.fa_unique_suffix)):
-                fa_files.append(full_name)
-                self.utils.print_both(full_name)
-                self.suffix_used = self.fa_unique_suffix                
+        fa_files = fa_files1 + fa_files2 + fa_files3
+
         return fa_files
         
     def get_run_info_ill_id(self, filename_base):
