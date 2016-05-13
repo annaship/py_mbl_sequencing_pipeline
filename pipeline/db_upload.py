@@ -67,6 +67,9 @@ class MyConnection:
                     port_env = 3308
                     read_default_file = os.path.expanduser("~/.my.cnf_server")
                 else:
+                    #         self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
+                    host     = 'localhost'
+                    db       = "test_env454"
                     port_env = 3306
                     read_default_file = os.path.expanduser("~/.my.cnf")
 
@@ -163,10 +166,10 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-#         self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
+        self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
 #         self.my_conn     = MyConnection()
 
-        self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
+#         self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
