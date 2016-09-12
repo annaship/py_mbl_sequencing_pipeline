@@ -247,7 +247,8 @@ class Chimera:
         for idx_key in self.input_file_names:
             file_name = os.path.join(self.indir, self.input_file_names[idx_key] + self.chg_suffix)
             if os.path.exists(file_name):
-                os.remove(file_name)
+                pass
+                # os.remove(file_name)
     
 #     def illumina_chimera_size_files(self):
 #     
