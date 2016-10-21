@@ -463,7 +463,7 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
         for file_r2 in files_r2:
             self.utils.print_both("FFF2: file %s" % file_r2)
             f_input  = fq.FastQSource(file_r2, compressed)
-            while f_input.next():
+            while f_input.next(trim_to = C.trimming_length):
                 e = f_input.entry
                 
 #                 start = time.time()  
@@ -473,8 +473,6 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
 #                 print "remove_end_ns_strip with strip is done in: %s" % (elapsed)      
                 
                 if (int(e.pair_no) == 2) and (e.header_line in self.id_dataset_idx):
-                    if len(e.sequence) > C.trimming_length:
-                        e.sequence = self.truncate_seq(e.sequence)
                     file_name = self.id_dataset_idx[e.header_line] + "_R2"
                     self.out_files[file_name].store_entry(e)        
                 else:
