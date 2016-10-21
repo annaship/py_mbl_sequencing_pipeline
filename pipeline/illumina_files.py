@@ -423,7 +423,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             self.utils.print_both("====\nFFF1: file %s" % file_r1)
             f_input  = fq.FastQSource(file_r1, compressed)
             index_sequence = self.get_index(file_r1)
-            while f_input.next():
+            while f_input.next(trim_to = C.trimming_length):
+            # while f_input.next():
                 e = f_input.entry
                 # todo: a fork with or without NNNN, add an argument
                 #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
@@ -431,8 +432,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
 #                 has_ns = True             
                 ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number
                 if int(e.pair_no) == 1:
-                    if len(e.sequence) > C.trimming_length:
-                        e.sequence = self.truncate_seq(e.sequence)
+                    # if len(e.sequence) > C.trimming_length:
+                    #     e.sequence = self.truncate_seq(e.sequence)
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
                         self.out_files[dataset_file_name_base_r1].store_entry(e)
@@ -444,8 +445,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 else:
                     self.out_files["unknown"].store_entry(e)
                     
-    def truncate_seq(self, seq):
-        return seq[:C.trimming_length]
+    # def truncate_seq(self, seq):
+    #     return seq[:C.trimming_length]
     
                     
     def get_run_key(self, e_sequence, has_ns = "True"):
