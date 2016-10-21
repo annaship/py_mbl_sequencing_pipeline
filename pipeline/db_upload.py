@@ -652,7 +652,11 @@ class dbUpload:
 #         grep '>' *-PERFECT_reads.fa.unique
 #       or
 #         cd /xraid2-2/g454/run_new_pipeline/illumina/20130607/lane_5_A/analysis/reads_overlap/; grep '>' *_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa | wc -l; date
-        self.suffix_used = list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0] 
+        try:
+            self.suffix_used = list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0] 
+        except:
+            print "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list)
+            self.suffix_used = ""
         print self.suffix_used
         suffix = self.fasta_dir + "/*" + self.suffix_used 
         program_name = "grep"
