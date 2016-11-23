@@ -15,7 +15,7 @@ from collections import defaultdict
 csv_header_list = {
 'illumina' :    ["run",    "data_owner",    "run_key",    "lane",    "dataset",    "project",    "tubelabel",    "barcode",
                             "adaptor",    "dna_region",    "amp_operator",    "seq_operator",    "barcode_index",    "overlap",    "insert_size",
-                            "read_length",    "primer_suite",    "first_name",    "last_name",    "email",    "institution",
+                            "read_length",   "platform",  "primer_suite",    "first_name",    "last_name",    "email",    "institution",
                             "project_title",    "project_description",    "funding",    "env_sample_source_id",    "dataset_description"],
 
 '454' :         [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
