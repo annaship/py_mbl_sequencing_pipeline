@@ -74,6 +74,11 @@ primers_dict["eukaryal v4 suite"]["proximal_primer"] = "CCAGCA[C,G]C[C,T]GCGGTAA
 # primers_dict["eukaryal v4 suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G]A"
 primers_dict["eukaryal v4 suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G][A,G]"
 
+primers_dict["archaeal v4 suite"]["proximal_primer"]  = "GTG[CT]CAGC[AC]GCCGCGGTAA"
+primers_dict["archaeal v4 suite"]["distal_primer"]    = "GGACTAC[ACGT][ACG]GGGT[AT]TCTAAT"
+primers_dict["bacterial v4 suite"]["proximal_primer"] = "GTG[CT]CAGC[AC]GCCGCGGTAA"
+primers_dict["bacterial v4 suite"]["distal_primer"]   = "GGACTAC[ACGT][ACG]GGGT[AT]TCTAAT"
+
 
 VALIDATE_STEP           = "validate"
 TRIM_STEP               = "trim"
