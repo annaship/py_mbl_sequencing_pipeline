@@ -458,12 +458,12 @@ class MetadataUtils:
                 (a,b,c) = data[item]['project'].split('_')
                 #if c[0] not in [i[0].upper() for i in domains]:
                 #    sys.exit("ERROR : Project suffix has incorrect/non-existant domain: "+c)
-                logger.error("c[1:] = ")
-                logger.error(c[1:])
-                logger.error("c.lower() =")
-                logger.error(c.lower()) 
-                logger.error("self.dna_regions")
-                logger.error(self.dna_regions )
+                # logger.error("c[1:] = ")
+                # logger.error(c[1:])
+                # logger.error("c.lower() =")
+                # logger.error(c.lower())
+                # logger.error("self.dna_regions")
+                # logger.error(self.dna_regions )
                 
                 if (c[1:].lower() not in self.dna_regions) and (c.lower() not in self.dna_regions):
                     logger.error("Project suffix has incorrect DNA region: ")

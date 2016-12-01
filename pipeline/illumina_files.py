@@ -241,8 +241,8 @@ class IlluminaFiles:
 #$ -j y
 # Send mail to these users
 #$ -M %s
-# Send mail at job end; -m eas sends on end, abort, suspend.
-#$ -m eas
+# Send mail at job end (e); -m as sends abort, suspend.
+#$ -m as
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
