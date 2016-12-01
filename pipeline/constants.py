@@ -44,7 +44,7 @@ primer_suites   = ["archaeal v6 suite", "archaeal v4 suite", "archaeal v6mod sui
                    "bacterial v3-v5 suite", "archaeal v4-v5 suite", "bacterial v4-v5 suite", "bacterial v4-v6 suite", "bacterial v4 suite", "bacterial v5-v3 suite",
                    "bacterial v6 suite", "bacterial v6-v4 suite", "cdsiii", "eukaryal v9 suite", "eukv9_1380",
                    "eukv9_1389", "fungal its1 suite", "hmp v3-v1 suite", "hmp v5-v3 suite", "hmpv3v1", "hmpv5v3",
-                   "relman", "ti_v3v6", "ti_v6", "topo", "v6v4", "v6_dutch", "vibrio v4", "eukaryal v4 suite", "eukaryal v4 hapto suite"]
+                   "relman", "ti_v3v6", "ti_v6", "topo", "v6v4", "v6_dutch", "vibrio v4", "eukaryal v4 suite", "eukaryal hssu suite", "eukaryal hlsu suite"]
 dna_regions     = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a",
                     "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6", "its1", "hlsu", "hssu"]
 
@@ -79,8 +79,10 @@ primers_dict["archaeal v4 suite"]["distal_primer"]    = "CCGGACTAC[ACGT][ACG]GGG
 primers_dict["bacterial v4 suite"]["proximal_primer"] = "GTGTG[CT]CAGC[AC]GCCGCGGTAA"
 primers_dict["bacterial v4 suite"]["distal_primer"]   = "CCGGACTAC[ACGT][ACG]GGGT[AT]TCTAAT"
 
-primers_dict["eukaryal v4 hapto suite"]["proximal_primer"] = "GCGGTAATTCCAGCTCCA"
-primers_dict["eukaryal v4 hapto suite"]["distal_primer"]   = "GATCAGTGAAAACATCCCTGG"
+primers_dict["eukaryal hssu suite"]["proximal_primer"] = "GCGGTAATTCCAGCTCCA"
+primers_dict["eukaryal hssu suite"]["distal_primer"]   = "GATCAGTGAAAACATCCCTGG"
+primers_dict["eukaryal hssu suite"]["proximal_primer"] = "GGT[AG]TCGGAGA[AG]GGTGAGAATCC"
+primers_dict["eukaryal hssu suite"]["distal_primer"]   = "TCAGACTCCTTGGTCCGTGTTTCT"
 
 
 
