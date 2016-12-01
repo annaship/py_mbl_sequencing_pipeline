@@ -463,7 +463,10 @@ class MetadataUtils:
                 logger.error(self.dna_regions )
                 
                 if (c[1:].lower() not in self.dna_regions) or (c.lower() not in self.dna_regions):
-                    logger.error("Project suffix has incorrect DNA region: "+c+" - Exiting (key: "+data[item]+")")
+                    logger.error("Project suffix has incorrect DNA region: ")
+                    logger.error(c)
+                    logger.error(" - Exiting (key: ")
+                    logger.error(data[item])
                     error = True
         return (error, warn)
         
