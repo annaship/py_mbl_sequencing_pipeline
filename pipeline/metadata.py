@@ -450,7 +450,10 @@ class MetadataUtils:
                 try:
                     (a,b,c) = data[item]['project'].split('_')
                 except:
-                    logger.error("project not in correct format: "+data[item]['project']+" - Exiting (key: "+data[item]+")")
+                    logger.error("project not in correct format: ")
+                    logger.error(data[item]['project'])
+                    logger.error(" - Exiting (key: ")
+                    logger.error(data[item])
                     error=True
                 (a,b,c) = data[item]['project'].split('_')
                 #if c[0] not in [i[0].upper() for i in domains]:
