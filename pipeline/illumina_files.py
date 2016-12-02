@@ -165,7 +165,7 @@ class IlluminaFiles:
     """          
                               
     def partial_overlap_reads_cluster(self):
-        self.utils.print_both("Extract partial_overlap V4V5 reads:")
+        self.utils.print_both("Extract partial_overlap reads (from partial_overlap_reads_cluster):")
         program_name = C.partial_overlap_cmd
         if self.utils.is_local():
             program_name = C.partial_overlap_cmd_local       
@@ -186,7 +186,7 @@ class IlluminaFiles:
         return script_file_name      
                     
     def partial_overlap_reads(self):
-        self.utils.print_both("Extract partial_overlap V4V5 reads:")
+        self.utils.print_both("Extract partial_overlap reads (from partial_overlap_reads):")
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = C.partial_overlap_cmd
@@ -340,11 +340,14 @@ class IlluminaFiles:
         primers         = {}
         for idx_key in self.runobj.samples.keys():
             primer_suite = self.runobj.samples[idx_key].primer_suite.lower()
+            
+            print "PPP primer_suite = "
+            print primer_suite
 
             if primer_suite in C.primers_dict:
                 proximal_primer = C.primers_dict[primer_suite]["proximal_primer"]
                 distal_primer = C.primers_dict[primer_suite]["distal_primer"]
-#                 print "proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
+                print "RRR proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
             else:
                 self.utils.print_both("ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'\n" % (primer_suite))
             primers[idx_key] = (proximal_primer, distal_primer) 
