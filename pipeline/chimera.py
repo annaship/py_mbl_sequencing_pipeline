@@ -331,7 +331,7 @@ class Chimera:
         uchime_cmd += " -notrunclabels"
         
         
-#         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
+        print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
         return uchime_cmd
         
     def get_ref_db(self, dna_region):
