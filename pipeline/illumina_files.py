@@ -373,9 +373,10 @@ pair_1 = %s
 pair_2 = %s
 """ % (idx_key, email, self.out_file_path, self.results_path, idx_key + "_R1.fastq", idx_key + "_R2.fastq")
 
-            "That's for parital overlap (v4v5 miseq illumina)" 
+            "That's for parital overlap (v4v5 and hapto miseq illumina)" 
             if not self.runobj.do_perfect:
                 primers = self.get_primers()    
+                # print "run_key = %s, idx_key = %s, primers[idx_key][0], primers[idx_key][1] = %s" (run_key, idx_key, primers[idx_key][0], primers[idx_key][1])
                 text += """
 # following section is optional
 [prefixes]

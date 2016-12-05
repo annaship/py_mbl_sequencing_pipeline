@@ -81,8 +81,8 @@ primers_dict["bacterial v4 suite"]["distal_primer"]   = "CCGGACTAC[ACGT][ACG]GGG
 
 primers_dict["eukaryal hssu suite"]["proximal_primer"] = "GCGGTAATTCCAGCTCCA"
 primers_dict["eukaryal hssu suite"]["distal_primer"]   = "GATCAGTGAAAACATCCCTGG"
-primers_dict["eukaryal hssu suite"]["proximal_primer"] = "GGT[AG]TCGGAGA[AG]GGTGAGAATCC"
-primers_dict["eukaryal hssu suite"]["distal_primer"]   = "TCAGACTCCTTGGTCCGTGTTTCT"
+primers_dict["eukaryal hlsu suite"]["proximal_primer"] = "GGT[AG]TCGGAGA[AG]GGTGAGAATCC"
+primers_dict["eukaryal hlsu suite"]["distal_primer"]   = "TCAGACTCCTTGGTCCGTGTTTCT"
 
 
 
