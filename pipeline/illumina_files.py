@@ -443,8 +443,8 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                         short_id2 = ":".join(e.header_line.split()[1].split(":")[1:])
                         id2 = short_id1 + " 2:" + short_id2
                         self.id_dataset_idx[id2] = ini_run_key
-                else:
-                    self.out_files["unknown"].store_entry(e)
+                    else:
+                        self.out_files["unknown"].store_entry(e)
                     
     # def truncate_seq(self, seq):
     #     return seq[:C.trimming_length]
