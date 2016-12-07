@@ -55,6 +55,7 @@ class IlluminaFiles:
         self.dirs = dirs
         self.out_file_path = dirs.check_dir(dirs.analysis_dir)
         self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
+        self.platform = self.runobj.platform
         
     def split_files(self, compressed = False):
         """
@@ -432,8 +433,10 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 # todo: a fork with or without NNNN, add an argument
                 #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
                 has_ns = any("NNNN" in s for s in self.runobj.run_keys)           
-#                 has_ns = True             
-                ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number
+                lane_number = e.lane_number
+                if self.platform == "nextseq":
+                    lane_number = "1"
+                ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + lane_number
                 if int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):

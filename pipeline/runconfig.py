@@ -235,7 +235,7 @@ class RunConfig:
             except:
                 self.classifier= 'unknown'
         else:
-            if self.platform == 'illumina':
+            if self.platform in C.illumina_list:
                 self.compressed     = general_config['compressed']                 
                 self.database_name  = general_config['database_name'] 
                 self.database_host  = general_config['database_host'] 
@@ -246,11 +246,11 @@ class RunConfig:
                 if general_config.has_key("do_perfect"):
                     self.do_perfect = general_config['do_perfect']
                 else:
-                    self.do_perfect = C.pipeline_run_items['illumina']['do_perfect']        
+                    self.do_perfect = C.pipeline_run_items[self.platform]['do_perfect']        
                 if general_config.has_key("lane_name"):
                     self.lane_name = general_config['lane_name']
                 else:
-                    self.lane_name = C.pipeline_run_items['illumina']['lane_name']                                    
+                    self.lane_name = C.pipeline_run_items[self.platform]['lane_name']                                    
                     
             elif self.platform == '454':
                 self.compressed     = general_config['compressed'] 
@@ -410,7 +410,7 @@ class RunConfig:
                 # a dictionary of samples
                 self.samples[key] = sample
             else:
-                if self.platform == 'illumina':
+                if self.platform in C.illumina_list:
                     # req specifically for illumina
                     sample.data_owner           = lane_run_dict['data_owner']
                     sample.first_name           = lane_run_dict['first_name']

@@ -13,10 +13,22 @@
 from collections import defaultdict
 
 csv_header_list = {
-'illumina' :    ["run",    "data_owner",    "run_key",    "lane",    "dataset",    "project",    "tubelabel",    "barcode",
-                            "adaptor",    "dna_region",    "amp_operator",    "seq_operator",    "barcode_index",    "overlap",    "insert_size",
-                            "read_length",   "platform",  "primer_suite",    "first_name",    "last_name",    "email",    "institution",
-                            "project_title",    "project_description",    "funding",    "env_sample_source_id",    "dataset_description"],
+'illumina' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
+'miseq' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
+'hiseq' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
+'nextseq' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
 
 '454' :         [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
@@ -37,7 +49,8 @@ csv_header_list = {
                             "funding",          "env_sample_source_id","dataset_description" ]
 }
 
-known_platforms = ('illumina','454','ion_torrent','vamps')
+known_platforms = ('illumina','454','ion_torrent','vamps','hiseq','miseq','nextseq')
+illumina_list = ['hiseq', 'miseq', 'nextseq']
 #primer_suites   = ["bacterialv6suite","bacterial v6 suite","bacterial_v6_suite","archaeal v6 suite","archaealv6suite","eukaryalv9suite","bacterial v4-v5 suite"]
 # todo: take from db!
 primer_suites   = ["archaeal v6 suite", "archaeal v4 suite", "archaeal v6mod suite", "archaeal v6-v4 suite", "bacterial v3 suite", "bacterial v3-v1 suite",
@@ -147,11 +160,45 @@ pipeline_run_items = {
             'config_file_type':'ini',
             'platform':'vamps'
             },
-'illumina' : {'input_file_format':'fastq',
+'miseq' : {'input_file_format':'fastq',
                 'compressed':True,
                 'database_host':'vampsdev',
                 'database_name':'test',
-                'platform':'illumina',
+                'platform':'miseq',
+                'use_cluster':True,
+                'csvPath':'',
+                'site':'vampsdev',
+                'load_vamps_database':False,
+                'anchor_file':'',
+                'baseoutputdir':'output',
+                'input_dir':'.',
+                'primer_file':'',
+                'require_distal':True,
+                'do_perfect': False,
+                'lane_name':'1'
+			},
+'nextseq' : {'input_file_format':'fastq',
+                'compressed':True,
+                'database_host':'vampsdev',
+                'database_name':'test',
+                'platform':'nextseq',
+                'use_cluster':True,
+                'csvPath':'',
+                'site':'vampsdev',
+                'load_vamps_database':False,
+                'anchor_file':'',
+                'baseoutputdir':'output',
+                'input_dir':'.',
+                'primer_file':'',
+                'require_distal':True,
+                'do_perfect': False,
+                'lane_name':'1'
+			},
+'hiseq' : {'input_file_format':'fastq',
+                'compressed':True,
+                'database_host':'vampsdev',
+                'database_name':'test',
+                'platform':'hiseq',
                 'use_cluster':True,
                 'csvPath':'',
                 'site':'vampsdev',
@@ -163,7 +210,7 @@ pipeline_run_items = {
                 'require_distal':True,
                 'do_perfect':True,
                 'lane_name':''
-			},
+			},            
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',
 			'platform':'454',
