@@ -419,6 +419,21 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 correct_file_names.append(file1)
         return set(correct_file_names)
         
+        
+    def get_run_key(self, e_sequence, has_ns = "True"):
+        if has_ns:
+            return ("NNNN" + e_sequence[4:9])
+        else:
+            return e_sequence[0:5]
+            
+    def get_ini_run_key(self, index_sequence, e):
+        has_ns = any("NNNN" in s for s in self.runobj.run_keys)           
+        
+        lane_number = e.lane_number
+        if self.platform == "nextseq":
+            lane_number = "1"
+        return index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + lane_number
+        
     def read1(self, files_r1, compressed):
         """ loop through the fastq_file_names
             1) e.pair_no = 1, find run_key -> dataset name
@@ -432,11 +447,11 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 e = f_input.entry
                 # todo: a fork with or without NNNN, add an argument
                 #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
-                has_ns = any("NNNN" in s for s in self.runobj.run_keys)           
-                lane_number = e.lane_number
-                if self.platform == "nextseq":
-                    lane_number = "1"
-                ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + lane_number
+                # lane_number = e.lane_number
+                # if self.platform == "nextseq":
+                #     lane_number = "1"
+                # ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + lane_number
+                ini_run_key = self.get_ini_run_key(index_sequence, e)
                 if int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
@@ -451,13 +466,6 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                     
     # def truncate_seq(self, seq):
     #     return seq[:C.trimming_length]
-    
-                    
-    def get_run_key(self, e_sequence, has_ns = "True"):
-        if has_ns:
-            return ("NNNN" + e_sequence[4:9])
-        else:
-            return e_sequence[0:5]
     
     def remove_end_ns_strip(self, e_sequence):
         if e_sequence.endswith('N'):
