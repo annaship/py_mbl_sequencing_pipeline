@@ -161,7 +161,7 @@ class dbUpload:
         self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
 #         self.my_conn     = MyConnection()
 
-#         self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
+        # self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -509,10 +509,10 @@ class dbUpload:
                                                     file_prefix, read_length, primer_suite_id, platform) 
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',  
                                                     '%s', %s, '%s', '%s', '%s', '%s', %s, 
-                                                    '%s', %s, %s)
+                                                    '%s', %s, %s, '%s')
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, content_row.overlap, content_row.insert_size,
-                                                    file_prefix, content_row.read_length, primer_suite_id, platform)
+                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform)
         
         self.utils.print_both("insert run_info sql = %s" % my_sql)
         
