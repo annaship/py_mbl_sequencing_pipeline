@@ -158,10 +158,13 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
-#         self.my_conn     = MyConnection()
-
-        # self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
+        logger.error("self.utils.is_local() LLL1 db upload")
+        logger.error(self.utils.is_local())
+        
+        if self.utils.is_local():
+            self.my_conn = MyConnection(host = 'localhost', db="test_env454")
+        else:
+            self.my_conn = MyConnection(host='newbpcdb2.jbpc-np.mbl.edu', db="env454")
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None

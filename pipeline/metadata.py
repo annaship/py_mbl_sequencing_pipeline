@@ -51,6 +51,8 @@ class MetadataUtils:
         then press 'c' to continue the pipeline\n"""
         self.res_headers = []
         self.env = {}
+        self.utils  = PipelneUtils()        
+        
                   
     def convert_and_save_ini(self, analysis_dir):
         
@@ -420,9 +422,11 @@ class MetadataUtils:
         
         
     def check_projects_and_datasets(self,data):
-        self.my_conn     = MyConnection(host='newbpcdb2.jbpc-np.mbl.edu', db="env454")
+        if self.utils.is_local():
+            self.my_conn    = MyConnection(host = 'localhost', db="test_env454")
+        else:
+            self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
         # self.my_conn     = MyConnection()
-        # self.my_conn    = MyConnection(host = 'localhost', db="test_env454")
         project_dataset = {}
         projects = {}
         datasets = {}
@@ -477,7 +481,7 @@ class MetadataUtils:
         if 'validate' in steps.split(','):
             # print we are done
             sys.exit()
-        if PipelneUtils().is_local:
+        if self.utils.is_local():
             return 'c'
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
@@ -654,9 +658,13 @@ water-marine
             return True
         
     def env_source_to_id(self, headers):
-        self.my_conn = MyConnection(host='newbpcdb2.jbpc-np.mbl.edu', db="env454")
+        logger.error("self.utils.is_local() LLL2 metadata")
+        logger.error(self.utils.is_local())
+        if self.utils.is_local():
+            self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
+        else:
+            self.my_conn = MyConnection(host='newbpcdb2.jbpc-np.mbl.edu', db="env454")
         # self.my_conn     = MyConnection()    
-        # self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
         my_sql       = """SELECT * FROM env_sample_source"""
         self.env     = self.my_conn.execute_fetch_select(my_sql)
         self.res_headers = ["env_sample_source_id" if x=="env_sample_source" else x for x in headers]
