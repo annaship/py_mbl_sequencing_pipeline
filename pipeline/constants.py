@@ -13,10 +13,22 @@
 from collections import defaultdict
 
 csv_header_list = {
-'illumina' :    ["run",    "data_owner",    "run_key",    "lane",    "dataset",    "project",    "tubelabel",    "barcode",
-                            "adaptor",    "dna_region",    "amp_operator",    "seq_operator",    "barcode_index",    "overlap",    "insert_size",
-                            "read_length",    "primer_suite",    "first_name",    "last_name",    "email",    "institution",
-                            "project_title",    "project_description",    "funding",    "env_sample_source_id",    "dataset_description"],
+'illumina' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
+'miseq' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
+'hiseq' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
+'nextseq' :    ["run", "data_owner", "run_key", "lane", "dataset", "project", "tubelabel", "barcode",
+ "adaptor", "dna_region", "amp_operator", "seq_operator", "barcode_index", "overlap", "insert_size",
+ "read_length", "platform", "primer_suite", "first_name", "last_name", "email", "institution",
+ "project_title", "project_description", "funding", "env_sample_source_id", "dataset_description"],
 
 '454' :         [ "run",          "data_owner",       "run_key",      "lane",         "project",  "dataset",
                             "tubelabel",    "barcode",          "adaptor",      "dna_region",   "amp_operator",     "seq_operator",
@@ -37,16 +49,17 @@ csv_header_list = {
                             "funding",          "env_sample_source_id","dataset_description" ]
 }
 
-known_platforms = ('illumina','454','ion_torrent','vamps','miseq','hiseq','nextseq')
+known_platforms = ('illumina','454','ion_torrent','vamps','hiseq','miseq','nextseq')
+illumina_list = ['hiseq', 'miseq', 'nextseq']
 #primer_suites   = ["bacterialv6suite","bacterial v6 suite","bacterial_v6_suite","archaeal v6 suite","archaealv6suite","eukaryalv9suite","bacterial v4-v5 suite"]
 # todo: take from db!
-primer_suites   = ["archaeal v6 suite", "archaeal v6mod suite", "archaeal v6-v4 suite", "bacterial v3 suite", "bacterial v3-v1 suite",
-                   "bacterial v3-v5 suite", "archaeal v4-v5 suite", "bacterial v4-v5 suite", "bacterial v4-v6 suite", "bacterial v5-v3 suite",
+primer_suites   = ["archaeal v6 suite", "archaeal v4 suite", "archaeal v6mod suite", "archaeal v6-v4 suite", "bacterial v3 suite", "bacterial v3-v1 suite",
+                   "bacterial v3-v5 suite", "archaeal v4-v5 suite", "bacterial v4-v5 suite", "bacterial v4-v6 suite", "bacterial v4 suite", "bacterial v5-v3 suite",
                    "bacterial v6 suite", "bacterial v6-v4 suite", "cdsiii", "eukaryal v9 suite", "eukv9_1380",
                    "eukv9_1389", "fungal its1 suite", "hmp v3-v1 suite", "hmp v5-v3 suite", "hmpv3v1", "hmpv5v3",
-                   "relman", "ti_v3v6", "ti_v6", "topo", "v6v4", "v6_dutch", "vibrio v4", "eukaryal v4 suite", "eukaryal hlsu suite", "eukaryal hssu suite"]
+                   "relman", "ti_v3v6", "ti_v6", "topo", "v6v4", "v6_dutch", "vibrio v4", "eukaryal v4 suite", "eukaryal hssu suite", "eukaryal hlsu suite"]
 dna_regions     = ["v3", "v3v1", "v3v5", "v3v6", "v4", "v4v5", "v4v6", "v5v3", "v5v4", "v6", "v6a",
-                    "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6", "its1"]
+                    "v6v4", "v6v4a", "v6_dutch", "v9", "v9v6", "its1", "hlsu", "hssu"]
 
 #K = [G,T]
 #M = [A,C]
@@ -74,13 +87,15 @@ primers_dict["eukaryal v4 suite"]["proximal_primer"] = "CCAGCA[C,G]C[C,T]GCGGTAA
 # primers_dict["eukaryal v4 suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G]A"
 primers_dict["eukaryal v4 suite"]["distal_primer"]   = "ACTTTCGTTCTTGAT[C,T][A,G][A,G]"
 
+primers_dict["archaeal v4 suite"]["proximal_primer"]  = "GTGTG[CT]CAGC[AC]GCCGCGGTAA"
+primers_dict["archaeal v4 suite"]["distal_primer"]    = "CCGGACTAC[ACGT][ACG]GGGT[AT]TCTAAT"
+primers_dict["bacterial v4 suite"]["proximal_primer"] = "GTGTG[CT]CAGC[AC]GCCGCGGTAA"
+primers_dict["bacterial v4 suite"]["distal_primer"]   = "CCGGACTAC[ACGT][ACG]GGGT[AT]TCTAAT"
+
 primers_dict["eukaryal hssu suite"]["proximal_primer"] = "GCGGTAATTCCAGCTCCA"
 primers_dict["eukaryal hssu suite"]["distal_primer"]   = "GATCAGTGAAAACATCCCTGG"
-
 primers_dict["eukaryal hlsu suite"]["proximal_primer"] = "GGT[AG]TCGGAGA[AG]GGTGAGAATCC"
 primers_dict["eukaryal hlsu suite"]["distal_primer"]   = "TCAGACTCCTTGGTCCGTGTTTCT"
-             
-
 
 VALIDATE_STEP           = "validate"
 TRIM_STEP               = "trim"
@@ -142,11 +157,45 @@ pipeline_run_items = {
             'config_file_type':'ini',
             'platform':'vamps'
             },
-'illumina' : {'input_file_format':'fastq',
+'miseq' : {'input_file_format':'fastq',
                 'compressed':True,
                 'database_host':'vampsdev',
                 'database_name':'test',
-                'platform':'illumina',
+                'platform':'miseq',
+                'use_cluster':True,
+                'csvPath':'',
+                'site':'vampsdev',
+                'load_vamps_database':False,
+                'anchor_file':'',
+                'baseoutputdir':'output',
+                'input_dir':'.',
+                'primer_file':'',
+                'require_distal':True,
+                'do_perfect': False,
+                'lane_name':'1'
+			},
+'nextseq' : {'input_file_format':'fastq',
+                'compressed':True,
+                'database_host':'vampsdev',
+                'database_name':'test',
+                'platform':'nextseq',
+                'use_cluster':True,
+                'csvPath':'',
+                'site':'vampsdev',
+                'load_vamps_database':False,
+                'anchor_file':'',
+                'baseoutputdir':'output',
+                'input_dir':'.',
+                'primer_file':'',
+                'require_distal':True,
+                'do_perfect': False,
+                'lane_name':'1'
+			},
+'hiseq' : {'input_file_format':'fastq',
+                'compressed':True,
+                'database_host':'vampsdev',
+                'database_name':'test',
+                'platform':'hiseq',
                 'use_cluster':True,
                 'csvPath':'',
                 'site':'vampsdev',
@@ -158,7 +207,7 @@ pipeline_run_items = {
                 'require_distal':True,
                 'do_perfect':True,
                 'lane_name':''
-			},
+			},            
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',
 			'platform':'454',

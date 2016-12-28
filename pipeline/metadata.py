@@ -51,6 +51,8 @@ class MetadataUtils:
         then press 'c' to continue the pipeline\n"""
         self.res_headers = []
         self.env = {}
+        self.utils  = PipelneUtils()        
+        
                   
     def convert_and_save_ini(self, analysis_dir):
         
@@ -73,7 +75,7 @@ class MetadataUtils:
     
     def validate(self, analysis_dir): 
         
-        if self.general_config_dict['platform'] == 'illumina':
+        if self.general_config_dict['platform'] in C.illumina_list:
             self.warn_msg = self.validate_illumina_ini(analysis_dir)
         elif self.general_config_dict['platform'] == '454':
             data = self.validate_454_ini(analysis_dir)
@@ -91,80 +93,6 @@ class MetadataUtils:
         """
         """
         return self.data_object['general']
-        
-#     def create_dictionary_from_ini(self):
-#         """
-#         # read an ini config file and convert to a dictionary
-#         """
-#         import ConfigParser
-#         if os.path.exists(self.general_config_dict['configPath']):
-#             data_object = {}
-#             user_config = ConfigParser.ConfigParser()
-#             user_config.read(self.general_config_dict['configPath'])
-#             
-#             for section in user_config.sections():
-#                 
-#                 section_dict = data_object[section] = {}
-#                 for option in user_config.options(section):
-#                     section_dict[option] = user_config.get(section,option)
-#                     
-#         else:
-#             print "error could not open config file: ",self.general_config_dict['configPath']
-#         
-#         return data_object 
-
-#     def get_command_line_items(self, general_data):
-#     
-#         # command line items take precedence over ini file items of the same name
-#         # defaults should be here and NOT in argparse/commandline
-#         if self.args.input_dir:       
-#             general_data['input_dir'] = self.args.input_dir
-#         else:
-#             if not general_data['input_dir']:
-#                 general_data['input_dir'] = './'
-#         
-#         if self.args.run:
-#             general_data['run'] = self.args.run
-#             general_data['run_date'] = self.args.run
-#         else:
-#             if 'run' in general_data:                
-#                 general_data['run_date'] = general_data['run']
-#             elif 'run_date' in general_data:
-#                 general_data['run'] = general_data['run_date']
-#             else:
-#                 sys.exit("Cannot find the run or run_date on command line or in config file - Exiting")
-#         # make sure RUN is before OUTPUT_DIR        
-#         try:
-#             general_data['output_dir'] = os.path.join(self.args.baseoutputdir,self.args.run)
-#         except:
-#             if 'output_dir' not in general_data:
-#                 general_data['output_dir'] = os.path.join('.',self.args.run)       
-#         #getattr(args,'force_runkey', "")
-#         
-#         
-#         if self.args.platform:
-#             general_data['platform'] = self.args.platform
-#         else:
-#             if 'platform' not in general_data:
-#                 sys.exit("Cannot find the platform from command line or in config file - Exiting")
-#                 
-#         
-#         if self.args.input_file_format:
-#             general_data['input_file_format'] = self.args.input_file_format
-#         else:
-#             if 'input_file_format' not in general_data:
-#                 general_data['input_file_format'] = ''
-#         if self.args.input_file_suffix:
-#             general_data['input_file_suffix'] = self.args.input_file_suffix
-#         else:
-#             if 'input_file_suffix' not in general_data:
-#                 general_data['input_file_suffix'] = ''
-#         
-#         return general_data
-        
-#     def validate_454_csv(self, args, my_csv):
-#         print "TODO: write validate def for 454/csv"
-#         data_object = self.populate_data_object_454(args, my_csv)
         
     def validate_vamps_ini(self, analysis_dir):
         # configPath is the new configPath
@@ -229,7 +157,7 @@ class MetadataUtils:
         elif not os.path.isdir(self.data_object['general']['input_dir']):
             logger.error("That is not a directory: "+self.data_object['general']['input_dir'])
             error=True
-        elif self.data_object['general']['input_file_format'] == 'fastq' and self.data_object['general']['platform'] == 'illumina':
+        elif self.data_object['general']['input_file_format'] == 'fastq' and self.data_object['general']['platform'] in C.illumina_list:
                 file_exists = False
     #            if 'input_dir' in self.data_object['general'] and self.data_object['general']['input_dir']:
                 for dirname, dirnames, filenames in os.walk(self.data_object['general']['input_dir']):
@@ -450,15 +378,28 @@ class MetadataUtils:
                 try:
                     (a,b,c) = data[item]['project'].split('_')
                 except:
-                    logger.error("project not in correct format: "+data[item]['project']+" - Exiting (key: "+data[item]+")")
+                    logger.error("project not in correct format: ")
+                    logger.error(data[item]['project'])
+                    logger.error(" - Exiting (key: ")
+                    logger.error(data[item])
                     error=True
                 (a,b,c) = data[item]['project'].split('_')
                 #if c[0] not in [i[0].upper() for i in domains]:
                 #    sys.exit("ERROR : Project suffix has incorrect/non-existant domain: "+c)
-                if (c[1:] not in self.dna_regions) and (c.lower() not in self.dna_regions):
-                    logger.error("Project suffix has incorrect DNA region: "+c+" - Exiting (key: "+data[item]+")")
+                # logger.error("c[1:] = ")
+                # logger.error(c[1:])
+                # logger.error("c.lower() =")
+                # logger.error(c.lower())
+                # logger.error("self.dna_regions")
+                # logger.error(self.dna_regions )
+                
+                if (c[1:].lower() not in self.dna_regions) and (c.lower() not in self.dna_regions):
+                    logger.error("Project suffix has incorrect DNA region: ")
+                    logger.error(c)
+                    logger.error(" - Exiting (key: ")
+                    logger.error(data[item])
                     error = True
-        return (error,warn)
+        return (error, warn)
         
     def check_dataset_name(self,data):
         """
@@ -481,8 +422,11 @@ class MetadataUtils:
         
         
     def check_projects_and_datasets(self,data):
-        self.my_conn     = MyConnection(host='newbpcdb2.jbpc-np.mbl.edu', db="env454")
-#         self.my_conn     = MyConnection()      
+        if self.utils.is_local():
+            self.my_conn    = MyConnection(host = 'localhost', db="test_env454")
+        else:
+            self.my_conn     = MyConnection(host = 'newbpcdb2.jbpc-np.mbl.edu', db="env454")
+        # self.my_conn     = MyConnection()
         project_dataset = {}
         projects = {}
         datasets = {}
@@ -537,7 +481,7 @@ class MetadataUtils:
         if 'validate' in steps.split(','):
             # print we are done
             sys.exit()
-        if PipelneUtils().is_local:
+        if self.utils.is_local():
             return 'c'
         else:
             return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
@@ -574,7 +518,7 @@ class MetadataUtils:
         fh.write("platform = " + self.general_config_dict['platform']+"\n")
         fh.write("output_dir = " + os.path.dirname(new_ini_file)+"\n")
         #fh.write("output_dir = "+os.path.join(self.general_config_dict['baseoutputdir'],self.general_config_dict['run'])+"\n")
-        if self.general_config_dict['platform'] == 'illumina':
+        if self.general_config_dict['platform'] in C.illumina_list:
             #fh.write("input_file_suffix = "  + self.general_config_dict['input_file_suffix']+"\n")
             fh.write("input_file_format = " + self.general_config_dict['input_file_format']+"\n")
             fh.write("anchor_file = "        + self.general_config_dict['anchor_file']+"\n")
@@ -601,7 +545,7 @@ class MetadataUtils:
  
         for k, values in content.iteritems():
             fh.write("\n")
-            if self.general_config_dict['platform'] == 'illumina':
+            if self.general_config_dict['platform'] in C.illumina_list:
                 fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
             elif self.general_config_dict['platform'] == '454':
                 fh.write("["+values['lane']+"_"+values['run_key']+"]\n")
@@ -682,8 +626,9 @@ water-marine
         out_fh.close()
             
     def check_headers(self, headers):
-        if self.general_config_dict['platform']=='illumina':
-            known_header_list= self.known_header_list['illumina']
+        if self.general_config_dict['platform'] in C.illumina_list:
+            pl = self.general_config_dict['platform']
+            known_header_list = self.known_header_list[pl]
         elif self.general_config_dict['platform'] == '454':
             known_header_list = self.known_header_list['454']
         else:
@@ -713,8 +658,13 @@ water-marine
             return True
         
     def env_source_to_id(self, headers):
-        self.my_conn = MyConnection(host='newbpcdb2.jbpc-np.mbl.edu', db="env454")  
-#         self.my_conn     = MyConnection()    
+        logger.error("self.utils.is_local() LLL2 metadata")
+        logger.error(self.utils.is_local())
+        if self.utils.is_local():
+            self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
+        else:
+            self.my_conn = MyConnection(host='newbpcdb2.jbpc-np.mbl.edu', db="env454")
+        # self.my_conn     = MyConnection()    
         my_sql       = """SELECT * FROM env_sample_source"""
         self.env     = self.my_conn.execute_fetch_select(my_sql)
         self.res_headers = ["env_sample_source_id" if x=="env_sample_source" else x for x in headers]
@@ -781,7 +731,7 @@ water-marine
             # no configPath
             collector= self.get_values( self.args )
             
-        if self.args.platform == 'illumina':
+        if self.args.platform in C.illumina_list:
             print "Starting Illumina Pipeline"
             if not self.args.csvPath:
                 sys.exit("illumina requires a csv file - Exiting")

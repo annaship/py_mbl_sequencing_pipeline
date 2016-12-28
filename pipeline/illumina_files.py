@@ -55,6 +55,7 @@ class IlluminaFiles:
         self.dirs = dirs
         self.out_file_path = dirs.check_dir(dirs.analysis_dir)
         self.results_path  = dirs.check_dir(dirs.reads_overlap_dir)
+        self.platform = self.runobj.platform
         
     def split_files(self, compressed = False):
         """
@@ -165,7 +166,7 @@ class IlluminaFiles:
     """          
                               
     def partial_overlap_reads_cluster(self):
-        self.utils.print_both("Extract partial_overlap V4V5 reads:")
+        self.utils.print_both("Extract partial_overlap reads (from partial_overlap_reads_cluster):")
         program_name = C.partial_overlap_cmd
         if self.utils.is_local():
             program_name = C.partial_overlap_cmd_local       
@@ -186,7 +187,7 @@ class IlluminaFiles:
         return script_file_name      
                     
     def partial_overlap_reads(self):
-        self.utils.print_both("Extract partial_overlap V4V5 reads:")
+        self.utils.print_both("Extract partial_overlap reads (from partial_overlap_reads):")
         for idx_key in self.runobj.samples.keys():
             ini_file_name = os.path.join(self.out_file_path, idx_key + ".ini")
             program_name = C.partial_overlap_cmd
@@ -241,8 +242,8 @@ class IlluminaFiles:
 #$ -j y
 # Send mail to these users
 #$ -M %s
-# Send mail at job end; -m eas sends on end, abort, suspend.
-#$ -m eas
+# Send mail at job end (e); -m as sends abort, suspend.
+#$ -m as
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
@@ -340,11 +341,14 @@ class IlluminaFiles:
         primers         = {}
         for idx_key in self.runobj.samples.keys():
             primer_suite = self.runobj.samples[idx_key].primer_suite.lower()
+            
+            # print "PPP primer_suite = "
+            # print primer_suite
 
             if primer_suite in C.primers_dict:
                 proximal_primer = C.primers_dict[primer_suite]["proximal_primer"]
                 distal_primer = C.primers_dict[primer_suite]["distal_primer"]
-#                 print "proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
+                # print "RRR proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer)
             else:
                 self.utils.print_both("ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'\n" % (primer_suite))
             primers[idx_key] = (proximal_primer, distal_primer) 
@@ -370,9 +374,10 @@ pair_1 = %s
 pair_2 = %s
 """ % (idx_key, email, self.out_file_path, self.results_path, idx_key + "_R1.fastq", idx_key + "_R2.fastq")
 
-            "That's for parital overlap (v4v5 miseq illumina)" 
+            "That's for parital overlap (v4v5 and hapto miseq illumina)" 
             if not self.runobj.do_perfect:
                 primers = self.get_primers()    
+                # print "run_key = %s, idx_key = %s, primers[idx_key][0], primers[idx_key][1] = %s" (run_key, idx_key, primers[idx_key][0], primers[idx_key][1])
                 text += """
 # following section is optional
 [prefixes]
@@ -414,6 +419,21 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 correct_file_names.append(file1)
         return set(correct_file_names)
         
+        
+    def get_run_key(self, e_sequence, has_ns = "True"):
+        if has_ns:
+            return ("NNNN" + e_sequence[4:9])
+        else:
+            return e_sequence[0:5]
+            
+    def get_ini_run_key(self, index_sequence, e):
+        has_ns = any("NNNN" in s for s in self.runobj.run_keys)           
+        
+        lane_number = e.lane_number
+        if self.platform == "nextseq":
+            lane_number = "1"
+        return index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + lane_number
+        
     def read1(self, files_r1, compressed):
         """ loop through the fastq_file_names
             1) e.pair_no = 1, find run_key -> dataset name
@@ -427,9 +447,11 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                 e = f_input.entry
                 # todo: a fork with or without NNNN, add an argument
                 #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
-                has_ns = any("NNNN" in s for s in self.runobj.run_keys)           
-#                 has_ns = True             
-                ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + e.lane_number
+                # lane_number = e.lane_number
+                # if self.platform == "nextseq":
+                #     lane_number = "1"
+                # ini_run_key  = index_sequence + "_" + self.get_run_key(e.sequence, has_ns) + "_" + lane_number
+                ini_run_key = self.get_ini_run_key(index_sequence, e)
                 if int(e.pair_no) == 1:
                     dataset_file_name_base_r1 = ini_run_key + "_R1"
                     if (dataset_file_name_base_r1 in self.out_files.keys()):
@@ -439,18 +461,11 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
                         short_id2 = ":".join(e.header_line.split()[1].split(":")[1:])
                         id2 = short_id1 + " 2:" + short_id2
                         self.id_dataset_idx[id2] = ini_run_key
-                else:
-                    self.out_files["unknown"].store_entry(e)
+                    else:
+                        self.out_files["unknown"].store_entry(e)
                     
     # def truncate_seq(self, seq):
     #     return seq[:C.trimming_length]
-    
-                    
-    def get_run_key(self, e_sequence, has_ns = "True"):
-        if has_ns:
-            return ("NNNN" + e_sequence[4:9])
-        else:
-            return e_sequence[0:5]
     
     def remove_end_ns_strip(self, e_sequence):
         if e_sequence.endswith('N'):
