@@ -37,7 +37,7 @@ csv_header_list = {
                             "funding",          "env_sample_source_id","dataset_description" ]
 }
 
-known_platforms = ('illumina','454','ion_torrent','vamps')
+known_platforms = ('illumina','454','ion_torrent','vamps','miseq','hiseq','nextseq')
 #primer_suites   = ["bacterialv6suite","bacterial v6 suite","bacterial_v6_suite","archaeal v6 suite","archaealv6suite","eukaryalv9suite","bacterial v4-v5 suite"]
 # todo: take from db!
 primer_suites   = ["archaeal v6 suite", "archaeal v6mod suite", "archaeal v6-v4 suite", "bacterial v3 suite", "bacterial v3-v1 suite",
