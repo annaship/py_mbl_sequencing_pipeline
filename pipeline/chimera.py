@@ -189,7 +189,7 @@ class Chimera:
         regex          = re.compile(r"%s" % tuple_name.find)                                
 #         print "find = %s, replace = %s" % (find, replace)
         if (not tuple_name.cur_file_names) and (tuple_name == from_frequency_to_size):
-            self.utils.print_both('ERROR: Did not find uniqued files ("%s") in %s, please check if the previous step has finished. Exiting.\n' % (C.filtered_suffix + ".unique" , self.indir))
+            self.utils.print_both('ERROR: Did not find uniqued files (".unique") in %s, please check if the previous step has finished. Exiting.\n' % self.indir)
             sys.exit()
         for cur_file_name in tuple_name.cur_file_names:
             file_name = os.path.join(tuple_name.cur_dirname, cur_file_name)           
