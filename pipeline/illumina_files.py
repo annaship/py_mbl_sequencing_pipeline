@@ -442,10 +442,9 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
         for file_r1 in files_r1:
             self.utils.print_both("====\nFFF1: file %s" % file_r1)
             f_input  = fq.FastQSource(file_r1, compressed)
-            self.utils.print_both("compressed = ")
-            self.utils.print_both(compressed)
             index_sequence = self.get_index(file_r1)
-            while f_input.next(trim_to = C.trimming_length[self.platform]):
+            while f_input.next(trim_to = C.trimming_length):
+            # while f_input.next(trim_to = C.trimming_length[self.platform]):
                 e = f_input.entry
                 # todo: a fork with or without NNNN, add an argument
                 #                 ini_run_key  = index_sequence + "_" + "NNNN" + e.sequence[4:9] + "_" + e.lane_number   
