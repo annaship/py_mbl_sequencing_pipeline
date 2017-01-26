@@ -301,6 +301,7 @@ trim_primers_cmd          = "iu-trim-V6-primers"
 filter_mismatch_cmd       = "iu-filter-merged-reads"
 filter_mismatch_cmd_local = filter_mismatch_cmd
 
+marker_gene_stringent_regions = ["ITS1", "HLSU"]
 ################################################################################################
 trimming_length    = 251
 # trimming_length    = {"miseq": 251, "nextseq": 151}

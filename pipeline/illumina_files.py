@@ -171,7 +171,7 @@ class IlluminaFiles:
         if self.utils.is_local():
             program_name = C.partial_overlap_cmd_local       
         dna_region = self.get_config_values('dna_region')
-        if ("ITS1" in list(dna_region)):
+        if set(C.marker_gene_stringent_regions) & set(list(dna_region)):
             add_arg = "--marker-gene-stringent"
         else:
             add_arg = ""
@@ -194,7 +194,8 @@ class IlluminaFiles:
             if self.utils.is_local():
                 program_name = C.partial_overlap_cmd_local        
             try:
-                if (self.runobj.samples[idx_key].dna_region == "ITS1"):
+                if set(C.marker_gene_stringent_regions) & set(list(self.runobj.samples[idx_key].dna_region)):
+                # if (self.runobj.samples[idx_key].dna_region == "ITS1"):
                     call([program_name, "--enforce-Q30-check", "--marker-gene-stringent", ini_file_name])
                 else:
                     call([program_name, "--enforce-Q30-check", ini_file_name])
