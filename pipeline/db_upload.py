@@ -472,8 +472,8 @@ class dbUpload:
             return int(res[0][0])        
 
     def insert_rundate(self):
-        my_sql = """INSERT IGNORE INTO run (run, run_prefix) VALUES
-            ('%s', 'illumina')""" % (self.rundate)
+        my_sql = """INSERT IGNORE INTO run (run, run_prefix, platform) VALUES
+            ('%s', 'illumin', '%s')""" % (self.rundate, self.runobj.platform)
         self.run_id = self.my_conn.execute_no_fetch(my_sql)
         
     def insert_project(self, content_row, contact_id):
