@@ -502,6 +502,7 @@ class dbUpload:
         project_id      = self.get_id('project',      content_row.project)
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
         primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
+        illumina_index_id = self.get_id('illumina_index', content_row.illumina_index)
         file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
         #overlap = content_row.overlap
         #if (content_row.overlap == 'complete'):
@@ -509,13 +510,13 @@ class dbUpload:
         
         my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode, 
                                                     adaptor, dna_region_id, amp_operator, seq_operator, barcode_index, overlap, insert_size, 
-                                                    file_prefix, read_length, primer_suite_id, platform) 
+                                                    file_prefix, read_length, primer_suite_id, platform, illumina_index_id) 
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',  
                                                     '%s', %s, '%s', '%s', '%s', '%s', %s, 
-                                                    '%s', %s, %s, '%s')
+                                                    '%s', %s, %s, '%s', %s)
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.barcode_index, content_row.overlap, content_row.insert_size,
-                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform)
+                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
         
         self.utils.print_both("insert run_info sql = %s" % my_sql)
         
