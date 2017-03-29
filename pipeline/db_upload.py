@@ -512,7 +512,7 @@ class dbUpload:
                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size, 
                                                     file_prefix, read_length, primer_suite_id, platform, illumina_index_id) 
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',  
-                                                    '%s', %s, '%s', '%s', '%s', '%s', %s, 
+                                                    '%s', %s, '%s', '%s', '%s', %s, 
                                                     '%s', %s, %s, '%s', %s)
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
