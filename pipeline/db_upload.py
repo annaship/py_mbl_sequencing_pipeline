@@ -62,11 +62,12 @@ class MyConnection:
             
             if self.utils.is_local():
                 host = "127.0.0.1"
-                if db == "env454":
-                    port_env = 3308
-                    read_default_file = os.path.expanduser("~/.my.cnf_server")
-                else:
-                    db = "test_env454"
+#                 if db == "env454":
+#                     port_env = 3308
+#                     read_default_file = os.path.expanduser("~/.my.cnf_server")
+#                 else:
+#                     db = "test_env454"
+                read_default_file = "~/.my.cnf_local"
             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
@@ -212,8 +213,11 @@ class dbUpload:
         
     def insert_seq(self, sequences):
       query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
+      # ON DUPLICATE KEY UPDATE
       val_tmpl   = "'%s'"
       my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+      my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s)" % (self.sequence_field_name, self.sequence_field_name)
+#       print "MMM my_sql = %s" % my_sql
       seq_id     = self.my_conn.execute_no_fetch(my_sql)
       self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
       return seq_id
@@ -276,7 +280,8 @@ class dbUpload:
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-
+        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count)"
+#         print "MMM1 my_sql = %s" % my_sql
         try:
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
@@ -361,6 +366,8 @@ class dbUpload:
                     '%s'                
                    )
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+            my_sql          = my_sql + " ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id)"
+#             print "MMM2 my_sql = %s" % my_sql                   
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
 # 
