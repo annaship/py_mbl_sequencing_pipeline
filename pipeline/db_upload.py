@@ -159,8 +159,8 @@ class dbUpload:
         database_name = runobj.database_name
         
         self.filenames   = []
-        logger.error("self.utils.is_local() LLL1 db upload")
-        logger.error(self.utils.is_local())
+        # logger.error("self.utils.is_local() LLL1 db upload")
+        # logger.error(self.utils.is_local())
         
         if self.utils.is_local():
             self.my_conn = MyConnection(host = 'localhost', db="test_env454")
