@@ -212,8 +212,7 @@ class dbUpload:
         return sequences 
         
     def insert_seq(self, sequences):
-      query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
-      # ON DUPLICATE KEY UPDATE
+      query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
       val_tmpl   = "'%s'"
       my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
       my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s)" % (self.sequence_field_name, self.sequence_field_name)
@@ -278,9 +277,9 @@ class dbUpload:
 
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
-        my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
+        my_sql          = """INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count)"
+        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id)"
 #         print "MMM1 my_sql = %s" % my_sql
         try:
             res_id = self.my_conn.execute_no_fetch(my_sql)
@@ -356,7 +355,7 @@ class dbUpload:
                 except Exception, e:
                     logger.debug("Error = %s" % e)
                     raise
-            my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+            my_sql = """INSERT INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
                     %s,
