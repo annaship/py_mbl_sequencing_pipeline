@@ -484,7 +484,9 @@ class MetadataUtils:
         if self.utils.is_local():
             return 'c'
         else:
-            return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
+            return 'c'
+          
+            # return raw_input("\nDoes this look okay? (q to quit, v to view configFile, c to continue) ")
         
     def convert_csv_to_ini(self, new_ini_file):
         #print self.args
