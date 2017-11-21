@@ -365,7 +365,15 @@ class dbUpload:
                     '%s'                
                    )
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-            my_sql          = my_sql + " ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id)"
+#             my_sql          = my_sql + " ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id)"
+            my_sql          = my_sql + """ ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id), 
+            taxonomy_id = VALUES(taxonomy_id), 
+            gast_distance = VALUES(gast_distance), 
+            refssu_count = VALUES(refssu_count), 
+            rank_id = VALUES(rank_id), 
+            refhvr_ids = VALUES(refhvr_ids)"""
+
+
 #             print "MMM2 my_sql = %s" % my_sql                   
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
