@@ -279,7 +279,7 @@ class dbUpload:
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id)"
+        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count)"
 #         print "MMM1 my_sql = %s" % my_sql
         try:
             res_id = self.my_conn.execute_no_fetch(my_sql)
@@ -342,8 +342,7 @@ class dbUpload:
         else:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
-            
-# todo: combine insert and update DRY
+
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
@@ -355,67 +354,7 @@ class dbUpload:
                 except Exception, e:
                     logger.debug("Error = %s" % e)
                     raise
-            my_sql = """INSERT INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
-                   (
-                    %s,
-                    %s,
-                    '%s',
-                    '%s',
-                    (SELECT rank_id FROM rank WHERE rank = '%s'),
-                    '%s'                
-                   )
-                   """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-#             my_sql          = my_sql + " ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id)"
-            my_sql          = my_sql + """ ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id), 
-            taxonomy_id = VALUES(taxonomy_id), 
-            gast_distance = VALUES(gast_distance), 
-            refssu_count = VALUES(refssu_count), 
-            rank_id = VALUES(rank_id), 
-            refhvr_ids = VALUES(refhvr_ids)"""
-
-
-#             print "MMM2 my_sql = %s" % my_sql                   
-            res_id = self.my_conn.execute_no_fetch(my_sql)
-            return res_id
-# 
-# '''TODO: after switching to mysql 5.6
-#     def update_sequence_uniq_info_ill(self, fasta, gast_dict):
-#         if gast_dict:
-#             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-#             seq_upper = fasta.seq.upper()
-#             sequence_ill_id = self.seq_id_dict[seq_upper]
-#             if taxonomy in self.tax_id_dict:
-#                 try:
-#                     taxonomy_id = self.tax_id_dict[taxonomy] 
-#                 except Exception, e:
-#                     logger.debug("Error = %s" % e)
-#                     raise
-#             my_sql = """UPDATE IGNORE sequence_uniq_info_ill                        
-#                         SET updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-#                             taxonomy_id = %s,
-#                             gast_distance = '%s',
-#                             refssu_count = '%s',
-#                             rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
-#                             refhvr_ids = '%s'
-#                         WHERE sequence_ill_id = %s
-#                      """ % (taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), sequence_ill_id)
-#             res_id = self.my_conn.execute_no_fetch(my_sql)
-#             return res_id
-# '''
-  
-    def update_sequence_uniq_info_ill(self, fasta, gast_dict):
-        if gast_dict:
-            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-            seq_upper = fasta.seq.upper()
-            sequence_ill_id = self.seq_id_dict[seq_upper]
-            if taxonomy in self.tax_id_dict:
-                try:
-                    taxonomy_id = self.tax_id_dict[taxonomy] 
-                except Exception, e:
-                    logger.debug("Error = %s" % e)
-                    raise
-                      
-            my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+                my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
                     %s,
@@ -432,18 +371,62 @@ class dbUpload:
                        rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
                        refhvr_ids = '%s'
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-                    
-            # my_sql = """UPDATE IGNORE sequence_uniq_info_ill
-            #             SET updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-            #                 taxonomy_id = %s,
-            #                 gast_distance = '%s',
-            #                 refssu_count = '%s',
-            #                 rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
-            #                 refhvr_ids = '%s'
-            #             WHERE sequence_ill_id = %s
-            #          """ % (taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), sequence_ill_id)
+                     
+#             my_sql = """INSERT INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+#                    (
+#                     %s,
+#                     %s,
+#                     '%s',
+#                     '%s',
+#                     (SELECT rank_id FROM rank WHERE rank = '%s'),
+#                     '%s'                
+#                    )
+#                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+#             my_sql          = my_sql + " ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id)"
+#             my_sql          = my_sql + """ ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id), 
+#             taxonomy_id = VALUES(taxonomy_id), 
+#             gast_distance = VALUES(gast_distance), 
+#             refssu_count = VALUES(refssu_count), 
+#             rank_id = VALUES(rank_id), 
+#             refhvr_ids = VALUES(refhvr_ids),
+#             updated = (CASE WHEN VALUES(taxonomy_id) <> %s THEN NOW() ELSE updated END)
+#             """
+#             print "MMM2 my_sql = %s" % my_sql                   
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
+
+    # def update_sequence_uniq_info_ill(self, fasta, gast_dict):
+    #     if gast_dict:
+    #         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+    #         seq_upper = fasta.seq.upper()
+    #         sequence_ill_id = self.seq_id_dict[seq_upper]
+    #         if taxonomy in self.tax_id_dict:
+    #             try:
+    #                 taxonomy_id = self.tax_id_dict[taxonomy] 
+    #             except Exception, e:
+    #                 logger.debug("Error = %s" % e)
+    #                 raise
+    #                   
+    #         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+    #                (
+    #                 %s,
+    #                 %s,
+    #                 '%s',
+    #                 '%s',
+    #                 (SELECT rank_id FROM rank WHERE rank = '%s'),
+    #                 '%s'                
+    #                )
+    #                ON DUPLICATE KEY UPDATE
+    #                    updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+    #                    taxonomy_id = %s,
+    #                    gast_distance = '%s',
+    #                    refssu_count = '%s',
+    #                    rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
+    #                    refhvr_ids = '%s'
+    #                """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+    #                 
+    #         res_id = self.my_conn.execute_no_fetch(my_sql)
+    #         return res_id
     
 
     def put_run_info(self, content = None):

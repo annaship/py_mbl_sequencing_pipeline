@@ -599,13 +599,16 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                 wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
 
-                if (full_upload):
-                    wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-                    insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
-                else:
-                    wrapped = wrapper(my_env454upload.update_sequence_uniq_info_ill, fasta, gast_dict)
-                    insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
-                    
+                wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
+                insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+
+                # if (full_upload):
+                #     wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
+                #     insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+                # else:
+                #     wrapped = wrapper(my_env454upload.update_sequence_uniq_info_ill, fasta, gast_dict)
+                #     insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+                #     
 
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
 
