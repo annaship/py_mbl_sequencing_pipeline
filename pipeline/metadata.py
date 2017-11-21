@@ -425,7 +425,8 @@ class MetadataUtils:
         if self.utils.is_local():
             self.my_conn    = MyConnection(host = 'localhost', db="test_env454")
         else:
-            self.my_conn     = MyConnection(host = 'bpcdb1.jbpc-np.mbl.edu', db="env454")
+            self.my_conn     = MyConnection(host = 'bpcdb1', db="env454")
+#             self.my_conn     = MyConnection(host = 'bpcdb1.jbpc-np.mbl.edu', db="env454")
         # self.my_conn     = MyConnection()
         project_dataset = {}
         projects = {}
@@ -665,7 +666,8 @@ water-marine
         if self.utils.is_local():
             self.my_conn     = MyConnection(host = 'localhost', db="test_env454")
         else:
-            self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
+            self.my_conn     = MyConnection(host = 'bpcdb1', db="env454")
+#             self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
         # self.my_conn     = MyConnection()    
         my_sql       = """SELECT * FROM env_sample_source"""
         self.env     = self.my_conn.execute_fetch_select(my_sql)
