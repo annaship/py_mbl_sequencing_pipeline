@@ -278,8 +278,7 @@ class dbUpload:
 
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
-        my_sql          = """INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
-                             VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
+        my_sql          = """INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
         my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count);"
 #         print "MMM1 my_sql = %s" % my_sql
 #         try:
