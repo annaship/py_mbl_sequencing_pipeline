@@ -296,6 +296,19 @@ class Chimera:
         -chimeras
         /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.txt.chimeric.fa
         -notrunclabels
+        ---
+        /usr/local/bin/vsearch
+        -uchime_ref
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/reads_overlap/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chg
+        -uchimeout
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.db
+        -chimeras
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.db.chimeric.fa
+        -notrunclabels
+        -strand
+        plus
+        -db
+        /groups/g454/blastdbs/rRNA16S.gold.fasta
 
         """
         ref_or_novo_options = {self.denovo_suffix: "-uchime_denovo", self.ref_suffix: "-uchime_ref"}
@@ -303,27 +316,21 @@ class Chimera:
         
         "TODO:"
         file_name = "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
-        
-        
-
         ref_db = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
         
 
         for suff, opt in ref_or_novo_options.items():
-            output_file_name  = self.outdir + "/" + file_name + self.chimeras_suffix + suff 
+            input_file_name  = self.indir  + "/" + file_name + self.chg_suffix
+            output_file_name = self.outdir + "/" + file_name + self.chimeras_suffix + suff 
             ref_add = ""
             if (opt == "-uchime_ref"):
                 ref_add = "-strand plus -db %s" % ref_db  
                 
-            uchime_cmd = """%s %s %s/%s.chg -uchimeout %s -chimeras %s%s -notrunclabels %s""" % (self.usearch_cmd, opt, self.indir, file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
+            uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s""" % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
             print "UUU = uchime_cmd = %s" % uchime_cmd
             print "+++"
        
-#         uchime_cmd_nov = """%s -uchime_denovo %s/%s.chg -uchimeout %s/%s%s -chimeras %s/%s%s -notrunclabels""" % (self.usearch_cmd, self.indir, file_name, self.outdir, output_file_name, self.denovo_suffix, self.outdir, output_file_name, chimera_denovo_suffix) 
-#         uchime_cmd_ref = """%s -uchime_ref %s/%s.chg -uchimeout %s/%s%s -chimeras %s/%s%s -notrunclabels -strand plus -db %s""" % (self.usearch_cmd, self.indir, file_name, self.outdir, output_file_name, self.ref_suffix, self.outdir, output_file_name, chimera_ref_suffix) 
-#         
-#         print "UUU = uchime_cmd_nov = %s" % uchime_cmd_nov
-#         print "UUU = uchime_cmd_ref = %s" % uchime_cmd_ref
+
           
     def create_chimera_cmd_old(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
         """
