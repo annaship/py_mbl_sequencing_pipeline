@@ -591,6 +591,9 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             
             start_fasta_next = time.time()
+            my_env454upload.my_conn.execute_no_fetch("DELIMITER $$")
+            my_env454upload.my_conn.execute_no_fetch("BEGIN NOT ATOMIC")
+
             while fasta.next():
                 if (full_upload):
                     wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
@@ -611,7 +614,9 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                 #     
 
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-
+    
+            my_env454upload.my_conn.execute_no_fetch("END ; $$")
+            my_env454upload.my_conn.execute_no_fetch("DELIMITER ;")
         logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
         logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
         logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)

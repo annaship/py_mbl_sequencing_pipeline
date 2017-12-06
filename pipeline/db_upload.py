@@ -96,7 +96,7 @@ class MyConnection:
     def execute_no_fetch(self, sql):
         if self.cursor:
             self.cursor.execute(sql)
-            self.conn.commit()
+#             self.conn.commit()
 #            if (self.conn.affected_rows()):
 #            print dir(self.cursor)
             return self.cursor.lastrowid
@@ -345,6 +345,8 @@ class dbUpload:
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
 
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
+#     def make_insert_sequence_uniq_info_ill(self, fasta, gast_dict):
+        cnt = 0
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
@@ -370,7 +372,7 @@ class dbUpload:
                        gast_distance = '%s',
                        refssu_count = '%s',
                        rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
-                       refhvr_ids = '%s'
+                       refhvr_ids = '%s';
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
                      
 #             my_sql = """INSERT INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
@@ -392,7 +394,8 @@ class dbUpload:
 #             refhvr_ids = VALUES(refhvr_ids),
 #             updated = (CASE WHEN VALUES(taxonomy_id) <> %s THEN NOW() ELSE updated END)
 #             """
-#             print "MMM2 my_sql = %s" % my_sql                   
+#             print "MMM2 my_sql = %s" % my_sql      
+            cnt = cnt + 1
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
 
