@@ -622,21 +622,42 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 #             my_env454upload.my_conn.cursor.execute("SHOW tables")
 #             my_env454upload.my_conn.cursor.execute("DELIMITER //")
 #             my_env454upload.my_conn.cursor.execute("BEGIN NOT ATOMIC")
+
             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
-            begin_sql = "DELIMITER $$ "
-            end_sql = " DELIMITER ;"
             all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
+            if (full_upload):
+                start = time.time()
+                my_env454upload.my_conn.cursor.execute(all_insert_pdr_info_sql_to_run)
+#                 self.conn.commit()
+# self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+#             self.cursor = self.conn.cursor()
+#                 my_env454upload.my_conn.commit()
+                my_env454upload.my_conn.cursor.execute("COMMIT")
+                
+                insert_pdr_info_time = (time.time() - start)
+#                 wrapped = wrapper(my_env454upload.my_conn.cursor.execute, all_insert_pdr_info_sql_to_run)
+#                 insert_pdr_info_time += timeit.timeit(wrapped, number=1)
+
+#                 wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
+#                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
+# 
+#                 wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
+#                 insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
+
+
+            
+            
+            
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
 #             my_env454upload.my_conn.cursor.execute(begin_sql)
-            my_env454upload.my_conn.cursor.execute("SHOW tables like 'run%'")
-            res = my_env454upload.my_conn.cursor.fetchall ()
-            print res
-            my_env454upload.my_conn.cursor.execute(all_insert_pdr_info_sql_to_run)
+#             my_env454upload.my_conn.cursor.execute("SHOW tables like 'run%'")
+#             res = my_env454upload.my_conn.cursor.fetchall ()
+#             print res
 #             my_env454upload.my_conn.cursor.execute(end_sql)
 #             my_env454upload.my_conn.cursor.execute("SHOW tables like 'run'")
 #             my_env454upload.my_conn.execute_no_fetch("END ; $$")
 #             my_env454upload.my_conn.execute_no_fetch("DELIMITER ;")
-#         logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
+        logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
 #         logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
 #         logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
         logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))

@@ -96,7 +96,7 @@ class MyConnection:
     def execute_no_fetch(self, sql):
         if self.cursor:
             self.cursor.execute(sql)
-#             self.conn.commit()
+            self.conn.commit()
 #            if (self.conn.affected_rows()):
 #            print dir(self.cursor)
             return self.cursor.lastrowid
