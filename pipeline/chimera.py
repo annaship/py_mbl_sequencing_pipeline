@@ -301,17 +301,20 @@ class Chimera:
         "TODO:"
         ref_or_novo_options = {self.denovo_suffix: "-uchime_denovo", self.ref_suffix: "-uchime_ref"}
         file_name = "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
-        output_file_name  = file_name + self.chimeras_suffix + self.denovo_suffix
+        output_file_name  = file_name + self.chimeras_suffix
         chimera_ref_suffix    = self.ref_suffix + self.chimeric_suffix #".db.chimeric.fa"
         chimera_denovo_suffix = self.denovo_suffix + self.chimeric_suffix # ".txt.chimeric.fa"
+        ref_db = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
 
 #             self.indir  = self.dirs.check_dir(self.dirs.reads_overlap_dir)
 #             self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)
        
 #         uchime_cmd = self.usearch_cmd + " " + "-uchime_denovo" + " " + self.indir + "/" + file_name + ".chg" + " " + "-uchimeout"  + " " + self.outdir + "/" +  output_file_name + " " + "-chimeras"  + " " + self.outdir + "/" + output_file_name + ".chimeric.fa" + " " + "-notrunclabels" 
-        uchime_cmd = """%s -uchime_denovo %s/%s.chg -uchimeout %s/%s -chimeras %s/%s.chimeric.fa -notrunclabels""" % (self.usearch_cmd, self.indir, file_name, self.outdir, output_file_name, self.outdir, output_file_name) 
+        uchime_cmd_nov = """%s -uchime_denovo %s/%s.chg -uchimeout %s/%s%s -chimeras %s/%s%s -notrunclabels""" % (self.usearch_cmd, self.indir, file_name, self.outdir, output_file_name, self.denovo_suffix, self.outdir, output_file_name, chimera_denovo_suffix) 
+        uchime_cmd_ref = """%s -uchime_ref %s/%s.chg -uchimeout %s/%s%s -chimeras %s/%s%s -notrunclabels -strand plus -db %s""" % (self.usearch_cmd, self.indir, file_name, self.outdir, output_file_name, self.ref_suffix, self.outdir, output_file_name, chimera_ref_suffix, ref_db) 
         
-        print "UUU = uchime_cmd = %s" % uchime_cmd
+        print "UUU = uchime_cmd_nov = %s" % uchime_cmd_nov
+        print "UUU = uchime_cmd_ref = %s" % uchime_cmd_ref
           
     def create_chimera_cmd_old(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
         """
