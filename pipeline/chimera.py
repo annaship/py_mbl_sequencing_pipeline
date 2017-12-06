@@ -70,14 +70,17 @@ class Chimera:
         
 #         self.usearch_cmd = C.usearch_cmd
         self.usearch_cmd = C.usearch6_cmd        
+        if self.utils.is_local():
+            self.usearch_cmd = C.usearch6_cmd_local        
         #self.abskew      = C.chimera_checking_abskew
         self.refdb       = C.chimera_checking_refdb_6
+        if self.utils.is_local():
+            self.refdb_local = C.chimera_checking_refdb_local
         self.its_refdb   = C.chimera_checking_its_refdb_6
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
 #         pprint(self.run_keys)
 #         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
         
-
         
     def make_chimera_input_illumina_file_names(self):
         input_file_names = {} 
@@ -317,10 +320,20 @@ class Chimera:
 
 
         uchime_cmd = C.clusterize_cmd
+        if self.utils.is_local():
+            uchime_cmd = ""
         uchime_cmd += " "
         uchime_cmd += self.usearch_cmd
+        print "self.usearch_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
+
         uchime_cmd += uchime_cmd_append + input_file_name
+        print "uchime_cmd_append FROM create_chimera_cmd = %s" % (uchime_cmd_append)
+
+        
         uchime_cmd += db_cmd_append
+
+        print "db_cmd_append FROM create_chimera_cmd = %s" % (db_cmd_append)
+
         uchime_cmd += " -uchimeout " + output_file_name
         """if we need nonchimeric for denovo and db separate we might create them here
 #         uchime_cmd += " -nonchimeras "
@@ -348,6 +361,17 @@ class Chimera:
         chimera_region_found = False
         output = {}
         
+        file_list             = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
+        print "FFF = file_list = %s" % (file_list)
+        uchime_cmd1 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+        uchime_cmd2 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+#         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
+#         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+#         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+#         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
+#         self.dirs.chmod_all(self.dirs.analysis_dir)        
+#   
+        
         for idx_key in self.input_file_names:
 #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
@@ -371,6 +395,9 @@ class Chimera:
             
             try:
                 logger.info("chimera checking command: " + str(uchime_cmd))
+#                 self.utils.call_sh_script(script_name_w_path, where_to_run)
+                
+
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             except OSError, e:

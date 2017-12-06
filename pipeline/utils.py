@@ -314,6 +314,61 @@ class PipelneUtils:
     def __init__(self):
         pass
 
+    def call_sh_script(self, script_name_w_path, where_to_run):
+        try:
+            call(['chmod', '0774', script_name_w_path])
+            if self.is_local():
+                self.print_both("call(['qsub', script_name_w_path], cwd=(where_to_run))")
+                call(['bash', script_name_w_path], cwd=(where_to_run))                
+            else:
+                call(['qsub', script_name_w_path], cwd=(where_to_run))
+#             pass
+        except:
+            self.print_both("Problems with script_name = %s or qsub" % (script_name_w_path))
+            raise    
+    
+    def create_job_array_script(self, command_line, dir_to_run, files_list):
+        files_string         = " ".join(files_list)
+        files_list_size         = len(files_list)
+        command_file_name = os.path.basename(command_line.split(" ")[0])
+        script_file_name  = command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        script_file_name_full = os.path.join(dir_to_run, script_file_name)
+        log_file_name     = script_file_name + ".sge_script.sh.log"
+        email_mbl         = self.make_users_email()
+        text = (
+                '''#!/bin/bash
+#$ -cwd
+#$ -S /bin/bash
+#$ -N %s
+# Giving the name of the output log file
+#$ -o %s
+# Combining output/error messages into one file
+#$ -j y
+# Send mail to these users
+#$ -M %s
+# Send mail at job end (e); -m as sends abort, suspend.
+#$ -m as
+#$ -t 1-%s
+# Now the script will iterate %s times.
+
+  file_list=(%s)
+  
+  i=$(expr $SGE_TASK_ID - 1)
+#   echo "i = $i"
+  # . /etc/profile.d/modules.sh
+  # . /xraid/bioware/bioware-loader.sh
+  . /xraid/bioware/Modules/etc/profile.modules
+  module load bioware
+    
+  echo "%s ${file_list[$i]}"  
+  %s ${file_list[$i]}  
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
+# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
+                )
+        self.open_write_close(script_file_name_full, text)
+        return script_file_name
+
+
     def get_vsearch_version(self):
         import commands
         return commands.getstatusoutput('vsearch --help | head -1')
@@ -515,6 +570,9 @@ example of getting all directory name in illumina_files
         print "call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name)
         print Exception         
         pass
+
+
+
         
 if __name__=='__main__':
     print "GTTCAAAGAYTCGATGATTCAC"
