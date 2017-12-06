@@ -625,9 +625,15 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
             begin_sql = "DELIMITER $$ "
             end_sql = " DELIMITER ;"
-            all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; $$ "
+            all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-    
+#             my_env454upload.my_conn.cursor.execute(begin_sql)
+            my_env454upload.my_conn.cursor.execute("SHOW tables like 'run%'")
+            res = my_env454upload.my_conn.cursor.fetchall ()
+            print res
+            my_env454upload.my_conn.cursor.execute(all_insert_pdr_info_sql_to_run)
+#             my_env454upload.my_conn.cursor.execute(end_sql)
+#             my_env454upload.my_conn.cursor.execute("SHOW tables like 'run'")
 #             my_env454upload.my_conn.execute_no_fetch("END ; $$")
 #             my_env454upload.my_conn.execute_no_fetch("DELIMITER ;")
 #         logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
