@@ -337,9 +337,11 @@ class dbUpload:
                     self.tax_id_dict[taxonomy] = tax_id
                 else:
                     my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-                    tax_id = self.my_conn.execute_no_fetch(my_sql)
-                    self.tax_id_dict[taxonomy] = tax_id
-                return tax_id
+#                     tax_id = self.my_conn.execute_no_fetch(my_sql)
+#                     self.tax_id_dict[taxonomy] = tax_id
+#                 return tax_id
+                    return my_sql
+
         else:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            

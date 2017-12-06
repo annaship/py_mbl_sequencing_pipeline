@@ -594,11 +594,11 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 
 
             all_insert_pdr_info_sql = []
-            insert_taxonomy_sql = []
-            insert_sequence_uniq_info_ill_sql = []
+            all_insert_taxonomy_sql = []
+            all_insert_sequence_uniq_info_ill_sql = []
             while fasta.next():
                 all_insert_pdr_info_sql.append(my_env454upload.insert_pdr_info(fasta, run_info_ill_id))
-#                 insert_taxonomy_sql.append(my_env454upload.insert_taxonomy(fasta, gast_dict))
+                all_insert_taxonomy_sql.append(my_env454upload.insert_taxonomy(fasta, gast_dict))
 #                 insert_sequence_uniq_info_ill_sql.append(my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict))
 #                 if (full_upload):
 #                     wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
@@ -625,15 +625,15 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 
             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
             all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
+            
+            all_insert_taxonomy_sql_all = " ".join(all_insert_taxonomy_sql)
+            all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+            
+            print "YYY "
             if (full_upload):
                 start = time.time()
                 my_env454upload.my_conn.cursor.execute(all_insert_pdr_info_sql_to_run)
-#                 self.conn.commit()
-# self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
-#             self.cursor = self.conn.cursor()
-#                 my_env454upload.my_conn.commit()
                 my_env454upload.my_conn.cursor.execute("COMMIT")
-                
                 insert_pdr_info_time = (time.time() - start)
 #                 wrapped = wrapper(my_env454upload.my_conn.cursor.execute, all_insert_pdr_info_sql_to_run)
 #                 insert_pdr_info_time += timeit.timeit(wrapped, number=1)
