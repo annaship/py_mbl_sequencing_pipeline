@@ -298,23 +298,24 @@ class Chimera:
         -notrunclabels
 
         """
-        "TODO:"
         ref_or_novo_options = {self.denovo_suffix: "-uchime_denovo", self.ref_suffix: "-uchime_ref"}
+
+        
+        "TODO:"
         file_name = "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
-        output_file_name  = file_name + self.chimeras_suffix
-        chimera_ref_suffix    = self.ref_suffix + self.chimeric_suffix #".db.chimeric.fa"
-        chimera_denovo_suffix = self.denovo_suffix + self.chimeric_suffix # ".txt.chimeric.fa"
+        
+        
+
         ref_db = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
         
 
         for suff, opt in ref_or_novo_options.items():
-            print "suff = %s" % suff
-            print "ref_or_novo_options[suff] = opt = %s" % opt
+            output_file_name  = self.outdir + "/" + file_name + self.chimeras_suffix + suff 
+            ref_add = ""
             if (opt == "-uchime_ref"):
                 ref_add = "-strand plus -db %s" % ref_db  
-            else:
-                ref_add = ""
-            uchime_cmd = """%s %s %s/%s.chg -uchimeout %s/%s%s -chimeras %s/%s%s%s -notrunclabels %s""" % (self.usearch_cmd, opt, self.indir, file_name, self.outdir, output_file_name, suff, self.outdir, output_file_name, suff, self.chimeric_suffix, ref_add) 
+                
+            uchime_cmd = """%s %s %s/%s.chg -uchimeout %s -chimeras %s%s -notrunclabels %s""" % (self.usearch_cmd, opt, self.indir, file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
             print "UUU = uchime_cmd = %s" % uchime_cmd
             print "+++"
        
