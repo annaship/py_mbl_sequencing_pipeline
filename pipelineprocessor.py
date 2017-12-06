@@ -591,6 +591,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             
             start_fasta_next = time.time()
+            
             while fasta.next():
                 if (full_upload):
                     wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)

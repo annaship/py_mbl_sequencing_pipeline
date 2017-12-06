@@ -10,18 +10,20 @@ from pipeline.utils import Dirs, PipelneUtils
 import IlluminaUtils.lib.fastalib as fastalib
 
 try:
-    import MySQLdb
-except MySQLdb.Error, e:
-    message = """
-    MySQLdb ERROR
-      To load the correct module, try running these commands before running the pipeline:
-       
-source /xraid/bioware/Modules/etc/profile.modules
-module load bioware
-    """
-    PipelneUtils.print_both(message)
-    PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
-    raise
+    import mysql.connector as mariadb
+#     import MySQLdb
+
+# except MySQLdb.Error, e:
+#     message = """
+#     MySQLdb ERROR
+#       To load the correct module, try running these commands before running the pipeline:
+#        
+# source /xraid/bioware/Modules/etc/profile.modules
+# module load bioware
+#     """
+#     PipelneUtils.print_both(message)
+#     PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
+#     raise
 except:                       # catch everything
     PipelneUtils.print_both("Unexpected:")
 #     print "Unexpected:"         # handle unexpected exceptions
@@ -37,6 +39,9 @@ except:                       # catch everything
 # module load bioware
 # 
 #     """)
+
+# from MySQLdb import OperationalError
+
 class MyConnection:
     """
     Connection to env454
@@ -67,14 +72,18 @@ class MyConnection:
 #                     read_default_file = os.path.expanduser("~/.my.cnf_server")
 #                 else:
 #                     db = "test_env454"
-                read_default_file = "~/.my.cnf_local"
-            self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+                read_default_file = os.path.expanduser("~/.my.cnf_local")
+                print "read_default_file = %s" % (read_default_file)
+#             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+            self.conn   = mariadb.connect(host = host, db = db, option_files = read_default_file, port = port_env)
+            # cursor = mariadb_connection.cursor()
+
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
                    
-        except MySQLdb.Error, e:
-            self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
-            raise
+#         except MySQLdb.Error, e:
+#             self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
+#             raise
         except:                       # catch everything
             self.utils.print_both("Unexpected:")
             self.utils.print_both(sys.exc_info()[0])
@@ -93,14 +102,34 @@ class MyConnection:
             raise
           return res
 
-    def execute_no_fetch(self, sql):
-        if self.cursor:
-            self.cursor.execute(sql)
-            self.conn.commit()
-#            if (self.conn.affected_rows()):
-#            print dir(self.cursor)
+#     def execute_no_fetch(self, sql):
+#         if self.cursor:
+#             self.cursor.execute(sql)
+#             self.conn.commit()
+# #            if (self.conn.affected_rows()):
+# #            print dir(self.cursor)
+#             return self.cursor.lastrowid
+# #        logger.debug("rows = "  + str(self.rows))
+
+    def execute_no_fetch(self, query):
+        try:
+            self.cursor.execute(query, multi=True)
             return self.cursor.lastrowid
-#        logger.debug("rows = "  + str(self.rows))
+        except:
+            raise
+#         except OperationalError as e:
+#             read_default_file = os.path.expanduser("~/.my.cnf")
+#             port_env = 3306
+#             
+#             if self.utils.is_local():
+#                 host = "127.0.0.1"
+#                 read_default_file = "~/.my.cnf_local"
+#                 db = "test_env454"
+#             MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+# #             MySQLdb.reconnect()
+#             print 'reconnecting and trying again...'
+# #             fetch_data(query)
+
  
 
 class dbUpload:
@@ -213,14 +242,23 @@ class dbUpload:
         return sequences 
         
     def insert_seq(self, sequences):
-      query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
-      val_tmpl   = "'%s'"
-      my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
-      my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s)" % (self.sequence_field_name, self.sequence_field_name)
-#       print "MMM my_sql = %s" % my_sql
-      seq_id     = self.my_conn.execute_no_fetch(my_sql)
-      self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
-      return seq_id
+        query_tmpl = "BEGIN; INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
+        val_tmpl   = "'%s'"
+        my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s); END;" % (self.sequence_field_name, self.sequence_field_name)
+        #       print "MMM my_sql = %s" % my_sql
+        seq_id     = self.my_conn.execute_no_fetch(my_sql)
+        self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+        return seq_id        
+#     def insert_seq(self, sequences):
+#       query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
+#       val_tmpl   = "'%s'"
+#       my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+#       my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s)" % (self.sequence_field_name, self.sequence_field_name)
+# #       print "MMM my_sql = %s" % my_sql
+#       seq_id     = self.my_conn.execute_no_fetch(my_sql)
+#       self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+#       return seq_id
     #     try:
     #         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (COMPRESS(%s))"
     #         val_tmpl   = "'%s'"
