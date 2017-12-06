@@ -286,8 +286,34 @@ class Chimera:
 
         return cluster_done
         
+    def create_chimera_cmd(self):
+        """
+        /usr/local/bin/vsearch
+        -uchime_denovo
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/reads_overlap/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chg
+        -uchimeout
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.txt
+        -chimeras
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.txt.chimeric.fa
+        -notrunclabels
+
+        """
+        "TODO:"
+        ref_or_novo_options = {self.denovo_suffix: "-uchime_denovo", self.ref_suffix: "-uchime_ref"}
+        file_name = "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
+        output_file_name  = file_name + self.chimeras_suffix + self.denovo_suffix
+        chimera_ref_suffix    = self.ref_suffix + self.chimeric_suffix #".db.chimeric.fa"
+        chimera_denovo_suffix = self.denovo_suffix + self.chimeric_suffix # ".txt.chimeric.fa"
+
+#             self.indir  = self.dirs.check_dir(self.dirs.reads_overlap_dir)
+#             self.outdir = self.dirs.check_dir(self.dirs.chimera_dir)
+       
+#         uchime_cmd = self.usearch_cmd + " " + "-uchime_denovo" + " " + self.indir + "/" + file_name + ".chg" + " " + "-uchimeout"  + " " + self.outdir + "/" +  output_file_name + " " + "-chimeras"  + " " + self.outdir + "/" + output_file_name + ".chimeric.fa" + " " + "-notrunclabels" 
+        uchime_cmd = """%s -uchime_denovo %s/%s.chg -uchimeout %s/%s -chimeras %s/%s.chimeric.fa -notrunclabels""" % (self.usearch_cmd, self.indir, file_name, self.outdir, output_file_name, self.outdir, output_file_name) 
+        
+        print "UUU = uchime_cmd = %s" % uchime_cmd
           
-    def create_chimera_cmd(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
+    def create_chimera_cmd_old(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
         """
         http://www.drive5.com/usearch/manual/uchime_denovo.html
         from usearch -help
@@ -363,8 +389,11 @@ class Chimera:
         
         file_list             = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
         print "FFF = file_list = %s" % (file_list)
-        uchime_cmd1 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
-        uchime_cmd2 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+#         uchime_cmd1 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+#         script_file_name      = self.create_job_array_script(uchime_cmd1, self.dirs.analysis_dir, file_list)
+        
+
+#         uchime_cmd2 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
 #         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
 #         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
 #         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
@@ -390,7 +419,8 @@ class Chimera:
 
 #             print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
             
-            uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+            #uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+            uchime_cmd = self.create_chimera_cmd()
             self.utils.print_both("\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd))
             
             try:

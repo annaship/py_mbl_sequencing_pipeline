@@ -368,7 +368,6 @@ class PipelneUtils:
         self.open_write_close(script_file_name_full, text)
         return script_file_name
 
-
     def get_vsearch_version(self):
         import commands
         return commands.getstatusoutput('vsearch --help | head -1')
