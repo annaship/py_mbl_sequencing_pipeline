@@ -280,14 +280,15 @@ class dbUpload:
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = """INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count)"
+        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count);"
 #         print "MMM1 my_sql = %s" % my_sql
-        try:
-            res_id = self.my_conn.execute_no_fetch(my_sql)
-            return res_id
-        except:
-            self.utils.print_both("Offensive query: %s" % my_sql)
-            raise
+#         try:
+#             res_id = self.my_conn.execute_no_fetch(my_sql)
+#             return res_id
+#         except:
+#             self.utils.print_both("Offensive query: %s" % my_sql)
+#             raise
+        return my_sql
         
     def make_gast_files_dict(self):
         return self.dirs.get_all_files(self.gast_dir, "gast")
@@ -394,8 +395,6 @@ class dbUpload:
 #             refhvr_ids = VALUES(refhvr_ids),
 #             updated = (CASE WHEN VALUES(taxonomy_id) <> %s THEN NOW() ELSE updated END)
 #             """
-#             print "MMM2 my_sql = %s" % my_sql      
-            cnt = cnt + 1
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
 
