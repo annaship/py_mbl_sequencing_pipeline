@@ -364,6 +364,7 @@ class dbUpload:
             sequence_ill_id = self.seq_id_dict[seq_upper]
 # TEMP!
 #             taxonomy_id = self.get_id("taxonomy", taxonomy)
+
             if taxonomy in self.tax_id_dict:
                 try:
                     taxonomy_id = self.tax_id_dict[taxonomy] 
@@ -657,7 +658,7 @@ class dbUpload:
         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
                      
 #         start = time.time()
-        self.get_taxonomy_ids()
+#         self.get_taxonomy_ids()
         self.get_taxonomy_id_dict()
 #         elapsed = (time.time() - start)
 #         print "get_taxonomy_ids time: %s" % elapsed
