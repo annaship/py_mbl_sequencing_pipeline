@@ -278,16 +278,16 @@ class dbUpload:
 
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
-        my_sql          = """INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) 
-                             VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
-        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count)"
+        my_sql          = "INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) VALUES (%s, %s, %s)" % (run_info_ill_id, sequence_ill_id, seq_count)
+        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count);"
 #         print "MMM1 my_sql = %s" % my_sql
-        try:
-            res_id = self.my_conn.execute_no_fetch(my_sql)
-            return res_id
-        except:
-            self.utils.print_both("Offensive query: %s" % my_sql)
-            raise
+#         try:
+#             res_id = self.my_conn.execute_no_fetch(my_sql)
+#             return res_id
+#         except:
+#             self.utils.print_both("Offensive query: %s" % my_sql)
+#             raise
+        return my_sql
         
     def make_gast_files_dict(self):
         return self.dirs.get_all_files(self.gast_dir, "gast")
@@ -337,14 +337,18 @@ class dbUpload:
                     self.tax_id_dict[taxonomy] = tax_id
                 else:
                     my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-                    tax_id = self.my_conn.execute_no_fetch(my_sql)
-                    self.tax_id_dict[taxonomy] = tax_id
-                return tax_id
+#                     tax_id = self.my_conn.execute_no_fetch(my_sql)
+#                     self.tax_id_dict[taxonomy] = tax_id
+#                 return tax_id
+                    return my_sql
+
         else:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
 
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
+#     def make_insert_sequence_uniq_info_ill(self, fasta, gast_dict):
+        cnt = 0
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
@@ -370,7 +374,7 @@ class dbUpload:
                        gast_distance = '%s',
                        refssu_count = '%s',
                        rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
-                       refhvr_ids = '%s'
+                       refhvr_ids = '%s';
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
                      
 #             my_sql = """INSERT INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
@@ -392,7 +396,6 @@ class dbUpload:
 #             refhvr_ids = VALUES(refhvr_ids),
 #             updated = (CASE WHEN VALUES(taxonomy_id) <> %s THEN NOW() ELSE updated END)
 #             """
-#             print "MMM2 my_sql = %s" % my_sql                   
             res_id = self.my_conn.execute_no_fetch(my_sql)
             return res_id
 
