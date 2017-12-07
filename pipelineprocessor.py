@@ -595,32 +595,10 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             start_fasta_next = time.time()
             
-#             all_insert_pdr_info_sql_to_run = my_env454upload.prepare_upload_query(fasta, run_info_ill_id)
-#             all_insert_taxonomy_sql_to_run = my_env454upload.prepare_upload_query(fasta, gast_dict)
-#             all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.prepare_upload_query(fasta, gast_dict)
-
             sql3 = my_env454upload.prepare_upload_query(fasta, run_info_ill_id, gast_dict)
             all_insert_pdr_info_sql_to_run = sql3[0]
             all_insert_taxonomy_sql_to_run = sql3[1]
             all_insert_sequence_uniq_info_ill_sql_to_run = sql3[2]
-#             all_insert_pdr_info_sql = []
-#             all_insert_taxonomy_sql = []
-#             all_insert_sequence_uniq_info_ill_sql = []
-#             while fasta.next():
-#                 all_insert_pdr_info_sql.append(my_env454upload.insert_pdr_info(fasta, run_info_ill_id))
-#                 insert_taxonomy_sql = my_env454upload.insert_taxonomy(fasta, gast_dict)
-#                 if insert_taxonomy_sql:
-#                     all_insert_taxonomy_sql.append(insert_taxonomy_sql)
-#                 all_insert_sequence_uniq_info_ill_sql.append(my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict))
-# 
-#             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
-#             all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
-#             
-#             all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
-#             all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
-#                         
-#             all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
-#             all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
 
             print "YYY "
 #             TODO: DRY
@@ -629,6 +607,10 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                 my_env454upload.my_conn.cursor.execute(all_insert_pdr_info_sql_to_run)
                 my_env454upload.my_conn.cursor.execute("COMMIT")
                 insert_pdr_info_time = (time.time() - start)
+                
+                insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
+                
+                
             start = time.time()
             my_env454upload.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
             my_env454upload.my_conn.cursor.execute("COMMIT")
@@ -636,10 +618,12 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             my_env454upload.get_taxonomy_ids()
 
-            start = time.time()
-            my_env454upload.my_conn.cursor.execute(all_insert_sequence_uniq_info_ill_sql_to_run)
-            my_env454upload.my_conn.cursor.execute("COMMIT")
-            insert_sequence_uniq_info_ill_time = (time.time() - start)
+#             start = time.time()
+#             my_env454upload.my_conn.cursor.execute(all_insert_sequence_uniq_info_ill_sql_to_run)
+#             my_env454upload.my_conn.cursor.execute("COMMIT")
+#             insert_sequence_uniq_info_ill_time = (time.time() - start)
+
+            insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_sequence_uniq_info_ill_sql_to_run)
 
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
 
@@ -654,6 +638,12 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception             
       
+def upload_w_time(my_env454upload, sql):
+    start = time.time()
+    my_env454upload.my_conn.cursor.execute(sql)
+    my_env454upload.my_conn.cursor.execute("COMMIT")
+    return (time.time() - start)
+    
 def gast(runobj):  
     
     logger.info("STARTING GAST()")

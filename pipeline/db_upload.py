@@ -3,6 +3,7 @@ import os
 import constants as C
 from subprocess import Popen, PIPE
 from shlex import split
+from time import sleep, time, gmtime, strftime
 
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
@@ -313,7 +314,7 @@ class dbUpload:
 #         TODO: get all in one query as seq_ids!
         for taxonomy in self.taxonomies:
             tax_id = self.get_id("taxonomy", taxonomy)
-            try: 
+            try:
                 self.tax_id_dict[taxonomy] = tax_id
             except:
                 raise
@@ -340,13 +341,13 @@ class dbUpload:
             seq_upper = fasta.seq.upper()
             sequence_ill_id = self.seq_id_dict[seq_upper]
 # TEMP!
-            taxonomy_id = self.get_id("taxonomy", taxonomy)
-#             if taxonomy in self.tax_id_dict:
-#                 try:
-#                     taxonomy_id = self.tax_id_dict[taxonomy] 
-#                 except Exception, e:
-#                     logger.debug("Error = %s" % e)
-#                     raise
+#             taxonomy_id = self.get_id("taxonomy", taxonomy)
+            if taxonomy in self.tax_id_dict:
+                try:
+                    taxonomy_id = self.tax_id_dict[taxonomy] 
+                except Exception, e:
+                    logger.debug("Error = %s" % e)
+                    raise
             my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
@@ -626,13 +627,20 @@ class dbUpload:
             insert_taxonomy_sql = self.insert_taxonomy(fasta, gast_dict)
             if insert_taxonomy_sql:
                 all_insert_taxonomy_sql.append(insert_taxonomy_sql)
-            all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))
         
         all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
         all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
          
         all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+                     
+#         start = time.time()
+        self.get_taxonomy_ids()
+#         elapsed = (time.time() - start)
+#         print "get_taxonomy_ids time: %s" % elapsed
+        
+        while fasta.next():
+            all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))            
                      
         all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
         all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
