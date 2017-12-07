@@ -334,19 +334,20 @@ class dbUpload:
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
 
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
-#     def make_insert_sequence_uniq_info_ill(self, fasta, gast_dict):
-        cnt = 0
+        my_sql = ""
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
             sequence_ill_id = self.seq_id_dict[seq_upper]
-            if taxonomy in self.tax_id_dict:
-                try:
-                    taxonomy_id = self.tax_id_dict[taxonomy] 
-                except Exception, e:
-                    logger.debug("Error = %s" % e)
-                    raise
-                my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+# TEMP!
+            taxonomy_id = self.get_id("taxonomy", taxonomy)
+#             if taxonomy in self.tax_id_dict:
+#                 try:
+#                     taxonomy_id = self.tax_id_dict[taxonomy] 
+#                 except Exception, e:
+#                     logger.debug("Error = %s" % e)
+#                     raise
+            my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
                     %s,
@@ -364,8 +365,8 @@ class dbUpload:
                        refhvr_ids = '%s';
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
                      
-            res_id = self.my_conn.execute_no_fetch(my_sql)
-            return res_id
+#             res_id = self.my_conn.execute_no_fetch(my_sql)
+            return my_sql
 
     def put_run_info(self, content = None):
 

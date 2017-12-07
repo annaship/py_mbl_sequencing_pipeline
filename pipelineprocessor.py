@@ -570,6 +570,7 @@ def env454upload_seq(my_env454upload, filename, sequences):
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception   
 
+# TODO: DRY
 def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
     insert_pdr_info_time = 0
     insert_taxonomy_time = 0
@@ -594,7 +595,8 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             start_fasta_next = time.time()
 
-
+#             my_env454upload.prepare
+            
             all_insert_pdr_info_sql = []
             all_insert_taxonomy_sql = []
             all_insert_sequence_uniq_info_ill_sql = []
@@ -603,36 +605,17 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                 insert_taxonomy_sql = my_env454upload.insert_taxonomy(fasta, gast_dict)
                 if insert_taxonomy_sql:
                     all_insert_taxonomy_sql.append(insert_taxonomy_sql)
-#                 insert_sequence_uniq_info_ill_sql.append(my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict))
-#                 if (full_upload):
-#                     wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
-#                     insert_pdr_info_time += timeit.timeit(wrapped, number=1)
-
-#                 wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
-#                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
-# 
-#                 wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-#                 insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
-
-                # if (full_upload):
-                #     wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-                #     insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
-                # else:
-                #     wrapped = wrapper(my_env454upload.update_sequence_uniq_info_ill, fasta, gast_dict)
-                #     insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
-                #     
-
-#             self.cursor.execute(sql)
-#             my_env454upload.my_conn.cursor.execute("SHOW tables")
-#             my_env454upload.my_conn.cursor.execute("DELIMITER //")
-#             my_env454upload.my_conn.cursor.execute("BEGIN NOT ATOMIC")
+                all_insert_sequence_uniq_info_ill_sql.append(my_env454upload.insert_sequence_uniq_info_ill(fasta, gast_dict))
 
             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
             all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
             
             all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
             all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
-            
+                        
+            all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
+            all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
+
             print "YYY "
             if (full_upload):
                 start = time.time()
@@ -646,31 +629,16 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             my_env454upload.get_taxonomy_ids()
 
-#                 wrapped = wrapper(my_env454upload.my_conn.cursor.execute, all_insert_pdr_info_sql_to_run)
-#                 insert_pdr_info_time += timeit.timeit(wrapped, number=1)
+            start = time.time()
+            my_env454upload.my_conn.cursor.execute(all_insert_sequence_uniq_info_ill_sql_to_run)
+            my_env454upload.my_conn.cursor.execute("COMMIT")
+            insert_sequence_uniq_info_ill_time = (time.time() - start)
 
-#                 wrapped = wrapper(my_env454upload.insert_taxonomy, fasta, gast_dict)
-#                 insert_taxonomy_time += timeit.timeit(wrapped, number=1)
-# 
-#                 wrapped = wrapper(my_env454upload.insert_sequence_uniq_info_ill, fasta, gast_dict)
-#                 insert_sequence_uniq_info_ill_time += timeit.timeit(wrapped, number=1)
-
-
-            
-            
-            
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-#             my_env454upload.my_conn.cursor.execute(begin_sql)
-#             my_env454upload.my_conn.cursor.execute("SHOW tables like 'run%'")
-#             res = my_env454upload.my_conn.cursor.fetchall ()
-#             print res
-#             my_env454upload.my_conn.cursor.execute(end_sql)
-#             my_env454upload.my_conn.cursor.execute("SHOW tables like 'run'")
-#             my_env454upload.my_conn.execute_no_fetch("END ; $$")
-#             my_env454upload.my_conn.execute_no_fetch("DELIMITER ;")
+
         logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
         logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
-#         logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
+        logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
         logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
         return total_seq
         
