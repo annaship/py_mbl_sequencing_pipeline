@@ -630,7 +630,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
             all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
             
-            all_insert_taxonomy_sql_all = " ".join(all_insert_taxonomy_sql)
+            all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
             all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
             
             print "YYY "
@@ -643,6 +643,8 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             my_env454upload.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
             my_env454upload.my_conn.cursor.execute("COMMIT")
             insert_taxonomy_time = (time.time() - start)
+            
+            my_env454upload.get_taxonomy_ids()
 
 #                 wrapped = wrapper(my_env454upload.my_conn.cursor.execute, all_insert_pdr_info_sql_to_run)
 #                 insert_pdr_info_time += timeit.timeit(wrapped, number=1)
