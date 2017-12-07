@@ -165,8 +165,7 @@ class dbUpload:
         if self.utils.is_local():
             self.my_conn = MyConnection(host = 'localhost', db="test_env454")
         else:
-            self.my_conn = MyConnection(host='bpcdb1', db="env454")
-#             self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
+            self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
