@@ -315,15 +315,13 @@ def illumina_chimera(runobj):
     print "Waiting for the cluster..."
     while True:
         if utils.is_local():
-            sleep(1)  
-            break
-      
+            sleep(1)        
         else:
             sleep(120)        
-            cluster_done = mychimera.check_if_cluster_is_done(time_before)
-            print "cluster_done = %s" % cluster_done
-            if (cluster_done):
-                break
+        cluster_done = mychimera.check_if_cluster_is_done(time_before)
+        print "cluster_done = %s" % cluster_done
+        if (cluster_done):
+            break
     
     elapsed = (time.time() - start)
     print "Cluster is done with both chimera checkings in: %s" % elapsed     
