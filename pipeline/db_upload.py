@@ -318,6 +318,28 @@ class dbUpload:
                 self.tax_id_dict[taxonomy] = tax_id
             except:
                 raise
+            
+            
+#         try:
+#             my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name,
+#                                         '), COMPRESS('.join([val_tmpl % key for key in sequences]))
+ 
+            
+    def get_taxonomy_id_dict(self):
+#         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
+        id_name    = "taxonomy_id" 
+        query_tmpl = """SELECT %s, %s FROM %s WHERE %s in (%s)"""
+        val_tmpl   = "'%s'"
+        try:
+            my_sql     = query_tmpl % (id_name, "taxonomy", "taxonomy", "taxonomy", ', '.join([val_tmpl % key for key in self.taxonomies]))
+            res        = self.my_conn.execute_fetch_select(my_sql)
+            one_tax_id_dict = dict((y, int(x)) for x, y in res)
+            self.tax_id_dict.update(one_tax_id_dict)
+        except:
+            if len(self.taxonomies) == 0:
+                self.utils.print_both(("ERROR: There are no taxonomy, please check if there are correct gast files in the directory %s") % self.gast_dir)
+            raise
+            
 
     def insert_taxonomy(self, fasta, gast_dict):
         if gast_dict:
@@ -636,6 +658,7 @@ class dbUpload:
                      
 #         start = time.time()
         self.get_taxonomy_ids()
+        self.get_taxonomy_id_dict()
 #         elapsed = (time.time() - start)
 #         print "get_taxonomy_ids time: %s" % elapsed
         
