@@ -617,3 +617,24 @@ class dbUpload:
 #            os.remove(file_full)
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)       
         
+    def prepare_upload_query(self, fasta, run_info_ill_id, gast_dict):
+        all_insert_pdr_info_sql = []
+        all_insert_taxonomy_sql = []
+        all_insert_sequence_uniq_info_ill_sql = []
+        while fasta.next():
+            all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
+            insert_taxonomy_sql = self.insert_taxonomy(fasta, gast_dict)
+            if insert_taxonomy_sql:
+                all_insert_taxonomy_sql.append(insert_taxonomy_sql)
+            all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))
+        
+        all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
+        all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
+         
+        all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
+        all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+                     
+        all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
+        all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
+        
+        return (all_insert_pdr_info_sql_to_run, all_insert_taxonomy_sql_to_run, all_insert_sequence_uniq_info_ill_sql_to_run)
