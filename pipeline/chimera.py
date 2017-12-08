@@ -315,8 +315,11 @@ class Chimera:
 
         
         "TODO:"
-        file_name = "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
-        ref_db = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
+        file_name = "CTTGTA_NNNNATGCT_1_MERGED-MAX-MISMATCH-3.unique"
+#         "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
+        ref_db = C.chimera_checking_refdb
+        if self.utils.is_local():
+            ref_db = C.chimera_checking_refdb_local
         
 
         for suff, opt in ref_or_novo_options.items():
