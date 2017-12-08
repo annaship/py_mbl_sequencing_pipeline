@@ -316,11 +316,10 @@ class Chimera:
         
         "TODO:"
         file_name = "CTTGTA_NNNNATGCT_1_MERGED-MAX-MISMATCH-3.unique"
-#         "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
+#        BPC: "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
         ref_db = C.chimera_checking_refdb
         if self.utils.is_local():
             ref_db = C.chimera_checking_refdb_local
-        
 
         for suff, opt in ref_or_novo_options.items():
             input_file_name  = self.indir  + "/" + file_name + self.chg_suffix
@@ -329,7 +328,8 @@ class Chimera:
             if (opt == "-uchime_ref"):
                 ref_add = "-strand plus -db %s" % ref_db  
                 
-            uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s""" % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
+            uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
+            """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
             print "UUU = uchime_cmd = %s" % uchime_cmd
             print "+++"
        
