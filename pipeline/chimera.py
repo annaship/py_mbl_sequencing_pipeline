@@ -70,14 +70,17 @@ class Chimera:
         
 #         self.usearch_cmd = C.usearch_cmd
         self.usearch_cmd = C.usearch6_cmd        
+        if self.utils.is_local():
+            self.usearch_cmd = C.usearch6_cmd_local        
         #self.abskew      = C.chimera_checking_abskew
         self.refdb       = C.chimera_checking_refdb_6
+        if self.utils.is_local():
+            self.refdb_local = C.chimera_checking_refdb_local
         self.its_refdb   = C.chimera_checking_its_refdb_6
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
 #         pprint(self.run_keys)
 #         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
         
-
         
     def make_chimera_input_illumina_file_names(self):
         input_file_names = {} 
@@ -283,8 +286,53 @@ class Chimera:
 
         return cluster_done
         
+    def create_chimera_cmd(self):
+        """
+        /usr/local/bin/vsearch
+        -uchime_denovo
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/reads_overlap/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chg
+        -uchimeout
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.txt
+        -chimeras
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.txt.chimeric.fa
+        -notrunclabels
+        ---
+        /usr/local/bin/vsearch
+        -uchime_ref
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/reads_overlap/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chg
+        -uchimeout
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.db
+        -chimeras
+        /Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/miseq/20150223/lane_1_B/analysis/chimera/TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique.chimeras.db.chimeric.fa
+        -notrunclabels
+        -strand
+        plus
+        -db
+        /groups/g454/blastdbs/rRNA16S.gold.fasta
+
+        """
+        ref_or_novo_options = {self.denovo_suffix: "-uchime_denovo", self.ref_suffix: "-uchime_ref"}
+
+        
+        "TODO:"
+        file_name = "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
+        ref_db = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
+        
+
+        for suff, opt in ref_or_novo_options.items():
+            input_file_name  = self.indir  + "/" + file_name + self.chg_suffix
+            output_file_name = self.outdir + "/" + file_name + self.chimeras_suffix + suff 
+            ref_add = ""
+            if (opt == "-uchime_ref"):
+                ref_add = "-strand plus -db %s" % ref_db  
+                
+            uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s""" % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
+            print "UUU = uchime_cmd = %s" % uchime_cmd
+            print "+++"
+       
+
           
-    def create_chimera_cmd(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
+    def create_chimera_cmd_old(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
         """
         http://www.drive5.com/usearch/manual/uchime_denovo.html
         from usearch -help
@@ -317,10 +365,20 @@ class Chimera:
 
 
         uchime_cmd = C.clusterize_cmd
+        if self.utils.is_local():
+            uchime_cmd = ""
         uchime_cmd += " "
         uchime_cmd += self.usearch_cmd
+        print "self.usearch_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
+
         uchime_cmd += uchime_cmd_append + input_file_name
+        print "uchime_cmd_append FROM create_chimera_cmd = %s" % (uchime_cmd_append)
+
+        
         uchime_cmd += db_cmd_append
+
+        print "db_cmd_append FROM create_chimera_cmd = %s" % (db_cmd_append)
+
         uchime_cmd += " -uchimeout " + output_file_name
         """if we need nonchimeric for denovo and db separate we might create them here
 #         uchime_cmd += " -nonchimeras "
@@ -348,6 +406,20 @@ class Chimera:
         chimera_region_found = False
         output = {}
         
+        file_list             = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
+        print "FFF = file_list = %s" % (file_list)
+#         uchime_cmd1 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+#         script_file_name      = self.create_job_array_script(uchime_cmd1, self.dirs.analysis_dir, file_list)
+        
+
+#         uchime_cmd2 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+#         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
+#         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
+#         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
+#         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
+#         self.dirs.chmod_all(self.dirs.analysis_dir)        
+#   
+        
         for idx_key in self.input_file_names:
 #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
@@ -366,11 +438,15 @@ class Chimera:
 
 #             print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
             
-            uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+            #uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+            uchime_cmd = self.create_chimera_cmd()
             self.utils.print_both("\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd))
             
             try:
                 logger.info("chimera checking command: " + str(uchime_cmd))
+#                 self.utils.call_sh_script(script_name_w_path, where_to_run)
+                
+
                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             except OSError, e:

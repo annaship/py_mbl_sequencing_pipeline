@@ -3,6 +3,7 @@ import os
 import constants as C
 from subprocess import Popen, PIPE
 from shlex import split
+from time import sleep, time, gmtime, strftime
 
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
@@ -194,7 +195,8 @@ class dbUpload:
         if self.utils.is_local():
             self.my_conn = MyConnection(host = 'localhost', db="test_env454")
         else:
-            self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
+            self.my_conn = MyConnection(host='bpcdb1', db="env454")
+#             self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
         self.my_csv              = None
@@ -202,6 +204,7 @@ class dbUpload:
         self.unique_file_counts = self.dirs.unique_file_counts
         self.dirs.delete_file(self.unique_file_counts)
         self.seq_id_dict = {}
+        self.taxonomies = set()
         self.tax_id_dict = {}
         self.run_id      = None
 #        self.nonchimeras_suffix = ".nonchimeric.fa"
@@ -228,7 +231,7 @@ class dbUpload:
         my_sql = """SELECT run_info_ill_id FROM run_info_ill 
                     JOIN run using(run_id)
                     WHERE file_prefix = '%s'
-                    and run = '%s'
+                    and run = '%s';
         """ % (filename_base, self.rundate)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
@@ -241,6 +244,7 @@ class dbUpload:
         return sequences 
         
     def insert_seq(self, sequences):
+<<<<<<< HEAD
         query_tmpl = "BEGIN; INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
         val_tmpl   = "'%s'"
         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
@@ -275,6 +279,16 @@ class dbUpload:
     #         if len(sequences) == 0:
     #             self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
     #         raise
+=======
+        query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
+        val_tmpl   = "'%s'"
+        my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (self.sequence_field_name, self.sequence_field_name)
+#       print "MMM my_sql = %s" % my_sql
+        seq_id     = self.my_conn.execute_no_fetch(my_sql)
+        self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+        return seq_id
+>>>>>>> chimera_refactoring
         
     def get_seq_id_dict(self, sequences):
         id_name    = self.sequence_table_name + "_id" 
@@ -293,13 +307,13 @@ class dbUpload:
 
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
-        my_sql  = """SELECT %s FROM %s WHERE %s = '%s'""" % (id_name, table_name, table_name, value)
+        my_sql  = """SELECT %s FROM %s WHERE %s = '%s';""" % (id_name, table_name, table_name, value)
         res     = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])         
             
     def get_sequence_id(self, seq):
-        my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp""" % (seq)
+        my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp;""" % (seq)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])     
@@ -361,42 +375,61 @@ class dbUpload:
         except:
             # reraise the exception, as it's an unexpected error
             raise
+        
+#     def get_taxonomy_ids(self):
+# #         TODO: get all in one query as seq_ids!
+#         for taxonomy in self.taxonomies:
+#             tax_id = self.get_id("taxonomy", taxonomy)
+#             try:
+#                 self.tax_id_dict[taxonomy] = tax_id
+#             except:
+#                 raise
+#             
+            
+#         try:
+#             my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name,
+#                                         '), COMPRESS('.join([val_tmpl % key for key in sequences]))
+ 
+            
+    def get_taxonomy_id_dict(self):
+#         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
+         
+        my_sql = "SELECT %s, %s FROM %s;" % ("taxonomy_id", "taxonomy", "taxonomy")
+        res        = self.my_conn.execute_fetch_select(my_sql)
+        one_tax_id_dict = dict((y, int(x)) for x, y in res)
+        self.tax_id_dict.update(one_tax_id_dict)        
 
     def insert_taxonomy(self, fasta, gast_dict):
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-            "if we already had this taxonomy in this run, just skip it"
-            if taxonomy in self.tax_id_dict:
-                next
-            else:
-                tax_id = self.get_id("taxonomy", taxonomy)
-                if tax_id:
-                    self.tax_id_dict[taxonomy] = tax_id
-                else:
-                    my_sql = """INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s')""" % (taxonomy.rstrip())
-#                     tax_id = self.my_conn.execute_no_fetch(my_sql)
-#                     self.tax_id_dict[taxonomy] = tax_id
-#                 return tax_id
-                    return my_sql
+            my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
+            return my_sql
+
+#             "if we already had this taxonomy in this run, just skip it"
+#             if taxonomy in self.taxonomies:
+#                 next
+#             else:
+#                 my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
+#                 self.taxonomies.add(taxonomy)
+#                 return my_sql
 
         else:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
 
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
-#     def make_insert_sequence_uniq_info_ill(self, fasta, gast_dict):
-        cnt = 0
+        my_sql = ""
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
             sequence_ill_id = self.seq_id_dict[seq_upper]
+# TEMP!
+#             taxonomy_id = self.get_id("taxonomy", taxonomy)
+
             if taxonomy in self.tax_id_dict:
                 try:
                     taxonomy_id = self.tax_id_dict[taxonomy] 
-                except Exception, e:
-                    logger.debug("Error = %s" % e)
-                    raise
-                my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+                    my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
                     %s,
@@ -413,62 +446,12 @@ class dbUpload:
                        rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
                        refhvr_ids = '%s';
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-                     
-#             my_sql = """INSERT INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
-#                    (
-#                     %s,
-#                     %s,
-#                     '%s',
-#                     '%s',
-#                     (SELECT rank_id FROM rank WHERE rank = '%s'),
-#                     '%s'                
-#                    )
-#                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-#             my_sql          = my_sql + " ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id)"
-#             my_sql          = my_sql + """ ON DUPLICATE KEY UPDATE sequence_ill_id = VALUES(sequence_ill_id), 
-#             taxonomy_id = VALUES(taxonomy_id), 
-#             gast_distance = VALUES(gast_distance), 
-#             refssu_count = VALUES(refssu_count), 
-#             rank_id = VALUES(rank_id), 
-#             refhvr_ids = VALUES(refhvr_ids),
-#             updated = (CASE WHEN VALUES(taxonomy_id) <> %s THEN NOW() ELSE updated END)
-#             """
-            res_id = self.my_conn.execute_no_fetch(my_sql)
-            return res_id
+                except Exception, e:
+                    logger.debug("Error = %s" % e)
+                    raise
 
-    # def update_sequence_uniq_info_ill(self, fasta, gast_dict):
-    #     if gast_dict:
-    #         (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-    #         seq_upper = fasta.seq.upper()
-    #         sequence_ill_id = self.seq_id_dict[seq_upper]
-    #         if taxonomy in self.tax_id_dict:
-    #             try:
-    #                 taxonomy_id = self.tax_id_dict[taxonomy] 
-    #             except Exception, e:
-    #                 logger.debug("Error = %s" % e)
-    #                 raise
-    #                   
-    #         my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
-    #                (
-    #                 %s,
-    #                 %s,
-    #                 '%s',
-    #                 '%s',
-    #                 (SELECT rank_id FROM rank WHERE rank = '%s'),
-    #                 '%s'                
-    #                )
-    #                ON DUPLICATE KEY UPDATE
-    #                    updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-    #                    taxonomy_id = %s,
-    #                    gast_distance = '%s',
-    #                    refssu_count = '%s',
-    #                    rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
-    #                    refhvr_ids = '%s'
-    #                """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-    #                 
-    #         res_id = self.my_conn.execute_no_fetch(my_sql)
-    #         return res_id
-    
+#             res_id = self.my_conn.execute_no_fetch(my_sql)
+            return my_sql
 
     def put_run_info(self, content = None):
 
@@ -500,25 +483,25 @@ class dbUpload:
         pass
     def insert_test_contact(self):
         my_sql = '''INSERT IGNORE INTO contact (contact, email, institution, vamps_name, first_name, last_name)
-                VALUES ("guest user", "guest@guest.com", "guest institution", "guest", "guest", "user")'''
+                VALUES ("guest user", "guest@guest.com", "guest institution", "guest", "guest", "user");'''
         self.my_conn.execute_no_fetch(my_sql)        
         
     def get_contact_id(self, data_owner):
-        my_sql = """SELECT contact_id FROM contact WHERE vamps_name = '%s'""" % (data_owner)
+        my_sql = """SELECT contact_id FROM contact WHERE vamps_name = '%s';""" % (data_owner)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])        
 
     def insert_rundate(self):
         my_sql = """INSERT IGNORE INTO run (run, run_prefix, platform) VALUES
-            ('%s', 'illumin', '%s')""" % (self.rundate, self.runobj.platform)
+            ('%s', 'illumin', '%s');""" % (self.rundate, self.runobj.platform)
         self.run_id = self.my_conn.execute_no_fetch(my_sql)
         
     def insert_project(self, content_row, contact_id):
         if (not contact_id):
             self.utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")        
         my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
-        ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
+        ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
         """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
         self.utils.print_both(my_sql)
         self.my_conn.execute_no_fetch(my_sql)
@@ -528,7 +511,7 @@ class dbUpload:
         TODO: get dataset_description
         """        
         my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
-        ('%s', '')
+        ('%s', '');
         """ % (content_row.dataset)
         self.my_conn.execute_no_fetch(my_sql)
     
@@ -551,7 +534,7 @@ class dbUpload:
                                                     file_prefix, read_length, primer_suite_id, platform, illumina_index_id) 
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',  
                                                     '%s', %s, '%s', '%s', '%s', %s, 
-                                                    '%s', %s, %s, '%s', %s)
+                                                    '%s', %s, %s, '%s', %s);
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode, 
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
@@ -585,18 +568,6 @@ class dbUpload:
             my_sql = my_sql1 + my_sql2 + my_sql3
         self.my_conn.execute_no_fetch(my_sql)
 
-#    def del_sequence_pdr_info(self):
-#        my_sql = """DELETE FROM sequence_pdr_info_ill
-#                    USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) JOIN run USING(run_id) WHERE run = "%s"
-#                """ % self.rundate
-#        self.my_conn.execute_no_fetch(my_sql)
-        
-#    def del_run_info(self):
-#        my_sql = """DELETE FROM run_info_ill
-#                    USING run_info_ill JOIN run USING(run_id) WHERE run = "%s"
-#                """ % self.rundate
-#        self.my_conn.execute_no_fetch(my_sql)
-
     def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
         my_sql1 = """DELETE FROM run_info_ill
                     USING run_info_ill 
@@ -623,14 +594,14 @@ class dbUpload:
         my_sql = """DELETE FROM sequence_uniq_info_ill 
                     USING sequence_uniq_info_ill 
                     LEFT JOIN sequence_pdr_info_ill USING(sequence_ill_id) 
-                    WHERE sequence_pdr_info_ill_id is NULL"""
+                    WHERE sequence_pdr_info_ill_id is NULL;"""
         self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequences(self):
         my_sql = """DELETE FROM sequence_ill 
                     USING sequence_ill 
                     LEFT JOIN sequence_pdr_info_ill USING(sequence_ill_id) 
-                    WHERE sequence_pdr_info_ill_id IS NULL
+                    WHERE sequence_pdr_info_ill_id IS NULL;
                 """
         self.my_conn.execute_no_fetch(my_sql)
 
@@ -649,7 +620,7 @@ class dbUpload:
                           JOIN primer_suite using(primer_suite_id) 
                         WHERE run = '%s' 
                           AND lane = %s
-                          AND primer_suite = '%s'
+                          AND primer_suite = '%s';
                           """ % (self.rundate, lane, primer_suite)
             res    = self.my_conn.execute_fetch_select(my_sql)
             try:
@@ -731,3 +702,29 @@ class dbUpload:
 #            os.remove(file_full)
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)       
         
+    def prepare_upload_query(self, fasta, run_info_ill_id, gast_dict):
+        all_insert_pdr_info_sql = []
+        all_insert_taxonomy_sql = []
+        while fasta.next():
+            all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
+            insert_taxonomy_sql = self.insert_taxonomy(fasta, gast_dict)
+            if insert_taxonomy_sql:
+                all_insert_taxonomy_sql.append(insert_taxonomy_sql)
+        
+        all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
+        all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
+         
+        all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
+        all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+                     
+        return (all_insert_pdr_info_sql_to_run, all_insert_taxonomy_sql_to_run)
+    
+    def prepare_insert_sequence_uniq_info_ill_sql(self, fasta, gast_dict):
+        all_insert_sequence_uniq_info_ill_sql = []
+        fasta.reset()
+        while fasta.next():
+            all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))            
+                     
+        all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
+        all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
+        return all_insert_sequence_uniq_info_ill_sql_to_run
