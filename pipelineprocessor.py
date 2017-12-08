@@ -604,17 +604,17 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                 
             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)
             
-            start = time.time()
-            my_env454upload.get_taxonomy_id_dict()
-            elapsed = (time.time() - start)
-            logger.debug("get_taxonomy_ids took %s sec to finish" % elapsed)
-
-            prepare_insert_sequence_uniq_info_ill_sql_time = 0
-            start_prepare_insert_sequence_uniq_info_ill_sql_time = time.time()
-            all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
-            prepare_insert_sequence_uniq_info_ill_sql_time = (time.time() - start_prepare_insert_sequence_uniq_info_ill_sql_time)
-            
-            insert_sequence_uniq_info_ill_time = upload_w_time(my_env454upload, all_insert_sequence_uniq_info_ill_sql_to_run)
+#             start = time.time()
+#             my_env454upload.get_taxonomy_id_dict()
+#             elapsed = (time.time() - start)
+#             logger.debug("get_taxonomy_ids took %s sec to finish" % elapsed)
+# 
+#             prepare_insert_sequence_uniq_info_ill_sql_time = 0
+#             start_prepare_insert_sequence_uniq_info_ill_sql_time = time.time()
+#             all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
+#             prepare_insert_sequence_uniq_info_ill_sql_time = (time.time() - start_prepare_insert_sequence_uniq_info_ill_sql_time)
+#             
+#             insert_sequence_uniq_info_ill_time = upload_w_time(my_env454upload, all_insert_sequence_uniq_info_ill_sql_to_run)
 
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
             logger.debug("prepare_upload_query_time took %s sec to finish" % (prepare_upload_query_time))
@@ -622,17 +622,32 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
             logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
             
-            logger.debug("prepare_upload_query_time took %s sec to finish" % (prepare_insert_sequence_uniq_info_ill_sql_time))
-            
-            logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
         logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
+
+        start = time.time()
+        my_env454upload.get_taxonomy_id_dict()
+        elapsed = (time.time() - start)
+        logger.debug("get_taxonomy_ids took %s sec to finish" % elapsed)
+    
+        for filename in filenames:
+            gast_dict = my_env454upload.get_gast_result(os.path.basename(filename))
+            fasta     = fastalib.SequenceSource(filename, lazy_init = False) 
+    
+            start_prepare_insert_sequence_uniq_info_ill_sql_time = time.time()
+            all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
+            logger.debug("prepare_insert_sequence_uniq_info_ill_sql_time() took %s sec to finish" % (time.time() - start_prepare_insert_sequence_uniq_info_ill_sql_time))
+            
+            insert_sequence_uniq_info_ill_time = upload_w_time(my_env454upload, all_insert_sequence_uniq_info_ill_sql_to_run)
+            logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
+
         return total_seq
         
     except:                       # catch everything
         print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
-        raise                       # re-throw caught exception             
-      
+        raise                       # re-throw caught exception
+    
+
 def upload_w_time(my_env454upload, sql):
     start = time.time()
     my_env454upload.my_conn.cursor.execute(sql)
