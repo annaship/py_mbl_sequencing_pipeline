@@ -607,8 +607,8 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             start = time.time()
             my_env454upload.get_taxonomy_id_dict()
             elapsed = (time.time() - start)
-            print "get_taxonomy_ids time: %s" % elapsed
-            
+            logger.debug("get_taxonomy_ids took %s sec to finish" % elapsed)
+
             prepare_insert_sequence_uniq_info_ill_sql_time = 0
             start_prepare_insert_sequence_uniq_info_ill_sql_time = time.time()
             all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
