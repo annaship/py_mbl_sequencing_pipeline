@@ -368,10 +368,7 @@ class dbUpload:
             if taxonomy in self.tax_id_dict:
                 try:
                     taxonomy_id = self.tax_id_dict[taxonomy] 
-                except Exception, e:
-                    logger.debug("Error = %s" % e)
-                    raise
-            my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+                    my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
                     %s,
@@ -388,7 +385,10 @@ class dbUpload:
                        rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
                        refhvr_ids = '%s';
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
-                     
+                except Exception, e:
+                    logger.debug("Error = %s" % e)
+                    raise
+
 #             res_id = self.my_conn.execute_no_fetch(my_sql)
             return my_sql
 

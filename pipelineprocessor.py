@@ -595,6 +595,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             start_fasta_next = time.time()
             
+            prepare_upload_query_time = 0
             start_prepare_upload_query_time = time.time()
             sql3 = my_env454upload.prepare_upload_query(fasta, run_info_ill_id, gast_dict)
             
@@ -633,7 +634,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             insert_sequence_uniq_info_ill_time = upload_w_time(my_env454upload, all_insert_sequence_uniq_info_ill_sql_to_run)
 
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-            logger.debug("prepare_upload_query_time took %s sec to finish" % (time.time() - prepare_upload_query_time))
+            logger.debug("prepare_upload_query_time took %s sec to finish" % (prepare_upload_query_time))
 
         logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
         logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
