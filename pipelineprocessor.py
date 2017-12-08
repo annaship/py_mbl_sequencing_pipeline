@@ -636,9 +636,9 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
             logger.debug("prepare_upload_query_time took %s sec to finish" % (prepare_upload_query_time))
 
-        logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
-        logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
-        logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
+            logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
+            logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
+            logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
         logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
         return total_seq
         
