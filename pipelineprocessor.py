@@ -591,21 +591,6 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             logger.debug("seq_in_file = %s" % seq_in_file)
             my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
             total_seq += seq_in_file
-<<<<<<< HEAD
-            
-            
-            start_fasta_next = time.time()
-<<<<<<< HEAD
-            
-            while fasta.next():
-                if (full_upload):
-                    wrapped = wrapper(my_env454upload.insert_pdr_info, fasta, run_info_ill_id)
-                    insert_pdr_info_time += timeit.timeit(wrapped, number=1)
-=======
->>>>>>> master
-
-=======
->>>>>>> chimera_refactoring
 
             start_fasta_next = time.time()
             
