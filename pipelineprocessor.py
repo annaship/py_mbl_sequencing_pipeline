@@ -591,8 +591,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             logger.debug("seq_in_file = %s" % seq_in_file)
             my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
             total_seq += seq_in_file
-            
-            
+
             start_fasta_next = time.time()
             
             prepare_upload_query_time = 0
@@ -604,7 +603,6 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 
             all_insert_pdr_info_sql_to_run = sql3[0]
             all_insert_taxonomy_sql_to_run = sql3[1]
-            all_insert_sequence_uniq_info_ill_sql_to_run = sql3[2]
 
             print "YYY "
 #             TODO: DRY
@@ -623,8 +621,19 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 #             insert_taxonomy_time = (time.time() - start)
             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)
             
+            start = time.time()
+            my_env454upload.get_taxonomy_id_dict()
+            elapsed = (time.time() - start)
+            print "get_taxonomy_ids time: %s" % elapsed
             
-            my_env454upload.get_taxonomy_ids()
+            prepare_insert_sequence_uniq_info_ill_sql_time = 0
+            start_prepare_insert_sequence_uniq_info_ill_sql_time = time.time()
+            
+            all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
+            prepare_insert_sequence_uniq_info_ill_sql_time = (time.time() - start_prepare_insert_sequence_uniq_info_ill_sql_time)
+
+            
+#             my_env454upload.get_taxonomy_ids()
 
 #             start = time.time()
 #             my_env454upload.my_conn.cursor.execute(all_insert_sequence_uniq_info_ill_sql_to_run)
@@ -638,6 +647,9 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 
             logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
             logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
+            
+            logger.debug("prepare_upload_query_time took %s sec to finish" % (prepare_insert_sequence_uniq_info_ill_sql_time))
+            
             logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
         logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
         return total_seq

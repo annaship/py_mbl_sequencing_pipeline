@@ -310,15 +310,15 @@ class dbUpload:
             # reraise the exception, as it's an unexpected error
             raise
         
-    def get_taxonomy_ids(self):
-#         TODO: get all in one query as seq_ids!
-        for taxonomy in self.taxonomies:
-            tax_id = self.get_id("taxonomy", taxonomy)
-            try:
-                self.tax_id_dict[taxonomy] = tax_id
-            except:
-                raise
-            
+#     def get_taxonomy_ids(self):
+# #         TODO: get all in one query as seq_ids!
+#         for taxonomy in self.taxonomies:
+#             tax_id = self.get_id("taxonomy", taxonomy)
+#             try:
+#                 self.tax_id_dict[taxonomy] = tax_id
+#             except:
+#                 raise
+#             
             
 #         try:
 #             my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name,
@@ -327,30 +327,26 @@ class dbUpload:
             
     def get_taxonomy_id_dict(self):
 #         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
-        id_name    = "taxonomy_id" 
-        query_tmpl = """SELECT %s, %s FROM %s WHERE %s in (%s)"""
-        val_tmpl   = "'%s'"
-        try:
-            my_sql     = query_tmpl % (id_name, "taxonomy", "taxonomy", "taxonomy", ', '.join([val_tmpl % key for key in self.taxonomies]))
-            res        = self.my_conn.execute_fetch_select(my_sql)
-            one_tax_id_dict = dict((y, int(x)) for x, y in res)
-            self.tax_id_dict.update(one_tax_id_dict)
-        except:
-            if len(self.taxonomies) == 0:
-                self.utils.print_both(("ERROR: There are no taxonomy, please check if there are correct gast files in the directory %s") % self.gast_dir)
-            raise
-            
+         
+        my_sql = "SELECT %s, %s FROM %s;" % ("taxonomy_id", "taxonomy", "taxonomy")
+        res        = self.my_conn.execute_fetch_select(my_sql)
+        one_tax_id_dict = dict((y, int(x)) for x, y in res)
+        self.tax_id_dict.update(one_tax_id_dict)        
+        print "UUU"
 
     def insert_taxonomy(self, fasta, gast_dict):
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-            "if we already had this taxonomy in this run, just skip it"
-            if taxonomy in self.taxonomies:
-                next
-            else:
-                my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
-                self.taxonomies.add(taxonomy)
-                return my_sql
+            my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
+            return my_sql
+
+#             "if we already had this taxonomy in this run, just skip it"
+#             if taxonomy in self.taxonomies:
+#                 next
+#             else:
+#                 my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
+#                 self.taxonomies.add(taxonomy)
+#                 return my_sql
 
         else:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
@@ -644,7 +640,6 @@ class dbUpload:
     def prepare_upload_query(self, fasta, run_info_ill_id, gast_dict):
         all_insert_pdr_info_sql = []
         all_insert_taxonomy_sql = []
-        all_insert_sequence_uniq_info_ill_sql = []
         while fasta.next():
             all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
             insert_taxonomy_sql = self.insert_taxonomy(fasta, gast_dict)
@@ -657,18 +652,14 @@ class dbUpload:
         all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
                      
-#         start = time.time()
-#         self.get_taxonomy_ids()
-        self.get_taxonomy_id_dict()
-#         elapsed = (time.time() - start)
-#         print "get_taxonomy_ids time: %s" % elapsed
-#         fasta.pos = 0
-#         fasta.file_pointer.seek(0)
+        return (all_insert_pdr_info_sql_to_run, all_insert_taxonomy_sql_to_run)
+    
+    def prepare_insert_sequence_uniq_info_ill_sql(self, fasta, gast_dict):
+        all_insert_sequence_uniq_info_ill_sql = []
         fasta.reset()
         while fasta.next():
             all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))            
                      
         all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
         all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
-        
-        return (all_insert_pdr_info_sql_to_run, all_insert_taxonomy_sql_to_run, all_insert_sequence_uniq_info_ill_sql_to_run)
+        return all_insert_sequence_uniq_info_ill_sql_to_run
