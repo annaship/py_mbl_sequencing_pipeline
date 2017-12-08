@@ -332,7 +332,6 @@ class dbUpload:
         res        = self.my_conn.execute_fetch_select(my_sql)
         one_tax_id_dict = dict((y, int(x)) for x, y in res)
         self.tax_id_dict.update(one_tax_id_dict)        
-        print "UUU"
 
     def insert_taxonomy(self, fasta, gast_dict):
         if gast_dict:
