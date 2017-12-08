@@ -662,7 +662,9 @@ class dbUpload:
         self.get_taxonomy_id_dict()
 #         elapsed = (time.time() - start)
 #         print "get_taxonomy_ids time: %s" % elapsed
-        
+#         fasta.pos = 0
+#         fasta.file_pointer.seek(0)
+        fasta.reset()
         while fasta.next():
             all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))            
                      
