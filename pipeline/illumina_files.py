@@ -107,6 +107,7 @@ class IlluminaFiles:
 #                 self.utils.print_both("Problems with program_name = %s, file_name = %s" % (program_name, file_name))
 #                 raise  
 #     
+#     TODO: use from util
     def call_sh_script(self, script_name_w_path, where_to_run):
         try:
             call(['chmod', '0774', script_name_w_path])
@@ -220,10 +221,12 @@ class IlluminaFiles:
         config_path_data = [v for k, v in self.runobj.configPath.items()]
         return set([a[key] for a in config_path_data if key in a.keys()])
         
+#     TODO: use from util
     def make_users_email(self):
         username = getpass.getuser() 
         return username + "@mbl.edu"
                 
+#     TODO: use from util
     def create_job_array_script(self, command_line, dir_to_run, files_list):
         files_string         = " ".join(files_list)
         files_list_size         = len(files_list)
@@ -387,6 +390,7 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             ini_file_name = os.path.join(self.out_file_path,  idx_key + ".ini")
             self.open_write_close(ini_file_name, text)
 
+#     TODO: use from utils
     def open_write_close(self, script_file_name, text):
         ini_file = open(script_file_name, "w")
         ini_file.write(text)

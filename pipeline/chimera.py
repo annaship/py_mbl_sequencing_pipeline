@@ -322,7 +322,7 @@ class Chimera:
         /groups/g454/blastdbs/rRNA16S.gold.fasta
 
         """
-        command_line = ""
+        command_line = []
 
         ref_or_novo_options = {self.denovo_suffix: "-uchime_denovo", self.ref_suffix: "-uchime_ref"}
         for suff, opt in ref_or_novo_options.items():
@@ -333,12 +333,11 @@ class Chimera:
             if (opt == "-uchime_ref"):
                 ref_add = "-strand plus -db %s" % ref_db  
 
-            uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
-            """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
+            uchime_cmd = "%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s" % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
             print "UUU = uchime_cmd = %s" % uchime_cmd
             print "+++"
         
-            command_line = command_line + uchime_cmd
+            command_line.append(uchime_cmd)
             
         return command_line
 #         command_line = """
@@ -459,8 +458,10 @@ class Chimera:
   filename_base="${filename%%.*}"
   
   echo "%s ${file_list[$i]}"  
+  echo "%s ${file_list[$i]}"  
   %s ${file_list[$i]}  
-''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
+  %s ${file_list[$i]}  
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[0], command_line[1], command_line[1])
 # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
                 )
         self.utils.open_write_close(script_file_name_full, text)
@@ -479,26 +480,14 @@ class Chimera:
         else:
             logger.debug('region not checked: ' +  dna_region)
         ref_db = self.get_ref_db(dna_region)
-#         dna_region = list(set([self.runobj.samples[idx_key].dna_region for idx_key in self.input_file_names]))[0]
-#         if dna_region in C.regions_to_chimera_check:
-#             chimera_region_found = True
-#         else:
-#             logger.debug('region not checked: ' +  dna_region)
-# 
-#             
-#         ref_db     = self.get_ref_db(dna_region)
-#         input_file_name  = self.indir  + "/$filename_base" + self.chg_suffix
-#         output_file_name = self.outdir + "/$filename_base" + self.chimeras_suffix 
-#         
-#         command_line = """
-#         %s -uchime_ref %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.db -chimeras %s/$filename_base.chimeras.db.chimeric.fa -notrunclabels -strand plus -db %s
-#         %s -uchime_denovo %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.txt -chimeras %s/$filename_base.chimeras.txt.chimeric.fa -notrunclabels    
-#         """ % (self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir, ref_db, self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir)
         command_line = self.create_chimera_cmd(ref_db)
         sh_script_file_name = self.create_job_array_script("chimera_checking", command_line, self.indir, file_list)
-        
+        script_file_name_full = os.path.join(self.indir, sh_script_file_name)
+        self.utils.call_sh_script(script_file_name_full, self.indir)
+        self.utils.print_both("self.dirs.chmod_all(%s)" % (self.indir))
+        self.dirs.chmod_all(self.indir)        
         logger.debug('sh_script_file_name: ' +  sh_script_file_name)
-        logger.debug('command_line: ' +  command_line)
+#         logger.debug('command_line: ' +  command_line)
 
 #         for idx_key in self.input_file_names:
 # #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
