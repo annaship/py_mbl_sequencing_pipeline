@@ -322,27 +322,40 @@ class Chimera:
         /groups/g454/blastdbs/rRNA16S.gold.fasta
 
         """
+        command_line = ""
+
         ref_or_novo_options = {self.denovo_suffix: "-uchime_denovo", self.ref_suffix: "-uchime_ref"}
-
-        
-        "TODO:"
-        file_name = "CTTGTA_NNNNATGCT_1_MERGED-MAX-MISMATCH-3.unique"
-#        BPC: "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
-#         ref_db = C.chimera_checking_refdb
-#         if self.utils.is_local():
-#             ref_db = C.chimera_checking_refdb_local
-
         for suff, opt in ref_or_novo_options.items():
-            input_file_name  = self.indir  + "/" + file_name + self.chg_suffix
-            output_file_name = self.outdir + "/" + file_name + self.chimeras_suffix + suff 
+            input_file_name  = self.indir  + "/$filename_base" + self.chg_suffix
+            output_file_name = self.outdir + "/$filename_base" + self.chimeras_suffix + suff
+
             ref_add = ""
             if (opt == "-uchime_ref"):
                 ref_add = "-strand plus -db %s" % ref_db  
-                
+
             uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
             """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
             print "UUU = uchime_cmd = %s" % uchime_cmd
             print "+++"
+        
+            command_line = command_line + uchime_cmd
+            
+        return command_line
+#         command_line = """
+#         %s -uchime_ref %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.db -chimeras %s/$filename_base.chimeras.db.chimeric.fa -notrunclabels -strand plus -db %s
+#         %s -uchime_denovo %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.txt -chimeras %s/$filename_base.chimeras.txt.chimeric.fa -notrunclabels    
+#         """ % (self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir, ref_db, self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir)
+#         for suff, opt in ref_or_novo_options.items():
+#             input_file_name  = self.indir  + "/" + file_name + self.chg_suffix
+#             output_file_name = self.outdir + "/" + file_name + self.chimeras_suffix + suff 
+#             ref_add = ""
+#             if (opt == "-uchime_ref"):
+#                 ref_add = "-strand plus -db %s" % ref_db  
+#                 
+#             uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
+#             """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
+#             print "UUU = uchime_cmd = %s" % uchime_cmd
+#             print "+++"
        
 
           
@@ -443,7 +456,7 @@ class Chimera:
   module load bioware
     
   filename=$(basename $INFILE)
-  filename_base="${filename%.*}"
+  filename_base="${filename%%.*}"
   
   echo "%s ${file_list[$i]}"  
   %s ${file_list[$i]}  
@@ -453,21 +466,30 @@ class Chimera:
         self.utils.open_write_close(script_file_name_full, text)
         return script_file_name
     
-    def chimera_checking(self, ref_or_novo):
+    def chimera_checking(self):
         chimera_region_found = False
-        output = {}
         
         file_list   = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
         print "FFF = file_list = %s" % (file_list)
+        
+#         TODO: method
         dna_region = list(set([self.runobj.samples[idx_key].dna_region for idx_key in self.input_file_names]))[0]
         if dna_region in C.regions_to_chimera_check:
             chimera_region_found = True
         else:
             logger.debug('region not checked: ' +  dna_region)
-
-            
-        ref_db     = self.get_ref_db(dna_region)
-        
+        ref_db = self.get_ref_db(dna_region)
+#         dna_region = list(set([self.runobj.samples[idx_key].dna_region for idx_key in self.input_file_names]))[0]
+#         if dna_region in C.regions_to_chimera_check:
+#             chimera_region_found = True
+#         else:
+#             logger.debug('region not checked: ' +  dna_region)
+# 
+#             
+#         ref_db     = self.get_ref_db(dna_region)
+#         input_file_name  = self.indir  + "/$filename_base" + self.chg_suffix
+#         output_file_name = self.outdir + "/$filename_base" + self.chimeras_suffix 
+#         
 #         command_line = """
 #         %s -uchime_ref %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.db -chimeras %s/$filename_base.chimeras.db.chimeric.fa -notrunclabels -strand plus -db %s
 #         %s -uchime_denovo %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.txt -chimeras %s/$filename_base.chimeras.txt.chimeric.fa -notrunclabels    
