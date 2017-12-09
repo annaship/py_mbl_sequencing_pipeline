@@ -405,61 +405,109 @@ class Chimera:
             ref_db = self.refdb
         return ref_db       
     
+    # temp! take from util. change illumina-files to use util, too
+    def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
+        files_string         = " ".join(files_list)
+        files_list_size         = len(files_list)
+#         command_file_name = os.path.basename(command_line.split(" ")[0])
+        script_file_name  = script_file_name_base + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        script_file_name_full = os.path.join(dir_to_run, script_file_name)
+        log_file_name     = script_file_name + ".sge_script.sh.log"
+        email_mbl         = self.utils.make_users_email()
+        text = (
+                '''#!/bin/bash
+#$ -cwd
+#$ -S /bin/bash
+#$ -N %s
+# Giving the name of the output log file
+#$ -o %s
+# Combining output/error messages into one file
+#$ -j y
+# Send mail to these users
+#$ -M %s
+# Send mail at job end (e); -m as sends abort, suspend.
+#$ -m as
+#$ -t 1-%s
+# Now the script will iterate %s times.
+
+  file_list=(%s)
+  
+  i=$(expr $SGE_TASK_ID - 1)
+#   echo "i = $i"
+  # . /etc/profile.d/modules.sh
+  # . /xraid/bioware/bioware-loader.sh
+  . /xraid/bioware/Modules/etc/profile.modules
+  module load bioware
+    
+  echo "%s ${file_list[$i]}"  
+  %s ${file_list[$i]}  
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
+# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
+                )
+        self.utils.open_write_close(script_file_name_full, text)
+        return script_file_name
+    
     def chimera_checking(self, ref_or_novo):
         chimera_region_found = False
         output = {}
         
-        file_list             = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
+        file_list   = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
         print "FFF = file_list = %s" % (file_list)
-#         uchime_cmd1 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
-#         script_file_name      = self.create_job_array_script(uchime_cmd1, self.dirs.analysis_dir, file_list)
+        dna_region = list(set([self.runobj.samples[idx_key].dna_region for idx_key in self.input_file_names]))[0]
+        if dna_region in C.regions_to_chimera_check:
+            chimera_region_found = True
+        else:
+            logger.debug('region not checked: ' +  dna_region)
+
+            
+        ref_db     = self.get_ref_db(dna_region)
         
-
-#         uchime_cmd2 = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
-#         script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
-#         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
-#         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)  
-#         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
-#         self.dirs.chmod_all(self.dirs.analysis_dir)        
-#   
+        command_line = """
+        %s -uchime_ref %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.db -chimeras %s/$filename_base.chimeras.db.chimeric.fa -notrunclabels -strand plus -db %s
+        %s -uchime_denovo %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.txt -chimeras %s/$filename_base.chimeras.txt.chimeric.fa -notrunclabels    
+        """ % (self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir, ref_db, self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir)
+        self.create_job_array_script("chimera_checking", command_line, self.indir, file_list)
         
-        for idx_key in self.input_file_names:
-#             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
-            input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
-            output_file_name = os.path.join(self.outdir, self.input_file_names[idx_key])        
-            dna_region       = self.runobj.samples[idx_key].dna_region
-#             print "dna_region = %s" % dna_region
-            if dna_region in C.regions_to_chimera_check:
-                chimera_region_found = True
-            else:
-                logger.debug('region not checked: ' +  dna_region)
-                continue
-            
-#             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
-            ref_db     = self.get_ref_db(dna_region)
-#             ref_db     = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
+        logger.debug('command_line: ' +  command_line)
 
-#             print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
-            
-            #uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
-            uchime_cmd = self.create_chimera_cmd()
-            self.utils.print_both("\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd))
-            
-            try:
-                logger.info("chimera checking command: " + str(uchime_cmd))
-#                 self.utils.call_sh_script(script_name_w_path, where_to_run)
-                
-
-                output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-            except OSError, e:
-                self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
-                if self.utils.is_local():
-                    print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
-                else:
-                    print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
-                    self.utils.print_both("Error: Execution of %s failed: %s" % (uchime_cmd, e))
-                    raise                  
+#         for idx_key in self.input_file_names:
+# #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
+#             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
+#             output_file_name = os.path.join(self.outdir, self.input_file_names[idx_key])        
+#             dna_region       = self.runobj.samples[idx_key].dna_region
+# #             print "dna_region = %s" % dna_region
+#             if dna_region in C.regions_to_chimera_check:
+#                 chimera_region_found = True
+#             else:
+#                 logger.debug('region not checked: ' +  dna_region)
+#                 continue
+#             
+# #             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
+#             ref_db     = self.get_ref_db(dna_region)
+# #             ref_db     = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
+# 
+# #             print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
+#             
+#             #uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
+#             uchime_cmd = self.create_chimera_cmd()
+#             self.utils.print_both("\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd))
+#             
+#             try:
+#                 logger.info("chimera checking command: " + str(uchime_cmd))
+# #                 self.utils.call_sh_script(script_name_w_path, where_to_run)
+#                 
+# 
+#                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+# 
+#             except OSError, e:
+#                 self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
+#                 if self.utils.is_local():
+#                     print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
+#                 else:
+#                     print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
+#                     self.utils.print_both("Error: Execution of %s failed: %s" % (uchime_cmd, e))
+#                     raise   
+                           
                                
 # ???
         if not chimera_region_found:            

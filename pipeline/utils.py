@@ -12,6 +12,7 @@ import collections
 sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
 from pipeline.pipelinelogging import logger
 from subprocess import call
+import getpass
 
 base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
 
@@ -326,6 +327,15 @@ class PipelneUtils:
         except:
             self.print_both("Problems with script_name = %s or qsub" % (script_name_w_path))
             raise    
+        
+    def make_users_email(self):
+        username = getpass.getuser() 
+        return username + "@mbl.edu"
+    
+    def open_write_close(self, file_name, text):
+        ini_file = open(file_name, "w")
+        ini_file.write(text)
+        ini_file.close()
     
     def create_job_array_script(self, command_line, dir_to_run, files_list):
         files_string         = " ".join(files_list)
