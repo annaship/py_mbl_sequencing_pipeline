@@ -333,7 +333,8 @@ class Chimera:
             if (opt == "-uchime_ref"):
                 ref_add = "-strand plus -db %s" % ref_db  
 
-            uchime_cmd = "%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s" % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
+            uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
+            """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
             print "UUU = uchime_cmd = %s" % uchime_cmd
             print "+++"
         
@@ -448,20 +449,24 @@ class Chimera:
   file_list=(%s)
   
   i=$(expr $SGE_TASK_ID - 1)
-#   echo "i = $i"
+  echo "i = $i"
   # . /etc/profile.d/modules.sh
   # . /xraid/bioware/bioware-loader.sh
   . /xraid/bioware/Modules/etc/profile.modules
   module load bioware
+  
+  INFILE=${file_list[$i]} 
     
   filename=$(basename $INFILE)
+  echo "INFILE = $INFILE"
   filename_base="${filename%%.*}"
+  echo "filename_base = $filename_base"
   
-  echo "%s ${file_list[$i]}"  
-  echo "%s ${file_list[$i]}"  
-  %s ${file_list[$i]}  
-  %s ${file_list[$i]}  
-''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[0], command_line[1], command_line[1])
+  echo "%s"  
+  echo "%s"  
+  %s  
+  %s  
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
 # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
                 )
         self.utils.open_write_close(script_file_name_full, text)
