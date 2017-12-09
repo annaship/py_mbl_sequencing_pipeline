@@ -73,15 +73,26 @@ class Chimera:
         if self.utils.is_local():
             self.usearch_cmd = C.usearch6_cmd_local        
         #self.abskew      = C.chimera_checking_abskew
-        self.refdb       = C.chimera_checking_refdb_6
+        self.refdb       = C.chimera_checking_refdb
         if self.utils.is_local():
             self.refdb_local = C.chimera_checking_refdb_local
-        self.its_refdb   = C.chimera_checking_its_refdb_6
+        self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
 #         pprint(self.run_keys)
 #         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
         
-        
+    def get_ref_db(self, dna_region):
+        ref_db = ''
+        if dna_region.upper() == 'ITS':
+            ref_db = C.chimera_checking_its_refdb
+            logger.debug("got an ITS dna region so using refdb: " + ref_db)
+        else:
+            ref_db = C.chimera_checking_refdb
+            if self.utils.is_local():
+                ref_db = C.chimera_checking_refdb_local
+            logger.debug("using standard refdb: " + ref_db)
+        return ref_db       
+    
     def make_chimera_input_illumina_file_names(self):
         input_file_names = {} 
         
@@ -286,7 +297,7 @@ class Chimera:
 
         return cluster_done
         
-    def create_chimera_cmd(self):
+    def create_chimera_cmd(self, ref_db):
         """
         /usr/local/bin/vsearch
         -uchime_denovo
@@ -317,9 +328,9 @@ class Chimera:
         "TODO:"
         file_name = "CTTGTA_NNNNATGCT_1_MERGED-MAX-MISMATCH-3.unique"
 #        BPC: "TGACCA_NNNNCGACG_1_MERGED-MAX-MISMATCH-3.unique"
-        ref_db = C.chimera_checking_refdb
-        if self.utils.is_local():
-            ref_db = C.chimera_checking_refdb_local
+#         ref_db = C.chimera_checking_refdb
+#         if self.utils.is_local():
+#             ref_db = C.chimera_checking_refdb_local
 
         for suff, opt in ref_or_novo_options.items():
             input_file_name  = self.indir  + "/" + file_name + self.chg_suffix
@@ -394,16 +405,8 @@ class Chimera:
         
         print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
         return uchime_cmd
-        
-    def get_ref_db(self, dna_region):
-        ref_db = ''
-        if dna_region.upper() == 'ITS':
-            logger.debug("got an ITS dna region so using refdb: " + self.its_refdb)
-            ref_db = self.its_refdb
-        else:
-            logger.debug("using standard refdb: " + self.refdb)
-            ref_db = self.refdb
-        return ref_db       
+
+
     
     # temp! take from util. change illumina-files to use util, too
     def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
@@ -439,6 +442,9 @@ class Chimera:
   . /xraid/bioware/Modules/etc/profile.modules
   module load bioware
     
+  filename=$(basename $INFILE)
+  filename_base="${filename%.*}"
+  
   echo "%s ${file_list[$i]}"  
   %s ${file_list[$i]}  
 ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
@@ -462,12 +468,14 @@ class Chimera:
             
         ref_db     = self.get_ref_db(dna_region)
         
-        command_line = """
-        %s -uchime_ref %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.db -chimeras %s/$filename_base.chimeras.db.chimeric.fa -notrunclabels -strand plus -db %s
-        %s -uchime_denovo %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.txt -chimeras %s/$filename_base.chimeras.txt.chimeric.fa -notrunclabels    
-        """ % (self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir, ref_db, self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir)
-        self.create_job_array_script("chimera_checking", command_line, self.indir, file_list)
+#         command_line = """
+#         %s -uchime_ref %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.db -chimeras %s/$filename_base.chimeras.db.chimeric.fa -notrunclabels -strand plus -db %s
+#         %s -uchime_denovo %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.txt -chimeras %s/$filename_base.chimeras.txt.chimeric.fa -notrunclabels    
+#         """ % (self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir, ref_db, self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir)
+        command_line = self.create_chimera_cmd(ref_db)
+        sh_script_file_name = self.create_job_array_script("chimera_checking", command_line, self.indir, file_list)
         
+        logger.debug('sh_script_file_name: ' +  sh_script_file_name)
         logger.debug('command_line: ' +  command_line)
 
 #         for idx_key in self.input_file_names:

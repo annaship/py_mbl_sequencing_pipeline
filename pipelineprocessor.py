@@ -301,11 +301,11 @@ def illumina_chimera(runobj):
 #     
     print "START chimera checking"
 #     c_den = 
-    mychimera.chimera_checking("denovo")
+    mychimera.chimera_checking()
 # #     print "c_den - check denovo res: %s" % c_den
 #     print c_den
 #     c_den = 
-    mychimera.chimera_checking("ref")
+#     mychimera.chimera_checking("ref")
 #     print c_den
 #     todo: use run_until_done_on_cluster from utils
     """run after cluster is done with it work:"""
