@@ -198,15 +198,8 @@ class Chimera:
         change_to_suffix   = self.chg_suffix
 #         print "find = %s, replace = %s" % (find, replace)
  
-#     def read_file(self, source_name):
-#         with open(source_name, "r") as sources:
-#             return sources.readlines()
-#  
-#  
         for cur_file_name in cur_file_names:
             file_name = os.path.join(cur_dirname, cur_file_name)
-#             with open(file_name + change_from_suffix, "r") as sources:
-#                 lines = sources.readlines()
             lines = self.utils.read_file(file_name + change_from_suffix)
             with open(file_name + change_to_suffix, "w") as target:
 #                 line2 = [regex1.sub(replace1, line) if line.startswith(">") else line.upper() for line in lines]
@@ -225,11 +218,19 @@ class Chimera:
         regex1          = re.compile(r"%s" % find1)        
  
         cur_file_names = self.get_chimera_file_names(self.outdir)
+
+ 
+#     def read_file(self, source_name):
+#         with open(source_name, "r") as sources:
+#             return sources.readlines()
+#  
+#  
                     
         for file_chim in cur_file_names:
             file_chim_path = os.path.join(self.outdir, file_chim)
-            with open(file_chim_path, "r") as sources:
-                lines = sources.readlines()
+            lines = self.utils.read_file(file_chim_path)
+#             with open(file_chim_path, "r") as sources:
+#                 lines = sources.readlines()
             with open(file_chim_path, "w") as target:
                 for line in lines:
                     line1 = regex1.sub(replace1, line)
