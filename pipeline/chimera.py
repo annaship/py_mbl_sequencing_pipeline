@@ -128,10 +128,6 @@ class Chimera:
             cur_file_names = [filename for filename in filenames if (self.is_chimera_check_file(filename))]
         return cur_file_names
 
-#     def read_file(self, source_name):
-#         with open(source_name, "r") as sources:
-#             return sources.readlines()
-
     def illumina_sed(self, lines, target_name, regex, replace, uppercase):
         with open(target_name, "w") as target:
             for line in lines:
@@ -202,10 +198,16 @@ class Chimera:
         change_to_suffix   = self.chg_suffix
 #         print "find = %s, replace = %s" % (find, replace)
  
+#     def read_file(self, source_name):
+#         with open(source_name, "r") as sources:
+#             return sources.readlines()
+#  
+#  
         for cur_file_name in cur_file_names:
             file_name = os.path.join(cur_dirname, cur_file_name)
-            with open(file_name + change_from_suffix, "r") as sources:
-                lines = sources.readlines()
+#             with open(file_name + change_from_suffix, "r") as sources:
+#                 lines = sources.readlines()
+            lines = self.utils.read_file(file_name + change_from_suffix)
             with open(file_name + change_to_suffix, "w") as target:
 #                 line2 = [regex1.sub(replace1, line) if line.startswith(">") else line.upper() for line in lines]
                 for line in lines:
