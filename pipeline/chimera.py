@@ -202,7 +202,6 @@ class Chimera:
             file_name = os.path.join(cur_dirname, cur_file_name)
             lines = self.utils.read_file(file_name + change_from_suffix)
             with open(file_name + change_to_suffix, "w") as target:
-#                 line2 = [regex1.sub(replace1, line) if line.startswith(">") else line.upper() for line in lines]
                 for line in lines:
                     if line.startswith(">"):
                         line1 = regex1.sub(replace1, line)
@@ -218,19 +217,10 @@ class Chimera:
         regex1          = re.compile(r"%s" % find1)        
  
         cur_file_names = self.get_chimera_file_names(self.outdir)
-
- 
-#     def read_file(self, source_name):
-#         with open(source_name, "r") as sources:
-#             return sources.readlines()
-#  
-#  
-                    
+           
         for file_chim in cur_file_names:
             file_chim_path = os.path.join(self.outdir, file_chim)
             lines = self.utils.read_file(file_chim_path)
-#             with open(file_chim_path, "r") as sources:
-#                 lines = sources.readlines()
             with open(file_chim_path, "w") as target:
                 for line in lines:
                     line1 = regex1.sub(replace1, line)
@@ -242,11 +232,6 @@ class Chimera:
             if os.path.exists(file_name):
                 pass
                 # os.remove(file_name)
-    
-#     def illumina_chimera_size_files(self):
-#     
-#     import os
-# [os.rename(f, f.replace('_', '-')) for f in os.listdir('.') if not f.startswith('.')]
 
     def check_if_chimera_dir_empty(self):
         if not os.listdir(self.outdir):
@@ -760,6 +745,7 @@ class Chimera:
             for file in [denovo_file, ref_file]:            
                 if os.path.isfile(file):
                     fh = open(file,"r") 
+                    #TODO: Use self.utils.read_file ?
                     # make a list of chimera deleted read_ids            
                     for line in fh.readlines():
                         lst = line.strip().split()
@@ -772,6 +758,8 @@ class Chimera:
             for id in chimera_deleted:
                 fh_del.write(id+"\tChimera\n") 
             fh_del.close()
+            
+       
             
 # # http://drive5.com/uchime/uchime_quickref.pdf
 # # The --uchimeout file is a tab-separated file with the following 17 fields.
