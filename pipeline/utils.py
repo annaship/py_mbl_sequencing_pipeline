@@ -377,6 +377,10 @@ class PipelneUtils:
                 )
         self.open_write_close(script_file_name_full, text)
         return script_file_name
+    
+    def read_file(self, source_name):
+        with open(source_name, "r") as sources:
+            return sources.readlines()
 
     def get_vsearch_version(self):
         import commands
@@ -579,8 +583,6 @@ example of getting all directory name in illumina_files
         print "call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name)
         print Exception         
         pass
-
-
 
         
 if __name__=='__main__':
