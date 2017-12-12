@@ -185,7 +185,6 @@ class Chimera:
             self.illumina_sed(lines, target_name, regex, tuple_name.replace, tuple_name.uppercase)
 
     def illumina_freq_to_size_in_chg(self):
-#         TODO: not used?
         find1    = "frequency:"
         replace1 = ";size="
         regex1   = re.compile(r"%s" % find1)        
