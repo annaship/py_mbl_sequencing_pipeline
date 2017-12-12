@@ -68,17 +68,8 @@ class MyConnection:
 #                     read_default_file = os.path.expanduser("~/.my.cnf_server")
 #                 else:
 #                     db = "test_env454"
-<<<<<<< Updated upstream
                 read_default_file = "~/.my.cnf_local"
             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
-=======
-                read_default_file = os.path.expanduser("~/.my.cnf_local")
-                print "read_default_file = %s" % (read_default_file)
-#             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
-            self.conn   = mariadb.connect(host = host, db = db, option_files = read_default_file, port = port_env, password="Avkv55a")
-            # cursor = mariadb_connection.cursor()
-
->>>>>>> Stashed changes
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
                    
