@@ -24,10 +24,10 @@ module load bioware
     PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
     raise
 except:                       # catch everything
-    PipelneUtils.print_both("Unexpected:")
-#     print "Unexpected:"         # handle unexpected exceptions
-    PipelneUtils.print_both(sys.exc_info()[0])
-#     print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+#     PipelneUtils.print_both("Unexpected:")
+    print "Unexpected:"         # handle unexpected exceptions
+#     PipelneUtils.print_both(sys.exc_info()[0])
+    print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
     raise          
 
 #     sys.exit("""
@@ -68,8 +68,17 @@ class MyConnection:
 #                     read_default_file = os.path.expanduser("~/.my.cnf_server")
 #                 else:
 #                     db = "test_env454"
+<<<<<<< Updated upstream
                 read_default_file = "~/.my.cnf_local"
             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+=======
+                read_default_file = os.path.expanduser("~/.my.cnf_local")
+                print "read_default_file = %s" % (read_default_file)
+#             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+            self.conn   = mariadb.connect(host = host, db = db, option_files = read_default_file, port = port_env, password="Avkv55a")
+            # cursor = mariadb_connection.cursor()
+
+>>>>>>> Stashed changes
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
                    
