@@ -103,12 +103,6 @@ class Chimera:
                 input_file_names[idx_key] = file_name
         
         return input_file_names
-            
-#     def make_chimera_output_illumina_file_names(self, input_file_names):
-#         output_file_names = {} 
-#         for idx_key, input_file_name in input_file_names.iteritems():
-#             output_file_names[idx_key] = input_file_name
-#         return output_file_names
 
     def get_current_dirname(self, in_or_out = ""):
         if in_or_out == "":
@@ -133,28 +127,6 @@ class Chimera:
         for dirname, dirnames, filenames in os.walk(cur_dirname):
             cur_file_names = [filename for filename in filenames if (self.is_chimera_check_file(filename))]
         return cur_file_names
-
-#     def illumina_frequency_size(self, in_or_out = "", find = "frequency:", replace = ";size="):
-#         cur_dirname    = self.get_current_dirname(in_or_out)
-#         cur_file_names = self.get_current_filenames(cur_dirname)
-# #         print "cur_file_names: "
-# #         pprint(cur_file_names)
-#         change_from_suffix = ""
-#         change_to_suffix   = self.chg_suffix
-# #         print "find = %s, replace = %s" % (find, replace)
-#         regex              = re.compile(r"%s" % find)
-# 
-#         for cur_file_name in cur_file_names:
-#             file_name = os.path.join(cur_dirname, cur_file_name)
-#             with open(file_name + change_from_suffix, "r") as sources:
-#                 lines = sources.readlines()
-#             with open(file_name + change_to_suffix, "w") as target:
-#                 for line in lines:
-#                         target.write(regex.sub(replace, line))
-
-    def read_file(self, source_name):
-        with open(source_name, "r") as sources:
-            return sources.readlines()
 
     def illumina_sed(self, lines, target_name, regex, replace, uppercase):
         with open(target_name, "w") as target:
@@ -209,11 +181,10 @@ class Chimera:
             file_name = os.path.join(tuple_name.cur_dirname, cur_file_name)           
             source_name = file_name + tuple_name.change_from_suffix
             target_name = file_name + tuple_name.change_to_suffix 
-            lines = self.read_file(source_name)
+            lines = self.utils.read_file(source_name)
             self.illumina_sed(lines, target_name, regex, tuple_name.replace, tuple_name.uppercase)
 
     def illumina_freq_to_size_in_chg(self):
-#         TODO: not used?
         find1    = "frequency:"
         replace1 = ";size="
         regex1   = re.compile(r"%s" % find1)        
@@ -228,10 +199,8 @@ class Chimera:
  
         for cur_file_name in cur_file_names:
             file_name = os.path.join(cur_dirname, cur_file_name)
-            with open(file_name + change_from_suffix, "r") as sources:
-                lines = sources.readlines()
+            lines = self.utils.read_file(file_name + change_from_suffix)
             with open(file_name + change_to_suffix, "w") as target:
-#                 line2 = [regex1.sub(replace1, line) if line.startswith(">") else line.upper() for line in lines]
                 for line in lines:
                     if line.startswith(">"):
                         line1 = regex1.sub(replace1, line)
@@ -247,11 +216,10 @@ class Chimera:
         regex1          = re.compile(r"%s" % find1)        
  
         cur_file_names = self.get_chimera_file_names(self.outdir)
-                    
+           
         for file_chim in cur_file_names:
             file_chim_path = os.path.join(self.outdir, file_chim)
-            with open(file_chim_path, "r") as sources:
-                lines = sources.readlines()
+            lines = self.utils.read_file(file_chim_path)
             with open(file_chim_path, "w") as target:
                 for line in lines:
                     line1 = regex1.sub(replace1, line)
@@ -263,11 +231,6 @@ class Chimera:
             if os.path.exists(file_name):
                 pass
                 # os.remove(file_name)
-    
-#     def illumina_chimera_size_files(self):
-#     
-#     import os
-# [os.rename(f, f.replace('_', '-')) for f in os.listdir('.') if not f.startswith('.')]
 
     def check_if_chimera_dir_empty(self):
         if not os.listdir(self.outdir):
@@ -335,93 +298,14 @@ class Chimera:
 
             uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
             """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
-            print "UUU = uchime_cmd = %s" % uchime_cmd
-            print "+++"
+#             print "UUU = uchime_cmd = %s" % uchime_cmd
+#             print "+++"
         
             command_line.append(uchime_cmd)
             
         return command_line
-#         command_line = """
-#         %s -uchime_ref %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.db -chimeras %s/$filename_base.chimeras.db.chimeric.fa -notrunclabels -strand plus -db %s
-#         %s -uchime_denovo %s/$filename_base%s -uchimeout %s/$filename_base.chimeras.txt -chimeras %s/$filename_base.chimeras.txt.chimeric.fa -notrunclabels    
-#         """ % (self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir, ref_db, self.usearch_cmd, self.indir, self.chg_suffix, self.outdir, self.outdir)
-#         for suff, opt in ref_or_novo_options.items():
-#             input_file_name  = self.indir  + "/" + file_name + self.chg_suffix
-#             output_file_name = self.outdir + "/" + file_name + self.chimeras_suffix + suff 
-#             ref_add = ""
-#             if (opt == "-uchime_ref"):
-#                 ref_add = "-strand plus -db %s" % ref_db  
-#                 
-#             uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
-#             """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add) 
-#             print "UUU = uchime_cmd = %s" % uchime_cmd
-#             print "+++"
-       
 
           
-    def create_chimera_cmd_old(self, input_file_name, output_file_name, ref_or_novo, ref_db = ""):
-        """
-        http://www.drive5.com/usearch/manual/uchime_denovo.html
-        from usearch -help
-        Chimera detection (UCHIME ref. db. mode):
-          usearch -uchime q.fasta [-db db.fasta] [-chimeras ch.fasta]
-            [-nonchimeras good.fasta] [-uchimeout results.uch] [-uchimealns results.alns]
-         
-        Chimera detection (UCHIME de novo mode):
-          usearch -uchime amplicons.fasta [-chimeras ch.fasta] [-nonchimeras good.fasta]
-             [-uchimeout results.uch] [-uchimealns results.alns]
-          Input is estimated amplicons with integer abundances specified using ";size=N".
-        usearch -uchime_denovo amplicons.fasta -uchimeout results.uchime
-        """        
-
-        uchime_cmd_append = ""
-        db_cmd_append     = ""
-        dir_cmd_append    = ""
-
-        if (ref_or_novo == "denovo"):
-            uchime_cmd_append = " -uchime_denovo "           
-            output_file_name  = output_file_name + self.chimeras_suffix + self.denovo_suffix 
-        elif (ref_or_novo == "ref"):
-            uchime_cmd_append = " -uchime_ref "
-            output_file_name  = output_file_name + self.chimeras_suffix + self.ref_suffix           
-            db_cmd_append     = " -db " + ref_db   
-            dir_cmd_append    = " -strand plus"
-        else:
-            self.utils.print_both("Error: Incorrect method, should be \"denovo\" or \"ref\"") 
-        self.utils.print_both("output_file_name = %s" % output_file_name) 
-
-
-        uchime_cmd = C.clusterize_cmd
-        if self.utils.is_local():
-            uchime_cmd = ""
-        uchime_cmd += " "
-        uchime_cmd += self.usearch_cmd
-        print "self.usearch_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
-
-        uchime_cmd += uchime_cmd_append + input_file_name
-        print "uchime_cmd_append FROM create_chimera_cmd = %s" % (uchime_cmd_append)
-
-        
-        uchime_cmd += db_cmd_append
-
-        print "db_cmd_append FROM create_chimera_cmd = %s" % (db_cmd_append)
-
-        uchime_cmd += " -uchimeout " + output_file_name
-        """if we need nonchimeric for denovo and db separate we might create them here
-#         uchime_cmd += " -nonchimeras "
-#         uchime_cmd += (output_file_name + self.nonchimeric_suffix)
-"""
-        uchime_cmd += " -chimeras " + (output_file_name + self.chimeric_suffix)         
-        uchime_cmd += dir_cmd_append
-        uchime_cmd += " -notrunclabels"
-        
-        
-        print "uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd)
-        return uchime_cmd
-
-
-    
-    # temp! take from util. change illumina-files to use util, too
     def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
         files_string         = " ".join(files_list)
         files_list_size         = len(files_list)
@@ -466,9 +350,7 @@ class Chimera:
   echo "%s"  
   %s  
   %s  
-''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
-# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
-                )
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1]))
         self.utils.open_write_close(script_file_name_full, text)
         return script_file_name
     
@@ -492,48 +374,7 @@ class Chimera:
         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.indir))
         self.dirs.chmod_all(self.indir)        
         logger.debug('sh_script_file_name: ' +  sh_script_file_name)
-#         logger.debug('command_line: ' +  command_line)
 
-#         for idx_key in self.input_file_names:
-# #             print "idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names)
-#             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)        
-#             output_file_name = os.path.join(self.outdir, self.input_file_names[idx_key])        
-#             dna_region       = self.runobj.samples[idx_key].dna_region
-# #             print "dna_region = %s" % dna_region
-#             if dna_region in C.regions_to_chimera_check:
-#                 chimera_region_found = True
-#             else:
-#                 logger.debug('region not checked: ' +  dna_region)
-#                 continue
-#             
-# #             print "input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name)
-#             ref_db     = self.get_ref_db(dna_region)
-# #             ref_db     = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
-# 
-# #             print "dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo)
-#             
-#             #uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
-#             uchime_cmd = self.create_chimera_cmd()
-#             self.utils.print_both("\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd))
-#             
-#             try:
-#                 logger.info("chimera checking command: " + str(uchime_cmd))
-# #                 self.utils.call_sh_script(script_name_w_path, where_to_run)
-#                 
-# 
-#                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-# 
-#             except OSError, e:
-#                 self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
-#                 if self.utils.is_local():
-#                     print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
-#                 else:
-#                     print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
-#                     self.utils.print_both("Error: Execution of %s failed: %s" % (uchime_cmd, e))
-#                     raise   
-                           
-                               
-# ???
         if not chimera_region_found:            
             return ('NOREGION', 'No regions found that need checking', '')
         else:
@@ -903,6 +744,7 @@ class Chimera:
             for file in [denovo_file, ref_file]:            
                 if os.path.isfile(file):
                     fh = open(file,"r") 
+                    #TODO: Use self.utils.read_file ?
                     # make a list of chimera deleted read_ids            
                     for line in fh.readlines():
                         lst = line.strip().split()
@@ -915,6 +757,8 @@ class Chimera:
             for id in chimera_deleted:
                 fh_del.write(id+"\tChimera\n") 
             fh_del.close()
+            
+       
             
 # # http://drive5.com/uchime/uchime_quickref.pdf
 # # The --uchimeout file is a tab-separated file with the following 17 fields.

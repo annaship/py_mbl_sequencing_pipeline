@@ -389,7 +389,7 @@ refdbs = {'unknown':'refssu_all',
 # chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.udb'
 chimera_checking_refdb_6     = '/groups/g454/blastdbs/rRNA16S.gold.fasta'
 chimera_checking_refdb       = '/groups/g454/blastdbs/rRNA16S.gold.fasta'
-chimera_checking_refdb_local = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test/rRNA16S.gold.fasta'
+chimera_checking_refdb_local = output_root_mbl_local + 'rRNA16S.gold.fasta'
 
 chimera_checking_its_refdb_6 = '/groups/g454/blastdbs/fungalITS.udb'
 chimera_checking_its_refdb   = '/groups/g454/blastdbs/fungalITS.fa'
