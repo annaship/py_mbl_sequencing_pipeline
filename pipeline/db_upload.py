@@ -124,7 +124,8 @@ class dbUpload:
         # insert_sequence_uniq_info_ill()
 
     """
-    def __init__(self, runobj = None):
+    def __init__(self, runobj = None, db_server = "env454"):
+        self.db_server   = db_server
         self.utils       = PipelneUtils()
         self.runobj      = runobj
         self.rundate     = self.runobj.run
@@ -163,10 +164,18 @@ class dbUpload:
         # logger.error("self.utils.is_local() LLL1 db upload")
         # logger.error(self.utils.is_local())
         
-        if self.utils.is_local():
-            self.my_conn = MyConnection(host = 'localhost', db="test_env454")
-        else:
-            self.my_conn = MyConnection(host='bpcdb1', db="env454")
+        if (self.db_server == "vamps2"):
+            if self.utils.is_local():
+                self.my_conn = MyConnection(host = 'localhost', db="vamps2")
+            else:
+                self.my_conn = MyConnection(host='vampsdb', db="vamps2")
+        
+        elif (self.db_server == "env454"):
+            if self.utils.is_local():
+                self.my_conn = MyConnection(host = 'localhost', db="test_env454")
+            else:
+                self.my_conn = MyConnection(host='bpcdb1', db="env454")
+
 #             self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
         self.sequence_table_name = "sequence_ill" 
         self.sequence_field_name = "sequence_comp" 
