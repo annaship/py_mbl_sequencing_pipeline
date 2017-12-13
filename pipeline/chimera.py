@@ -239,7 +239,7 @@ class Chimera:
           
     def check_if_cluster_is_done(self, time_before):
         cluster_done = False
-        check_qstat_cmd_line = "qstat | grep \"%s\" | grep vsearch | wc -l" % time_before
+        check_qstat_cmd_line = "qstat | grep \"%s\" | grep chimera_ch | wc -l" % time_before
 #         check_qstat_cmd_line = "qstat | grep vsearch"
 
         self.utils.print_both("check_qstat_cmd_line = %s" % check_qstat_cmd_line)
