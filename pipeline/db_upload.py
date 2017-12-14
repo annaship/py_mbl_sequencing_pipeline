@@ -625,7 +625,7 @@ class dbUpload:
         
         for pr_suite, file_seq_db_count in file_seq_db_counts.iteritems():
             if (file_seq_orig_count == file_seq_db_count):
-                self.utils.print_both("All sequences from files made it to the db for %s: %s == %s\n" % (pr_suite, file_seq_orig_count, file_seq_db_count))
+                self.utils.print_both("All sequences from files made it to the db for %s %s: %s == %s\n" % (self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
             else:
                 self.utils.print_both("Warning: Amount of sequences from files not equal to the one in the db for %s: %s != %s\n" % (pr_suite, file_seq_orig_count, file_seq_db_count))
 #                 
