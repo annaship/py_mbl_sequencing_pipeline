@@ -260,7 +260,7 @@ class dbUpload:
             return int(res[0][0])         
             
     def get_sequence_id(self, seq):
-        my_sql = """SELECT sequence_ill_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp;""" % (seq)
+        my_sql = """SELECT %s_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp;""" % (seq, self.sequence_table_name)
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])     
@@ -272,12 +272,12 @@ class dbUpload:
             
         # ------- insert sequence info per run/project/dataset --------
         seq_upper = fasta.seq.upper()
-        sequence_ill_id = self.seq_id_dict[seq_upper]
+        sequence_id = self.seq_id_dict[seq_upper]
 
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
-        my_sql          = "INSERT INTO %s (run_info_ill_id, sequence_ill_id, seq_count) VALUES (%s, %s, %s)" % (self.sequence_pdr_info_table_name, run_info_ill_id, sequence_ill_id, seq_count)
-        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count);"
+        my_sql          = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES (%s, %s, %s)" % (self.sequence_pdr_info_table_name, self.sequence_table_name, run_info_ill_id, sequence_id, seq_count)
+        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.sequence_table_name, self.sequence_table_name)
 #         print "MMM1 my_sql = %s" % my_sql
 #         try:
 #             res_id = self.my_conn.execute_no_fetch(my_sql)
@@ -369,14 +369,14 @@ class dbUpload:
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
-            sequence_ill_id = self.seq_id_dict[seq_upper]
+            sequence_id = self.seq_id_dict[seq_upper]
 # TEMP!
 #             taxonomy_id = self.get_id("taxonomy", taxonomy)
 
             if taxonomy in self.tax_id_dict:
                 try:
                     taxonomy_id = self.tax_id_dict[taxonomy] 
-                    my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (sequence_ill_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+                    my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
                     %s,
@@ -392,7 +392,7 @@ class dbUpload:
                        refssu_count = '%s',
                        rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
                        refhvr_ids = '%s';
-                   """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+                   """ % (self.sequence_table_name, sequence_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
                 except Exception, e:
                     logger.debug("Error = %s" % e)
                     raise
@@ -540,16 +540,16 @@ class dbUpload:
     def del_sequence_uniq_info(self):
         my_sql = """DELETE FROM sequence_uniq_info_ill 
                     USING sequence_uniq_info_ill 
-                    LEFT JOIN %s USING(sequence_ill_id) 
-                    WHERE %s_id is NULL;""" % (self.sequence_pdr_info_table_name, self.sequence_pdr_info_table_name)
+                    LEFT JOIN %s USING(%s_id) 
+                    WHERE %s_id is NULL;""" % (self.sequence_pdr_info_table_name, self.sequence_table_name, self.sequence_pdr_info_table_name)
         self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequences(self):
-        my_sql = """DELETE FROM sequence_ill 
-                    USING sequence_ill 
-                    LEFT JOIN %s USING(sequence_ill_id) 
+        my_sql = """DELETE FROM %s 
+                    USING %s 
+                    LEFT JOIN %s USING(%s_id) 
                     WHERE %s_id IS NULL;
-                """ % (self.sequence_pdr_info_table_name, self.sequence_pdr_info_table_name)
+                """ % (self.sequence_table_name, self.sequence_table_name, self.sequence_table_name, self.sequence_pdr_info_table_name, self.sequence_pdr_info_table_name)
         self.my_conn.execute_no_fetch(my_sql)
 
 
