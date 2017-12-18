@@ -167,7 +167,7 @@ class dbUpload:
 #         TODO: make a dict
         if (self.db_server == "vamps2"):
             self.sequence_table_name = "sequence" 
-
+            self.sequence_pdr_info_table_name = "sequence_pdr_info"
             if self.utils.is_local():
                 self.my_conn = MyConnection(host = 'localhost', db="vamps2")
             else:
@@ -175,6 +175,7 @@ class dbUpload:
         
         elif (self.db_server == "env454"):
             self.sequence_table_name = "sequence_ill" 
+            self.sequence_pdr_info_table_name = "sequence_pdr_info_ill"
             if self.utils.is_local():
                 self.my_conn = MyConnection(host = 'localhost', db="test_env454")
             else:
@@ -275,7 +276,7 @@ class dbUpload:
 
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
-        my_sql          = "INSERT INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count) VALUES (%s, %s, %s)" % (run_info_ill_id, sequence_ill_id, seq_count)
+        my_sql          = "INSERT INTO %s (run_info_ill_id, sequence_ill_id, seq_count) VALUES (%s, %s, %s)" % (self.sequence_pdr_info_table_name, run_info_ill_id, sequence_ill_id, seq_count)
         my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), sequence_ill_id = VALUES(sequence_ill_id), seq_count = VALUES(seq_count);"
 #         print "MMM1 my_sql = %s" % my_sql
 #         try:
@@ -493,15 +494,15 @@ class dbUpload:
         pass
         
     def del_sequence_pdr_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
-        my_sql1 = """DELETE FROM sequence_pdr_info_ill
-                    USING sequence_pdr_info_ill JOIN run_info_ill USING (run_info_ill_id) 
+        my_sql1 = """DELETE FROM %s
+                    USING %s JOIN run_info_ill USING (run_info_ill_id) 
                     JOIN run USING(run_id) 
                     JOIN project using(project_id)
                     JOIN dataset using(dataset_id)
                     JOIN primer_suite using(primer_suite_id)
                     WHERE primer_suite = "%s"
                     AND run = "%s"
-                """ % (primer_suite, self.rundate)
+                """ % (self.sequence_pdr_info_table_name, self.sequence_pdr_info_table_name,  primer_suite, self.rundate)
         my_sql2 = " AND project in (" + projects + ")"
         my_sql3 = " AND dataset in (" + datasets + ")"
         if (projects == "") and (datasets == ""):
@@ -539,16 +540,16 @@ class dbUpload:
     def del_sequence_uniq_info(self):
         my_sql = """DELETE FROM sequence_uniq_info_ill 
                     USING sequence_uniq_info_ill 
-                    LEFT JOIN sequence_pdr_info_ill USING(sequence_ill_id) 
-                    WHERE sequence_pdr_info_ill_id is NULL;"""
+                    LEFT JOIN %s USING(sequence_ill_id) 
+                    WHERE %s_id is NULL;""" % (self.sequence_pdr_info_table_name, self.sequence_pdr_info_table_name)
         self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequences(self):
         my_sql = """DELETE FROM sequence_ill 
                     USING sequence_ill 
-                    LEFT JOIN sequence_pdr_info_ill USING(sequence_ill_id) 
-                    WHERE sequence_pdr_info_ill_id IS NULL;
-                """
+                    LEFT JOIN %s USING(sequence_ill_id) 
+                    WHERE %s_id IS NULL;
+                """ % (self.sequence_pdr_info_table_name, self.sequence_pdr_info_table_name)
         self.my_conn.execute_no_fetch(my_sql)
 
 
@@ -559,15 +560,15 @@ class dbUpload:
         lane          = self.get_lane().pop()
         for primer_suite in primer_suites:
             primer_suite_lane = primer_suite + ", lane " + lane
-            my_sql = """SELECT count(sequence_pdr_info_ill_id) 
-                        FROM sequence_pdr_info_ill 
+            my_sql = """SELECT count(%s_id) 
+                        FROM %s 
                           JOIN run_info_ill USING(run_info_ill_id) 
                           JOIN run USING(run_id) 
                           JOIN primer_suite using(primer_suite_id) 
                         WHERE run = '%s' 
                           AND lane = %s
                           AND primer_suite = '%s';
-                          """ % (self.rundate, lane, primer_suite)
+                          """ % (self.sequence_pdr_info_table_name, self.sequence_pdr_info_table_name, self.rundate, lane, primer_suite)
             res    = self.my_conn.execute_fetch_select(my_sql)
             try:
                 if (int(res[0][0]) > 0):
