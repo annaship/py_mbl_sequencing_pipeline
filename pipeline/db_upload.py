@@ -221,6 +221,8 @@ class dbUpload:
         if res:
             return int(res[0][0])
         
+    
+        
     def make_seq_upper(self, filename):
         read_fasta = fastalib.ReadFasta(filename)
         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
@@ -266,7 +268,7 @@ class dbUpload:
             return int(res[0][0])     
     
     def insert_pdr_info(self, fasta, run_info_ill_id):
-        res_id = ""
+#         res_id = ""
         if (not run_info_ill_id):
             self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
             
@@ -278,6 +280,32 @@ class dbUpload:
 #        print run_info_ill_id, sequence_ill_id, seq_count
         my_sql          = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES (%s, %s, %s)" % (self.sequence_pdr_info_table_name, self.sequence_table_name, run_info_ill_id, sequence_id, seq_count)
         my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.sequence_table_name, self.sequence_table_name)
+#         print "MMM1 my_sql = %s" % my_sql
+#         try:
+#             res_id = self.my_conn.execute_no_fetch(my_sql)
+#             return res_id
+#         except:
+#             self.utils.print_both("Offensive query: %s" % my_sql)
+#             raise
+        return my_sql
+        
+    
+    def insert_pdr_info2(self, fasta, run_info_ill_id):
+#         res_id = ""
+        if (not run_info_ill_id):
+            self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
+            
+        # ------- insert sequence info per run/project/dataset --------
+        seq_upper = fasta.seq.upper()
+        sequence_id = self.seq_id_dict[seq_upper]
+
+        seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
+#        print run_info_ill_id, sequence_ill_id, seq_count
+#         my_sql          = "INSERT INTO sequence_pdr_info (`dataset_id`, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 5643752, 1, 2)" 
+
+
+        my_sql          = "INSERT INTO %s (dataset_id, %s_id, seq_count) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = %s), %s, %s)" % (self.sequence_pdr_info_table_name, self.sequence_table_name, run_info_ill_id, sequence_id, seq_count)
+        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.sequence_table_name, self.sequence_table_name)
 #         print "MMM1 my_sql = %s" % my_sql
 #         try:
 #             res_id = self.my_conn.execute_no_fetch(my_sql)
@@ -321,22 +349,7 @@ class dbUpload:
             pass            
         except:
             # reraise the exception, as it's an unexpected error
-            raise
-        
-#     def get_taxonomy_ids(self):
-# #         TODO: get all in one query as seq_ids!
-#         for taxonomy in self.taxonomies:
-#             tax_id = self.get_id("taxonomy", taxonomy)
-#             try:
-#                 self.tax_id_dict[taxonomy] = tax_id
-#             except:
-#                 raise
-#             
-            
-#         try:
-#             my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name,
-#                                         '), COMPRESS('.join([val_tmpl % key for key in sequences]))
- 
+            raise     
             
     def get_taxonomy_id_dict(self):
 #         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
@@ -654,6 +667,8 @@ class dbUpload:
         all_insert_taxonomy_sql = []
         while fasta.next():
             all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
+            all_insert_pdr_info_sql.append(self.insert_pdr_info2(fasta, run_info_ill_id))
+            
             insert_taxonomy_sql = self.insert_taxonomy(fasta, gast_dict)
             if insert_taxonomy_sql:
                 all_insert_taxonomy_sql.append(insert_taxonomy_sql)
