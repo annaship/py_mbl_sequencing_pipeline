@@ -843,7 +843,7 @@ def vamps2upload(runobj):
     
     whole_start     = time.time()
 
-    my_upload = dbUpload(runobj)
+    my_upload = dbUpload(runobj, db_server="vamps2")
     filenames       = my_upload.get_fasta_file_names()
     if not filenames:
         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_upload.fasta_dir)
