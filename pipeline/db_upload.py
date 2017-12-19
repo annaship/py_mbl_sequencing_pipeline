@@ -363,23 +363,6 @@ class dbUpload:
 #         one_tax_id_dict = dict((y, int(x)) for x, y in res)
 #         self.tax_id_dict.update(one_tax_id_dict)        
 
-    def insert_taxonomy(self, fasta, gast_dict):
-            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-            my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
-            return my_sql
-
-#             "if we already had this taxonomy in this run, just skip it"
-#             if taxonomy in self.taxonomies:
-#                 next
-#             else:
-#                 my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
-#                 self.taxonomies.add(taxonomy)
-#                 return my_sql
-
-#         else:
-#             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
-#             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
-
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         my_sql = ""
         if gast_dict:
@@ -665,29 +648,29 @@ class dbUpload:
 #            os.remove(file_full)
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)       
         
-    def prepare_upload_query(self, fasta, run_info_ill_id, gast_dict):
-        all_insert_pdr_info_sql = []
-        all_insert_taxonomy_sql = []
+    def prepare_taxonomy_upload_query(self, gast_dict):
+# TODO: mv to Taxonomy
+#         all_insert_taxonomy_sql = []
 
         self.taxonomy.get_taxonomy_from_gast(gast_dict)
-
+        all_insert_taxonomy_sql_to_run = self.taxonomy.insert_whole_taxonomy()
+#         if insert_taxonomy_sql:
+#             all_insert_taxonomy_sql.append(insert_taxonomy_sql)
+#             all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
+#         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+        return all_insert_taxonomy_sql_to_run
         
+    def prepare_pdr_info_upload_query(self, fasta, run_info_ill_id, gast_dict):
+        all_insert_pdr_info_sql = []
+
         while fasta.next():
 #             all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
             all_insert_pdr_info_sql.append(self.insert_pdr_info2(fasta, run_info_ill_id))
-            
-            
-            insert_taxonomy_sql = self.insert_taxonomy(fasta, gast_dict)
-            if insert_taxonomy_sql:
-                all_insert_taxonomy_sql.append(insert_taxonomy_sql)
-        
+
         all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
         all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
          
-        all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
-        all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
-                     
-        return (all_insert_pdr_info_sql_to_run, all_insert_taxonomy_sql_to_run)
+        return all_insert_pdr_info_sql_to_run
     
     def prepare_insert_sequence_uniq_info_ill_sql(self, fasta, gast_dict):
         all_insert_sequence_uniq_info_ill_sql = []
@@ -732,8 +715,17 @@ class Taxonomy:
         one_tax_id_dict = dict((y, int(x)) for x, y in res)
         self.tax_id_dict.update(one_tax_id_dict)        
 
-    def insert_taxonomy(self, fasta, gast_dict):
-            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+#     def insert_taxonomy(self, fasta, gast_dict):
+#             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+#             my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
+#             return my_sql
+        
+    def insert_whole_taxonomy(self):
+        all_insert_taxonomy_sql = []   
+        for taxonomy in self.taxa_content:
             my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
-            return my_sql
+            all_insert_taxonomy_sql.append(my_sql)
+            all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
+        all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+        return all_insert_taxonomy_sql_to_run
         
