@@ -165,6 +165,8 @@ class dbUpload:
         # logger.error("self.utils.is_local() LLL1 db upload")
         # logger.error(self.utils.is_local())
         
+        self.sequence_field_name = "sequence_comp" 
+
 #         TODO: make a dict
         if (self.db_server == "vamps2"):
             self.sequence_table_name = "sequence" 
@@ -183,8 +185,9 @@ class dbUpload:
                 self.my_conn = MyConnection(host='bpcdb1', db="env454")
 
 #             self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
-        self.sequence_field_name = "sequence_comp" 
-        self.my_csv              = None
+
+        self.taxonomy    = Taxonomy(self.my_conn)
+        self.my_csv      = None
 
         self.unique_file_counts = self.dirs.unique_file_counts
         self.dirs.delete_file(self.unique_file_counts)
@@ -352,16 +355,15 @@ class dbUpload:
             # reraise the exception, as it's an unexpected error
             raise     
             
-    def get_taxonomy_id_dict(self):
-#         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
-         
-        my_sql = "SELECT %s, %s FROM %s;" % ("taxonomy_id", "taxonomy", "taxonomy")
-        res        = self.my_conn.execute_fetch_select(my_sql)
-        one_tax_id_dict = dict((y, int(x)) for x, y in res)
-        self.tax_id_dict.update(one_tax_id_dict)        
+#     def get_taxonomy_id_dict(self):
+# #         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
+#          
+#         my_sql = "SELECT %s, %s FROM %s;" % ("taxonomy_id", "taxonomy", "taxonomy")
+#         res        = self.my_conn.execute_fetch_select(my_sql)
+#         one_tax_id_dict = dict((y, int(x)) for x, y in res)
+#         self.tax_id_dict.update(one_tax_id_dict)        
 
     def insert_taxonomy(self, fasta, gast_dict):
-        if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
             return my_sql
@@ -374,8 +376,8 @@ class dbUpload:
 #                 self.taxonomies.add(taxonomy)
 #                 return my_sql
 
-        else:
-            self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
+#         else:
+#             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
 
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
@@ -666,9 +668,14 @@ class dbUpload:
     def prepare_upload_query(self, fasta, run_info_ill_id, gast_dict):
         all_insert_pdr_info_sql = []
         all_insert_taxonomy_sql = []
+
+        self.taxonomy.get_taxonomy_from_gast(gast_dict)
+
+        
         while fasta.next():
-            all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
+#             all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
             all_insert_pdr_info_sql.append(self.insert_pdr_info2(fasta, run_info_ill_id))
+            
             
             insert_taxonomy_sql = self.insert_taxonomy(fasta, gast_dict)
             if insert_taxonomy_sql:
@@ -693,16 +700,40 @@ class dbUpload:
         return all_insert_sequence_uniq_info_ill_sql_to_run
 
 class Taxonomy:
-  def __init__(self, taxa_content):
-    self.utils        = PipelneUtils()
-    self.taxa_content = taxa_content
-    self.ranks        = ['domain', 'phylum', 'klass', 'order', 'family', 'genus', 'species', 'strain']
-    self.taxa_by_rank = []
-    self.all_rank_w_id                       = set()
-    self.uniqued_taxa_by_rank_dict           = {}
-    self.uniqued_taxa_by_rank_w_id_dict      = {}
-    self.taxa_list_w_empty_ranks_dict        = defaultdict(list)
-    self.taxa_list_w_empty_ranks_ids_dict    = defaultdict(list)
-    self.silva_taxonomy_rank_list_w_ids_dict = defaultdict(list)
-    self.silva_taxonomy_ids_dict             = defaultdict(list)
-    self.silva_taxonomy_id_per_taxonomy_dict = defaultdict(list)
+    def __init__(self, my_conn):
+    
+        self.utils        = PipelneUtils()
+        self.my_conn      = my_conn
+        self.taxa_content = set()
+        self.ranks        = ['domain', 'phylum', 'klass', 'order', 'family', 'genus', 'species', 'strain']
+        self.taxa_by_rank = []
+        self.all_rank_w_id                       = set()
+        self.uniqued_taxa_by_rank_dict           = {}
+        self.uniqued_taxa_by_rank_w_id_dict      = {}
+        self.taxa_list_w_empty_ranks_dict        = defaultdict(list)
+        self.taxa_list_w_empty_ranks_ids_dict    = defaultdict(list)
+        self.silva_taxonomy_rank_list_w_ids_dict = defaultdict(list)
+        self.silva_taxonomy_ids_dict             = defaultdict(list)
+        self.silva_taxonomy_id_per_taxonomy_dict = defaultdict(list)
+    
+    
+    def parse_taxonomy(self):
+        self.taxa_list_dict = {taxon_string: taxon_string.split(";") for taxon_string in self.taxa_content}
+        self.taxa_list_w_empty_ranks_dict = {taxonomy: tax_list + [""] * (len(self.ranks) - len(tax_list)) for taxonomy, tax_list in self.taxa_list_dict.items()}
+
+    def get_taxonomy_from_gast(self, gast_dict):
+        if gast_dict:
+            for k, v in gast_dict.items():
+                self.taxa_content.add(v[0])
+
+    def get_taxonomy_id_dict(self):
+        my_sql = "SELECT %s, %s FROM %s;" % ("taxonomy_id", "taxonomy", "taxonomy")
+        res        = self.my_conn.execute_fetch_select(my_sql)
+        one_tax_id_dict = dict((y, int(x)) for x, y in res)
+        self.tax_id_dict.update(one_tax_id_dict)        
+
+    def insert_taxonomy(self, fasta, gast_dict):
+            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
+            my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
+            return my_sql
+        

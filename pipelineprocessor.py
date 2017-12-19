@@ -605,7 +605,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)
             
             start = time.time()
-            my_env454upload.get_taxonomy_id_dict()
+            my_env454upload.taxonomy.get_taxonomy_id_dict()
             elapsed = (time.time() - start)
             logger.debug("get_taxonomy_ids took %s sec to finish" % elapsed)
 
