@@ -9,6 +9,7 @@ from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 import IlluminaUtils.lib.fastalib as fastalib
+from collections import defaultdict
 
 try:
     import MySQLdb
@@ -690,3 +691,18 @@ class dbUpload:
         all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
         all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
         return all_insert_sequence_uniq_info_ill_sql_to_run
+
+class Taxonomy:
+  def __init__(self, taxa_content):
+    self.utils        = PipelneUtils()
+    self.taxa_content = taxa_content
+    self.ranks        = ['domain', 'phylum', 'klass', 'order', 'family', 'genus', 'species', 'strain']
+    self.taxa_by_rank = []
+    self.all_rank_w_id                       = set()
+    self.uniqued_taxa_by_rank_dict           = {}
+    self.uniqued_taxa_by_rank_w_id_dict      = {}
+    self.taxa_list_w_empty_ranks_dict        = defaultdict(list)
+    self.taxa_list_w_empty_ranks_ids_dict    = defaultdict(list)
+    self.silva_taxonomy_rank_list_w_ids_dict = defaultdict(list)
+    self.silva_taxonomy_ids_dict             = defaultdict(list)
+    self.silva_taxonomy_id_per_taxonomy_dict = defaultdict(list)
