@@ -125,7 +125,7 @@ class dbUpload:
         # insert_sequence_uniq_info_ill()
 
     """
-    def __init__(self, runobj = None, db_server = "vamps2"):
+    def __init__(self, runobj = None, db_server = "env454"):
         self.db_server   = db_server
         self.utils       = PipelneUtils()
         self.runobj      = runobj
@@ -193,7 +193,6 @@ class dbUpload:
         self.dirs.delete_file(self.unique_file_counts)
         self.seq_id_dict = {}
         self.taxonomies = set()
-        self.tax_id_dict = {}
         self.run_id      = None
 #        self.nonchimeras_suffix = ".nonchimeric.fa"
         self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
@@ -372,9 +371,9 @@ class dbUpload:
 # TEMP!
 #             taxonomy_id = self.get_id("taxonomy", taxonomy)
 
-            if taxonomy in self.tax_id_dict:
+            if taxonomy in self.taxonomy.tax_id_dict:
                 try:
-                    taxonomy_id = self.tax_id_dict[taxonomy] 
+                    taxonomy_id = self.taxonomy.tax_id_dict[taxonomy] 
                     my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
                    (
                     %s,
@@ -693,6 +692,7 @@ class Taxonomy:
         self.all_rank_w_id                       = set()
         self.uniqued_taxa_by_rank_dict           = {}
         self.uniqued_taxa_by_rank_w_id_dict      = {}
+        self.tax_id_dict                         = {}
         self.taxa_list_w_empty_ranks_dict        = defaultdict(list)
         self.taxa_list_w_empty_ranks_ids_dict    = defaultdict(list)
         self.silva_taxonomy_rank_list_w_ids_dict = defaultdict(list)
