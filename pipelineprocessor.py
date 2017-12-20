@@ -467,7 +467,7 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-    my_env454upload = dbUpload(runobj)
+    my_env454upload = dbUpload(runobj, db_server="vamps2")
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()

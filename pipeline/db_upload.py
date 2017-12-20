@@ -650,17 +650,17 @@ class dbUpload:
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)       
         
     def prepare_taxonomy_upload_query(self, gast_dict):
-# TODO: mv to Taxonomy
-#         all_insert_taxonomy_sql = []
-
+        # TODO: mv to Taxonomy?
+        all_insert_taxonomy_sql_to_run = ""
         self.taxonomy.get_taxonomy_from_gast(gast_dict)
-        all_insert_taxonomy_sql_to_run = self.taxonomy.insert_whole_taxonomy()
-#         if insert_taxonomy_sql:
-#             all_insert_taxonomy_sql.append(insert_taxonomy_sql)
-#             all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
-#         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+        if (self.db_server == "vamps2"):
+            all_insert_taxonomy_sql_to_run = self.taxonomy.insert_split_taxonomy()
+
+        if (self.db_server == "env454"):
+            all_insert_taxonomy_sql_to_run = self.taxonomy.insert_whole_taxonomy()
         return all_insert_taxonomy_sql_to_run
         
+
     def prepare_pdr_info_upload_query(self, fasta, run_info_ill_id, gast_dict):
         all_insert_pdr_info_sql = []
 
@@ -700,12 +700,7 @@ class Taxonomy:
         self.silva_taxonomy_rank_list_w_ids_dict = defaultdict(list)
         self.silva_taxonomy_ids_dict             = defaultdict(list)
         self.silva_taxonomy_id_per_taxonomy_dict = defaultdict(list)
-    
-    
-    def parse_taxonomy(self):
-        self.taxa_list_dict = {taxon_string: taxon_string.split(";") for taxon_string in self.taxa_content}
-        self.taxa_list_w_empty_ranks_dict = {taxonomy: tax_list + [""] * (len(self.ranks) - len(tax_list)) for taxonomy, tax_list in self.taxa_list_dict.items()}
-
+      
     def get_taxonomy_from_gast(self, gast_dict):
         self.taxa_content = set(v[0] for v in gast_dict.values())
 
@@ -724,3 +719,158 @@ class Taxonomy:
         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
         return all_insert_taxonomy_sql_to_run
         
+    def insert_split_taxonomy(self):
+        self.parse_taxonomy()
+        self.get_taxa_by_rank()
+        self.make_uniqued_taxa_by_rank_dict()
+#         if (args.do_not_insert == False):
+        self.insert_taxa()
+        self.silva_taxonomy
+#         if (args.do_not_insert == False):
+        self.insert_silva_taxonomy()
+        self.get_silva_taxonomy_ids()
+        self.make_silva_taxonomy_id_per_taxonomy_dict()
+        self.get_all_rank_w_id()
+    
+    def parse_taxonomy(self):
+        self.taxa_list_dict = {taxon_string: taxon_string.split(";") for taxon_string in self.taxa_content}
+        self.taxa_list_w_empty_ranks_dict = {taxonomy: tax_list + [""] * (len(self.ranks) - len(tax_list)) for taxonomy, tax_list in self.taxa_list_dict.items()}
+
+    def get_taxa_by_rank(self):
+        self.taxa_by_rank = zip(*self.taxa_list_w_empty_ranks_dict.values())
+    
+    def make_uniqued_taxa_by_rank_dict(self):
+        for rank in self.ranks:
+            rank_num = self.ranks.index(rank)
+        uniqued_taxa_by_rank = set(self.taxa_by_rank[rank_num])
+        try:
+            self.uniqued_taxa_by_rank_dict[rank] = uniqued_taxa_by_rank
+        except:
+            raise
+    
+# self.utils.print_array_w_title(self.uniqued_taxa_by_rank_dict, "self.uniqued_taxa_by_rank_dict made with for")
+    
+    def insert_taxa(self):
+        """
+        TODO: make all queries, then insert all? Benchmark!
+        """
+        for rank, uniqued_taxa_by_rank in self.uniqued_taxa_by_rank_dict.items():
+            insert_taxa_vals = '), ('.join(["'%s'" % key for key in uniqued_taxa_by_rank])
+    
+            shielded_rank_name = self.shield_rank_name(rank)
+            rows_affected = self.my_conn.execute_insert(shielded_rank_name, shielded_rank_name, insert_taxa_vals)
+            self.utils.print_array_w_title(rows_affected, "rows affected by self.my_conn.execute_insert(%s, %s, insert_taxa_vals)" % (rank, rank))
+    
+    def shield_rank_name(self, rank):
+        return "`"+rank+"`"
+    
+        """
+        >>> obj1 = (6, 1, 2, 6, 3)
+        >>> obj2 = list(obj1) #Convert to list
+        >>> obj2.append(8)
+        >>> print obj2
+        [6, 1, 2, 6, 3, 8]
+        >>> obj1 = tuple(obj2) #Convert back to tuple
+        >>> print obj1
+        (6, 1, 2, 6, 3, 8)
+        
+        """
+    
+    def get_all_rank_w_id(self):
+      all_rank_w_id = self.my_conn.get_all_name_id("rank")
+      klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "klass")
+      t = ("class", klass_id[0])
+      l = list(all_rank_w_id)
+      l.append(t)
+      self.all_rank_w_id = set(l)
+      # self.utils.print_array_w_title(self.all_rank_w_id, "self.all_rank_w_id from get_all_rank_w_id")
+      # (('domain', 78), ('family', 82), ('genus', 83), ('klass', 80), ('NA', 87), ('order', 81), ('phylum', 79), ('species', 84), ('strain', 85), ('superkingdom', 86))
+    
+    
+    def make_uniqued_taxa_by_rank_w_id_dict(self):
+      # self.utils.print_array_w_title(self.uniqued_taxa_by_rank_dict, "===\nself.uniqued_taxa_by_rank_dict from def silva_taxonomy")
+    
+      for rank, uniqued_taxa_by_rank in self.uniqued_taxa_by_rank_dict.items():
+        shielded_rank_name = self.shield_rank_name(rank)
+        taxa_names         = ', '.join(["'%s'" % key for key in uniqued_taxa_by_rank])
+        taxa_w_id          = self.my_conn.get_all_name_id(shielded_rank_name, rank + "_id", shielded_rank_name, 'WHERE %s in (%s)' % (shielded_rank_name, taxa_names))
+        self.uniqued_taxa_by_rank_w_id_dict[rank] = taxa_w_id
+    
+    def insert_silva_taxonomy(self):
+    
+      # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict.values(), "===\nself.taxa_list_w_empty_ranks_ids_dict from def insert_silva_taxonomy")
+    
+      field_list = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
+      all_insert_st_vals = self.utils.make_insert_values(self.taxa_list_w_empty_ranks_ids_dict.values())
+      rows_affected = self.my_conn.execute_insert("silva_taxonomy", field_list, all_insert_st_vals)
+      self.utils.print_array_w_title(rows_affected, "rows_affected by inserting silva_taxonomy")
+    
+    def silva_taxonomy(self):
+      # silva_taxonomy (domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id)
+      self.make_uniqued_taxa_by_rank_w_id_dict()
+      silva_taxonomy_list = []
+    
+      for taxonomy, tax_list in self.taxa_list_w_empty_ranks_dict.items():
+        # ['Bacteria', 'Proteobacteria', 'Deltaproteobacteria', 'Desulfobacterales', 'Nitrospinaceae', 'Nitrospina', '', '']
+        silva_taxonomy_sublist = []
+        for rank_num, taxon in enumerate(tax_list):
+          rank     = self.ranks[rank_num]
+          taxon_id = int(self.utils.find_val_in_nested_list(self.uniqued_taxa_by_rank_w_id_dict[rank], taxon)[0])
+          silva_taxonomy_sublist.append(taxon_id)
+          # self.utils.print_array_w_title(silva_taxonomy_sublist, "===\nsilva_taxonomy_sublist from def silva_taxonomy: ")
+        self.taxa_list_w_empty_ranks_ids_dict[taxonomy] = silva_taxonomy_sublist
+      # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict, "===\ntaxa_list_w_empty_ranks_ids_dict from def silva_taxonomy: ")
+    
+    def make_silva_taxonomy_rank_list_w_ids_dict(self):
+      for taxonomy, silva_taxonomy_id_list in self.taxa_list_w_empty_ranks_ids_dict.items():
+        rank_w_id_list = []
+        for rank_num, taxon_id in enumerate(silva_taxonomy_id_list):
+          rank = self.ranks[rank_num]
+          t = (rank, taxon_id)
+          rank_w_id_list.append(t)
+    
+        self.silva_taxonomy_rank_list_w_ids_dict[taxonomy] = rank_w_id_list
+      # self.utils.print_array_w_title(self.silva_taxonomy_rank_list_w_ids_dict, "===\nsilva_taxonomy_rank_list_w_ids_dict from def make_silva_taxonomy_rank_list_w_ids_dict: ")
+      """
+      {'Bacteria;Proteobacteria;Alphaproteobacteria;Rhizobiales;Rhodobiaceae;Rhodobium': [('domain', 2), ('phylum', 2016066), ('klass', 2085666), ('order', 2252460), ('family', 2293035), ('genus', 2303053), ('species', 1), ('strain', 2148217)], ...
+      """
+    
+    def make_rank_name_id_t_id_str(self, rank_w_id_list):
+      a = ""
+      for t in rank_w_id_list[:-1]:
+        a += t[0] + "_id = " + str(t[1]) + " AND\n"
+      a += rank_w_id_list[-1][0] + "_id = " + str(rank_w_id_list[-1][1]) + "\n"
+      return a
+    
+    def make_silva_taxonomy_ids_dict(self, silva_taxonomy_ids):
+      for ids in silva_taxonomy_ids:
+        self.silva_taxonomy_ids_dict[int(ids[0])] = [int(id) for id in ids[1:]]
+      # self.utils.print_array_w_title(self.silva_taxonomy_ids_dict, "===\nsilva_taxonomy_ids_dict from def get_silva_taxonomy_ids: ")
+      # {2436595: [2, 2016066, 2085666, 2252460, 2293035, 2303053, 1, 2148217], 2436596: [...
+    
+    def get_silva_taxonomy_ids(self):
+      self.make_silva_taxonomy_rank_list_w_ids_dict()
+    
+      sql_part = ""
+      for taxonomy, rank_w_id_list in self.silva_taxonomy_rank_list_w_ids_dict.items()[:-1]:
+        a = self.make_rank_name_id_t_id_str(rank_w_id_list)
+        sql_part += "(%s) OR " % a
+    
+      a_last = self.make_rank_name_id_t_id_str(self.silva_taxonomy_rank_list_w_ids_dict.values()[-1])
+      sql_part += "(%s)" % a_last
+    
+      field_names = "silva_taxonomy_id, domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
+      table_name  = "silva_taxonomy"
+      where_part  = "WHERE " + sql_part
+      silva_taxonomy_ids = self.my_conn.execute_simple_select(field_names, table_name, where_part)
+    
+      """
+      ((2436595L, 2L, 2016066L, 2085666L, 2252460L, 2293035L, 2303053L, 1L, 2148217L), ...
+      """
+      self.make_silva_taxonomy_ids_dict(silva_taxonomy_ids)
+    
+    def make_silva_taxonomy_id_per_taxonomy_dict(self):
+      for silva_taxonomy_id, st_id_list1 in self.silva_taxonomy_ids_dict.items():
+        taxon_string = self.utils.find_key_by_value_in_dict(self.taxa_list_w_empty_ranks_ids_dict.items(), st_id_list1)
+        self.silva_taxonomy_id_per_taxonomy_dict[taxon_string[0]] = silva_taxonomy_id
+      # self.utils.print_array_w_title(self.silva_taxonomy_id_per_taxonomy_dict, "silva_taxonomy_id_per_taxonomy_dict from silva_taxonomy_info_per_seq = ")
