@@ -103,6 +103,22 @@ class MyConnection:
 #            print dir(self.cursor)
             return self.cursor.lastrowid
 #        logger.debug("rows = "  + str(self.rows))
+
+
+    def execute_insert(self, table_name, field_name, val_list, ignore = "IGNORE"):
+        try:
+            sql = "INSERT %s INTO %s (%s) VALUES (%s)" % (ignore, table_name, field_name, val_list)
+            #print 'sql',sql
+            #if table_name == 'dataset' or table_name == 'project':
+            #    print 'sql',sql
+            if self.cursor:
+                self.cursor.execute(sql)
+                self.conn.commit()
+                return (self.cursor.rowcount, self.cursor.lastrowid)
+        except:
+            self.utils.print_both(("ERROR: query = %s") % sql)
+            raise
+
  
 
 class dbUpload:
