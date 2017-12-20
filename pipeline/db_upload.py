@@ -705,21 +705,14 @@ class Taxonomy:
         self.taxa_list_w_empty_ranks_dict = {taxonomy: tax_list + [""] * (len(self.ranks) - len(tax_list)) for taxonomy, tax_list in self.taxa_list_dict.items()}
 
     def get_taxonomy_from_gast(self, gast_dict):
-        if gast_dict:
-            for k, v in gast_dict.items():
-                self.taxa_content.add(v[0])
+        self.taxa_content = set(v[0] for v in gast_dict.values())
 
     def get_taxonomy_id_dict(self):
         my_sql = "SELECT %s, %s FROM %s;" % ("taxonomy_id", "taxonomy", "taxonomy")
         res        = self.my_conn.execute_fetch_select(my_sql)
         one_tax_id_dict = dict((y, int(x)) for x, y in res)
         self.tax_id_dict.update(one_tax_id_dict)        
-
-#     def insert_taxonomy(self, fasta, gast_dict):
-#             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-#             my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
-#             return my_sql
-        
+       
     def insert_whole_taxonomy(self):
         all_insert_taxonomy_sql = []   
         for taxonomy in self.taxa_content:
