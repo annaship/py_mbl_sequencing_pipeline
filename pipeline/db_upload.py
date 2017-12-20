@@ -125,8 +125,10 @@ class dbUpload:
         # insert_sequence_uniq_info_ill()
 
     """
-    def __init__(self, runobj = None, db_server = "env454"):
-        self.db_server   = db_server
+    def __init__(self, runobj = None, db_server = None):
+        if db_server is None:
+            db_server = "env454"
+        self.db_server   = db_server 
         self.utils       = PipelneUtils()
         self.runobj      = runobj
         self.rundate     = self.runobj.run
