@@ -107,7 +107,9 @@ class MyConnection:
 
     def execute_insert(self, table_name, field_name, val_list, ignore = "IGNORE"):
         try:
-            sql = "INSERT %s INTO %s (%s) VALUES (%s)" % (ignore, table_name, field_name, val_list)
+            sql = "INSERT %s INTO %s (%s) VALUES (%s) " % (ignore, table_name, field_name, val_list)
+            sql = sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (field_name, field_name)
+
             #print 'sql',sql
             #if table_name == 'dataset' or table_name == 'project':
             #    print 'sql',sql
@@ -758,11 +760,11 @@ class Taxonomy:
     def make_uniqued_taxa_by_rank_dict(self):
         for rank in self.ranks:
             rank_num = self.ranks.index(rank)
-        uniqued_taxa_by_rank = set(self.taxa_by_rank[rank_num])
-        try:
-            self.uniqued_taxa_by_rank_dict[rank] = uniqued_taxa_by_rank
-        except:
-            raise
+            uniqued_taxa_by_rank = set(self.taxa_by_rank[rank_num])
+            try:
+                self.uniqued_taxa_by_rank_dict[rank] = uniqued_taxa_by_rank
+            except:
+                raise
     
 # self.utils.print_array_w_title(self.uniqued_taxa_by_rank_dict, "self.uniqued_taxa_by_rank_dict made with for")
     
@@ -812,15 +814,29 @@ class Taxonomy:
         taxa_w_id          = self.my_conn.get_all_name_id(shielded_rank_name, rank + "_id", shielded_rank_name, 'WHERE %s in (%s)' % (shielded_rank_name, taxa_names))
         self.uniqued_taxa_by_rank_w_id_dict[rank] = taxa_w_id
     
+    def make_insert_values(self, matrix):
+        all_insert_vals = ""
+        
+        for arr in matrix[:-1]:
+            insert_dat_vals = ', '.join("'%s'" % key for key in arr)
+            all_insert_vals += insert_dat_vals + "), ("
+        
+        all_insert_vals += ', '.join("'%s'" % key for key in matrix[-1])
+        
+        # self.print_array_w_title(all_insert_vals, "all_insert_vals from make_insert_values")
+        return all_insert_vals
+
+    
+    
     def insert_silva_taxonomy(self):
     
-      # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict.values(), "===\nself.taxa_list_w_empty_ranks_ids_dict from def insert_silva_taxonomy")
-    
-      field_list = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
-      all_insert_st_vals = self.utils.make_insert_values(self.taxa_list_w_empty_ranks_ids_dict.values())
-      rows_affected = self.my_conn.execute_insert("silva_taxonomy", field_list, all_insert_st_vals)
-      self.utils.print_array_w_title(rows_affected, "rows_affected by inserting silva_taxonomy")
-    
+        # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict.values(), "===\nself.taxa_list_w_empty_ranks_ids_dict from def insert_silva_taxonomy")
+        
+        field_list = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
+        all_insert_st_vals = self.make_insert_values(self.taxa_list_w_empty_ranks_ids_dict.values())
+        rows_affected = self.my_conn.execute_insert("silva_taxonomy", field_list, all_insert_st_vals)
+        self.utils.print_array_w_title(rows_affected, "rows_affected by inserting silva_taxonomy")
+
     def silva_taxonomy(self):
       # silva_taxonomy (domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id)
       self.make_uniqued_taxa_by_rank_w_id_dict()

@@ -315,6 +315,10 @@ class PipelneUtils:
     def __init__(self):
         pass
 
+    def print_array_w_title(self, message, title = 'message'):
+      print title
+      print message
+
     def call_sh_script(self, script_name_w_path, where_to_run):
         try:
             call(['chmod', '0774', script_name_w_path])
