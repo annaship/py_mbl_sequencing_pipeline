@@ -250,7 +250,7 @@ class dbUpload:
         read_fasta = fastalib.ReadFasta(filename)
         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
         read_fasta.close()
-        return sequences 
+        return list(set(sequences)) 
         
     def insert_seq(self, sequences):
         query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
