@@ -316,8 +316,11 @@ class PipelneUtils:
         pass
 
     def print_array_w_title(self, message, title = 'message'):
-      print title
-      print message
+        print title
+        print message
+
+    def find_val_in_nested_list(self, hey, needle):
+      return [v for k, v in hey if k.lower() == needle.lower()]
 
     def call_sh_script(self, script_name_w_path, where_to_run):
         try:

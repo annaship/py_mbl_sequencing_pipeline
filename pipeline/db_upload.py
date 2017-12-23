@@ -120,6 +120,19 @@ class MyConnection:
         except:
             self.utils.print_both(("ERROR: query = %s") % sql)
             raise
+        
+    def get_all_name_id(self, table_name, id_name = "", field_name = "", where_part = ""):
+        if (field_name == ""):
+            field_name = table_name
+        if (id_name == ""):
+            id_name = table_name + '_id'
+        my_sql  = """SELECT %s, %s FROM %s %s""" % (field_name, id_name, table_name, where_part)
+        self.utils.print_both(("my_sql from get_all_name_id = %s") % my_sql)
+        res     = self.execute_fetch_select(my_sql)
+        
+        if res:
+            return res[0]
+        
 
  
 
@@ -356,7 +369,9 @@ class dbUpload:
         
         try:
             with open(gast_file_name) as fd:
-                gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])    
+                gast_content = fd.readlines()
+            gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in gast_content[1:]])    
+#             gast_dict.remove([k for k in gast_dict if k[0] == 'taxonomy'][0])
             return gast_dict
         except IOError, e:
 #            print dir(e)
@@ -743,7 +758,7 @@ class Taxonomy:
         self.make_uniqued_taxa_by_rank_dict()
 #         if (args.do_not_insert == False):
         self.insert_taxa()
-        self.silva_taxonomy
+        self.silva_taxonomy()
 #         if (args.do_not_insert == False):
         self.insert_silva_taxonomy()
         self.get_silva_taxonomy_ids()
@@ -838,20 +853,20 @@ class Taxonomy:
         self.utils.print_array_w_title(rows_affected, "rows_affected by inserting silva_taxonomy")
 
     def silva_taxonomy(self):
-      # silva_taxonomy (domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id)
-      self.make_uniqued_taxa_by_rank_w_id_dict()
-      silva_taxonomy_list = []
+        # silva_taxonomy (domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id)
+        self.make_uniqued_taxa_by_rank_w_id_dict()
+        silva_taxonomy_list = []
     
-      for taxonomy, tax_list in self.taxa_list_w_empty_ranks_dict.items():
-        # ['Bacteria', 'Proteobacteria', 'Deltaproteobacteria', 'Desulfobacterales', 'Nitrospinaceae', 'Nitrospina', '', '']
-        silva_taxonomy_sublist = []
-        for rank_num, taxon in enumerate(tax_list):
-          rank     = self.ranks[rank_num]
-          taxon_id = int(self.utils.find_val_in_nested_list(self.uniqued_taxa_by_rank_w_id_dict[rank], taxon)[0])
-          silva_taxonomy_sublist.append(taxon_id)
-          # self.utils.print_array_w_title(silva_taxonomy_sublist, "===\nsilva_taxonomy_sublist from def silva_taxonomy: ")
-        self.taxa_list_w_empty_ranks_ids_dict[taxonomy] = silva_taxonomy_sublist
-      # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict, "===\ntaxa_list_w_empty_ranks_ids_dict from def silva_taxonomy: ")
+        for taxonomy, tax_list in self.taxa_list_w_empty_ranks_dict.items():
+            # ['Bacteria', 'Proteobacteria', 'Deltaproteobacteria', 'Desulfobacterales', 'Nitrospinaceae', 'Nitrospina', '', '']
+            silva_taxonomy_sublist = []
+            for rank_num, taxon in enumerate(tax_list):
+                rank     = self.ranks[rank_num]
+                taxon_id = int(self.utils.find_val_in_nested_list(self.uniqued_taxa_by_rank_w_id_dict[rank], taxon)[0])
+                silva_taxonomy_sublist.append(taxon_id)
+                # self.utils.print_array_w_title(silva_taxonomy_sublist, "===\nsilva_taxonomy_sublist from def silva_taxonomy: ")
+            self.taxa_list_w_empty_ranks_ids_dict[taxonomy] = silva_taxonomy_sublist
+            # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict, "===\ntaxa_list_w_empty_ranks_ids_dict from def silva_taxonomy: ")
     
     def make_silva_taxonomy_rank_list_w_ids_dict(self):
       for taxonomy, silva_taxonomy_id_list in self.taxa_list_w_empty_ranks_ids_dict.items():
