@@ -127,11 +127,11 @@ class MyConnection:
         if (id_name == ""):
             id_name = table_name + '_id'
         my_sql  = """SELECT %s, %s FROM %s %s""" % (field_name, id_name, table_name, where_part)
-        self.utils.print_both(("my_sql from get_all_name_id = %s") % my_sql)
+#         self.utils.print_both(("my_sql from get_all_name_id = %s") % my_sql)
         res     = self.execute_fetch_select(my_sql)
         
         if res:
-            return res[0]
+            return res
         
 
  
