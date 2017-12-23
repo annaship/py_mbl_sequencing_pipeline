@@ -99,8 +99,11 @@ class MyConnection:
         if self.cursor:
             self.cursor.execute(sql)
             self.conn.commit()
-#            if (self.conn.affected_rows()):
-#            print dir(self.cursor)
+#             if (self.conn.affected_rows()):
+#                 logger.debug("affected_rows = "  + str(self.conn.affected_rows()))
+            logger.debug(self.cursor._info)
+#             _info    str: Records: 238  Duplicates: 66  Warnings: 0    
+
             return self.cursor.lastrowid
 #        logger.debug("rows = "  + str(self.rows))
 
@@ -110,7 +113,7 @@ class MyConnection:
             sql = "INSERT %s INTO %s (%s) VALUES (%s) " % (ignore, table_name, field_name, val_list)
             sql = sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (field_name, field_name)
 
-            #print 'sql',sql
+            print 'sql',sql
             #if table_name == 'dataset' or table_name == 'project':
             #    print 'sql',sql
             if self.cursor:
@@ -849,7 +852,14 @@ class Taxonomy:
         
         field_list = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
         all_insert_st_vals = self.make_insert_values(self.taxa_list_w_empty_ranks_ids_dict.values())
-        rows_affected = self.my_conn.execute_insert("silva_taxonomy", field_list, all_insert_st_vals)
+        sql = "INSERT %s INTO %s (%s) VALUES (%s) " % ("ignore", "silva_taxonomy", field_list, all_insert_st_vals)
+        sql = sql + " ON DUPLICATE KEY UPDATE "
+        duplicate_list = []
+        for field_name in field_list.split(", "):
+            duplicate_list.append(" %s = VALUES(%s)" % (field_name, field_name))
+        sql = sql + ",".join(duplicate_list) + "; "
+        print sql
+        rows_affected = self.my_conn.execute_no_fetch(sql)
         self.utils.print_array_w_title(rows_affected, "rows_affected by inserting silva_taxonomy")
 
     def silva_taxonomy(self):
