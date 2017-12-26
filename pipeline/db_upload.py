@@ -203,21 +203,21 @@ class dbUpload:
         self.filenames   = []
         # logger.error("self.utils.is_local() LLL1 db upload")
         # logger.error(self.utils.is_local())
-        
-        self.sequence_field_name = "sequence_comp" 
+        self.table_names = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence",  "sequence_pdr_info_table_name": "sequence_pdr_info"}, 
+                       "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill",  "sequence_pdr_info_table_name": "sequence_pdr_info_ill"}}
 
 #         TODO: make a dict
         if (self.db_server == "vamps2"):
-            self.sequence_table_name = "sequence" 
-            self.sequence_pdr_info_table_name = "sequence_pdr_info"
+#             self.sequence_table_name = "sequence" 
+#             self.sequence_pdr_info_table_name = "sequence_pdr_info"
+
             if self.utils.is_local():
                 self.my_conn = MyConnection(host = 'localhost', db="vamps2")
             else:
                 self.my_conn = MyConnection(host='vampsdb', db="vamps2")
-        
         elif (self.db_server == "env454"):
-            self.sequence_table_name = "sequence_ill" 
-            self.sequence_pdr_info_table_name = "sequence_pdr_info_ill"
+#             self.sequence_table_name = "sequence_ill" 
+#             self.sequence_pdr_info_table_name = "sequence_pdr_info_ill"
             if self.utils.is_local():
                 self.my_conn = MyConnection(host = 'localhost', db="test_env454")
             else:
@@ -225,8 +225,9 @@ class dbUpload:
 
 #             self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
 
-        self.taxonomy    = Taxonomy(self.my_conn)
-        self.my_csv      = None
+        self.taxonomy = Taxonomy(self.my_conn)
+        self.seq      = Seq(self.my_conn, self.table_names[self.db_server])
+#         self.my_csv   = None
 
         self.unique_file_counts = self.dirs.unique_file_counts
         self.dirs.delete_file(self.unique_file_counts)
@@ -263,39 +264,7 @@ class dbUpload:
         if res:
             return int(res[0][0])
         
-    
         
-    def make_seq_upper(self, filename):
-        read_fasta = fastalib.ReadFasta(filename)
-        sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
-        read_fasta.close()
-        return list(set(sequences)) 
-        
-    def insert_seq(self, sequences):
-        query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
-        val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
-        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (self.sequence_field_name, self.sequence_field_name)
-#       print "MMM my_sql = %s" % my_sql
-        seq_id     = self.my_conn.execute_no_fetch(my_sql)
-        self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
-        return seq_id
-        
-    def get_seq_id_dict(self, sequences):
-        id_name    = self.sequence_table_name + "_id" 
-        query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
-        val_tmpl   = "'%s'"
-        try:
-            my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
-            res        = self.my_conn.execute_fetch_select(my_sql)
-            one_seq_id_dict = dict((y, int(x)) for x, y in res)
-            self.seq_id_dict.update(one_seq_id_dict)
-        except:
-            if len(sequences) == 0:
-                self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
-            raise
-
-
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
         my_sql  = """SELECT %s FROM %s WHERE %s = '%s';""" % (id_name, table_name, table_name, value)
@@ -402,7 +371,27 @@ class dbUpload:
 #         res        = self.my_conn.execute_fetch_select(my_sql)
 #         one_tax_id_dict = dict((y, int(x)) for x, y in res)
 #         self.tax_id_dict.update(one_tax_id_dict)        
+            # sequence_id, silva_taxonomy_info_per_seq_id, gg_otu_info_per_seq_id, rdp_taxonomy_info_per_seq_id, oligotype_id, created_at, updated_at, 
 
+    def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
+        sequence_ids_strs = [str(id) for id in self.seq_ids_by_name_dict.values()]
+        where_part = 'WHERE sequence_id in (%s)' % ', '.join(sequence_ids_strs)
+        self.seq_id_w_silva_taxonomy_info_per_seq_id = self.my_conn.get_all_name_id("silva_taxonomy_info_per_seq", "silva_taxonomy_info_per_seq_id", "sequence_id", where_part)
+
+    def insert_sequence_uniq_info(self):
+        field_list = "sequence_id, silva_taxonomy_info_per_seq_id"
+        if len(self.seq_id_w_silva_taxonomy_info_per_seq_id) > self.utils.min_seqs:
+            split = len(self.seq_id_w_silva_taxonomy_info_per_seq_id)/self.utils.chunk_split  # how many pieces
+            for i,vals in enumerate(self.utils.chunks(self.seq_id_w_silva_taxonomy_info_per_seq_id, split)):
+                sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in vals)
+                print i+1,'/',self.utils.chunk_split,' -- len vals chunk:',len(sequence_uniq_info_values)
+                rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, sequence_uniq_info_values)
+                self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
+        else:
+            self.sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id)
+            rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
+            self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
+    
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         my_sql = ""
         if gast_dict:
@@ -712,16 +701,6 @@ class dbUpload:
          
         return all_insert_pdr_info_sql_to_run
     
-    def prepare_insert_sequence_uniq_info_ill_sql(self, fasta, gast_dict):
-        all_insert_sequence_uniq_info_ill_sql = []
-        fasta.reset()
-        while fasta.next():
-            all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))            
-                     
-        all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
-        all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
-        return all_insert_sequence_uniq_info_ill_sql_to_run
-
 class Taxonomy:
     def __init__(self, my_conn):
     
@@ -935,3 +914,55 @@ class Taxonomy:
             taxon_string = self.utils.find_key_by_value_in_dict(self.taxa_list_w_empty_ranks_ids_dict.items(), st_id_list1)
             self.silva_taxonomy_id_per_taxonomy_dict[taxon_string[0]] = silva_taxonomy_id
         # self.utils.print_array_w_title(self.silva_taxonomy_id_per_taxonomy_dict, "silva_taxonomy_id_per_taxonomy_dict from silva_taxonomy_info_per_seq = ")
+
+class Seq:
+    def __init__(self, my_conn, table_names):
+    
+        self.utils        = PipelneUtils()
+        self.my_conn      = my_conn
+        self.table_names  = table_names
+        self.sequences    = ""
+        self.taxa         = ""
+        self.refhvr_id    = ""
+        self.the_rest     = ""
+
+    def prepare_insert_sequence_uniq_info_ill_sql(self, fasta, gast_dict):
+        all_insert_sequence_uniq_info_ill_sql = []
+        fasta.reset()
+        while fasta.next():
+            all_insert_sequence_uniq_info_ill_sql.append(self.insert_sequence_uniq_info_ill(fasta, gast_dict))            
+                     
+        all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
+        all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
+        return all_insert_sequence_uniq_info_ill_sql_to_run
+
+
+    def make_seq_upper(self, filename):
+        read_fasta = fastalib.ReadFasta(filename)
+        sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
+        read_fasta.close()
+        return list(set(sequences)) 
+        
+    def insert_seq(self, sequences):
+        query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
+        val_tmpl   = "'%s'"
+        my_sql     = query_tmpl % (self.table_names.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (self.sequence_field_name, self.sequence_field_name)
+#       print "MMM my_sql = %s" % my_sql
+        seq_id     = self.my_conn.execute_no_fetch(my_sql)
+        self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+        return seq_id
+        
+    def get_seq_id_dict(self, sequences):
+        id_name    = self.table_names.sequence_table_name + "_id" 
+        query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
+        val_tmpl   = "'%s'"
+        try:
+            my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.table_names.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
+            res        = self.my_conn.execute_fetch_select(my_sql)
+            one_seq_id_dict = dict((y, int(x)) for x, y in res)
+            self.seq_id_dict.update(one_seq_id_dict)
+        except:
+            if len(sequences) == 0:
+                self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
+            raise

@@ -467,7 +467,8 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-    my_env454upload = dbUpload(runobj, db_server="vamps2")
+#     my_env454upload = dbUpload(runobj, db_server="vamps2")
+    my_env454upload = dbUpload(runobj, db_server="env454")    
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
@@ -476,10 +477,10 @@ def env454upload_main(runobj, full_upload):
 
 #     sequences = get_sequences(my_env454upload, filenames)
     for filename in filenames:
-        sequences = my_env454upload.make_seq_upper(filename)
+        sequences = my_env454upload.seq.make_seq_upper(filename)
         if full_upload:
             env454upload_seq(my_env454upload, filename, sequences)
-        wrapped   = wrapper(my_env454upload.get_seq_id_dict, sequences)
+        wrapped   = wrapper(my_env454upload.seq.get_seq_id_dict, sequences)
         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 
@@ -553,7 +554,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 
             prepare_insert_sequence_uniq_info_ill_sql_time = 0
             start_prepare_insert_sequence_uniq_info_ill_sql_time = time.time()
-            all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
+            all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.seq.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
             prepare_insert_sequence_uniq_info_ill_sql_time = (time.time() - start_prepare_insert_sequence_uniq_info_ill_sql_time)
             
             insert_sequence_uniq_info_ill_time = upload_w_time(my_env454upload, all_insert_sequence_uniq_info_ill_sql_to_run)
