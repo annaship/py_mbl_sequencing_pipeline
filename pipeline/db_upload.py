@@ -86,14 +86,14 @@ class MyConnection:
 
     def execute_fetch_select(self, sql):
         if self.cursor:
-          try:
-            # sql = self.conn.escape(sql)
-            self.cursor.execute(sql)
-            res = self.cursor.fetchall ()
-          except:
-            self.utils.print_both(("ERROR: query = %s") % sql)
-            raise
-          return res
+            try:
+                # sql = self.conn.escape(sql)
+                self.cursor.execute(sql)
+                res = self.cursor.fetchall ()
+            except:
+                self.utils.print_both(("ERROR: query = %s") % sql)
+                raise
+        return res
 
     def execute_no_fetch(self, sql):
         if self.cursor:
@@ -101,11 +101,9 @@ class MyConnection:
             self.conn.commit()
 #             if (self.conn.affected_rows()):
 #                 logger.debug("affected_rows = "  + str(self.conn.affected_rows()))
-            logger.debug(self.cursor._info)
+#             logger.debug(self.cursor._info)
 #             _info    str: Records: 238  Duplicates: 66  Warnings: 0    
-
-            return self.cursor.lastrowid
-#        logger.debug("rows = "  + str(self.rows))
+            return self.cursor._info
 
 
     def execute_insert(self, table_name, field_name, val_list, ignore = "IGNORE"):
@@ -113,7 +111,7 @@ class MyConnection:
             sql = "INSERT %s INTO %s (%s) VALUES (%s) " % (ignore, table_name, field_name, val_list)
             sql = sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (field_name, field_name)
 
-            print 'sql',sql
+#             print 'sql',sql
             #if table_name == 'dataset' or table_name == 'project':
             #    print 'sql',sql
             if self.cursor:
@@ -135,6 +133,11 @@ class MyConnection:
         
         if res:
             return res
+        
+#     def execute_simple_select(self, field_name, table_name, where_part):
+#         id_query  = "SELECT %s FROM %s %s" % (field_name, table_name, where_part)
+#         return self.execute_fetch_select(id_query)
+        
         
 
  
@@ -813,24 +816,24 @@ class Taxonomy:
         """
     
     def get_all_rank_w_id(self):
-      all_rank_w_id = self.my_conn.get_all_name_id("rank")
-      klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "klass")
-      t = ("class", klass_id[0])
-      l = list(all_rank_w_id)
-      l.append(t)
-      self.all_rank_w_id = set(l)
-      # self.utils.print_array_w_title(self.all_rank_w_id, "self.all_rank_w_id from get_all_rank_w_id")
-      # (('domain', 78), ('family', 82), ('genus', 83), ('klass', 80), ('NA', 87), ('order', 81), ('phylum', 79), ('species', 84), ('strain', 85), ('superkingdom', 86))
-    
-    
+        all_rank_w_id = self.my_conn.get_all_name_id("rank")
+        klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "klass")
+        t = ("class", klass_id[0])
+        l = list(all_rank_w_id)
+        l.append(t)
+        self.all_rank_w_id = set(l)
+        # self.utils.print_array_w_title(self.all_rank_w_id, "self.all_rank_w_id from get_all_rank_w_id")
+        # (('domain', 78), ('family', 82), ('genus', 83), ('klass', 80), ('NA', 87), ('order', 81), ('phylum', 79), ('species', 84), ('strain', 85), ('superkingdom', 86))
+        
+
     def make_uniqued_taxa_by_rank_w_id_dict(self):
-      # self.utils.print_array_w_title(self.uniqued_taxa_by_rank_dict, "===\nself.uniqued_taxa_by_rank_dict from def silva_taxonomy")
-    
-      for rank, uniqued_taxa_by_rank in self.uniqued_taxa_by_rank_dict.items():
-        shielded_rank_name = self.shield_rank_name(rank)
-        taxa_names         = ', '.join(["'%s'" % key for key in uniqued_taxa_by_rank])
-        taxa_w_id          = self.my_conn.get_all_name_id(shielded_rank_name, rank + "_id", shielded_rank_name, 'WHERE %s in (%s)' % (shielded_rank_name, taxa_names))
-        self.uniqued_taxa_by_rank_w_id_dict[rank] = taxa_w_id
+        # self.utils.print_array_w_title(self.uniqued_taxa_by_rank_dict, "===\nself.uniqued_taxa_by_rank_dict from def silva_taxonomy")
+        
+        for rank, uniqued_taxa_by_rank in self.uniqued_taxa_by_rank_dict.items():
+            shielded_rank_name = self.shield_rank_name(rank)
+            taxa_names         = ', '.join(["'%s'" % key for key in uniqued_taxa_by_rank])
+            taxa_w_id          = self.my_conn.get_all_name_id(shielded_rank_name, rank + "_id", shielded_rank_name, 'WHERE %s in (%s)' % (shielded_rank_name, taxa_names))
+            self.uniqued_taxa_by_rank_w_id_dict[rank] = taxa_w_id
     
     def make_insert_values(self, matrix):
         all_insert_vals = ""
@@ -879,53 +882,54 @@ class Taxonomy:
             # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict, "===\ntaxa_list_w_empty_ranks_ids_dict from def silva_taxonomy: ")
     
     def make_silva_taxonomy_rank_list_w_ids_dict(self):
-      for taxonomy, silva_taxonomy_id_list in self.taxa_list_w_empty_ranks_ids_dict.items():
-        rank_w_id_list = []
-        for rank_num, taxon_id in enumerate(silva_taxonomy_id_list):
-          rank = self.ranks[rank_num]
-          t = (rank, taxon_id)
-          rank_w_id_list.append(t)
-    
-        self.silva_taxonomy_rank_list_w_ids_dict[taxonomy] = rank_w_id_list
-      # self.utils.print_array_w_title(self.silva_taxonomy_rank_list_w_ids_dict, "===\nsilva_taxonomy_rank_list_w_ids_dict from def make_silva_taxonomy_rank_list_w_ids_dict: ")
-      """
-      {'Bacteria;Proteobacteria;Alphaproteobacteria;Rhizobiales;Rhodobiaceae;Rhodobium': [('domain', 2), ('phylum', 2016066), ('klass', 2085666), ('order', 2252460), ('family', 2293035), ('genus', 2303053), ('species', 1), ('strain', 2148217)], ...
-      """
+        for taxonomy, silva_taxonomy_id_list in self.taxa_list_w_empty_ranks_ids_dict.items():
+            rank_w_id_list = []
+            for rank_num, taxon_id in enumerate(silva_taxonomy_id_list):
+                rank = self.ranks[rank_num]
+                t = (rank, taxon_id)
+                rank_w_id_list.append(t)
+            
+            self.silva_taxonomy_rank_list_w_ids_dict[taxonomy] = rank_w_id_list
+            # self.utils.print_array_w_title(self.silva_taxonomy_rank_list_w_ids_dict, "===\nsilva_taxonomy_rank_list_w_ids_dict from def make_silva_taxonomy_rank_list_w_ids_dict: ")
+            """
+            {'Bacteria;Proteobacteria;Alphaproteobacteria;Rhizobiales;Rhodobiaceae;Rhodobium': [('domain', 2), ('phylum', 2016066), ('klass', 2085666), ('order', 2252460), ('family', 2293035), ('genus', 2303053), ('species', 1), ('strain', 2148217)], ...
+            """
     
     def make_rank_name_id_t_id_str(self, rank_w_id_list):
-      a = ""
-      for t in rank_w_id_list[:-1]:
-        a += t[0] + "_id = " + str(t[1]) + " AND\n"
-      a += rank_w_id_list[-1][0] + "_id = " + str(rank_w_id_list[-1][1]) + "\n"
-      return a
-    
+        a = ""
+        for t in rank_w_id_list[:-1]:
+            a += t[0] + "_id = " + str(t[1]) + " AND\n"
+        a += rank_w_id_list[-1][0] + "_id = " + str(rank_w_id_list[-1][1]) + "\n"
+        return a
+
     def make_silva_taxonomy_ids_dict(self, silva_taxonomy_ids):
-      for ids in silva_taxonomy_ids:
-        self.silva_taxonomy_ids_dict[int(ids[0])] = [int(id) for id in ids[1:]]
-      # self.utils.print_array_w_title(self.silva_taxonomy_ids_dict, "===\nsilva_taxonomy_ids_dict from def get_silva_taxonomy_ids: ")
-      # {2436595: [2, 2016066, 2085666, 2252460, 2293035, 2303053, 1, 2148217], 2436596: [...
+        for ids in silva_taxonomy_ids:
+#             ids[-1] = silva_taxonomy_id, the rest are ids for each rank
+            self.silva_taxonomy_ids_dict[int(ids[-1])] = [int(id) for id in ids[0:-1]]
+        # self.utils.print_array_w_title(self.silva_taxonomy_ids_dict, "===\nsilva_taxonomy_ids_dict from def get_silva_taxonomy_ids: ")
+        # {2436595: [2, 2016066, 2085666, 2252460, 2293035, 2303053, 1, 2148217], 2436596: [...
     
     def get_silva_taxonomy_ids(self):
-      self.make_silva_taxonomy_rank_list_w_ids_dict()
-    
-      sql_part = ""
-      for taxonomy, rank_w_id_list in self.silva_taxonomy_rank_list_w_ids_dict.items()[:-1]:
-        a = self.make_rank_name_id_t_id_str(rank_w_id_list)
-        sql_part += "(%s) OR " % a
-    
-      a_last = self.make_rank_name_id_t_id_str(self.silva_taxonomy_rank_list_w_ids_dict.values()[-1])
-      sql_part += "(%s)" % a_last
-    
-      field_names = "silva_taxonomy_id, domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
-      table_name  = "silva_taxonomy"
-      where_part  = "WHERE " + sql_part
-      silva_taxonomy_ids = self.my_conn.execute_simple_select(field_names, table_name, where_part)
-    
-      """
-      ((2436595L, 2L, 2016066L, 2085666L, 2252460L, 2293035L, 2303053L, 1L, 2148217L), ...
-      """
-      self.make_silva_taxonomy_ids_dict(silva_taxonomy_ids)
-    
+        self.make_silva_taxonomy_rank_list_w_ids_dict()
+        
+        sql_part = ""
+        for taxonomy, rank_w_id_list in self.silva_taxonomy_rank_list_w_ids_dict.items()[:-1]:
+            a = self.make_rank_name_id_t_id_str(rank_w_id_list)
+            sql_part += "(%s) OR " % a
+        
+        a_last = self.make_rank_name_id_t_id_str(self.silva_taxonomy_rank_list_w_ids_dict.values()[-1])
+        sql_part += "(%s)" % a_last
+        
+        field_names = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
+        table_name  = "silva_taxonomy"
+        where_part  = "WHERE " + sql_part
+        silva_taxonomy_ids = self.my_conn.get_all_name_id(table_name, "", field_names, where_part)
+        
+        """
+        ((2436595L, 2L, 2016066L, 2085666L, 2252460L, 2293035L, 2303053L, 1L, 2148217L), ...
+        """
+        self.make_silva_taxonomy_ids_dict(silva_taxonomy_ids)
+
     def make_silva_taxonomy_id_per_taxonomy_dict(self):
       for silva_taxonomy_id, st_id_list1 in self.silva_taxonomy_ids_dict.items():
         taxon_string = self.utils.find_key_by_value_in_dict(self.taxa_list_w_empty_ranks_ids_dict.items(), st_id_list1)
