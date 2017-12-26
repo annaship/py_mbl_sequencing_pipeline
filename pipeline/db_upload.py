@@ -931,7 +931,7 @@ class Taxonomy:
         self.make_silva_taxonomy_ids_dict(silva_taxonomy_ids)
 
     def make_silva_taxonomy_id_per_taxonomy_dict(self):
-      for silva_taxonomy_id, st_id_list1 in self.silva_taxonomy_ids_dict.items():
-        taxon_string = self.utils.find_key_by_value_in_dict(self.taxa_list_w_empty_ranks_ids_dict.items(), st_id_list1)
-        self.silva_taxonomy_id_per_taxonomy_dict[taxon_string[0]] = silva_taxonomy_id
-      # self.utils.print_array_w_title(self.silva_taxonomy_id_per_taxonomy_dict, "silva_taxonomy_id_per_taxonomy_dict from silva_taxonomy_info_per_seq = ")
+        for silva_taxonomy_id, st_id_list1 in self.silva_taxonomy_ids_dict.items():
+            taxon_string = self.utils.find_key_by_value_in_dict(self.taxa_list_w_empty_ranks_ids_dict.items(), st_id_list1)
+            self.silva_taxonomy_id_per_taxonomy_dict[taxon_string[0]] = silva_taxonomy_id
+        # self.utils.print_array_w_title(self.silva_taxonomy_id_per_taxonomy_dict, "silva_taxonomy_id_per_taxonomy_dict from silva_taxonomy_info_per_seq = ")
