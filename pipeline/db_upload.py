@@ -206,22 +206,37 @@ class dbUpload:
         self.table_names = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence",  "sequence_pdr_info_table_name": "sequence_pdr_info"}, 
                        "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill",  "sequence_pdr_info_table_name": "sequence_pdr_info_ill"}}
 
-#         TODO: make a dict
-        if (self.db_server == "vamps2"):
-#             self.sequence_table_name = "sequence" 
-#             self.sequence_pdr_info_table_name = "sequence_pdr_info"
+        self.db_cnf = {
+            "vamps2": {"local": {"host": "localhost", "db": "vamps2"},
+                       "production": {"host": "vampsdb", "db": "vamps2"}
+                       }, 
+            "env454": {"local": {"host": "localhost", "db": "test_env454"},
+                       "production": {"host": "bpcdb1", "db": "env454"}
+                       }
+                    }
 
-            if self.utils.is_local():
-                self.my_conn = MyConnection(host = 'localhost', db="vamps2")
-            else:
-                self.my_conn = MyConnection(host='vampsdb', db="vamps2")
-        elif (self.db_server == "env454"):
-#             self.sequence_table_name = "sequence_ill" 
-#             self.sequence_pdr_info_table_name = "sequence_pdr_info_ill"
-            if self.utils.is_local():
-                self.my_conn = MyConnection(host = 'localhost', db="test_env454")
-            else:
-                self.my_conn = MyConnection(host='bpcdb1', db="env454")
+
+        if self.utils.is_local():
+            is_local = "local"
+        else:
+            is_local = "production"
+            
+        host = self.db_cnf[self.db_server][is_local]["host"]
+        db   = self.db_cnf[self.db_server][is_local]["db"]
+        self.my_conn = MyConnection(host, db)
+
+
+#         TODO: make a dict
+#         if (self.db_server == "vamps2"):
+#             if self.utils.is_local():
+#                 self.my_conn = MyConnection(host = 'localhost', db = "vamps2")
+#             else:
+#                 self.my_conn = MyConnection(host = 'vampsdb', db = "vamps2")
+#         elif (self.db_server == "env454"):
+#             if self.utils.is_local():
+#                 self.my_conn = MyConnection(host = 'localhost', db = "test_env454")
+#             else:
+#                 self.my_conn = MyConnection(host = 'bpcdb1', db = "env454")
 
 #             self.my_conn = MyConnection(host='bpcdb1.jbpc-np.mbl.edu', db="env454")
 
@@ -946,7 +961,7 @@ class Seq:
     def insert_seq(self, sequences):
         query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
         val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (self.table_names.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
+        my_sql     = query_tmpl % (self.table_names["sequence_table_name"], self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
         my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (self.sequence_field_name, self.sequence_field_name)
 #       print "MMM my_sql = %s" % my_sql
         seq_id     = self.my_conn.execute_no_fetch(my_sql)
@@ -954,11 +969,11 @@ class Seq:
         return seq_id
         
     def get_seq_id_dict(self, sequences):
-        id_name    = self.table_names.sequence_table_name + "_id" 
+        id_name    = self.table_names["sequence_table_name"] + "_id" 
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
         try:
-            my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.table_names.sequence_table_name, self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
+            my_sql     = query_tmpl % (id_name, self.sequence_field_name, self.table_names["sequence_table_name"], self.sequence_field_name, '), COMPRESS('.join([val_tmpl % key for key in sequences]))
             res        = self.my_conn.execute_fetch_select(my_sql)
             one_seq_id_dict = dict((y, int(x)) for x, y in res)
             self.seq_id_dict.update(one_seq_id_dict)
