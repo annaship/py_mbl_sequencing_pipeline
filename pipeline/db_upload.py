@@ -223,7 +223,7 @@ class dbUpload:
         self.my_conn = MyConnection(host, db)
 
         self.taxonomy = Taxonomy(self.my_conn)
-        self.seq      = Seq(self.my_conn, self.table_names)
+        self.seq      = Seq(self.taxonomy, self.table_names)
 #         self.my_csv   = None
 
         self.unique_file_counts = self.dirs.unique_file_counts
@@ -575,7 +575,10 @@ class dbUpload:
 
         all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
         all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
-         
+#         TODO: change to one query, as in insert sequence 
+        """INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 5588094, 1105786, 2)
+         ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 3180786, 856058, 2)
+         ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); """
         return all_insert_pdr_info_sql_to_run
     
 class Taxonomy:
@@ -654,7 +657,7 @@ class Taxonomy:
     
             shielded_rank_name = self.shield_rank_name(rank)
             rows_affected = self.my_conn.execute_insert(shielded_rank_name, shielded_rank_name, insert_taxa_vals)
-            self.utils.print_array_w_title(rows_affected, "rows affected by self.my_conn.execute_insert(%s, %s, insert_taxa_vals)" % (rank, rank))
+#             self.utils.print_array_w_title(rows_affected, "rows affected by self.my_conn.execute_insert(%s, %s, insert_taxa_vals)" % (rank, rank))
     
     def shield_rank_name(self, rank):
         return "`"+rank+"`"
@@ -793,11 +796,11 @@ class Taxonomy:
         # self.utils.print_array_w_title(self.silva_taxonomy_id_per_taxonomy_dict, "silva_taxonomy_id_per_taxonomy_dict from silva_taxonomy_info_per_seq = ")
 
 class Seq:
-    def __init__(self, my_conn, table_names):
+    def __init__(self, taxonomy, table_names):
     
         self.utils       = PipelneUtils()
-        self.taxonomy    = Taxonomy(my_conn)
-        self.my_conn     = my_conn
+        self.taxonomy    = taxonomy
+        self.my_conn     = self.taxonomy.my_conn
         self.table_names = table_names
         self.seq_id_dict = {}
 
@@ -885,13 +888,14 @@ class Seq:
         seq_upper = fasta.seq.upper()
         sequence_id = self.seq_id_dict[seq_upper]
 
-        seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
+        seq_count = int(fasta.id.split('|')[-1].split(':')[-1])
 #        print run_info_ill_id, sequence_ill_id, seq_count
 #         my_sql          = "INSERT INTO sequence_pdr_info (`dataset_id`, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 5643752, 1, 2)" 
 
 
-        my_sql          = "INSERT INTO %s (dataset_id, %s_id, seq_count) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = %s), %s, %s)" % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], run_info_ill_id, sequence_id, seq_count)
-        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
+        my_sql = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = %s), %s, %s, %s)
+        """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], run_info_ill_id, sequence_id, seq_count, C.classifier_id)
+        my_sql = my_sql + " ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
 #         print "MMM1 my_sql = %s" % my_sql
 #         try:
 #             res_id = self.my_conn.execute_no_fetch(my_sql)
