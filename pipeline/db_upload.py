@@ -953,6 +953,7 @@ class Seq:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
             sequence_id = self.seq_id_dict[seq_upper]
+            rank_id = self.taxonomy.all_rank_w_id[rank]
 # TEMP!
 #             taxonomy_id = self.get_id("taxonomy", taxonomy)
 
@@ -965,7 +966,7 @@ class Seq:
                     %s,
                     '%s',
                     '%s',
-                    (SELECT rank_id FROM rank WHERE rank = '%s'),
+                    %s,
                     '%s'                
                    )
                    ON DUPLICATE KEY UPDATE
@@ -973,9 +974,9 @@ class Seq:
                        taxonomy_id = %s,
                        gast_distance = '%s',
                        refssu_count = '%s',
-                       rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
+                       rank_id = %s,
                        refhvr_ids = '%s';
-                   """ % (self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+                   """ % (self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
                 except Exception, e:
                     logger.debug("Error = %s" % e)
                     raise
