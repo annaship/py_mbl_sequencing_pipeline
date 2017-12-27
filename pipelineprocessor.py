@@ -467,8 +467,8 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-    my_env454upload = dbUpload(runobj, db_server="vamps2")
-#     my_env454upload = dbUpload(runobj, db_server="env454")    
+#     my_env454upload = dbUpload(runobj, db_server="vamps2")
+    my_env454upload = dbUpload(runobj, db_server="env454")    
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
@@ -538,12 +538,12 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 
             start_prepare_taxonomy_upload_query_time = 0
             start_prepare_taxonomy_upload_query_time = time.time()
-            all_insert_taxonomy_sql_to_run = my_env454upload.prepare_taxonomy_upload_query(gast_dict)
+            my_env454upload.prepare_taxonomy_upload_query(gast_dict)
             prepare_taxonomy_upload_query_time = (time.time() - start_prepare_taxonomy_upload_query_time)
 
 
-            if (full_upload):
-                insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
+#             if (full_upload):
+            insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
                 
 #             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)
             
@@ -578,7 +578,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
       
 def upload_w_time(my_env454upload, sql):
     start = time.time()
-    my_env454upload.my_conn.cursor.execute(sql)
+    r = my_env454upload.my_conn.cursor.execute(sql)
     my_env454upload.my_conn.cursor.execute("COMMIT")
     run_time = (time.time() - start)
     return run_time

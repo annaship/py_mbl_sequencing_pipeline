@@ -560,8 +560,7 @@ class dbUpload:
         self.taxonomy.get_taxonomy_from_gast(gast_dict)
         if (self.db_server == "vamps2"):
             all_insert_taxonomy_sql_to_run = self.taxonomy.insert_split_taxonomy()
-
-        if (self.db_server == "env454"):
+        elif (self.db_server == "env454"):
             all_insert_taxonomy_sql_to_run = self.taxonomy.insert_whole_taxonomy()
         return all_insert_taxonomy_sql_to_run
         
@@ -569,9 +568,12 @@ class dbUpload:
     def prepare_pdr_info_upload_query(self, fasta, run_info_ill_id, gast_dict):
         all_insert_pdr_info_sql = []
 
-        while fasta.next():
-#             all_insert_pdr_info_sql.append(self.insert_pdr_info(fasta, run_info_ill_id))
-            all_insert_pdr_info_sql.append(self.seq.insert_pdr_info2(fasta, run_info_ill_id))
+        if (self.db_server == "vamps2"):
+            while fasta.next():
+                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info2(fasta, run_info_ill_id))
+        elif (self.db_server == "env454"):
+            while fasta.next():
+                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info(fasta, run_info_ill_id))
 
         all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
         all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
@@ -615,6 +617,12 @@ class Taxonomy:
             all_insert_taxonomy_sql.append(my_sql)
             all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+        
+        res = self.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
+        self.my_conn.cursor.execute("COMMIT")
+        self.get_taxonomy_id_dict()
+        # TODO add timer
+        
         return all_insert_taxonomy_sql_to_run
         
     def insert_split_taxonomy(self):
@@ -658,6 +666,7 @@ class Taxonomy:
             shielded_rank_name = self.shield_rank_name(rank)
             rows_affected = self.my_conn.execute_insert(shielded_rank_name, shielded_rank_name, insert_taxa_vals)
 #             self.utils.print_array_w_title(rows_affected, "rows affected by self.my_conn.execute_insert(%s, %s, insert_taxa_vals)" % (rank, rank))
+    
     
     def shield_rank_name(self, rank):
         return "`"+rank+"`"
