@@ -467,8 +467,8 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-#     my_env454upload = dbUpload(runobj, db_server="vamps2")
-    my_env454upload = dbUpload(runobj, db_server="env454")    
+    my_env454upload = dbUpload(runobj, db_server="vamps2")
+#     my_env454upload = dbUpload(runobj, db_server="env454")    
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
@@ -499,7 +499,7 @@ def env454upload_seq(my_env454upload, filename, sequences):
         if not (len(sequences)):
             logger.debug("There are 0 sequences in filename = %s" % filename)
 #             continue           
-        wrapped = wrapper(my_env454upload.insert_seq, sequences)
+        wrapped = wrapper(my_env454upload.seq.insert_seq, sequences)
         insert_seq_time = timeit.timeit(wrapped, number=1)
         logger.debug("insert_seq() took %s sec to finish" % insert_seq_time)
     except:                       # catch everything
