@@ -536,36 +536,27 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(fasta, run_info_ill_id, gast_dict)
             prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
 
-            start_prepare_taxonomy_upload_query_time = 0
-            start_prepare_taxonomy_upload_query_time = time.time()
-            my_env454upload.prepare_taxonomy_upload_query(gast_dict)
-            prepare_taxonomy_upload_query_time = (time.time() - start_prepare_taxonomy_upload_query_time)
-
-
-#             if (full_upload):
             insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
-                
-#             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)
-            
-#             start = time.time()
-#             my_env454upload.taxonomy.get_taxonomy_id_dict()
-#             elapsed = (time.time() - start)
-#             logger.debug("get_taxonomy_ids took %s sec to finish" % elapsed)
 
-            prepare_insert_sequence_uniq_info_ill_sql_time = 0
-            start_prepare_insert_sequence_uniq_info_ill_sql_time = time.time()
-            all_insert_sequence_uniq_info_ill_sql_to_run = my_env454upload.seq.prepare_insert_sequence_uniq_info_ill_sql(fasta, gast_dict)
-            prepare_insert_sequence_uniq_info_ill_sql_time = (time.time() - start_prepare_insert_sequence_uniq_info_ill_sql_time)
-            
-            insert_sequence_uniq_info_ill_time = upload_w_time(my_env454upload, all_insert_sequence_uniq_info_ill_sql_to_run)
+            start_prepare_taxonomy_upload_time = 0
+            start_prepare_taxonomy_upload_time = time.time()
+            my_env454upload.prepare_taxonomy_upload(gast_dict)
+            prepare_taxonomy_upload_time = (time.time() - start_prepare_taxonomy_upload_time)
 
+#             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)         res = self.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
+
+            prepare_sequence_uniq_info_time = 0
+            start_prepare_sequence_uniq_info_time = time.time()
+            my_env454upload.prepare_sequence_uniq_info(fasta, gast_dict)
+            prepare_sequence_uniq_info_time = (time.time() - start_prepare_sequence_uniq_info_time)
+            
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
             logger.debug("prepare_pdf_info_query_time took %s sec to finish" % (prepare_pdf_info_query_time))
-            logger.debug("start_prepare_taxonomy_upload_query_time took %s sec to finish" % (prepare_taxonomy_upload_query_time))
+            logger.debug("start_prepare_taxonomy_upload_time took %s sec to finish" % (prepare_taxonomy_upload_time))
             logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
 #             logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
             
-            logger.debug("prepare_insert_sequence_uniq_info_ill_sql_time took %s sec to finish" % (prepare_insert_sequence_uniq_info_ill_sql_time))
+            logger.debug("prepare_sequence_uniq_info_time took %s sec to finish" % (prepare_sequence_uniq_info_time))
             
             logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
         logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
