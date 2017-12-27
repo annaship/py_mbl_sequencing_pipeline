@@ -603,6 +603,7 @@ class Taxonomy:
         self.silva_taxonomy_rank_list_w_ids_dict = defaultdict(list)
         self.silva_taxonomy_ids_dict             = defaultdict(list)
         self.silva_taxonomy_id_per_taxonomy_dict = defaultdict(list)
+        self.get_all_rank_w_id()
       
     def get_taxonomy_from_gast(self, gast_dict):
         self.taxa_content = set(v[0] for v in gast_dict.values())
@@ -642,7 +643,6 @@ class Taxonomy:
         self.insert_silva_taxonomy()
         self.get_silva_taxonomy_ids()
         self.make_silva_taxonomy_id_per_taxonomy_dict()
-        self.get_all_rank_w_id()
     
     def parse_taxonomy(self):
         self.taxa_list_dict = {taxon_string: taxon_string.split(";") for taxon_string in self.taxa_content}
@@ -691,14 +691,19 @@ class Taxonomy:
     
     def get_all_rank_w_id(self):
         all_rank_w_id = self.my_conn.get_all_name_id("rank")
-        klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "klass")
-        t = ("class", klass_id[0])
-        l = list(all_rank_w_id)
-        l.append(t)
-        self.all_rank_w_id = set(l)
-        # self.utils.print_array_w_title(self.all_rank_w_id, "self.all_rank_w_id from get_all_rank_w_id")
-        # (('domain', 78), ('family', 82), ('genus', 83), ('klass', 80), ('NA', 87), ('order', 81), ('phylum', 79), ('species', 84), ('strain', 85), ('superkingdom', 86))
         
+        try:
+            klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "klass")
+        except:
+            raise
+        if not klass_id:
+            klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "class")
+        l = list(all_rank_w_id)
+        l.append(("class", klass_id[0]))
+        self.all_rank_w_id = dict((x, y) for x, y in set(l))
+        # (('domain', 78), ('family', 82), ('genus', 83), ('klass', 80), ('NA', 87), ('order', 81), ('phylum', 79), ('species', 84), ('strain', 85), ('superkingdom', 86))
+
+      
 
     def make_uniqued_taxa_by_rank_w_id_dict(self):
         # self.utils.print_array_w_title(self.uniqued_taxa_by_rank_dict, "===\nself.uniqued_taxa_by_rank_dict from def silva_taxonomy")
