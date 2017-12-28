@@ -314,6 +314,9 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
 class PipelneUtils:
     def __init__(self):
         pass
+    
+    def find_val_in_nested_list(self, hey, needle):
+        return [v for k, v in hey if k.lower() == needle.lower()]
 
     def call_sh_script(self, script_name_w_path, where_to_run):
         try:

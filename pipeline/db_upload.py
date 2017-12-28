@@ -102,6 +102,18 @@ class MyConnection:
 #            print dir(self.cursor)
             return self.cursor.lastrowid
 #        logger.debug("rows = "  + str(self.rows))
+
+    def get_all_name_id(self, table_name, id_name = "", field_name = "", where_part = ""):
+        if (field_name == ""):
+            field_name = table_name
+        if (id_name == ""):
+            id_name = table_name + '_id'
+        my_sql  = """SELECT %s, %s FROM %s %s""" % (field_name, id_name, table_name, where_part)
+#         self.utils.print_both(("my_sql from get_all_name_id = %s") % my_sql)
+        res     = self.execute_fetch_select(my_sql)
+        
+        if res:
+            return res
  
 
 class dbUpload:
@@ -130,13 +142,6 @@ class dbUpload:
         self.rundate     = self.runobj.run
         self.use_cluster = 1       
         self.unique_fasta_files = []
-#        if self.runobj.vamps_user_upload:
-#            site       = self.runobj.site
-#            dir_prefix = self.runobj.user + '_' + self.runobj.run
-#        else:
-#            site = ''
-#            dir_prefix = self.runobj.run         
-#        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site)
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -151,7 +156,6 @@ class dbUpload:
         
         self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site) 
  
-        
         self.analysis_dir = self.dirs.check_dir(self.dirs.analysis_dir)
         self.fasta_dir    = self.dirs.check_dir(self.dirs.reads_overlap_dir)
         self.gast_dir     = self.dirs.check_dir(self.dirs.gast_dir)
@@ -178,17 +182,14 @@ class dbUpload:
         self.taxonomies = set()
         self.tax_id_dict = {}
         self.run_id      = None
-#        self.nonchimeras_suffix = ".nonchimeric.fa"
         self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
         self.fa_unique_suffix   = ".fa." + C.unique_suffix #.fa.unique
         self.v6_unique_suffix   = "MERGED_V6_PRIMERS_REMOVED." + C.unique_suffix
         self.suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
-
-#         self.merge_unique_suffix = "." + C.filtered_suffix + "." + C.unique_suffix #.MERGED-MAX-MISMATCH-3.unique
         self.suffix_used        = ""
-        
+        self.get_all_rank_w_id()
+
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
-   
    
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
@@ -351,12 +352,27 @@ class dbUpload:
             self.utils.print_both("ERROR: can't read gast files! No taxonomy information will be processed. Please check if gast results are in analysis/gast")
 #             logger.debug("ERROR: can't read gast files! No taxonomy information will be processed.")            
 
+    def get_all_rank_w_id(self):
+        all_rank_w_id = self.my_conn.get_all_name_id("rank")
+        
+        try:
+            klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "klass")
+        except:
+            raise
+        if not klass_id:
+            klass_id = self.utils.find_val_in_nested_list(all_rank_w_id, "class")
+        l = list(all_rank_w_id)
+        l.append(("class", klass_id[0]))
+        self.all_rank_w_id = dict((x, y) for x, y in set(l))
+        # (('domain', 78), ('family', 82), ('genus', 83), ('klass', 80), ('NA', 87), ('order', 81), ('phylum', 79), ('species', 84), ('strain', 85), ('superkingdom', 86))
+
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         my_sql = ""
         if gast_dict:
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
             seq_upper = fasta.seq.upper()
             sequence_ill_id = self.seq_id_dict[seq_upper]
+            rank_id = self.all_rank_w_id[rank]
 # TEMP!
 #             taxonomy_id = self.get_id("taxonomy", taxonomy)
 
@@ -369,7 +385,7 @@ class dbUpload:
                     %s,
                     '%s',
                     '%s',
-                    (SELECT rank_id FROM rank WHERE rank = '%s'),
+                    %s,
                     '%s'                
                    )
                    ON DUPLICATE KEY UPDATE
@@ -377,9 +393,10 @@ class dbUpload:
                        taxonomy_id = %s,
                        gast_distance = '%s',
                        refssu_count = '%s',
-                       rank_id = (SELECT rank_id FROM rank WHERE rank = '%s'),
+                       rank_id = %s,
                        refhvr_ids = '%s';
-                   """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank, refhvr_ids.rstrip())
+                   """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip(), 
+                          taxonomy_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
                 except Exception, e:
                     logger.debug("Error = %s" % e)
                     raise
