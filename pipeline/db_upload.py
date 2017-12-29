@@ -167,13 +167,6 @@ class dbUpload:
         self.rundate     = self.runobj.run
         self.use_cluster = 1       
         self.unique_fasta_files = []
-#        if self.runobj.vamps_user_upload:
-#            site       = self.runobj.site
-#            dir_prefix = self.runobj.user + '_' + self.runobj.run
-#        else:
-#            site = ''
-#            dir_prefix = self.runobj.run         
-#        dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, site = site)
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -224,7 +217,8 @@ class dbUpload:
 
         self.taxonomy = Taxonomy(self.my_conn)
         self.seq      = Seq(self.taxonomy, self.table_names)
-#         self.my_csv   = None
+        
+        self.gast_dict = {}
 
         self.unique_file_counts = self.dirs.unique_file_counts
         self.dirs.delete_file(self.unique_file_counts)
@@ -288,9 +282,8 @@ class dbUpload:
         try:
             with open(gast_file_name) as fd:
                 gast_content = fd.readlines()
-            gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in gast_content[1:]])    
+            self.gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in gast_content[1:]])    
 #             gast_dict.remove([k for k in gast_dict if k[0] == 'taxonomy'][0])
-            return gast_dict
         except IOError, e:
 #            print dir(e)
 #['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__getslice__', '__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__', '__unicode__', 'args', 'errno', 'filename', 'message', 'strerror']
@@ -554,23 +547,21 @@ class dbUpload:
 #            os.remove(file_full)
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)       
         
-    def prepare_taxonomy_upload(self, gast_dict):
+    def prepare_taxonomy_upload(self):
         # TODO: mv to Taxonomy?
-        self.taxonomy.get_taxonomy_from_gast(gast_dict)
+        self.taxonomy.get_taxonomy_from_gast(self.gast_dict)
         if (self.db_server == "vamps2"):
             self.taxonomy.insert_split_taxonomy()
         elif (self.db_server == "env454"):
             self.taxonomy.insert_whole_taxonomy()
 
-    def prepare_pdr_info_upload_query(self, fasta, run_info_ill_id, gast_dict):
+    def prepare_pdr_info_upload_query(self, run_info_ill_id):
         all_insert_pdr_info_sql = []
-
-        if (self.db_server == "vamps2"):
-            while fasta.next():
-                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info2(fasta, run_info_ill_id))
-        elif (self.db_server == "env454"):
-            while fasta.next():
-                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info(fasta, run_info_ill_id))
+        for fasta_id, seq in self.fasta_dict.items():
+            if (self.db_server == "vamps2"):
+                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq))
+            elif (self.db_server == "env454"):
+                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info(run_info_ill_id, fasta_id, seq))
 
         all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
         all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
@@ -580,11 +571,36 @@ class dbUpload:
          ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); """
         return all_insert_pdr_info_sql_to_run
     
-    def prepare_sequence_uniq_info(self, fasta, gast_dict):
+    def prepare_sequence_uniq_info(self):
         if (self.db_server == "vamps2"):
-            self.seq.insert_sequence_uniq_info2(fasta, gast_dict)
+            self.insert_silva_taxonomy_info_per_seq()
+            self.seq.insert_sequence_uniq_info2()
         elif (self.db_server == "env454"):
-            self.seq.insert_sequence_uniq_info_ill(fasta, gast_dict)    
+            self.seq.insert_sequence_uniq_info_ill(self.gast_dict)  
+            
+    def insert_silva_taxonomy_info_per_seq(self):
+        # self.silva_taxonomy_info_per_seq_list = [[8559950L, 2436599, '0.03900', 0, 0, 83],...
+#         temp_list = list((sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id))
+        
+#         self.silva_taxonomy_info_per_seq_list.append(temp_list)
+
+#         TODO: already somwhere
+        field_list = "sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id"
+        
+        # sql = "INSERT %s INTO `%s` (`%s`) VALUES (%s)" % ("IGNORE", "silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
+        # self.utils.print_array_w_title(sql, "sql")
+#         if len(self.silva_taxonomy_info_per_seq_list) > self.utils.min_seqs:
+#             split = len(self.silva_taxonomy_info_per_seq_list)/self.utils.chunk_split  # how many pieces
+#             for i,vals in enumerate(self.utils.chunks(self.silva_taxonomy_info_per_seq_list, split)):
+#                 all_insert_dat_vals = self.utils.make_insert_values(vals)
+#                 print i+1,'/',self.utils.chunk_split,' -- len vals chunk:',len(all_insert_dat_vals)
+#                 rows_affected = self.mysql_util.execute_insert("silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
+#                 self.utils.print_array_w_title(rows_affected, "rows_affected by insert_silva_taxonomy_info_per_seq")
+#         else:
+        all_insert_dat_vals = self.utils.make_insert_values(self.silva_taxonomy_info_per_seq_list)
+        rows_affected = self.mysql_util.execute_insert("silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
+        self.utils.print_array_w_title(rows_affected, "rows_affected by insert_silva_taxonomy_info_per_seq")
+                  
     
 class Taxonomy:
     def __init__(self, my_conn):
@@ -823,16 +839,32 @@ class Seq:
         self.my_conn     = self.taxonomy.my_conn
         self.table_names = table_names
         self.seq_id_dict = {}
+        self.fasta_dict  = {}
 
         self.sequences   = ""
         self.taxa        = ""
         self.refhvr_id   = ""
         self.the_rest    = ""
+        
+    def prepare_fasta_dict(self, filename):
+        self.fasta = fastalib.SequenceSource(filename)
+        
+        while self.fasta.next():
+            if self.fasta.pos % 1000 == 0 or self.fasta.pos == 1:
+                sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
+                sys.stderr.flush()
+            self.fasta_dict[self.fasta.id] = self.fasta.seq
+        sys.stderr.write('\n')
+
+
+#         read_fasta = fastalib.ReadFasta(filename)
+#         self.fasta_dict = dict((id, seq) for s_id, seq in read_fasta)
+#         read_fasta.close()
+        
+
 
     def make_seq_upper(self, filename):
-        read_fasta = fastalib.ReadFasta(filename)
-        sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
-        read_fasta.close()
+        sequences  = [seq.upper() for seq in self.fasta_dict.values()] #here we make uppercase for VAMPS compartibility    
         return list(set(sequences)) 
         
     def insert_seq(self, sequences):
@@ -866,73 +898,57 @@ class Seq:
         if res:
             return int(res[0][0])     
     
-    def insert_pdr_info(self, fasta, run_info_ill_id):
-#         res_id = ""
+    def insert_pdr_info(self, run_info_ill_id, fasta_id, seq):
         if (not run_info_ill_id):
             self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
             
         # ------- insert sequence info per run/project/dataset --------
-        seq_upper = fasta.seq.upper()
+        seq_upper = seq.upper()
         sequence_id = self.seq_id_dict[seq_upper]
 
-        seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
-#        print run_info_ill_id, sequence_ill_id, seq_count
+        seq_count       = int(fasta_id.split('|')[-1].split(':')[-1])
         my_sql          = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES (%s, %s, %s)" % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], run_info_ill_id, sequence_id, seq_count)
         my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
-#         print "MMM1 my_sql = %s" % my_sql
-#         try:
-#             res_id = self.my_conn.execute_no_fetch(my_sql)
-#             return res_id
-#         except:
-#             self.utils.print_both("Offensive query: %s" % my_sql)
-#             raise
+
         return my_sql
         
-    
-    def insert_pdr_info2(self, fasta, run_info_ill_id):
+#     TODO: combine with insert_pdr_info
+    def insert_pdr_info2(self, run_info_ill_id, fasta_id, seq):
 #         res_id = ""
         if (not run_info_ill_id):
             self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
             
         # ------- insert sequence info per run/project/dataset --------
-        seq_upper = fasta.seq.upper()
+        seq_upper = seq.upper()
         sequence_id = self.seq_id_dict[seq_upper]
 
-        seq_count = int(fasta.id.split('|')[-1].split(':')[-1])
-#        print run_info_ill_id, sequence_ill_id, seq_count
-#         my_sql          = "INSERT INTO sequence_pdr_info (`dataset_id`, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 5643752, 1, 2)" 
-
+        seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
 
         my_sql = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = %s), %s, %s, %s)
         """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], run_info_ill_id, sequence_id, seq_count, C.classifier_id)
         my_sql = my_sql + " ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
-#         print "MMM1 my_sql = %s" % my_sql
-#         try:
-#             res_id = self.my_conn.execute_no_fetch(my_sql)
-#             return res_id
-#         except:
-#             self.utils.print_both("Offensive query: %s" % my_sql)
-#             raise
+
         return my_sql
         
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
-        sequence_ids_strs = [str(id) for id in self.seq_ids_by_name_dict.values()]
+        sequence_ids_strs = [str(i) for i in self.seq_id_dict.values()]
         where_part = 'WHERE sequence_id in (%s)' % ', '.join(sequence_ids_strs)
         self.seq_id_w_silva_taxonomy_info_per_seq_id = self.my_conn.get_all_name_id("silva_taxonomy_info_per_seq", "silva_taxonomy_info_per_seq_id", "sequence_id", where_part)
 
     def insert_sequence_uniq_info2(self):
+        self.get_seq_id_w_silva_taxonomy_info_per_seq_id()
         field_list = "sequence_id, silva_taxonomy_info_per_seq_id"
-        if len(self.seq_id_w_silva_taxonomy_info_per_seq_id) > self.utils.min_seqs:
-            split = len(self.seq_id_w_silva_taxonomy_info_per_seq_id)/self.utils.chunk_split  # how many pieces
-            for i,vals in enumerate(self.utils.chunks(self.seq_id_w_silva_taxonomy_info_per_seq_id, split)):
-                sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in vals)
-                print i+1,'/',self.utils.chunk_split,' -- len vals chunk:',len(sequence_uniq_info_values)
-                rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, sequence_uniq_info_values)
-                self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
-        else:
-            self.sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id)
-            rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
-            self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
+#         if len(self.seq_id_w_silva_taxonomy_info_per_seq_id) > self.utils.min_seqs:
+#             split = len(self.seq_id_w_silva_taxonomy_info_per_seq_id)/self.utils.chunk_split  # how many pieces
+#             for i,vals in enumerate(self.utils.chunks(self.seq_id_w_silva_taxonomy_info_per_seq_id, split)):
+#                 sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in vals)
+#                 print i+1,'/',self.utils.chunk_split,' -- len vals chunk:',len(sequence_uniq_info_values)
+#                 rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, sequence_uniq_info_values)
+#                 self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
+#         else:
+        self.sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id)
+        rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
+        self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
     
     def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
         all_insert_sequence_uniq_info_ill_sql = []

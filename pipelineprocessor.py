@@ -467,8 +467,8 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-#     my_env454upload = dbUpload(runobj, db_server="vamps2")
-    my_env454upload = dbUpload(runobj, db_server="env454")    
+    my_env454upload = dbUpload(runobj, db_server="vamps2")
+#     my_env454upload = dbUpload(runobj, db_server="env454")    
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
@@ -477,6 +477,7 @@ def env454upload_main(runobj, full_upload):
 
 #     sequences = get_sequences(my_env454upload, filenames)
     for filename in filenames:
+        my_env454upload.seq.prepare_fasta_dict(filename)
         sequences = my_env454upload.seq.make_seq_upper(filename)
         if full_upload:
             env454upload_seq(my_env454upload, filename, sequences)
@@ -517,7 +518,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
     start_c = time.time()
     try:
         for filename in filenames:
-            gast_dict             = my_env454upload.get_gast_result(os.path.basename(filename))
+            my_env454upload.get_gast_result(os.path.basename(filename))
             
             filename_base_no_suff = get_filename_base_no_suff(filename)
             
@@ -530,24 +531,24 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             total_seq += seq_in_file
 
             start_fasta_next = time.time()
-            
+                        
             start_prepare_pdf_info_query_time = 0
             start_prepare_pdf_info_query_time = time.time()
-            all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(fasta, run_info_ill_id, gast_dict)
+            all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(fasta, run_info_ill_id)
             prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
 
             insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
 
             start_prepare_taxonomy_upload_time = 0
             start_prepare_taxonomy_upload_time = time.time()
-            my_env454upload.prepare_taxonomy_upload(gast_dict)
+            my_env454upload.prepare_taxonomy_upload()
             prepare_taxonomy_upload_time = (time.time() - start_prepare_taxonomy_upload_time)
 
 #             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)         res = self.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
 
             prepare_sequence_uniq_info_time = 0
             start_prepare_sequence_uniq_info_time = time.time()
-            my_env454upload.prepare_sequence_uniq_info(fasta, gast_dict)
+            my_env454upload.prepare_sequence_uniq_info(fasta)
             prepare_sequence_uniq_info_time = (time.time() - start_prepare_sequence_uniq_info_time)
             
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
