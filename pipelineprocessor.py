@@ -467,8 +467,8 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-    my_env454upload = dbUpload(runobj, db_server="vamps2")
-#     my_env454upload = dbUpload(runobj, db_server="env454")    
+#     my_env454upload = dbUpload(runobj, db_server="vamps2")
+    my_env454upload = dbUpload(runobj, db_server="env454")    
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
@@ -524,8 +524,8 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
             
             run_info_ill_id       = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
             
-            fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
-            seq_in_file           = fasta.total_seq
+#             fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
+            seq_in_file           = len(my_env454upload.seq.fasta_dict)
             logger.debug("seq_in_file = %s" % seq_in_file)
             my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
             total_seq += seq_in_file
@@ -534,7 +534,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
                         
             start_prepare_pdf_info_query_time = 0
             start_prepare_pdf_info_query_time = time.time()
-            all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(fasta, run_info_ill_id)
+            all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(run_info_ill_id)
             prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
 
             insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
@@ -548,7 +548,7 @@ def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
 
             prepare_sequence_uniq_info_time = 0
             start_prepare_sequence_uniq_info_time = time.time()
-            my_env454upload.prepare_sequence_uniq_info(fasta)
+            my_env454upload.prepare_sequence_uniq_info()
             prepare_sequence_uniq_info_time = (time.time() - start_prepare_sequence_uniq_info_time)
             
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))

@@ -557,7 +557,7 @@ class dbUpload:
 
     def prepare_pdr_info_upload_query(self, run_info_ill_id):
         all_insert_pdr_info_sql = []
-        for fasta_id, seq in self.fasta_dict.items():
+        for fasta_id, seq in self.seq.fasta_dict.items():
             if (self.db_server == "vamps2"):
                 all_insert_pdr_info_sql.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq))
             elif (self.db_server == "env454"):
