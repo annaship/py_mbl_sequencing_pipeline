@@ -476,6 +476,8 @@ def env454upload_main(runobj, full_upload):
         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
 
 #     sequences = get_sequences(my_env454upload, filenames)
+    get_and_up_seq_time = time.time()
+
     for filename in filenames:
         my_env454upload.seq.prepare_fasta_dict(filename)
         sequences = my_env454upload.seq.make_seq_upper(filename)
@@ -484,6 +486,10 @@ def env454upload_main(runobj, full_upload):
         wrapped   = wrapper(my_env454upload.seq.get_seq_id_dict, sequences)
         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
+
+
+    get_and_up_seq_time_end = (time.time() - get_and_up_seq_time)
+    logger.debug("get_and_up_seq_time = %s" % get_and_up_seq_time_end)
 
     total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
     my_env454upload.check_seq_upload()
