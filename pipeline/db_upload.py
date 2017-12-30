@@ -847,14 +847,20 @@ class Seq:
         self.the_rest    = ""
         
     def prepare_fasta_dict(self, filename):
-        self.fasta = fastalib.SequenceSource(filename)
-        
-        while self.fasta.next():
-            if self.fasta.pos % 1000 == 0 or self.fasta.pos == 1:
-                sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
-                sys.stderr.flush()
-            self.fasta_dict[self.fasta.id] = self.fasta.seq
-        sys.stderr.write('\n')
+        read_fasta = fastalib.ReadFasta(filename)
+        self.fasta_dict = dict(zip(read_fasta.ids, read_fasta.sequences))
+#         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
+        read_fasta.close()
+#         return sequences 
+
+#         self.fasta = fastalib.SequenceSource(filename)
+#         
+#         while self.fasta.next():
+#             if self.fasta.pos % 1000 == 0 or self.fasta.pos == 1:
+#                 sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
+#                 sys.stderr.flush()
+#             self.fasta_dict[self.fasta.id] = self.fasta.seq
+#         sys.stderr.write('\n')
 
 
 #         read_fasta = fastalib.ReadFasta(filename)
@@ -950,11 +956,10 @@ class Seq:
         rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
         self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
     
-    def insert_sequence_uniq_info_ill(self, fasta, gast_dict):
+    def insert_sequence_uniq_info_ill(self, gast_dict):
         all_insert_sequence_uniq_info_ill_sql = []
-        fasta.reset()
-        while fasta.next():
-            all_insert_sequence_uniq_info_ill_sql.append(self.sequence_uniq_info_ill_query(fasta, gast_dict))            
+        for fasta_id, seq in self.seq.fasta_dict.items():
+            all_insert_sequence_uniq_info_ill_sql.append(self.sequence_uniq_info_ill_query(fasta_id, seq, gast_dict))            
                      
         all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
         all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
@@ -963,11 +968,11 @@ class Seq:
         print "RRR self.cursor._info" 
         print self.my_conn.cursor._info
     
-    def sequence_uniq_info_ill_query(self, fasta, gast_dict):
+    def sequence_uniq_info_ill_query(self, fasta_id, seq, gast_dict):
         my_sql = ""
         if gast_dict:
-            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta.id]
-            seq_upper = fasta.seq.upper()
+            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta_id]
+            seq_upper = seq.upper()
             sequence_id = self.seq_id_dict[seq_upper]
             rank_id = self.taxonomy.all_rank_w_id[rank]
 # TEMP!
