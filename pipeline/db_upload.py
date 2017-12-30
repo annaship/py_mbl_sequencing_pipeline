@@ -919,14 +919,20 @@ class Seq:
         return seq_ins_info
         
     def get_seq_id_dict(self, sequences):
+#         TODO: ONCE IN CLASS
+        sequence_field_name = self.table_names["sequence_field_name"]
+        sequence_table_name = self.table_names["sequence_table_name"]
         id_name    = self.table_names["sequence_table_name"] + "_id" 
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
         try:
-            my_sql     = query_tmpl % (id_name, self.table_names["sequence_field_name"], self.table_names["sequence_table_name"], self.table_names["sequence_field_name"], '), COMPRESS('.join([val_tmpl % key for key in sequences]))
-            res        = self.my_conn.execute_fetch_select(my_sql)
-            one_seq_id_dict = dict((y, int(x)) for x, y in res)
-            self.seq_id_dict.update(one_seq_id_dict)
+            group_seq = self.grouper(sequences, 10000)
+            for group in group_seq:
+                seq_part = '), COMPRESS('.join([val_tmpl % key for key in group])    
+                my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
+                res        = self.my_conn.execute_fetch_select(my_sql)
+                one_seq_id_dict = dict((y, int(x)) for x, y in res)
+                self.seq_id_dict.update(one_seq_id_dict)
         except:
             if len(sequences) == 0:
                 self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
