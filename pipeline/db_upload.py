@@ -10,6 +10,7 @@ from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 import IlluminaUtils.lib.fastalib as fastalib
 from collections import defaultdict
+from itertools import izip_longest
 
 try:
     import MySQLdb
@@ -73,7 +74,12 @@ class MyConnection:
             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
-                   
+
+        except (AttributeError, MySQLdb.OperationalError):
+            self.conn = MySQLdb.connect(host=host, db=db, read_default_file=read_default_file, port=port_env)
+            self.cursor = self.conn.cursor()
+
+
         except MySQLdb.Error, e:
             self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
             raise
@@ -83,6 +89,11 @@ class MyConnection:
 #             print "Unexpected:"         # handle unexpected exceptions
 #             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
             raise                       # re-throw caught exception   
+
+
+    def connect(self, host, db, read_default_file, port_env):
+        return MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+
 
     def execute_fetch_select(self, sql):
         if self.cursor:
@@ -884,16 +895,27 @@ class Seq:
     def make_seq_upper(self, filename):
         sequences  = [seq.upper() for seq in self.fasta_dict.values()] #here we make uppercase for VAMPS compartibility    
         return list(set(sequences)) 
-        
+
+    def grouper(self, iterable, n, fillvalue=None):
+        args = [iter(iterable)] * n
+        return izip_longest(*args, fillvalue=fillvalue)
+                
     def insert_seq(self, sequences):
+        sequence_field_name = self.table_names["sequence_field_name"]
+        sequence_table_name = self.table_names["sequence_table_name"]
+        group_seq = self.grouper(sequences, 10000)
         query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
         val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (self.table_names["sequence_table_name"], self.table_names["sequence_field_name"], ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
-        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (self.table_names["sequence_field_name"], self.table_names["sequence_field_name"])
-#       print "MMM my_sql = %s" % my_sql
-        seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
-        self.utils.print_both("seq_insert info: %s\n" % (seq_ins_info))
-        self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+        
+#         TODO: combine and run once with begin end
+        for group in group_seq:
+            seq_part = ')), (COMPRESS('.join([val_tmpl % key for key in group])
+            my_sql = query_tmpl % (sequence_table_name, sequence_field_name, seq_part)
+            my_sql = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (sequence_field_name, sequence_field_name)
+    #       print "MMM my_sql = %s" % my_sql
+            seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
+            self.utils.print_both("seq_insert info: %s\n" % (seq_ins_info))
+            self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
         return seq_ins_info
         
     def get_seq_id_dict(self, sequences):
