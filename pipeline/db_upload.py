@@ -10,6 +10,7 @@ from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 import IlluminaUtils.lib.fastalib as fastalib
 from collections import defaultdict
+from itertools import izip_longest
 
 try:
     import MySQLdb
@@ -567,7 +568,6 @@ class dbUpload:
             self.taxonomy.insert_whole_taxonomy()
 
     def prepare_pdr_info_upload_query(self, run_info_ill_id):
-        # TODO: DRY with insert_seq, get_seq_id?
         all_insert_pdr_info_sql = []
         for fasta_id, seq in self.seq.fasta_dict.items():
             if (self.db_server == "vamps2"):
@@ -575,18 +575,13 @@ class dbUpload:
             elif (self.db_server == "env454"):
                 all_insert_pdr_info_sql.append(self.seq.insert_pdr_info(run_info_ill_id, fasta_id, seq))
 
-            all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
-            group_sql = self.utils.grouper(all_insert_pdr_info_sql_all, 1000)
-            for group in group_sql:
-                all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + group + "END ; "
-                seq_ins_info = self.my_conn.execute_no_fetch(all_insert_pdr_info_sql_to_run)
-
+        all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
+        all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
 #         TODO: change to one query, as in insert sequence 
         """INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 5588094, 1105786, 2)
          ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 3180786, 856058, 2)
          ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); """
-#         insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
-
+        return all_insert_pdr_info_sql_to_run
     
     def prepare_sequence_uniq_info(self):
         if (self.db_server == "vamps2"):
@@ -900,11 +895,15 @@ class Seq:
     def make_seq_upper(self, filename):
         sequences  = [seq.upper() for seq in self.fasta_dict.values()] #here we make uppercase for VAMPS compartibility    
         return list(set(sequences)) 
+
+    def grouper(self, iterable, n, fillvalue=None):
+        args = [iter(iterable)] * n
+        return izip_longest(*args, fillvalue=fillvalue)
                 
     def insert_seq(self, sequences):
         sequence_field_name = self.table_names["sequence_field_name"]
         sequence_table_name = self.table_names["sequence_table_name"]
-        group_seq = self.utils.grouper(sequences, 10000)
+        group_seq = self.grouper(sequences, 10000)
         query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
         val_tmpl   = "'%s'"
         
@@ -927,7 +926,7 @@ class Seq:
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
         try:
-            group_seq = self.utils.grouper(sequences, 10000)
+            group_seq = self.grouper(sequences, 10000)
             for group in group_seq:
                 seq_part = '), COMPRESS('.join([val_tmpl % key for key in group])    
                 my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
