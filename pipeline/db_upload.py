@@ -851,6 +851,7 @@ class Seq:
         self.fasta_dict = dict(zip(read_fasta.ids, read_fasta.sequences))
 #         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility    
         read_fasta.close()
+#         self.fasta_dict.update(temp_fasta_dict)
 #         return sequences 
 
 #         self.fasta = fastalib.SequenceSource(filename)
@@ -958,8 +959,8 @@ class Seq:
     
     def insert_sequence_uniq_info_ill(self, gast_dict):
         all_insert_sequence_uniq_info_ill_sql = []
-        for fasta_id, seq in self.fasta_dict.items():
-            all_insert_sequence_uniq_info_ill_sql.append(self.sequence_uniq_info_ill_query(fasta_id, seq, gast_dict))            
+        for fasta_id, gast in gast_dict.items():
+            all_insert_sequence_uniq_info_ill_sql.append(self.sequence_uniq_info_ill_query(fasta_id, gast))            
                      
         all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
         all_insert_sequence_uniq_info_ill_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_sequence_uniq_info_ill_sql_all + "END ; "
@@ -968,40 +969,40 @@ class Seq:
         print "RRR self.cursor._info" 
         print self.my_conn.cursor._info
     
-    def sequence_uniq_info_ill_query(self, fasta_id, seq, gast_dict):
+    def sequence_uniq_info_ill_query(self, fasta_id, gast):
         my_sql = ""
-        if gast_dict:
-            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast_dict[fasta_id]
-            seq_upper = seq.upper()
-            sequence_id = self.seq_id_dict[seq_upper]
-            rank_id = self.taxonomy.all_rank_w_id[rank]
+        seq  = self.fasta_dict[fasta_id]
+        (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast
+        seq_upper = seq.upper()
+        sequence_id = self.seq_id_dict[seq_upper]
+        rank_id = self.taxonomy.all_rank_w_id[rank]
 # TEMP!
 #             taxonomy_id = self.get_id("taxonomy", taxonomy)
 
-            if taxonomy in self.taxonomy.tax_id_dict:
-                try:
-                    taxonomy_id = self.taxonomy.tax_id_dict[taxonomy] 
-                    my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
-                   (
-                    %s,
-                    %s,
-                    '%s',
-                    '%s',
-                    %s,
-                    '%s'                
-                   )
-                   ON DUPLICATE KEY UPDATE
-                       updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-                       taxonomy_id = %s,
-                       gast_distance = '%s',
-                       refssu_count = '%s',
-                       rank_id = %s,
-                       refhvr_ids = '%s';
-                   """ % (self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
-                except Exception, e:
-                    logger.debug("Error = %s" % e)
-                    raise
+        if taxonomy in self.taxonomy.tax_id_dict:
+            try:
+                taxonomy_id = self.taxonomy.tax_id_dict[taxonomy] 
+                my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+               (
+                %s,
+                %s,
+                '%s',
+                '%s',
+                %s,
+                '%s'                
+               )
+               ON DUPLICATE KEY UPDATE
+                   updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+                   taxonomy_id = %s,
+                   gast_distance = '%s',
+                   refssu_count = '%s',
+                   rank_id = %s,
+                   refhvr_ids = '%s';
+               """ % (self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip(), taxonomy_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
+            except Exception, e:
+                logger.debug("Error = %s" % e)
+                raise
 
 #             res_id = self.my_conn.execute_no_fetch(my_sql)
-            return my_sql
+        return my_sql
         
