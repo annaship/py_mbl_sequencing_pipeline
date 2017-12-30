@@ -325,6 +325,19 @@ class PipelneUtils:
     def find_key_by_value_in_dict(self, hey, needle):
         return [k for k, v in hey if v == needle]
 
+    def make_insert_values(self, matrix):
+        all_insert_vals = ""
+        
+        for arr in matrix[:-1]:
+            insert_dat_vals = ', '.join("'%s'" % key for key in arr)
+            all_insert_vals += insert_dat_vals + "), ("
+        
+        all_insert_vals += ', '.join("'%s'" % key for key in matrix[-1])
+        
+        # self.print_array_w_title(all_insert_vals, "all_insert_vals from make_insert_values")
+        return all_insert_vals
+
+
     def call_sh_script(self, script_name_w_path, where_to_run):
         try:
             call(['chmod', '0774', script_name_w_path])
