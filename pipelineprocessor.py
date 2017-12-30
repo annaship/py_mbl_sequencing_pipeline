@@ -530,7 +530,6 @@ def env454upload_all_but_seq(my_env454upload, filename, full_upload):
         
         run_info_ill_id       = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
         
-#             fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
         seq_in_file           = len(my_env454upload.seq.fasta_dict)
 #         logger.debug("seq_in_file = %s" % seq_in_file)
         my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
@@ -540,10 +539,9 @@ def env454upload_all_but_seq(my_env454upload, filename, full_upload):
                     
         start_prepare_pdf_info_query_time = 0
         start_prepare_pdf_info_query_time = time.time()
-        all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(run_info_ill_id)
+        my_env454upload.prepare_pdr_info_upload_query(run_info_ill_id)
         prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
 
-        insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
 
         start_prepare_taxonomy_upload_time = 0
         start_prepare_taxonomy_upload_time = time.time()
@@ -560,7 +558,7 @@ def env454upload_all_but_seq(my_env454upload, filename, full_upload):
         logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
         logger.debug("prepare_pdf_info_query_time took %s sec to finish" % (prepare_pdf_info_query_time))
         logger.debug("start_prepare_taxonomy_upload_time took %s sec to finish" % (prepare_taxonomy_upload_time))
-        logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
+#         logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
 #             logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
         
         logger.debug("prepare_sequence_uniq_info_time took %s sec to finish" % (prepare_sequence_uniq_info_time))
