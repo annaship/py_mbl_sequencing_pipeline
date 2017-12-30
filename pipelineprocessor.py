@@ -487,15 +487,17 @@ def env454upload_main(runobj, full_upload):
         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 
+        get_and_up_seq_time_end = (time.time() - get_and_up_seq_time)
+        logger.debug("get_and_up_seq_time = %s" % get_and_up_seq_time_end)
+        
+        start_c = time.time()
+        total_seq = env454upload_all_but_seq(my_env454upload, filename, full_upload)
+        logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
-    get_and_up_seq_time_end = (time.time() - get_and_up_seq_time)
-    logger.debug("get_and_up_seq_time = %s" % get_and_up_seq_time_end)
-
-    total_seq = env454upload_all_but_seq(my_env454upload, filenames, full_upload)
-    my_env454upload.check_seq_upload()
-    logger.debug("total_seq = %s" % total_seq)
-    whole_elapsed = (time.time() - whole_start)
-    print "The whole upload took %s s" % whole_elapsed
+        my_env454upload.check_seq_upload()
+        logger.debug("total_seq = %s" % total_seq)
+        whole_elapsed = (time.time() - whole_start)
+        print "The whole upload took %s s" % whole_elapsed
   
     
 def env454upload_seq(my_env454upload, filename, sequences):
@@ -515,58 +517,54 @@ def env454upload_seq(my_env454upload, filename, sequences):
         raise                       # re-throw caught exception   
 
 # TODO: DRY
-def env454upload_all_but_seq(my_env454upload, filenames, full_upload):
+def env454upload_all_but_seq(my_env454upload, filename, full_upload):
     insert_pdr_info_time = 0
-    insert_taxonomy_time = 0
     insert_sequence_uniq_info_ill_time = 0
     total_seq = 0
 
-    start_c = time.time()
     try:
-        for filename in filenames:
-            my_env454upload.get_gast_result(os.path.basename(filename))
-            
-            filename_base_no_suff = get_filename_base_no_suff(filename)
-            
-            run_info_ill_id       = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
-            
+        my_env454upload.get_gast_result(os.path.basename(filename))
+        
+        filename_base_no_suff = get_filename_base_no_suff(filename)
+        
+        run_info_ill_id       = my_env454upload.get_run_info_ill_id(filename_base_no_suff)
+        
 #             fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
-            seq_in_file           = len(my_env454upload.seq.fasta_dict)
-            logger.debug("seq_in_file = %s" % seq_in_file)
-            my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
-            total_seq += seq_in_file
+        seq_in_file           = len(my_env454upload.seq.fasta_dict)
+        logger.debug("seq_in_file = %s" % seq_in_file)
+        my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
+        total_seq += seq_in_file
 
-            start_fasta_next = time.time()
-                        
-            start_prepare_pdf_info_query_time = 0
-            start_prepare_pdf_info_query_time = time.time()
-            all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(run_info_ill_id)
-            prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
+        start_fasta_next = time.time()
+                    
+        start_prepare_pdf_info_query_time = 0
+        start_prepare_pdf_info_query_time = time.time()
+        all_insert_pdr_info_sql_to_run = my_env454upload.prepare_pdr_info_upload_query(run_info_ill_id)
+        prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
 
-            insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
+        insert_pdr_info_time = upload_w_time(my_env454upload, all_insert_pdr_info_sql_to_run)
 
-            start_prepare_taxonomy_upload_time = 0
-            start_prepare_taxonomy_upload_time = time.time()
-            my_env454upload.prepare_taxonomy_upload()
-            prepare_taxonomy_upload_time = (time.time() - start_prepare_taxonomy_upload_time)
+        start_prepare_taxonomy_upload_time = 0
+        start_prepare_taxonomy_upload_time = time.time()
+        my_env454upload.prepare_taxonomy_upload()
+        prepare_taxonomy_upload_time = (time.time() - start_prepare_taxonomy_upload_time)
 
 #             insert_taxonomy_time = upload_w_time(my_env454upload, all_insert_taxonomy_sql_to_run)         res = self.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
 
-            prepare_sequence_uniq_info_time = 0
-            start_prepare_sequence_uniq_info_time = time.time()
-            my_env454upload.prepare_sequence_uniq_info()
-            prepare_sequence_uniq_info_time = (time.time() - start_prepare_sequence_uniq_info_time)
-            
-            logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-            logger.debug("prepare_pdf_info_query_time took %s sec to finish" % (prepare_pdf_info_query_time))
-            logger.debug("start_prepare_taxonomy_upload_time took %s sec to finish" % (prepare_taxonomy_upload_time))
-            logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
+        prepare_sequence_uniq_info_time = 0
+        start_prepare_sequence_uniq_info_time = time.time()
+        my_env454upload.prepare_sequence_uniq_info()
+        prepare_sequence_uniq_info_time = (time.time() - start_prepare_sequence_uniq_info_time)
+        
+        logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
+        logger.debug("prepare_pdf_info_query_time took %s sec to finish" % (prepare_pdf_info_query_time))
+        logger.debug("start_prepare_taxonomy_upload_time took %s sec to finish" % (prepare_taxonomy_upload_time))
+        logger.debug("insert_pdr_info() took %s sec to finish" % insert_pdr_info_time)
 #             logger.debug("insert_taxonomy_time.time() took %s sec to finish" % insert_taxonomy_time)
-            
-            logger.debug("prepare_sequence_uniq_info_time took %s sec to finish" % (prepare_sequence_uniq_info_time))
-            
-            logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
-        logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
+        
+        logger.debug("prepare_sequence_uniq_info_time took %s sec to finish" % (prepare_sequence_uniq_info_time))
+        
+        logger.debug("insert_sequence_uniq_info_ill() took %s sec to finish" % insert_sequence_uniq_info_ill_time)
         return total_seq
         
     except:                       # catch everything
