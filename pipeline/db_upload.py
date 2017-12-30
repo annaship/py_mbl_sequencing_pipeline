@@ -575,8 +575,13 @@ class dbUpload:
             elif (self.db_server == "env454"):
                 all_insert_pdr_info_sql.append(self.seq.insert_pdr_info(run_info_ill_id, fasta_id, seq))
 
-        all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
-        all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
+#             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
+            group_sql = self.utils.grouper(all_insert_pdr_info_sql, 1000)
+            for group in group_sql:
+                all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + " ".join(group) + "END ; "
+                seq_ins_info = self.my_conn.execute_no_fetch(all_insert_pdr_info_sql_to_run)
+#         all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
+#         all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
 #         TODO: change to one query, as in insert sequence 
         """INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 5588094, 1105786, 2)
          ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 3180786, 856058, 2)
