@@ -13,6 +13,7 @@ sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pi
 from pipeline.pipelinelogging import logger
 from subprocess import call
 import getpass
+from itertools import izip_longest
 
 base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
 
@@ -318,6 +319,10 @@ class PipelneUtils:
     def print_array_w_title(self, message, title = 'message'):
         print title
         print message
+        
+    def grouper(self, iterable, n, fillvalue=None):
+        args = [iter(iterable)] * n
+        return izip_longest(*args, fillvalue=fillvalue)        
 
     def find_val_in_nested_list(self, hey, needle):
         return [v for k, v in hey if k.lower() == needle.lower()]
