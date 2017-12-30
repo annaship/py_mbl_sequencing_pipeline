@@ -477,7 +477,8 @@ def env454upload_main(runobj, full_upload):
 
 #     sequences = get_sequences(my_env454upload, filenames)
     get_and_up_seq_time = time.time()
-
+    total_seq = 0
+    
     for filename in filenames:
         my_env454upload.seq.prepare_fasta_dict(filename)
         sequences = my_env454upload.seq.make_seq_upper(filename)
@@ -491,13 +492,13 @@ def env454upload_main(runobj, full_upload):
         logger.debug("get_and_up_seq_time = %s" % get_and_up_seq_time_end)
         
         start_c = time.time()
-        total_seq = env454upload_all_but_seq(my_env454upload, filename, full_upload)
+        total_seq = total_seq + env454upload_all_but_seq(my_env454upload, filename, full_upload)
         logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
-        my_env454upload.check_seq_upload()
-        logger.debug("total_seq = %s" % total_seq)
-        whole_elapsed = (time.time() - whole_start)
-        print "The whole upload took %s s" % whole_elapsed
+    my_env454upload.check_seq_upload()
+    logger.debug("total_seq = %s" % total_seq)
+    whole_elapsed = (time.time() - whole_start)
+    print "The whole upload took %s s" % whole_elapsed
   
     
 def env454upload_seq(my_env454upload, filename, sequences):
@@ -531,7 +532,7 @@ def env454upload_all_but_seq(my_env454upload, filename, full_upload):
         
 #             fasta                 = fastalib.SequenceSource(filename, lazy_init = False) 
         seq_in_file           = len(my_env454upload.seq.fasta_dict)
-        logger.debug("seq_in_file = %s" % seq_in_file)
+#         logger.debug("seq_in_file = %s" % seq_in_file)
         my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
         total_seq += seq_in_file
 
