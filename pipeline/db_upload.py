@@ -219,7 +219,8 @@ class dbUpload:
         self.seq      = Seq(self.taxonomy, self.table_names)
         
         self.gast_dict = {}
-
+        self.silva_taxonomy_info_per_seq_list = []
+        
         self.unique_file_counts = self.dirs.unique_file_counts
         self.dirs.delete_file(self.unique_file_counts)
         self.taxonomies = set()
@@ -579,10 +580,20 @@ class dbUpload:
             self.seq.insert_sequence_uniq_info_ill(self.gast_dict)  
             
     def insert_silva_taxonomy_info_per_seq(self):
+        for fasta_id, gast_entry in self.gast_dict.items():
+            
+            curr_seq          = self.seq.fasta_dict[fasta_id]
+            sequence_id       = self.seq.seq_id_dict[curr_seq]
+            silva_taxonomy_id = self.taxonomy.silva_taxonomy_id_per_taxonomy_dict[gast_entry[0]]
+            gast_distance     = gast_entry[1]
+            rank_id           = self.taxonomy.all_rank_w_id[gast_entry[2]]
+            refssu_id         = 0
+            refssu_count      = 0
         # self.silva_taxonomy_info_per_seq_list = [[8559950L, 2436599, '0.03900', 0, 0, 83],...
-#         temp_list = list((sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id))
-        
-#         self.silva_taxonomy_info_per_seq_list.append(temp_list)
+#         (taxonomy, gast_distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = self.gast_dict
+
+            temp_list = list((sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id))
+            self.silva_taxonomy_info_per_seq_list.append(temp_list)
 
 #         TODO: already somwhere
         field_list = "sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id"
@@ -598,7 +609,7 @@ class dbUpload:
 #                 self.utils.print_array_w_title(rows_affected, "rows_affected by insert_silva_taxonomy_info_per_seq")
 #         else:
         all_insert_dat_vals = self.utils.make_insert_values(self.silva_taxonomy_info_per_seq_list)
-        rows_affected = self.mysql_util.execute_insert("silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
+        rows_affected = self.my_conn.execute_insert("silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
         self.utils.print_array_w_title(rows_affected, "rows_affected by insert_silva_taxonomy_info_per_seq")
                   
     
@@ -756,7 +767,7 @@ class Taxonomy:
         for field_name in field_list.split(", "):
             duplicate_list.append(" %s = VALUES(%s)" % (field_name, field_name))
         sql = sql + ",".join(duplicate_list) + "; "
-        print sql
+#         print sql
         rows_affected = self.my_conn.execute_no_fetch(sql)
         self.utils.print_array_w_title(rows_affected, "rows_affected by inserting silva_taxonomy")
 
