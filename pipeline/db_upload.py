@@ -958,7 +958,7 @@ class Seq:
     
     def insert_sequence_uniq_info_ill(self, gast_dict):
         all_insert_sequence_uniq_info_ill_sql = []
-        for fasta_id, seq in self.seq.fasta_dict.items():
+        for fasta_id, seq in self.fasta_dict.items():
             all_insert_sequence_uniq_info_ill_sql.append(self.sequence_uniq_info_ill_query(fasta_id, seq, gast_dict))            
                      
         all_insert_sequence_uniq_info_ill_sql_all = " ".join(list(set(all_insert_sequence_uniq_info_ill_sql)))
