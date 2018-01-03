@@ -671,24 +671,41 @@ class Taxonomy:
         res        = self.my_conn.execute_fetch_select(my_sql)
         one_tax_id_dict = dict((y, int(x)) for x, y in res)
         self.tax_id_dict.update(one_tax_id_dict)        
-       
+
     def insert_whole_taxonomy(self):
-        all_insert_taxonomy_sql = []   
-        for taxonomy in self.taxa_content:
-            my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
-            all_insert_taxonomy_sql.append(my_sql)
-            all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
-        all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
-        
-        res = self.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
-        self.my_conn.cursor.execute("COMMIT")
-        print "RRR self.cursor._info" 
-        print self.my_conn.cursor._info
+        query_tmpl = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES (%s);"
+        all_taxonomy = set([taxonomy.rstrip() for taxonomy in self.taxa_content])
+        groups = self.utils.grouper(all_taxonomy, 100)
+        val_tmpl   = "'%s'"
+
+        for group in groups:
+            sql_vals = "), (".join([val_tmpl % key for key in group if key is not None])
+            my_sql =  query_tmpl % sql_vals
+            res = self.my_conn.execute_no_fetch(my_sql)
+
 
         self.get_taxonomy_id_dict()
         # TODO add timer
         
-        return all_insert_taxonomy_sql_to_run
+#         return all_insert_taxonomy_sql_to_run
+       
+#     def insert_whole_taxonomy(self):
+#         all_insert_taxonomy_sql = []   
+#         for taxonomy in self.taxa_content:
+#             my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
+#             all_insert_taxonomy_sql.append(my_sql)
+#             all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
+#         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
+#         
+#         res = self.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
+#         self.my_conn.cursor.execute("COMMIT")
+#         print "RRR self.cursor._info" 
+#         print self.my_conn.cursor._info
+# 
+#         self.get_taxonomy_id_dict()
+#         # TODO add timer
+#         
+#         return all_insert_taxonomy_sql_to_run
         
     def insert_split_taxonomy(self):
         self.parse_taxonomy()
@@ -935,7 +952,7 @@ class Seq:
     #       print "MMM my_sql = %s" % my_sql
             seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
             self.utils.print_both("seq_insert info: %s\n" % (seq_ins_info))
-            self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+#             self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
         return seq_ins_info
         
     def get_seq_id_dict(self, sequences):
@@ -1029,7 +1046,18 @@ class Seq:
         rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
         self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
     
-    def insert_sequence_uniq_info_ill(self, gast_dict):
+    def insert_sequence_uniq_info_ill(self):
+        query_tmpl = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES (%s);"
+        all_taxonomy = set([taxonomy.rstrip() for taxonomy in self.taxa_content])
+        groups = self.utils.grouper(all_taxonomy, 100)
+        val_tmpl   = "'%s'"
+
+        for group in groups:
+            sql_vals = "), (".join([val_tmpl % key for key in group if key is not None])
+            my_sql =  query_tmpl % sql_vals
+            res = self.my_conn.execute_no_fetch(my_sql)
+    
+    def insert_sequence_uniq_info_ill_old(self, gast_dict):
         all_insert_sequence_uniq_info_ill_sql = []
         for fasta_id, gast in gast_dict.items():
             all_insert_sequence_uniq_info_ill_sql.append(self.sequence_uniq_info_ill_query(fasta_id, gast))            
