@@ -1022,16 +1022,47 @@ class Seq:
         rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
         self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
     
-    def insert_sequence_uniq_info_ill(self):
-        query_tmpl = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES (%s);"
-        all_taxonomy = set([taxonomy.rstrip() for taxonomy in self.taxa_content])
-        groups = self.utils.grouper(all_taxonomy, 100)
-        val_tmpl   = "'%s'"
+    def insert_sequence_uniq_info_ill(self, gast_dict):
+# my_sql = """INSERT IGNORE INTO sequence_uniq_info_ill (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES
+        """ON DUPLICATE KEY UPDATE
+                       updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+                       taxonomy_id = %s,
+                       gast_distance = '%s',
+                       refssu_count = '%s',
+                       rank_id = %s,
+                       refhvr_ids = '%s';
+                   """  
+#                                       self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip() 
 
-        for group in groups:
-            sql_vals = "), (".join([val_tmpl % key for key in group if key is not None])
-            my_sql =  query_tmpl % sql_vals
-            res = self.my_conn.execute_no_fetch(my_sql)
+        all_insert_sequence_uniq_info_ill_vals = []
+        for fasta_id, gast in gast_dict.items():
+            (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast
+            seq  = self.fasta_dict[fasta_id]
+            seq_upper = seq.upper()
+            sequence_id = self.seq_id_dict[seq_upper]
+            rank_id = self.taxonomy.all_rank_w_id[rank]
+            if taxonomy in self.taxonomy.tax_id_dict:
+                taxonomy_id = self.taxonomy.tax_id_dict[taxonomy] 
+                vals = "(%s,  %s,  '%s',  '%s',  %s,  '%s')" % (sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
+                all_insert_sequence_uniq_info_ill_vals.append(vals)
+        group_sql = self.utils.grouper(all_insert_sequence_uniq_info_ill_vals, 10000)
+        query_tmpl = """INSERT IGNORE INTO sequence_uniq_info_ill 
+                            (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES %s"""
+        for group in group_sql:
+            val_part = ', '.join([key for key in group if key is not None])
+            my_sql = query_tmpl % (self.table_names["sequence_table_name"], val_part)
+            my_sql = my_sql + """ON DUPLICATE KEY UPDATE
+                       updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+                       taxonomy_id = VALUES(taxonomy_id),
+                       gast_distance = VALUES(gast_distance),
+                       refssu_count = VALUES(refssu_count),
+                       rank_id = VALUES(rank_id),
+                       refhvr_ids = VALUES(refhvr_ids);
+                   """  % (taxonomy_id)
+# self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip() 
+            seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
+
+            
     
     def insert_sequence_uniq_info_ill_old(self, gast_dict):
         all_insert_sequence_uniq_info_ill_sql = []
