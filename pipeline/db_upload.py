@@ -1034,22 +1034,35 @@ class Seq:
                 taxonomy_id = self.taxonomy.tax_id_dict[taxonomy] 
                 vals = "(%s,  %s,  '%s',  '%s',  %s,  '%s')" % (sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
                 all_insert_sequence_uniq_info_ill_vals.append(vals)
-        group_sql = self.utils.grouper(all_insert_sequence_uniq_info_ill_vals, 10000)
-        query_tmpl = """INSERT IGNORE INTO sequence_uniq_info_ill 
-                            (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) VALUES %s"""
-        for group in group_sql:
-            val_part = ', '.join([key for key in group if key is not None])
-            my_sql = query_tmpl % (self.table_names["sequence_table_name"], val_part)
-            my_sql = my_sql + """ON DUPLICATE KEY UPDATE
-                       updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-                       taxonomy_id = VALUES(taxonomy_id),
-                       gast_distance = VALUES(gast_distance),
-                       refssu_count = VALUES(refssu_count),
-                       rank_id = VALUES(rank_id),
-                       refhvr_ids = VALUES(refhvr_ids);
-                   """  % (taxonomy_id)
-# self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip() 
-            seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
+        group_vals = self.utils.grouper(all_insert_sequence_uniq_info_ill_vals, 10000)
+        my_sql_1 = """INSERT IGNORE INTO sequence_uniq_info_ill 
+                            (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids) 
+                            VALUES """ % (self.table_names["sequence_table_name"])
+        my_sql_2 = """ON DUPLICATE KEY UPDATE
+                   updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+                   taxonomy_id = VALUES(taxonomy_id),
+                   gast_distance = VALUES(gast_distance),
+                   refssu_count = VALUES(refssu_count),
+                   rank_id = VALUES(rank_id),
+                   refhvr_ids = VALUES(refhvr_ids);
+               """  % (taxonomy_id)
+        query_tmpl = my_sql_1 + "%s " + my_sql_2
+        insert_info = self.run_groups(group_vals, query_tmpl)   
+        logger.debug("sequence_uniq_info_ill insert = %s" % insert_info)
+                                 
+#         for group in group_sql:
+#             val_part = ', '.join([key for key in group if key is not None])
+#             my_sql = query_tmpl % (self.table_names["sequence_table_name"], val_part)
+#             my_sql = my_sql + """ON DUPLICATE KEY UPDATE
+#                        updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+#                        taxonomy_id = VALUES(taxonomy_id),
+#                        gast_distance = VALUES(gast_distance),
+#                        refssu_count = VALUES(refssu_count),
+#                        rank_id = VALUES(rank_id),
+#                        refhvr_ids = VALUES(refhvr_ids);
+#                    """  % (taxonomy_id)
+# # self.table_names["sequence_table_name"], sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip() 
+#             seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
 
     def run_groups(self, group_vals, query_tmpl):
         for group in group_vals:
