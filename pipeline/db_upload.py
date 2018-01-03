@@ -581,11 +581,11 @@ class dbUpload:
 #             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
         group_sql = self.utils.grouper(all_insert_pdr_info_sql, 3)
         query_tmp = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES %s"
-        
+        sequence_table_name = self.table_names["sequence_table_name"] 
         for group in group_sql:
             val_part = ', '.join([key for key in group])
-            my_sql = query_tmp % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], val_part)
-            my_sql = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
+            my_sql = query_tmp % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name, val_part)
+            my_sql = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
     #       print "MMM my_sql = %s" % my_sql
             seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
 #             self.utils.print_both("seq_insert info: %s\n" % (seq_ins_info))
