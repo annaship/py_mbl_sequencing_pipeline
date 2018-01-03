@@ -583,17 +583,16 @@ class dbUpload:
         query_tmp = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES %s"
         sequence_table_name = self.table_names["sequence_table_name"] 
         for group in group_sql:
-            if group is not None:
-                try:
-                    group1 = [x for x in group if x is not None]
-                    val_part = ', '.join([key for key in group1])
-                except TypeError:
-                    break
-    #                 print group
-    #                 logger.error("TypeError, group = %s" % group)
-                except Exception, e:
-                    logger.debug("Error = %s" % e)
-                    raise
+            try:
+#                 group1 = [x for x in group if x is not None]
+                val_part = ', '.join([key for key in group if key is not None])
+            except TypeError:
+                break
+#                 print group
+#                 logger.error("TypeError, group = %s" % group)
+            except Exception, e:
+                logger.debug("Error = %s" % e)
+                raise
             my_sql = query_tmp % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name, val_part)
             my_sql = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
     #       print "MMM my_sql = %s" % my_sql
