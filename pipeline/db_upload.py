@@ -145,9 +145,12 @@ class MyConnection:
         if res:
             return res
         
-#     def execute_simple_select(self, field_name, table_name, where_part):
-#         id_query  = "SELECT %s FROM %s %s" % (field_name, table_name, where_part)
-#         return self.execute_fetch_select(id_query)
+    def run_groups(self, group_vals, query_tmpl, join_xpr = ', '):
+        for group in group_vals:
+            val_part = join_xpr.join([key for key in group if key is not None])
+            my_sql = query_tmpl % (val_part)
+            return self.execute_no_fetch(my_sql)
+        
 
 class dbUpload:
     """db upload methods"""
@@ -568,22 +571,22 @@ class dbUpload:
             self.taxonomy.insert_whole_taxonomy()
 
     def prepare_pdr_info_upload_query(self, run_info_ill_id):
-        all_insert_pdr_info_sql = []
+        all_insert_pdr_info_vals = []
         for fasta_id, seq in self.seq.fasta_dict.items():
             if (self.db_server == "vamps2"):
-                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq))
+                all_insert_pdr_info_vals.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq))
             elif (self.db_server == "env454"):
-                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info_vals(run_info_ill_id, fasta_id, seq))
+                all_insert_pdr_info_vals.append(self.seq.insert_pdr_info_vals(run_info_ill_id, fasta_id, seq))
 
         if (self.db_server == "vamps2"):
             pass
         elif (self.db_server == "env454"):            
             sequence_table_name = self.table_names["sequence_table_name"] 
-            group_vals = self.utils.grouper(all_insert_pdr_info_sql, 10000)
+            group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
             my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
             my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
             query_tmpl = my_sql_1 + "%s " + my_sql_2
-            insert_info = self.seq.run_groups(group_vals, query_tmpl)   
+            insert_info = self.my_conn.run_groups(group_vals, query_tmpl)   
             logger.debug("sequence_uniq_info_ill insert = %s" % insert_info)
                   
         
@@ -1052,12 +1055,8 @@ class Seq:
                    refhvr_ids = VALUES(refhvr_ids);
                """  % (taxonomy_id)
         query_tmpl = my_sql_1 + "%s " + my_sql_2
-        insert_info = self.run_groups(group_vals, query_tmpl)   
+        insert_info = self.my_conn.run_groups(group_vals, query_tmpl)   
         logger.debug("sequence_uniq_info_ill insert = %s" % insert_info)
                                  
-    def run_groups(self, group_vals, query_tmpl):
-        for group in group_vals:
-            val_part = ', '.join([key for key in group if key is not None])
-            my_sql = query_tmpl % (val_part)
-            return self.my_conn.execute_no_fetch(my_sql)
+
         
