@@ -626,19 +626,9 @@ class dbUpload:
             temp_list = list((sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id))
             self.silva_taxonomy_info_per_seq_list.append(temp_list)
 
-#         TODO: already somwhere
+#         TODO: already somewhere
         field_list = "sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id"
         
-        # sql = "INSERT %s INTO `%s` (`%s`) VALUES (%s)" % ("IGNORE", "silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
-        # self.utils.print_array_w_title(sql, "sql")
-#         if len(self.silva_taxonomy_info_per_seq_list) > self.utils.min_seqs:
-#             split = len(self.silva_taxonomy_info_per_seq_list)/self.utils.chunk_split  # how many pieces
-#             for i,vals in enumerate(self.utils.chunks(self.silva_taxonomy_info_per_seq_list, split)):
-#                 all_insert_dat_vals = self.utils.make_insert_values(vals)
-#                 print i+1,'/',self.utils.chunk_split,' -- len vals chunk:',len(all_insert_dat_vals)
-#                 rows_affected = self.mysql_util.execute_insert("silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
-#                 self.utils.print_array_w_title(rows_affected, "rows_affected by insert_silva_taxonomy_info_per_seq")
-#         else:
         all_insert_dat_vals = self.utils.make_insert_values(self.silva_taxonomy_info_per_seq_list)
         rows_affected = self.my_conn.execute_insert("silva_taxonomy_info_per_seq", field_list, all_insert_dat_vals)
         self.utils.print_array_w_title(rows_affected, "rows_affected by insert_silva_taxonomy_info_per_seq")
@@ -994,20 +984,6 @@ class Seq:
         
         return vals    
     
-    def insert_pdr_info_old(self, run_info_ill_id, fasta_id, seq):
-        if (not run_info_ill_id):
-            self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
-            
-        # ------- insert sequence info per run/project/dataset --------
-        seq_upper = seq.upper()
-        sequence_id = self.seq_id_dict[seq_upper]
-
-        seq_count       = int(fasta_id.split('|')[-1].split(':')[-1])
-        my_sql          = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES (%s, %s, %s)" % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], run_info_ill_id, sequence_id, seq_count)
-        my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
-
-        return my_sql
-        
 #     TODO: combine with insert_pdr_info
     def insert_pdr_info2(self, run_info_ill_id, fasta_id, seq):
 #         res_id = ""
