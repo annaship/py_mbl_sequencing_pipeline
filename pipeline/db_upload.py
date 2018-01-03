@@ -648,40 +648,17 @@ class Taxonomy:
         self.tax_id_dict.update(one_tax_id_dict)        
 
     def insert_whole_taxonomy(self):
-        query_tmpl = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES (%s);"
-        all_taxonomy = set([taxonomy.rstrip() for taxonomy in self.taxa_content])
-        groups = self.utils.grouper(all_taxonomy, 100)
-        val_tmpl   = "'%s'"
-
-        for group in groups:
-            sql_vals = "), (".join([val_tmpl % key for key in group if key is not None])
-            my_sql =  query_tmpl % sql_vals
-            res = self.my_conn.execute_no_fetch(my_sql)
-
+        val_tmpl   = "('%s')"        
+        all_taxonomy = set([val_tmpl % taxonomy.rstrip() for taxonomy in self.taxa_content])
+        my_sql_1 = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES "
+        my_sql_2 = " ON DUPLICATE KEY UPDATE taxonomy = VALUES(taxonomy);"         
+        group_vals = self.utils.grouper(all_taxonomy, 100)
+        query_tmpl = my_sql_1 + " %s " + my_sql_2
+        insert_info = self.my_conn.run_groups(group_vals, query_tmpl)   
+        logger.debug("sequence_uniq_info_ill insert = %s" % insert_info)
 
         self.get_taxonomy_id_dict()
-        # TODO add timer
-        
-#         return all_insert_taxonomy_sql_to_run
-       
-#     def insert_whole_taxonomy(self):
-#         all_insert_taxonomy_sql = []   
-#         for taxonomy in self.taxa_content:
-#             my_sql = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES ('%s');" % (taxonomy.rstrip())
-#             all_insert_taxonomy_sql.append(my_sql)
-#             all_insert_taxonomy_sql_all = " ".join(list(set(all_insert_taxonomy_sql)))
-#         all_insert_taxonomy_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_taxonomy_sql_all + "END ; "
-#         
-#         res = self.my_conn.cursor.execute(all_insert_taxonomy_sql_to_run)
-#         self.my_conn.cursor.execute("COMMIT")
-#         print "RRR self.cursor._info" 
-#         print self.my_conn.cursor._info
-# 
-#         self.get_taxonomy_id_dict()
-#         # TODO add timer
-#         
-#         return all_insert_taxonomy_sql_to_run
-        
+
     def insert_split_taxonomy(self):
         self.parse_taxonomy()
         self.get_taxa_by_rank()
