@@ -573,20 +573,58 @@ class dbUpload:
             if (self.db_server == "vamps2"):
                 all_insert_pdr_info_sql.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq))
             elif (self.db_server == "env454"):
-                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info(run_info_ill_id, fasta_id, seq))
+                all_insert_pdr_info_sql.append(self.seq.insert_pdr_info_vals(run_info_ill_id, fasta_id, seq))
+
+#         self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], 
+#          my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
 
 #             all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
-            group_sql = self.utils.grouper(all_insert_pdr_info_sql, 1000)
-            for group in group_sql:
-                all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + " ".join(group) + "END ; "
-                seq_ins_info = self.my_conn.execute_no_fetch(all_insert_pdr_info_sql_to_run)
+        group_sql = self.utils.grouper(all_insert_pdr_info_sql, 3)
+        query_tmp = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES %s"
+        
+        for group in group_sql:
+            val_part = ', '.join([key for key in group])
+            my_sql = query_tmp % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], val_part)
+            my_sql = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
+    #       print "MMM my_sql = %s" % my_sql
+            seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
+#             self.utils.print_both("seq_insert info: %s\n" % (seq_ins_info))
+#             self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+            print group
+            
+            
+            
+# ---
+#        "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES (%s, %s, %s)" % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], run_info_ill_id, sequence_id, seq_count)
+#         my_sql          = my_sql + " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
+# 
+#         group_seq = self.grouper(sequences, 10000)
+#         query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
+#         val_tmpl   = "'%s'"
+#         
+# #         TODO: combine and run once with begin end
+#         for group in group_seq:
+#             seq_part = ')), (COMPRESS('.join([val_tmpl % key for key in group])
+#             my_sql = query_tmpl % (sequence_table_name, sequence_field_name, seq_part)
+#             my_sql = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (sequence_field_name, sequence_field_name)
+#     #       print "MMM my_sql = %s" % my_sql
+#             seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
+#             self.utils.print_both("seq_insert info: %s\n" % (seq_ins_info))
+#             self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
+#         return seq_ins_info
+# ---            
+#             
+            
+            
+#                 all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + " ".join(group) + "END ; "
+#                 seq_ins_info = self.my_conn.execute_no_fetch(all_insert_pdr_info_sql_to_run)
 #         all_insert_pdr_info_sql_all = " ".join(all_insert_pdr_info_sql)
 #         all_insert_pdr_info_sql_to_run = "BEGIN NOT ATOMIC " + all_insert_pdr_info_sql_all + "END ; "
 #         TODO: change to one query, as in insert sequence 
         """INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 5588094, 1105786, 2)
          ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); INSERT INTO sequence_pdr_info (dataset_id, sequence_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = 372), 3180786, 856058, 2)
          ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), sequence_id = VALUES(sequence_id), seq_count = VALUES(seq_count); """
-        return all_insert_pdr_info_sql_to_run
+#         return all_insert_pdr_info_sql_to_run
     
     def prepare_sequence_uniq_info(self):
         if (self.db_server == "vamps2"):
@@ -949,7 +987,20 @@ class Seq:
         if res:
             return int(res[0][0])     
     
-    def insert_pdr_info(self, run_info_ill_id, fasta_id, seq):
+    def insert_pdr_info_vals(self, run_info_ill_id, fasta_id, seq):
+        if (not run_info_ill_id):
+            self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
+            
+        # ------- insert sequence info per run/project/dataset --------
+        seq_upper = seq.upper()
+        sequence_id = self.seq_id_dict[seq_upper]
+
+        seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
+        vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
+        
+        return vals    
+    
+    def insert_pdr_info_old(self, run_info_ill_id, fasta_id, seq):
         if (not run_info_ill_id):
             self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
             
