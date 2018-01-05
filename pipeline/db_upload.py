@@ -992,10 +992,26 @@ class Seq:
 
     def insert_sequence_uniq_info2(self):
         self.get_seq_id_w_silva_taxonomy_info_per_seq_id()
-        field_list = "sequence_id, silva_taxonomy_info_per_seq_id"
-        self.sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id)
-        rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
-        self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
+        fields = "sequence_id, silva_taxonomy_info_per_seq_id"
+        field_list = fields.split(', ')
+        self.sequence_uniq_info_values = ["(%s,  %s)"  % (i1, i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id]
+        
+        my_sql_1 = "INSERT IGNORE INTO sequence_uniq_info (%s) VALUES " % fields
+        my_sql_2 =  " ON DUPLICATE KEY UPDATE "
+        for field_name in field_list[:-1]:
+            my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name, field_name)
+        my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1], field_list[-1])
+        query_tmpl = my_sql_1 + "%s " + my_sql_2
+        
+        group_vals = self.utils.grouper(self.silva_taxonomy_info_per_seq_list, 10000)
+        logger.debug("insert sequence_uniq_info_ill:")
+        self.my_conn.run_groups(group_vals, query_tmpl)   
+        
+#         vals = "(%s,  %s)" % (sequence_id, silva_taxonomy_info_per_seq_id)
+
+#         self.sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id)
+#         rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
+#         self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
     
     def insert_sequence_uniq_info_ill(self, gast_dict):
         all_insert_sequence_uniq_info_ill_vals = []
