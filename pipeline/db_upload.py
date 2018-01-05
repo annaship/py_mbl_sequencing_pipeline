@@ -52,6 +52,7 @@ class MyConnection:
         self.utils  = PipelneUtils()        
         self.conn   = None
         self.cursor = None
+        self.cursorD = None
         self.rows   = 0
         self.new_id = None
         self.lastrowid = None
@@ -73,6 +74,7 @@ class MyConnection:
                 read_default_file = "~/.my.cnf_local"
             self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
             self.cursor = self.conn.cursor()
+            self.cursorD = self.conn.cursor (MySQLdb.cursors.DictCursor)
             # self.escape = self.conn.escape()
 
         except (AttributeError, MySQLdb.OperationalError):
@@ -581,7 +583,13 @@ class dbUpload:
                 all_insert_pdr_info_vals.append(self.seq.insert_pdr_info_vals(run_info_ill_id, fasta_id, seq))
 
         if (self.db_server == "vamps2"):
-            pass
+            sequence_table_name = self.table_names["sequence_table_name"] 
+            group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
+            my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
+            my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
+            query_tmpl = my_sql_1 + "%s " + my_sql_2
+            logger.debug("insert sequence_pdr_info:")
+            self.my_conn.run_groups(group_vals, query_tmpl)   
         elif (self.db_server == "env454"):            
             sequence_table_name = self.table_names["sequence_table_name"] 
             group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
@@ -950,11 +958,27 @@ class Seq:
 
         seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
 
-        my_sql = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = %s), %s, %s, %s)
-        """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], run_info_ill_id, sequence_id, seq_count, C.classifier_id)
-        my_sql = my_sql + " ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
+        
+#         dataset_ids = 
+# TODO: separate
+        all_dataset_run_info_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
+        self.my_conn.cursorD.execute(all_dataset_run_info_sql)
 
-        return my_sql
+        res = self.my_conn.execute_fetch_select(all_dataset_run_info_sql)
+#         for r, d in res:
+#             print r, d
+#         all_dataset_run_info_dict = {}
+        all_dataset_run_info_dict = dict([(r, d) for r, d in res])
+
+        dataset_id = all_dataset_run_info_dict[run_info_ill_id]
+        vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+#         my_sql = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES 
+#         ((SELECT dataset_id FROM run_info_ill WHERE run_info_ill.run_info_ill_id = %s), %s, %s, %s)
+#         """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], 
+#                run_info_ill_id, sequence_id, seq_count, C.classifier_id)
+#         my_sql = my_sql + " ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"])
+
+        return vals
         
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
         sequence_ids_strs = [str(i) for i in self.seq_id_dict.values()]
@@ -964,14 +988,6 @@ class Seq:
     def insert_sequence_uniq_info2(self):
         self.get_seq_id_w_silva_taxonomy_info_per_seq_id()
         field_list = "sequence_id, silva_taxonomy_info_per_seq_id"
-#         if len(self.seq_id_w_silva_taxonomy_info_per_seq_id) > self.utils.min_seqs:
-#             split = len(self.seq_id_w_silva_taxonomy_info_per_seq_id)/self.utils.chunk_split  # how many pieces
-#             for i,vals in enumerate(self.utils.chunks(self.seq_id_w_silva_taxonomy_info_per_seq_id, split)):
-#                 sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in vals)
-#                 print i+1,'/',self.utils.chunk_split,' -- len vals chunk:',len(sequence_uniq_info_values)
-#                 rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, sequence_uniq_info_values)
-#                 self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
-#         else:
         self.sequence_uniq_info_values = '), ('.join(str(i1) + "," + str(i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id)
         rows_affected = self.my_conn.execute_insert("sequence_uniq_info", field_list, self.sequence_uniq_info_values)
         self.utils.print_array_w_title(rows_affected, "rows_affected from insert_sequence_uniq_info = ")
