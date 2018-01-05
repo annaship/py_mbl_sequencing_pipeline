@@ -486,12 +486,12 @@ class dbUpload:
         self.my_conn.execute_no_fetch(my_sql)
         
     def count_sequence_pdr_info2(self):    
-        results = {}
+        dataset_cnt_dict = {}
         run_datasets = [x.dataset for x in self.runobj.samples.values()]
 #         curr_datasets = [dataset for sample.dataset in self.runobj.samples]
 #        self.all_dataset_ids[self.runobj.samples.dataset]
         for dataset in run_datasets:
-            dataset_id = self.utils.find_val_in_nested_list(self.all_dataset_ids, dataset)
+            dataset_id = int(self.utils.find_val_in_nested_list(self.all_dataset_ids, dataset)[0])
             my_sql = """SELECT count(sequence_pdr_info_id) 
                         FROM sequence_pdr_info 
                           JOIN dataset using(dataset_id) 
@@ -499,12 +499,12 @@ class dbUpload:
             res    = self.my_conn.execute_fetch_select(my_sql)
             try:
                 if (int(res[0][0]) > 0):
-                    results[dataset_id] = int(res[0][0])
+                    dataset_cnt_dict[dataset_id] = int(res[0][0])
 #                     results.append(int(res[0][0]))
             except Exception:
-                self.utils.print_both("Unexpected error from 'count_sequence_pdr_info_ill':", sys.exc_info()[0])
+                self.utils.print_both(("Unexpected error from 'count_sequence_pdr_info2':", sys.exc_info()[0]))
                 raise                
-        return results
+        return dataset_cnt_dict
 
     def count_sequence_pdr_info_ill(self):
         results = {}
@@ -587,7 +587,7 @@ class dbUpload:
             file_seq_db_counts   = self.count_sequence_pdr_info2()
         elif (self.db_server == "env454"):
             file_seq_db_counts   = self.count_sequence_pdr_info_ill()
-#        print "file_seq_db_count = %s" % file_seq_db_count
+#        per primer_suite_lane
 #         file_seq_orig_count = self.count_seq_from_file()
         file_seq_orig_count = self.count_seq_from_files_grep()
         
