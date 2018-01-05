@@ -250,7 +250,7 @@ class dbUpload:
 
 #         self.merge_unique_suffix = "." + C.filtered_suffix + "." + C.unique_suffix #.MERGED-MAX-MISMATCH-3.unique
         self.suffix_used        = ""
-        
+        self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 #        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
    
    
@@ -272,6 +272,10 @@ class dbUpload:
         if res:
             return int(res[0][0])
         
+    def get_dataset_per_run_info_id(self):
+        all_dataset_run_info_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
+        res = self.my_conn.execute_fetch_select(all_dataset_run_info_sql)
+        return dict([(r, d) for r, d in res])
         
     def get_id(self, table_name, value):
         id_name = table_name + '_id'
@@ -578,26 +582,25 @@ class dbUpload:
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.seq.fasta_dict.items():
             if (self.db_server == "vamps2"):
-                all_insert_pdr_info_vals.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq))
+                all_insert_pdr_info_vals.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq, self.all_dataset_run_info_dict))
             elif (self.db_server == "env454"):
                 all_insert_pdr_info_vals.append(self.seq.insert_pdr_info_vals(run_info_ill_id, fasta_id, seq))
 
+        group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
+        sequence_table_name = self.table_names["sequence_table_name"] 
+
         if (self.db_server == "vamps2"):
-            sequence_table_name = self.table_names["sequence_table_name"] 
-            group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
-            my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
-            my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
-            query_tmpl = my_sql_1 + "%s " + my_sql_2
-            logger.debug("insert sequence_pdr_info:")
-            self.my_conn.run_groups(group_vals, query_tmpl)   
+            my_sql_1 = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES 
+                    """ % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
+            my_sql_2 = """ ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count), classifier_id = VALUES(classifier_id);
+                    """ % (sequence_table_name, sequence_table_name)
         elif (self.db_server == "env454"):            
-            sequence_table_name = self.table_names["sequence_table_name"] 
-            group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
             my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
             my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
-            query_tmpl = my_sql_1 + "%s " + my_sql_2
-            logger.debug("insert sequence_pdr_info:")
-            self.my_conn.run_groups(group_vals, query_tmpl)   
+
+        query_tmpl = my_sql_1 + "%s " + my_sql_2
+        logger.debug("insert sequence_pdr_info:")
+        self.my_conn.run_groups(group_vals, query_tmpl)   
 
     def prepare_sequence_uniq_info(self):
         if (self.db_server == "vamps2"):
@@ -947,7 +950,7 @@ class Seq:
         return vals    
     
 #     TODO: combine with insert_pdr_info
-    def insert_pdr_info2(self, run_info_ill_id, fasta_id, seq):
+    def insert_pdr_info2(self, run_info_ill_id, fasta_id, seq, all_dataset_run_info_dict):
 #         res_id = ""
         if (not run_info_ill_id):
             self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
@@ -957,19 +960,7 @@ class Seq:
         sequence_id = self.seq_id_dict[seq_upper]
 
         seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
-
         
-#         dataset_ids = 
-# TODO: separate
-        all_dataset_run_info_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
-        self.my_conn.cursorD.execute(all_dataset_run_info_sql)
-
-        res = self.my_conn.execute_fetch_select(all_dataset_run_info_sql)
-#         for r, d in res:
-#             print r, d
-#         all_dataset_run_info_dict = {}
-        all_dataset_run_info_dict = dict([(r, d) for r, d in res])
-
         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
         vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
 #         my_sql = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES 
