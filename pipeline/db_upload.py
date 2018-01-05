@@ -149,7 +149,9 @@ class MyConnection:
         for group in group_vals:
             val_part = join_xpr.join([key for key in group if key is not None])
             my_sql = query_tmpl % (val_part)
-            return self.execute_no_fetch(my_sql)
+            insert_info = self.execute_no_fetch(my_sql)
+            logger.debug("insert_info = %s" % insert_info)
+
         
 class dbUpload:
     """db upload methods"""
@@ -568,6 +570,7 @@ class dbUpload:
             self.taxonomy.insert_split_taxonomy()
         elif (self.db_server == "env454"):
             self.taxonomy.insert_whole_taxonomy()
+            self.taxonomy.get_taxonomy_id_dict()
 
     def prepare_pdr_info_upload_query(self, run_info_ill_id):
         all_insert_pdr_info_vals = []
@@ -585,8 +588,8 @@ class dbUpload:
             my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
             my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
             query_tmpl = my_sql_1 + "%s " + my_sql_2
-            insert_info = self.my_conn.run_groups(group_vals, query_tmpl)   
-            logger.debug("sequence_uniq_info_ill insert = %s" % insert_info)
+            logger.debug("insert sequence_pdr_info:")
+            self.my_conn.run_groups(group_vals, query_tmpl)   
 
     def prepare_sequence_uniq_info(self):
         if (self.db_server == "vamps2"):
@@ -654,10 +657,8 @@ class Taxonomy:
         my_sql_2 = " ON DUPLICATE KEY UPDATE taxonomy = VALUES(taxonomy);"         
         group_vals = self.utils.grouper(all_taxonomy, 100)
         query_tmpl = my_sql_1 + " %s " + my_sql_2
-        insert_info = self.my_conn.run_groups(group_vals, query_tmpl)   
-        logger.debug("sequence_uniq_info_ill insert = %s" % insert_info)
-
-        self.get_taxonomy_id_dict()
+        logger.debug("insert taxonomy:")
+        self.my_conn.run_groups(group_vals, query_tmpl)   
 
     def insert_split_taxonomy(self):
         self.parse_taxonomy()
@@ -883,29 +884,20 @@ class Seq:
 
     def make_seq_upper(self, filename):
         sequences  = [seq.upper() for seq in self.fasta_dict.values()] #here we make uppercase for VAMPS compartibility    
-        return list(set(sequences)) 
-
-    def grouper(self, iterable, n, fillvalue=None):
-        args = [iter(iterable)] * n
-        return izip_longest(*args, fillvalue=fillvalue)
-                
+        return list(set(sequences))          
+    
     def insert_seq(self, sequences):
         sequence_field_name = self.table_names["sequence_field_name"]
         sequence_table_name = self.table_names["sequence_table_name"]
-        group_seq = self.grouper(sequences, 10000)
-        query_tmpl = "INSERT INTO %s (%s) VALUES (COMPRESS(%s))"
-        val_tmpl   = "'%s'"
-        
-#         TODO: combine and run once with begin end
-        for group in group_seq:
-            seq_part = ')), (COMPRESS('.join([val_tmpl % key for key in group])
-            my_sql = query_tmpl % (sequence_table_name, sequence_field_name, seq_part)
-            my_sql = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (sequence_field_name, sequence_field_name)
-    #       print "MMM my_sql = %s" % my_sql
-            seq_ins_info = self.my_conn.execute_no_fetch(my_sql)
-            self.utils.print_both("seq_insert info: %s\n" % (seq_ins_info))
-#             self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
-        return seq_ins_info
+        val_tmpl   = "(COMPRESS('%s'))"
+        all_seq = set([val_tmpl % seq for seq in sequences])
+        my_sql_1 = "INSERT INTO %s (%s) VALUES " % (sequence_table_name, sequence_field_name)
+        my_sql_2 = " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (sequence_field_name, sequence_field_name)      
+        query_tmpl = my_sql_1 + " %s " + my_sql_2
+        group_vals = self.utils.grouper(all_seq, 10000)
+        logger.debug("insert sequences:")
+        self.my_conn.run_groups(group_vals, query_tmpl)   
+
         
     def get_seq_id_dict(self, sequences):
 #         TODO: ONCE IN CLASS
@@ -915,7 +907,7 @@ class Seq:
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
         try:
-            group_seq = self.grouper(sequences, 10000)
+            group_seq = self.utils.grouper(sequences, 10000)
             for group in group_seq:
                 seq_part = '), COMPRESS('.join([val_tmpl % key for key in group])    
                 my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
@@ -1009,8 +1001,8 @@ class Seq:
                    refhvr_ids = VALUES(refhvr_ids);
                """  % (taxonomy_id)
         query_tmpl = my_sql_1 + "%s " + my_sql_2
-        insert_info = self.my_conn.run_groups(group_vals, query_tmpl)   
-        logger.debug("sequence_uniq_info_ill insert = %s" % insert_info)
+        logger.debug("insert sequence_uniq_info_ill:")
+        self.my_conn.run_groups(group_vals, query_tmpl)   
                                  
 
         
