@@ -406,12 +406,12 @@ class dbUpload:
         if self.db_server == "vamps2":
             project_id = self.get_id('project', content_row.project)
             my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description, project_id, created_at) VALUES
-                ('%s', '', %s, NOW());
-                """ % (content_row.dataset, project_id)
+                ('%s', '%s', %s, NOW());
+                """ % (content_row.dataset, content_row.dataset_description, project_id)
         elif self.db_server == "env454":      
             my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
-                ('%s', '');
-                """ % (content_row.dataset)
+                ('%s', '%s');
+                """ % (content_row.dataset, content_row.dataset_description)
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
     
     def insert_run_info(self, content_row):
