@@ -187,6 +187,7 @@ class dbUpload:
     def __init__(self, runobj = None, db_server = None):
         if db_server is None:
             db_server = "env454"
+
         self.db_server   = db_server 
         self.utils       = PipelneUtils()
         self.runobj      = runobj
@@ -211,9 +212,6 @@ class dbUpload:
         self.analysis_dir = self.dirs.check_dir(self.dirs.analysis_dir)
         self.fasta_dir    = self.dirs.check_dir(self.dirs.reads_overlap_dir)
         self.gast_dir     = self.dirs.check_dir(self.dirs.gast_dir)
-
-        host_name     = runobj.database_host
-        database_name = runobj.database_name
         
         self.filenames   = []
         # logger.error("self.utils.is_local() LLL1 db upload")
@@ -243,7 +241,7 @@ class dbUpload:
 
         self.taxonomy = Taxonomy(self.my_conn)
         self.seq      = Seq(self.taxonomy, self.table_names)
-        
+      
         self.gast_dict = {}
         self.silva_taxonomy_info_per_seq_list = []
         
@@ -251,18 +249,15 @@ class dbUpload:
         self.dirs.delete_file(self.unique_file_counts)
         self.taxonomies = set()
         self.run_id      = None
-#        self.nonchimeras_suffix = ".nonchimeric.fa"
         self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
         self.fa_unique_suffix   = ".fa." + C.unique_suffix #.fa.unique
         self.v6_unique_suffix   = "MERGED_V6_PRIMERS_REMOVED." + C.unique_suffix
         self.suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
-
-#         self.merge_unique_suffix = "." + C.filtered_suffix + "." + C.unique_suffix #.MERGED-MAX-MISMATCH-3.unique
         self.suffix_used        = ""
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
         self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
-
-#        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
+        if db_server == "vamps2":
+            self.put_run_info()
    
    
     def get_fasta_file_names(self):
