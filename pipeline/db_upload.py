@@ -350,7 +350,9 @@ class dbUpload:
     def insert_bulk_data(self, key, values):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
         val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
+        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % v for v in values]))
+        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (key, key)      
+ 
         self.my_conn.execute_no_fetch(my_sql)
     
     def get_contact_v_info(self):
