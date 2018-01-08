@@ -364,11 +364,7 @@ class dbUpload:
         self.my_conn.execute_no_fetch(my_sql)        
         
     def get_contact_id(self, data_owner):
-#                 self.table_names_dict = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence", 
-#                                              "sequence_pdr_info_table_name": "sequence_pdr_info", "contact": "user", "username": "username"}, 
         my_sql = """SELECT %s_id FROM %s WHERE %s = '%s';""" % (self.table_names["contact"], self.table_names["contact"], self.table_names["username"], data_owner)
-# /* 3:09:03 PM local_ruby vamps2 */ SELECT contact_id FROM `user` WHERE `username` = 'lloyd' LIMIT 0,500;
-
         
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
@@ -382,19 +378,38 @@ class dbUpload:
     def insert_project(self, content_row, contact_id):
         if (not contact_id):
             self.utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")        
-        my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
-        ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
-        """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
+
+        if self.db_server == "vamps2":
+            my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, owner_user_id, created_at) VALUES
+                ('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW());
+                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
+        elif self.db_server == "env454":      
+            my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
+                ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
+                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
+#         TODO: change! what if we have more self.db_server?
+        
+        
         self.utils.print_both(my_sql)
         self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
         """
         TODO: get dataset_description
+                run_key_id      = self.get_id('run_key',      content_row.run_key)
+
+        dataset, dataset_description, project_id, created_at, updated_at, 
         """        
-        my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
-        ('%s', '');
-        """ % (content_row.dataset)
+        
+        if self.db_server == "vamps2":
+            project_id = self.get_id('project', content_row.project)
+            my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description, project_id, created_at) VALUES
+                ('%s', '', %s, NOW());
+                """ % (content_row.dataset, project_id)
+        elif self.db_server == "env454":      
+            my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
+                ('%s', '');
+                """ % (content_row.dataset)
         self.my_conn.execute_no_fetch(my_sql)
     
     def insert_run_info(self, content_row):
