@@ -216,8 +216,10 @@ class dbUpload:
         self.filenames   = []
         # logger.error("self.utils.is_local() LLL1 db upload")
         # logger.error(self.utils.is_local())
-        self.table_names_dict = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence",  "sequence_pdr_info_table_name": "sequence_pdr_info"}, 
-                                 "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill",  "sequence_pdr_info_table_name": "sequence_pdr_info_ill"}}
+        self.table_names_dict = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence", 
+                                             "sequence_pdr_info_table_name": "sequence_pdr_info", "contact": "user", "username": "username"}, 
+                                 "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill", 
+                                             "sequence_pdr_info_table_name": "sequence_pdr_info_ill", "contact": "contact", "username": "vamps_name"}}
 
         self.db_cnf = {
             "vamps2": {"local":      {"host": "localhost", "db": "vamps2"},
@@ -338,7 +340,7 @@ class dbUpload:
 
         for key in self.runobj.samples:
             value = self.runobj.samples[key]
-            self.get_contact_v_info()
+#             self.get_contact_v_info()
             contact_id = self.get_contact_id(value.data_owner)
             self.insert_project(value, contact_id)
             self.insert_dataset(value) 
@@ -362,7 +364,12 @@ class dbUpload:
         self.my_conn.execute_no_fetch(my_sql)        
         
     def get_contact_id(self, data_owner):
-        my_sql = """SELECT contact_id FROM contact WHERE vamps_name = '%s';""" % (data_owner)
+#                 self.table_names_dict = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence", 
+#                                              "sequence_pdr_info_table_name": "sequence_pdr_info", "contact": "user", "username": "username"}, 
+        my_sql = """SELECT %s_id FROM %s WHERE %s = '%s';""" % (self.table_names["contact"], self.table_names["contact"], self.table_names["username"], data_owner)
+# /* 3:09:03 PM local_ruby vamps2 */ SELECT contact_id FROM `user` WHERE `username` = 'lloyd' LIMIT 0,500;
+
+        
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])        
