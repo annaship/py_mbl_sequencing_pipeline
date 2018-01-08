@@ -353,7 +353,7 @@ class dbUpload:
         my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % v for v in values]))
         my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (key, key)      
  
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
     
     def get_contact_v_info(self):
         """
@@ -363,7 +363,7 @@ class dbUpload:
     def insert_test_contact(self):
         my_sql = '''INSERT IGNORE INTO contact (contact, email, institution, vamps_name, first_name, last_name)
                 VALUES ("guest user", "guest@guest.com", "guest institution", "guest", "guest", "user");'''
-        self.my_conn.execute_no_fetch(my_sql)        
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)        
         
     def get_contact_id(self, data_owner):
         my_sql = """SELECT %s_id FROM %s WHERE %s = '%s';""" % (self.table_names["contact"], self.table_names["contact"], self.table_names["username"], data_owner)
@@ -375,7 +375,7 @@ class dbUpload:
     def insert_rundate(self):
         my_sql = """INSERT IGNORE INTO run (run, run_prefix, platform) VALUES
             ('%s', 'illumin', '%s');""" % (self.rundate, self.runobj.platform)
-        self.run_id = self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
         
     def insert_project(self, content_row, contact_id):
         if (not contact_id):
@@ -393,7 +393,7 @@ class dbUpload:
         
         
         self.utils.print_both(my_sql)
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
         """
@@ -412,7 +412,7 @@ class dbUpload:
             my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
                 ('%s', '');
                 """ % (content_row.dataset)
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
     
     def insert_run_info(self, content_row):
         run_key_id      = self.get_id('run_key',      content_row.run_key)
@@ -440,7 +440,7 @@ class dbUpload:
         
         self.utils.print_both("insert run_info sql = %s" % my_sql)
         
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def insert_primer(self):
         pass
@@ -465,7 +465,7 @@ class dbUpload:
             my_sql = my_sql1 + my_sql3
         elif (projects != "") and (datasets != ""):
             my_sql = my_sql1 + my_sql2 + my_sql3
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
         my_sql1 = """DELETE FROM run_info_ill
@@ -486,7 +486,7 @@ class dbUpload:
             my_sql = my_sql1 + my_sql3
         elif (projects != "") and (datasets != ""):
             my_sql = my_sql1 + my_sql2 + my_sql3
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
 
     def del_sequence_uniq_info(self):
@@ -494,7 +494,7 @@ class dbUpload:
                     USING sequence_uniq_info_ill 
                     LEFT JOIN %s USING(%s_id) 
                     WHERE %s_id is NULL;""" % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"])
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequences(self):
         my_sql = """DELETE FROM %s 
@@ -502,7 +502,7 @@ class dbUpload:
                     LEFT JOIN %s USING(%s_id) 
                     WHERE %s_id IS NULL;
                 """ % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"])
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
         
     def count_sequence_pdr_info2(self):    
         results = {}
