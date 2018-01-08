@@ -381,7 +381,15 @@ class dbUpload:
         if (not contact_id):
             self.utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")        
 
+
         if self.db_server == "vamps2":
+            fields = "project, title, project_description, rev_project_name, funding, owner_user_id, created_at"
+            vals = "('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())" % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
+            group_vals = self.utils.grouper([vals], 1)
+            query_tmpl = self.my_conn.make_sql_for_groups("project", fields)
+            self.my_conn.run_groups(group_vals, query_tmpl)   
+
+            
             my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, owner_user_id, created_at) VALUES
                 ('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW());
                 """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
@@ -390,6 +398,38 @@ class dbUpload:
                 ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
                 """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
 #         TODO: change! what if we have more self.db_server?
+        
+        '''
+        group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
+        sequence_table_name = self.table_names["sequence_table_name"] 
+
+        if (self.db_server == "vamps2"):
+            my_sql_1 = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES 
+                    """ % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
+            my_sql_2 = """ ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count), classifier_id = VALUES(classifier_id);
+                    """ % (sequence_table_name, sequence_table_name)
+        elif (self.db_server == "env454"):            
+            my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
+            my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
+
+        query_tmpl = my_sql_1 + "%s " + my_sql_2
+        logger.debug("insert sequence_pdr_info:")
+        self.my_conn.run_groups(group_vals, query_tmpl)   
+        '''
+        
+        """
+        make_sql_for_groups(self, table_name, fields):  
+        field_list = fields.split(",")          
+        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields)
+        my_sql_2 =  " ON DUPLICATE KEY UPDATE "
+        for field_name in field_list[:-1]:
+            my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
+        my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
+        return my_sql_1 + " %s " + my_sql_2  
+        
+        
+        """
+        
         
         
         self.utils.print_both(my_sql)
@@ -438,9 +478,10 @@ class dbUpload:
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
         
-        self.utils.print_both("insert run_info sql = %s" % my_sql)
+#         self.utils.print_both("insert run_info sql = %s" % my_sql)
         
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
+        self.utils.print_both("insert run_info: %s" % cursor_info)
 
     def insert_primer(self):
         pass
@@ -664,7 +705,6 @@ class dbUpload:
             self.seq.insert_sequence_uniq_info_ill(self.gast_dict)  
             
     def insert_silva_taxonomy_info_per_seq(self):
-        
         
         for fasta_id, gast_entry in self.gast_dict.items():
             
