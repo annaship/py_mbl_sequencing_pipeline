@@ -551,26 +551,32 @@ class dbUpload:
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
         
     def count_sequence_pdr_info2(self):    
-        dataset_cnt_dict = {}
-        run_datasets = [x.dataset for x in self.runobj.samples.values()]
-#         curr_datasets = [dataset for sample.dataset in self.runobj.samples]
-#        self.all_dataset_ids[self.runobj.samples.dataset]
-        for dataset in run_datasets:
-            dataset_id = int(self.utils.find_val_in_nested_list(self.all_dataset_ids, dataset)[0])
-            my_sql = """SELECT count(sequence_pdr_info_id) 
-                        FROM sequence_pdr_info 
-                          JOIN dataset using(dataset_id) 
-                          WHERE dataset_id = %s""" % dataset_id
+        results = {}
+        primer_suites = self.get_primer_suite_name()
+        lane          = self.get_lane().pop()
+        
+        for primer_suite in primer_suites:
+            primer_suite_lane = primer_suite + ", lane " + lane
+            my_sql = """SELECT count(%s_id) 
+                        FROM %s 
+                          join dataset using(dataset_id)
+                          JOIN run_info_ill USING(dataset_id) 
+                          JOIN run USING(run_id) 
+                          JOIN primer_suite using(primer_suite_id) 
+                        WHERE run = '%s' 
+                          AND lane = %s
+                          AND primer_suite = '%s';
+                          """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], self.rundate, lane, primer_suite)
             res    = self.my_conn.execute_fetch_select(my_sql)
             try:
                 if (int(res[0][0]) > 0):
-                    dataset_cnt_dict[dataset_id] = int(res[0][0])
+                    results[primer_suite_lane] = int(res[0][0])
 #                     results.append(int(res[0][0]))
             except Exception:
-                self.utils.print_both(("Unexpected error from 'count_sequence_pdr_info2':", sys.exc_info()[0]))
+                self.utils.print_both("Unexpected error from 'count_sequence_pdr_info_ill':", sys.exc_info()[0])
                 raise                
-        return dataset_cnt_dict
-
+        return results
+        
     def count_sequence_pdr_info_ill(self):
         results = {}
         primer_suites = self.get_primer_suite_name()
