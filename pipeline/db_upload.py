@@ -256,10 +256,10 @@ class dbUpload:
         self.v6_unique_suffix   = "MERGED_V6_PRIMERS_REMOVED." + C.unique_suffix
         self.suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
         self.suffix_used        = ""
-        self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
         self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
         if db_server == "vamps2":
             self.put_run_info()
+        self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
    
    
     def get_fasta_file_names(self):
@@ -550,59 +550,64 @@ class dbUpload:
                 """ % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"])
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
         
-    def count_sequence_pdr_info2(self):    
+    def count_sequence_pdr_info(self):    
         results = {}
         primer_suites = self.get_primer_suite_name()
         lane          = self.get_lane().pop()
+        
+        if (self.db_server == "vamps2"):
+            join_add = """ JOIN dataset using(dataset_id)
+                       JOIN run_info_ill USING(dataset_id) """
+        elif (self.db_server == "env454"):
+            join_add = """ JOIN run_info_ill USING(run_info_ill_id) """
         
         for primer_suite in primer_suites:
             primer_suite_lane = primer_suite + ", lane " + lane
             my_sql = """SELECT count(%s_id) 
                         FROM %s 
-                          join dataset using(dataset_id)
-                          JOIN run_info_ill USING(dataset_id) 
+                          %s 
                           JOIN run USING(run_id) 
                           JOIN primer_suite using(primer_suite_id) 
                         WHERE run = '%s' 
                           AND lane = %s
                           AND primer_suite = '%s';
-                          """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], self.rundate, lane, primer_suite)
+                          """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], join_add, self.rundate, lane, primer_suite)
             res    = self.my_conn.execute_fetch_select(my_sql)
             try:
                 if (int(res[0][0]) > 0):
                     results[primer_suite_lane] = int(res[0][0])
 #                     results.append(int(res[0][0]))
             except Exception:
-                self.utils.print_both("Unexpected error from 'count_sequence_pdr_info_ill':", sys.exc_info()[0])
+                self.utils.print_both("Unexpected error from 'count_sequence_pdr_info':", sys.exc_info()[0])
                 raise                
         return results
-        
-    def count_sequence_pdr_info_ill(self):
-        results = {}
-        primer_suites = self.get_primer_suite_name()
-        lane          = self.get_lane().pop()
-        for primer_suite in primer_suites:
-            primer_suite_lane = primer_suite + ", lane " + lane
-            my_sql = """SELECT count(%s_id) 
-                        FROM %s 
-                          JOIN run_info_ill USING(run_info_ill_id) 
-                          JOIN run USING(run_id) 
-                          JOIN primer_suite using(primer_suite_id) 
-                        WHERE run = '%s' 
-                          AND lane = %s
-                          AND primer_suite = '%s';
-                          """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], self.rundate, lane, primer_suite)
-            res    = self.my_conn.execute_fetch_select(my_sql)
-            try:
-                if (int(res[0][0]) > 0):
-                    results[primer_suite_lane] = int(res[0][0])
-#                     results.append(int(res[0][0]))
-            except Exception:
-                self.utils.print_both("Unexpected error from 'count_sequence_pdr_info_ill':", sys.exc_info()[0])
-                raise                
-        return results
-#             int(res[0][0])   
-    
+#         
+#     def count_sequence_pdr_info_ill(self):
+#         results = {}
+#         primer_suites = self.get_primer_suite_name()
+#         lane          = self.get_lane().pop()
+#         for primer_suite in primer_suites:
+#             primer_suite_lane = primer_suite + ", lane " + lane
+#             my_sql = """SELECT count(%s_id) 
+#                         FROM %s 
+#                           JOIN run_info_ill USING(run_info_ill_id) 
+#                           JOIN run USING(run_id) 
+#                           JOIN primer_suite using(primer_suite_id) 
+#                         WHERE run = '%s' 
+#                           AND lane = %s
+#                           AND primer_suite = '%s';
+#                           """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], self.rundate, lane, primer_suite)
+#             res    = self.my_conn.execute_fetch_select(my_sql)
+#             try:
+#                 if (int(res[0][0]) > 0):
+#                     results[primer_suite_lane] = int(res[0][0])
+# #                     results.append(int(res[0][0]))
+#             except Exception:
+#                 self.utils.print_both("Unexpected error from 'count_sequence_pdr_info_ill':", sys.exc_info()[0])
+#                 raise                
+#         return results
+# #             int(res[0][0])   
+#     
     def get_primer_suite_name(self):
         primer_suites = [v.primer_suite for v in self.runobj.samples.itervalues()]
         return list(set(primer_suites))
@@ -654,10 +659,10 @@ class dbUpload:
 
 
     def check_seq_upload(self):
-        if (self.db_server == "vamps2"):
-            file_seq_db_counts   = self.count_sequence_pdr_info2()
-        elif (self.db_server == "env454"):
-            file_seq_db_counts   = self.count_sequence_pdr_info_ill()
+#         if (self.db_server == "vamps2"):
+#             file_seq_db_counts   = self.count_sequence_pdr_info2()
+#         elif (self.db_server == "env454"):
+        file_seq_db_counts   = self.count_sequence_pdr_info()
 #        per primer_suite_lane
 #         file_seq_orig_count = self.count_seq_from_file()
         file_seq_orig_count = self.count_seq_from_files_grep()

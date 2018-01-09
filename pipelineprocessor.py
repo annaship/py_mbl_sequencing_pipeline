@@ -470,7 +470,7 @@ def env454upload_main(runobj, full_upload):
     whole_start     = time.time()
 
     my_env454upload = dbUpload(runobj, db_server="vamps2")
-#     my_env454upload = dbUpload(runobj, db_server="env454")    
+#     my_env454upload = dbUpload(runobj, db_server="env454")
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
@@ -491,7 +491,7 @@ def env454upload_main(runobj, full_upload):
         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 
         get_and_up_seq_time_end = (time.time() - get_and_up_seq_time)
-        logger.debug("get_and_up_seq_time = %s" % get_and_up_seq_time_end)
+        logger.debug("get_and_up_seq took %s" % get_and_up_seq_time_end)
         
         start_c = time.time()
         total_seq = total_seq + env454upload_all_but_seq(my_env454upload, filename, full_upload)
