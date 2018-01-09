@@ -342,6 +342,11 @@ class dbUpload:
             value = self.runobj.samples[key]
 #             self.get_contact_v_info()
             contact_id = self.get_contact_id(value.data_owner)
+            if (not contact_id):
+                logger.error("""ERROR: There is no such contact info on %s, 
+                    please check if the user %s has an account on VAMPS""" % (self.db_server, value.data_owner))
+                sys.exit("""ERROR: There is no such contact info on %s, 
+                    please check if the user %s has an account on VAMPS""" % (self.db_server, value.data_owner))
             self.insert_project(value, contact_id)
             self.insert_dataset(value) 
 
@@ -381,10 +386,10 @@ class dbUpload:
         if (not contact_id):
             self.utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")        
 
-
         if self.db_server == "vamps2":
             fields = "project, title, project_description, rev_project_name, funding, owner_user_id, created_at"
-            vals = "('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())" % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
+            vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
+            """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
             group_vals = self.utils.grouper([vals], 1)
             query_tmpl = self.my_conn.make_sql_for_groups("project", fields)
             self.my_conn.run_groups(group_vals, query_tmpl)   
