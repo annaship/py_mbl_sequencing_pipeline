@@ -187,6 +187,7 @@ class dbUpload:
     def __init__(self, runobj = None, db_server = None):
         if db_server is None:
             db_server = "env454"
+
         self.db_server   = db_server 
         self.utils       = PipelneUtils()
         self.runobj      = runobj
@@ -211,15 +212,14 @@ class dbUpload:
         self.analysis_dir = self.dirs.check_dir(self.dirs.analysis_dir)
         self.fasta_dir    = self.dirs.check_dir(self.dirs.reads_overlap_dir)
         self.gast_dir     = self.dirs.check_dir(self.dirs.gast_dir)
-
-        host_name     = runobj.database_host
-        database_name = runobj.database_name
         
         self.filenames   = []
         # logger.error("self.utils.is_local() LLL1 db upload")
         # logger.error(self.utils.is_local())
-        self.table_names_dict = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence",  "sequence_pdr_info_table_name": "sequence_pdr_info"}, 
-                                 "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill",  "sequence_pdr_info_table_name": "sequence_pdr_info_ill"}}
+        self.table_names_dict = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence", 
+                                             "sequence_pdr_info_table_name": "sequence_pdr_info", "contact": "user", "username": "username"}, 
+                                 "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill", 
+                                             "sequence_pdr_info_table_name": "sequence_pdr_info_ill", "contact": "contact", "username": "vamps_name"}}
 
         self.db_cnf = {
             "vamps2": {"local":      {"host": "localhost", "db": "vamps2"},
@@ -243,7 +243,7 @@ class dbUpload:
 
         self.taxonomy = Taxonomy(self.my_conn)
         self.seq      = Seq(self.taxonomy, self.table_names)
-        
+      
         self.gast_dict = {}
         self.silva_taxonomy_info_per_seq_list = []
         
@@ -251,18 +251,15 @@ class dbUpload:
         self.dirs.delete_file(self.unique_file_counts)
         self.taxonomies = set()
         self.run_id      = None
-#        self.nonchimeras_suffix = ".nonchimeric.fa"
         self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
         self.fa_unique_suffix   = ".fa." + C.unique_suffix #.fa.unique
         self.v6_unique_suffix   = "MERGED_V6_PRIMERS_REMOVED." + C.unique_suffix
         self.suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
-
-#         self.merge_unique_suffix = "." + C.filtered_suffix + "." + C.unique_suffix #.MERGED-MAX-MISMATCH-3.unique
         self.suffix_used        = ""
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
         self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
-
-#        self.refdb_dir = '/xraid2-2/vampsweb/blastdbs/'
+        if db_server == "vamps2":
+            self.put_run_info()
    
    
     def get_fasta_file_names(self):
@@ -343,7 +340,7 @@ class dbUpload:
 
         for key in self.runobj.samples:
             value = self.runobj.samples[key]
-            self.get_contact_v_info()
+#             self.get_contact_v_info()
             contact_id = self.get_contact_id(value.data_owner)
             self.insert_project(value, contact_id)
             self.insert_dataset(value) 
@@ -353,8 +350,10 @@ class dbUpload:
     def insert_bulk_data(self, key, values):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
         val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % key for key in values]))
-        self.my_conn.execute_no_fetch(my_sql)
+        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % v for v in values]))
+        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (key, key)      
+ 
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
     
     def get_contact_v_info(self):
         """
@@ -364,10 +363,11 @@ class dbUpload:
     def insert_test_contact(self):
         my_sql = '''INSERT IGNORE INTO contact (contact, email, institution, vamps_name, first_name, last_name)
                 VALUES ("guest user", "guest@guest.com", "guest institution", "guest", "guest", "user");'''
-        self.my_conn.execute_no_fetch(my_sql)        
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)        
         
     def get_contact_id(self, data_owner):
-        my_sql = """SELECT contact_id FROM contact WHERE vamps_name = '%s';""" % (data_owner)
+        my_sql = """SELECT %s_id FROM %s WHERE %s = '%s';""" % (self.table_names["contact"], self.table_names["contact"], self.table_names["username"], data_owner)
+        
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])        
@@ -375,25 +375,84 @@ class dbUpload:
     def insert_rundate(self):
         my_sql = """INSERT IGNORE INTO run (run, run_prefix, platform) VALUES
             ('%s', 'illumin', '%s');""" % (self.rundate, self.runobj.platform)
-        self.run_id = self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
         
     def insert_project(self, content_row, contact_id):
         if (not contact_id):
             self.utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")        
-        my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
-        ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
-        """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
+
+
+        if self.db_server == "vamps2":
+            fields = "project, title, project_description, rev_project_name, funding, owner_user_id, created_at"
+            vals = "('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())" % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
+            group_vals = self.utils.grouper([vals], 1)
+            query_tmpl = self.my_conn.make_sql_for_groups("project", fields)
+            self.my_conn.run_groups(group_vals, query_tmpl)   
+
+            
+            my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, owner_user_id, created_at) VALUES
+                ('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW());
+                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
+        elif self.db_server == "env454":      
+            my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
+                ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
+                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
+#         TODO: change! what if we have more self.db_server?
+        
+        '''
+        group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
+        sequence_table_name = self.table_names["sequence_table_name"] 
+
+        if (self.db_server == "vamps2"):
+            my_sql_1 = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES 
+                    """ % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
+            my_sql_2 = """ ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count), classifier_id = VALUES(classifier_id);
+                    """ % (sequence_table_name, sequence_table_name)
+        elif (self.db_server == "env454"):            
+            my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
+            my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
+
+        query_tmpl = my_sql_1 + "%s " + my_sql_2
+        logger.debug("insert sequence_pdr_info:")
+        self.my_conn.run_groups(group_vals, query_tmpl)   
+        '''
+        
+        """
+        make_sql_for_groups(self, table_name, fields):  
+        field_list = fields.split(",")          
+        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields)
+        my_sql_2 =  " ON DUPLICATE KEY UPDATE "
+        for field_name in field_list[:-1]:
+            my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
+        my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
+        return my_sql_1 + " %s " + my_sql_2  
+        
+        
+        """
+        
+        
+        
         self.utils.print_both(my_sql)
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
         """
         TODO: get dataset_description
+                run_key_id      = self.get_id('run_key',      content_row.run_key)
+
+        dataset, dataset_description, project_id, created_at, updated_at, 
         """        
-        my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
-        ('%s', '');
-        """ % (content_row.dataset)
-        self.my_conn.execute_no_fetch(my_sql)
+        
+        if self.db_server == "vamps2":
+            project_id = self.get_id('project', content_row.project)
+            my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description, project_id, created_at) VALUES
+                ('%s', '%s', %s, NOW());
+                """ % (content_row.dataset, content_row.dataset_description, project_id)
+        elif self.db_server == "env454":      
+            my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
+                ('%s', '%s');
+                """ % (content_row.dataset, content_row.dataset_description)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
     
     def insert_run_info(self, content_row):
         run_key_id      = self.get_id('run_key',      content_row.run_key)
@@ -419,9 +478,10 @@ class dbUpload:
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
         
-        self.utils.print_both("insert run_info sql = %s" % my_sql)
+#         self.utils.print_both("insert run_info sql = %s" % my_sql)
         
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
+        self.utils.print_both("insert run_info: %s" % cursor_info)
 
     def insert_primer(self):
         pass
@@ -446,7 +506,7 @@ class dbUpload:
             my_sql = my_sql1 + my_sql3
         elif (projects != "") and (datasets != ""):
             my_sql = my_sql1 + my_sql2 + my_sql3
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
         my_sql1 = """DELETE FROM run_info_ill
@@ -467,7 +527,7 @@ class dbUpload:
             my_sql = my_sql1 + my_sql3
         elif (projects != "") and (datasets != ""):
             my_sql = my_sql1 + my_sql2 + my_sql3
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
 
     def del_sequence_uniq_info(self):
@@ -475,7 +535,7 @@ class dbUpload:
                     USING sequence_uniq_info_ill 
                     LEFT JOIN %s USING(%s_id) 
                     WHERE %s_id is NULL;""" % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"])
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def del_sequences(self):
         my_sql = """DELETE FROM %s 
@@ -483,7 +543,7 @@ class dbUpload:
                     LEFT JOIN %s USING(%s_id) 
                     WHERE %s_id IS NULL;
                 """ % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"])
-        self.my_conn.execute_no_fetch(my_sql)
+        cursor_info = self.my_conn.execute_no_fetch(my_sql)
         
     def count_sequence_pdr_info2(self):    
         dataset_cnt_dict = {}
@@ -645,7 +705,6 @@ class dbUpload:
             self.seq.insert_sequence_uniq_info_ill(self.gast_dict)  
             
     def insert_silva_taxonomy_info_per_seq(self):
-        
         
         for fasta_id, gast_entry in self.gast_dict.items():
             
