@@ -649,15 +649,17 @@ class dbUpload:
             self.taxonomy.insert_split_taxonomy()
         elif (self.db_server == "env454"):
             self.taxonomy.insert_whole_taxonomy()
-            self.taxonomy.get_taxonomy_id_dict()
-
+            self.taxonomy.get_taxonomy_id_dict()      
+    
     def prepare_pdr_info_upload_query(self, run_info_ill_id):
         all_insert_pdr_info_vals = []
-        for fasta_id, seq in self.seq.fasta_dict.items():
-            if (self.db_server == "vamps2"):
-                all_insert_pdr_info_vals.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq, self.all_dataset_run_info_dict))
-            elif (self.db_server == "env454"):
-                all_insert_pdr_info_vals.append(self.seq.insert_pdr_info_vals(run_info_ill_id, fasta_id, seq))
+#         for fasta_id, seq in self.seq.fasta_dict.items():
+#             if (self.db_server == "vamps2"):
+#                 all_insert_pdr_info_vals.append(self.seq.insert_pdr_info2(run_info_ill_id, fasta_id, seq, self.all_dataset_run_info_dict))
+#             elif (self.db_server == "env454"):
+#                 all_insert_pdr_info_vals.append(self.seq.insert_pdr_info_vals(run_info_ill_id, fasta_id, seq))
+        all_insert_pdr_info_vals = self.seq.get_all_insert_pdr_info_vals(run_info_ill_id, self.all_dataset_run_info_dict, self.db_server)
+
 
         group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
         sequence_table_name = self.table_names["sequence_table_name"]
@@ -1005,35 +1007,56 @@ class Seq:
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])
+        
+    def get_all_insert_pdr_info_vals(self, run_info_ill_id, all_dataset_run_info_dict, db_server):
+        all_insert_pdr_info_vals = []
+        for fasta_id, seq in self.fasta_dict.items():
+            if (not run_info_ill_id):
+                self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
+            seq_upper = seq.upper()
+            sequence_id = self.seq_id_dict[seq_upper]
+        
+            seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
+        
+            if (db_server == "vamps2"):       
+                dataset_id = all_dataset_run_info_dict[run_info_ill_id]
+                vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+            elif (db_server == "env454"):
+                vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
+         
+            all_insert_pdr_info_vals.append(vals)
+        
+        return all_insert_pdr_info_vals
+          
 
-    def insert_pdr_info_vals(self, run_info_ill_id, fasta_id, seq):
-        if (not run_info_ill_id):
-            self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
-
-        # ------- insert sequence info per run/project/dataset --------
-        seq_upper = seq.upper()
-        sequence_id = self.seq_id_dict[seq_upper]
-
-        seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
-        vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
-
-        return vals
-
-#     TODO: combine with insert_pdr_info
-    def insert_pdr_info2(self, run_info_ill_id, fasta_id, seq, all_dataset_run_info_dict):
-#         res_id = ""
-        if (not run_info_ill_id):
-            self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
-
-        # ------- insert sequence info per run/project/dataset --------
-        seq_upper = seq.upper()
-        sequence_id = self.seq_id_dict[seq_upper]
-
-        seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
-
-        dataset_id = all_dataset_run_info_dict[run_info_ill_id]
-        vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
-        return vals
+#     def insert_pdr_info_vals(self, run_info_ill_id, fasta_id, seq):
+#         if (not run_info_ill_id):
+#             self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
+# 
+#         # ------- insert sequence info per run/project/dataset --------
+#         seq_upper = seq.upper()
+#         sequence_id = self.seq_id_dict[seq_upper]
+# 
+#         seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
+#         vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
+# 
+#         return vals
+# 
+# #     TODO: combine with insert_pdr_info
+# #     def insert_pdr_info2(self, run_info_ill_id, fasta_id, seq, all_dataset_run_info_dict):
+# # #         res_id = ""
+# #         if (not run_info_ill_id):
+# #             self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
+# # 
+# #         # ------- insert sequence info per run/project/dataset --------
+# #         seq_upper = seq.upper()
+# #         sequence_id = self.seq_id_dict[seq_upper]
+# # 
+# #         seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
+# # 
+# #         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
+# #         vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+# #         return vals
 
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
         sequence_ids_strs = [str(i) for i in self.seq_id_dict.values()]
