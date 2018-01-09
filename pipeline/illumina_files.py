@@ -30,7 +30,7 @@ class IlluminaFiles:
     1) split fastq files from casava into files with dataset_names
     2) create ini files 
     3) process them through Meren's script
-    4) result - files dataset_lane-PERFECT_reads.fa.unique with frequencies - to process with env454upload()    
+    4) result - files dataset_lane-PERFECT_reads.fa.unique with frequencies - to process with file_to_db_upload()    
     
     """
     def __init__(self, runobj):

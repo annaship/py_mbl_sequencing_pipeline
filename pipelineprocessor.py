@@ -424,15 +424,15 @@ def illumina_files(runobj):
         
         
 def env454run_info_upload(runobj):
-# my_env454upload = dbUpload(runobj, db_server="vamps2")
+# my_file_to_db_upload = dbUpload(runobj, db_server="vamps2")
     my_read_csv = dbUpload(runobj)
     wrapped   = wrapper(my_read_csv.put_run_info)
     print "put_run_info time = %s" % timeit.timeit(wrapped, number=1) 
     
-def get_sequences(my_env454upload, filenames):
+def get_sequences(my_file_to_db_upload, filenames):
     utils = PipelneUtils()
 
-    sequences = [my_env454upload.make_seq_upper(filename) for filename in filenames]
+    sequences = [my_file_to_db_upload.make_seq_upper(filename) for filename in filenames]
     return utils.flatten_list_of_lists(sequences)
 
 def wrapper(func, *args, **kwargs):
@@ -447,17 +447,17 @@ def get_filename_base_no_suff(filename):
         filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3]).replace('MERGED', '1')
     return filename_base_no_suff 
 
-def env454upload(runobj):  
+def file_to_db_upload(runobj):  
     full_upload = True
-    env454upload_main(runobj, full_upload)
+    file_to_db_upload_main(runobj, full_upload)
 
-def env454upload_no_seq(runobj):  
+def file_to_db_upload_no_seq(runobj):  
     full_upload = False
-    env454upload_main(runobj, full_upload)
+    file_to_db_upload_main(runobj, full_upload)
 
-def env454upload_main(runobj, full_upload):
+def file_to_db_upload_main(runobj, full_upload):
     """
-    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s env454upload -l debug
+    Run: pipeline dbUpload testing -c test/data/JJH_KCK_EQP_Bv6v4.ini -s file_to_db_upload -l debug
     For now upload only Illumina data to env454 from files, assuming that all run info is already on env454 (run, run_key, dataset, project, run_info_ill tables)
     Tables:
     sequence_ill
@@ -469,24 +469,28 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-    my_env454upload = dbUpload(runobj, db_server="vamps2")
-#     my_env454upload = dbUpload(runobj, db_server="env454")
+#     my_file_to_db_upload = dbUpload(runobj, db_server="vamps2")
+    if (runobj.database_name):
+        db_server = runobj.database_name
+    else:
+        db_server = "env454"
+    my_file_to_db_upload = dbUpload(runobj, db_server = db_server)
 
 #     dbUpload(runobj)
-    filenames       = my_env454upload.get_fasta_file_names()
+    filenames       = my_file_to_db_upload.get_fasta_file_names()
     if not filenames:
-        logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_env454upload.fasta_dir)
+        logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_file_to_db_upload.fasta_dir)
 
-#     sequences = get_sequences(my_env454upload, filenames)
+#     sequences = get_sequences(my_file_to_db_upload, filenames)
     get_and_up_seq_time = time.time()
     total_seq = 0
     
     for filename in filenames:
-        my_env454upload.seq.prepare_fasta_dict(filename)
-        sequences = my_env454upload.seq.make_seq_upper(filename)
+        my_file_to_db_upload.seq.prepare_fasta_dict(filename)
+        sequences = my_file_to_db_upload.seq.make_seq_upper(filename)
         if full_upload:
-            env454upload_seq(my_env454upload, filename, sequences)
-        wrapped   = wrapper(my_env454upload.seq.get_seq_id_dict, sequences)
+            file_to_db_upload_seq(my_file_to_db_upload, filename, sequences)
+        wrapped   = wrapper(my_file_to_db_upload.seq.get_seq_id_dict, sequences)
         get_seq_id_dict_time = timeit.timeit(wrapped, number=1)
         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 
@@ -494,24 +498,24 @@ def env454upload_main(runobj, full_upload):
         logger.debug("get_and_up_seq took %s" % get_and_up_seq_time_end)
         
         start_c = time.time()
-        total_seq = total_seq + env454upload_all_but_seq(my_env454upload, filename, full_upload)
-        logger.debug("env454upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
+        total_seq = total_seq + file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload)
+        logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
-    my_env454upload.check_seq_upload()
+    my_file_to_db_upload.check_seq_upload()
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
     print "The whole upload took %s s" % whole_elapsed
   
     
-def env454upload_seq(my_env454upload, filename, sequences):
+def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
 #     for filename in filenames:
     try:
         logger.debug("\n----------------\nfilename = %s" % filename)
-#             sequences = my_env454upload.make_seq_upper(filename)
+#             sequences = my_file_to_db_upload.make_seq_upper(filename)
         if not (len(sequences)):
             logger.debug("There are 0 sequences in filename = %s" % filename)
 #             continue           
-        wrapped = wrapper(my_env454upload.seq.insert_seq, sequences)
+        wrapped = wrapper(my_file_to_db_upload.seq.insert_seq, sequences)
         insert_seq_time = timeit.timeit(wrapped, number=1)
         logger.debug("insert_seq() took %s sec to finish" % insert_seq_time)
     except:                       # catch everything
@@ -520,34 +524,34 @@ def env454upload_seq(my_env454upload, filename, sequences):
         raise                       # re-throw caught exception   
 
 # TODO: DRY
-def env454upload_all_but_seq(my_env454upload, filename, full_upload):
+def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
     total_seq = 0
 
     try:
-        my_env454upload.get_gast_result(os.path.basename(filename))
+        my_file_to_db_upload.get_gast_result(os.path.basename(filename))
         
         filename_base_no_suff = get_filename_base_no_suff(filename)
         
-        run_info_ill_id       = my_env454upload.get_run_info_ill_id(filename_base_no_suff)        
-        seq_in_file           = len(my_env454upload.seq.fasta_dict)
-        my_env454upload.put_seq_statistics_in_file(filename, seq_in_file)
+        run_info_ill_id       = my_file_to_db_upload.get_run_info_ill_id(filename_base_no_suff)        
+        seq_in_file           = len(my_file_to_db_upload.seq.fasta_dict)
+        my_file_to_db_upload.put_seq_statistics_in_file(filename, seq_in_file)
         total_seq += seq_in_file
 
         start_fasta_next = time.time()
                     
         start_prepare_pdf_info_query_time = 0
         start_prepare_pdf_info_query_time = time.time()
-        my_env454upload.prepare_pdr_info_upload_query(run_info_ill_id)
+        my_file_to_db_upload.prepare_pdr_info_upload_query(run_info_ill_id)
         prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
 
         start_prepare_taxonomy_upload_time = 0
         start_prepare_taxonomy_upload_time = time.time()
-        my_env454upload.prepare_taxonomy_upload()
+        my_file_to_db_upload.prepare_taxonomy_upload()
         prepare_taxonomy_upload_time = (time.time() - start_prepare_taxonomy_upload_time)
 
         prepare_sequence_uniq_info_time = 0
         start_prepare_sequence_uniq_info_time = time.time()
-        my_env454upload.prepare_sequence_uniq_info()
+        my_file_to_db_upload.prepare_sequence_uniq_info()
         prepare_sequence_uniq_info_time = (time.time() - start_prepare_sequence_uniq_info_time)
         
         logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
@@ -562,10 +566,10 @@ def env454upload_all_but_seq(my_env454upload, filename, full_upload):
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception             
       
-def upload_w_time(my_env454upload, sql):
+def upload_w_time(my_file_to_db_upload, sql):
     start = time.time()
-    r = my_env454upload.my_conn.cursor.execute(sql)
-    my_env454upload.my_conn.cursor.execute("COMMIT")
+    r = my_file_to_db_upload.my_conn.cursor.execute(sql)
+    my_file_to_db_upload.my_conn.cursor.execute("COMMIT")
     run_time = (time.time() - start)
     return run_time
     
