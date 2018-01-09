@@ -591,7 +591,7 @@ class dbUpload:
 #         file_seq_orig_count = self.count_seq_from_file()
         file_seq_orig_count = self.count_seq_from_files_grep()
         
-        for pr_suite, file_seq_db_count in file_seq_db_counts.iteritems():
+        for pr_suite, file_seq_db_count in file_seq_db_counts.items():
             if (file_seq_orig_count == file_seq_db_count):
                 self.utils.print_both("All sequences from files made it to the db for %s %s: %s == %s\n" % (self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
             else:
@@ -663,7 +663,7 @@ class dbUpload:
         fields = "sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id"
         query_tmpl = self.my_conn.make_sql_for_groups("silva_taxonomy_info_per_seq", fields)
         group_vals = self.utils.grouper(self.silva_taxonomy_info_per_seq_list, 10000)
-        logger.debug("insert sequence_uniq_info_ill:")
+        logger.debug("insert silva_taxonomy_info_per_seq:")
         self.my_conn.run_groups(group_vals, query_tmpl)   
             
 class Taxonomy:

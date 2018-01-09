@@ -422,7 +422,9 @@ def illumina_files(runobj):
     elapsed = (time.time() - start)
     print "illumina_files time = %s" % str(elapsed)
         
+        
 def env454run_info_upload(runobj):
+# my_env454upload = dbUpload(runobj, db_server="vamps2")
     my_read_csv = dbUpload(runobj)
     wrapped   = wrapper(my_read_csv.put_run_info)
     print "put_run_info time = %s" % timeit.timeit(wrapped, number=1) 
@@ -467,8 +469,8 @@ def env454upload_main(runobj, full_upload):
 
     whole_start     = time.time()
 
-    my_env454upload = dbUpload(runobj, db_server="vamps2")
-#     my_env454upload = dbUpload(runobj, db_server="env454")    
+#     my_env454upload = dbUpload(runobj, db_server="vamps2")
+    my_env454upload = dbUpload(runobj, db_server="env454")    
 
 #     dbUpload(runobj)
     filenames       = my_env454upload.get_fasta_file_names()
