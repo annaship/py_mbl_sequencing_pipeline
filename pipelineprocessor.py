@@ -539,25 +539,25 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
 
         start_fasta_next = time.time()
                     
-        start_prepare_pdf_info_query_time = 0
-        start_prepare_pdf_info_query_time = time.time()
-        my_file_to_db_upload.prepare_pdr_info_upload_query(run_info_ill_id)
-        prepare_pdf_info_query_time = (time.time() - start_prepare_pdf_info_query_time)
+        start_insert_pdf_info_time = 0
+        start_insert_pdf_info_time = time.time()
+        my_file_to_db_upload.insert_pdr_info(run_info_ill_id)
+        insert_pdf_info_time = (time.time() - start_insert_pdf_info_time)
 
-        start_prepare_taxonomy_upload_time = 0
-        start_prepare_taxonomy_upload_time = time.time()
-        my_file_to_db_upload.prepare_taxonomy_upload()
-        prepare_taxonomy_upload_time = (time.time() - start_prepare_taxonomy_upload_time)
+        start_insert_taxonomy_time = 0
+        start_insert_taxonomy_time = time.time()
+        my_file_to_db_upload.insert_taxonomy()
+        insert_taxonomy_time = (time.time() - start_insert_taxonomy_time)
 
-        prepare_sequence_uniq_info_time = 0
-        start_prepare_sequence_uniq_info_time = time.time()
-        my_file_to_db_upload.prepare_sequence_uniq_info()
-        prepare_sequence_uniq_info_time = (time.time() - start_prepare_sequence_uniq_info_time)
+        insert_sequence_uniq_info_time = 0
+        start_insert_sequence_uniq_info_time = time.time()
+        my_file_to_db_upload.insert_sequence_uniq_info()
+        insert_sequence_uniq_info_time = (time.time() - start_insert_sequence_uniq_info_time)
         
         logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-        logger.debug("prepare_pdf_info_query_time took %s sec to finish" % (prepare_pdf_info_query_time))
-        logger.debug("start_prepare_taxonomy_upload_time took %s sec to finish" % (prepare_taxonomy_upload_time))
-        logger.debug("prepare_sequence_uniq_info_time took %s sec to finish" % (prepare_sequence_uniq_info_time))
+        logger.debug("insert_pdf_info_query_time took %s sec to finish" % (insert_pdf_info_time))
+        logger.debug("start_insert_taxonomy_upload_time took %s sec to finish" % (insert_taxonomy_time))
+        logger.debug("insert_sequence_uniq_info_time took %s sec to finish" % (insert_sequence_uniq_info_time))
         
         return total_seq
         

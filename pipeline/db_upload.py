@@ -642,7 +642,7 @@ class dbUpload:
 #            os.remove(file_full)
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)
 
-    def prepare_taxonomy_upload(self):
+    def insert_taxonomy(self):
         # TODO: mv to Taxonomy?
         self.taxonomy.get_taxonomy_from_gast(self.gast_dict)
         if (self.db_server == "vamps2"):
@@ -651,7 +651,7 @@ class dbUpload:
             self.taxonomy.insert_whole_taxonomy()
             self.taxonomy.get_taxonomy_id_dict()      
     
-    def prepare_pdr_info_upload_query(self, run_info_ill_id):
+    def insert_pdr_info(self, run_info_ill_id):
         all_insert_pdr_info_vals = self.seq.prepare_pdr_info_values(run_info_ill_id, self.all_dataset_run_info_dict, self.db_server)
 
         group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
@@ -670,7 +670,7 @@ class dbUpload:
         logger.debug("insert sequence_pdr_info:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
-    def prepare_sequence_uniq_info(self):
+    def insert_sequence_uniq_info(self):
         if (self.db_server == "vamps2"):
             self.insert_silva_taxonomy_info_per_seq()
             self.seq.insert_sequence_uniq_info2()
