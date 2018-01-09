@@ -514,7 +514,7 @@ def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
 #             sequences = my_file_to_db_upload.make_seq_upper(filename)
         if not (len(sequences)):
             logger.debug("There are 0 sequences in filename = %s" % filename)
-#             continue           
+ 
         wrapped = wrapper(my_file_to_db_upload.seq.insert_seq, sequences)
         insert_seq_time = timeit.timeit(wrapped, number=1)
         logger.debug("insert_seq() took %s sec to finish" % insert_seq_time)
@@ -523,7 +523,6 @@ def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception   
 
-# TODO: DRY
 def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
     total_seq = 0
 
@@ -566,12 +565,12 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
         print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception             
       
-def upload_w_time(my_file_to_db_upload, sql):
-    start = time.time()
-    r = my_file_to_db_upload.my_conn.cursor.execute(sql)
-    my_file_to_db_upload.my_conn.cursor.execute("COMMIT")
-    run_time = (time.time() - start)
-    return run_time
+# def upload_w_time(my_file_to_db_upload, sql):
+#     start = time.time()
+#     r = my_file_to_db_upload.my_conn.cursor.execute(sql)
+#     my_file_to_db_upload.my_conn.cursor.execute("COMMIT")
+#     run_time = (time.time() - start)
+#     return run_time
     
 def gast(runobj):  
     
