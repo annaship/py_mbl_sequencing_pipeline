@@ -995,7 +995,7 @@ class Seq:
                 seq_part = '), COMPRESS('.join([val_tmpl % key for key in group])
                 my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
                 res        = self.my_conn.execute_fetch_select(my_sql)
-                one_seq_id_dict = dict((y, int(x)) for x, y in res)
+                one_seq_id_dict = dict((y.upper(), int(x)) for x, y in res)
                 self.seq_id_dict.update(one_seq_id_dict)
         except:
             if len(sequences) == 0:
@@ -1013,8 +1013,8 @@ class Seq:
         for fasta_id, seq in self.fasta_dict.items():
             if (not run_info_ill_id):
                 self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
-            seq_upper = seq.upper()
-            sequence_id = self.seq_id_dict[seq_upper]
+#             seq_upper = seq.upper()
+            sequence_id = self.seq_id_dict[seq]
         
             seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
         
@@ -1077,8 +1077,8 @@ class Seq:
         for fasta_id, gast in gast_dict.items():
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast
             seq  = self.fasta_dict[fasta_id]
-            seq_upper = seq.upper()
-            sequence_id = self.seq_id_dict[seq_upper]
+#             seq_upper = seq.upper()
+            sequence_id = self.seq_id_dict[seq]
             rank_id = self.taxonomy.all_rank_w_id[rank]
             if taxonomy in self.taxonomy.tax_id_dict:
                 taxonomy_id = self.taxonomy.tax_id_dict[taxonomy]
