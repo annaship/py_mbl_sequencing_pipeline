@@ -995,11 +995,11 @@ class Seq:
                 self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
             raise
 
-    def get_sequence_id(self, seq):
-        my_sql = """SELECT %s_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp;""" % (seq, self.table_names["sequence_table_name"])
-        res    = self.my_conn.execute_fetch_select(my_sql)
-        if res:
-            return int(res[0][0])
+#     def get_sequence_id(self, seq):
+#         my_sql = """SELECT %s_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp;""" % (seq, self.table_names["sequence_table_name"])
+#         res    = self.my_conn.execute_fetch_select(my_sql)
+#         if res:
+#             return int(res[0][0])
         
     def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_server):
         all_insert_pdr_info_vals = []

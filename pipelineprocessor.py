@@ -429,11 +429,11 @@ def env454run_info_upload(runobj):
     wrapped   = wrapper(my_read_csv.put_run_info)
     print "put_run_info time = %s" % timeit.timeit(wrapped, number=1) 
     
-def get_sequences(my_file_to_db_upload, filenames):
-    utils = PipelneUtils()
-
-    sequences = [my_file_to_db_upload.make_seq_upper(filename) for filename in filenames]
-    return utils.flatten_list_of_lists(sequences)
+# def get_sequences(my_file_to_db_upload, filenames):
+#     utils = PipelneUtils()
+# 
+#     sequences = [my_file_to_db_upload.make_seq_upper(filename) for filename in filenames]
+#     return utils.flatten_list_of_lists(sequences)
 
 def wrapper(func, *args, **kwargs):
     def wrapped():
