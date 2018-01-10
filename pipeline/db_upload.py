@@ -965,7 +965,7 @@ class Seq:
     def insert_seq(self, sequences):
         sequence_field_name = self.table_names["sequence_field_name"]
         sequence_table_name = self.table_names["sequence_table_name"]
-        val_tmpl   = "(COMPRESS('%s'))"
+        val_tmpl = "(COMPRESS('%s'))"
         all_seq = set([val_tmpl % seq for seq in sequences])
         my_sql_1 = "INSERT INTO %s (%s) VALUES " % (sequence_table_name, sequence_field_name)
         my_sql_2 = " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (sequence_field_name, sequence_field_name)
