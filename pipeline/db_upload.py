@@ -781,27 +781,13 @@ class Taxonomy:
             taxa_w_id          = self.my_conn.get_all_name_id(shielded_rank_name, rank + "_id", shielded_rank_name, 'WHERE %s in (%s)' % (shielded_rank_name, taxa_names))
             self.uniqued_taxa_by_rank_w_id_dict[rank] = taxa_w_id
 
-    def make_insert_values(self, matrix):
-        all_insert_vals = ""
-
-        for arr in matrix[:-1]:
-            insert_dat_vals = ', '.join("'%s'" % key for key in arr)
-            all_insert_vals += insert_dat_vals + "), ("
-
-        all_insert_vals += ', '.join("'%s'" % key for key in matrix[-1])
-
-        # self.print_array_w_title(all_insert_vals, "all_insert_vals from make_insert_values")
-        return all_insert_vals
-
-
-
     def insert_silva_taxonomy(self):
         all_insert_st_vals = []
         
         for arr in self.taxa_list_w_empty_ranks_ids_dict.values():
             insert_dat_vals = ', '.join("'%s'" % key for key in arr)
             all_insert_st_vals.append('(%s)' % insert_dat_vals)
-        
+                    
         fields = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
         query_tmpl = self.my_conn.make_sql_for_groups("silva_taxonomy", fields)
         group_vals = self.utils.grouper(all_insert_st_vals, len(all_insert_st_vals))
