@@ -796,9 +796,21 @@ class Taxonomy:
 
 
     def insert_silva_taxonomy(self):
+        all_insert_st_vals = []
+        
+        for arr in self.taxa_list_w_empty_ranks_ids_dict.values():
+            insert_dat_vals = ', '.join("'%s'" % key for key in arr)
+            all_insert_st_vals.append('(%s)' % insert_dat_vals)
+        
+#         all_insert_st_vals = self.taxa_list_w_empty_ranks_ids_dict.values()
+        fields = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
+        query_tmpl = self.my_conn.make_sql_for_groups("silva_taxonomy", fields)
+        group_vals = self.utils.grouper(all_insert_st_vals, len(all_insert_st_vals))
+        logger.debug("insert silva_taxonomy:")
+        self.my_conn.run_groups(group_vals, query_tmpl)
 
         field_list = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
-        all_insert_st_vals = self.make_insert_values(self.taxa_list_w_empty_ranks_ids_dict.values())
+        all_insert_st_vals = self.make_insert_values(self.taxa_list_w_empty_ranks_ids_dict.values())        
         sql = "INSERT %s INTO %s (%s) VALUES (%s) " % ("ignore", "silva_taxonomy", field_list, all_insert_st_vals)
         sql = sql + " ON DUPLICATE KEY UPDATE "
         duplicate_list = []
@@ -808,6 +820,9 @@ class Taxonomy:
 #         print sql
         rows_affected = self.my_conn.execute_no_fetch(sql)
         self.utils.print_array_w_title(rows_affected, "rows_affected by inserting silva_taxonomy")
+        
+
+        
 
     def silva_taxonomy(self):
         # silva_taxonomy (domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id)
