@@ -427,8 +427,21 @@ class dbUpload:
         #overlap = content_row.overlap
         #if (content_row.overlap == 'complete'):
         #    overlap = 0
+        
+        # no project_id
+        if (self.db_server == "vamps2"):
+            my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
+                                                    adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
+                                                    file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
+                                            VALUES (%s, %s, %s, %s, '%s', '%s',
+                                                    '%s', %s, '%s', '%s', '%s', %s,
+                                                    '%s', %s, %s, '%s', %s);
+        """ % (run_key_id, self.run_id, content_row.lane, dataset_id, content_row.tubelabel, content_row.barcode,
+               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
+                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
 
-        my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
+        elif (self.db_server == "env454"):
+            my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
                                                     file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',
@@ -437,6 +450,17 @@ class dbUpload:
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode,
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
+
+
+#         my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
+#                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
+#                                                     file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
+#                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',
+#                                                     '%s', %s, '%s', '%s', '%s', %s,
+#                                                     '%s', %s, %s, '%s', %s);
+#         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode,
+#                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
+#                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
 
 #         self.utils.print_both("insert run_info sql = %s" % my_sql)
 
