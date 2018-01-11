@@ -1021,21 +1021,28 @@ class Seq:
             rank_id = self.taxonomy.all_rank_w_id[rank]
             if taxonomy in self.taxonomy.tax_id_dict:
                 taxonomy_id = self.taxonomy.tax_id_dict[taxonomy]
-                vals = "(%s,  %s,  '%s',  '%s',  %s,  '%s')" % (sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
+                vals = """(%s,  %s,  '%s',  '%s',  %s,  '%s')
+                        """ % (sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
                 all_insert_sequence_uniq_info_ill_vals.append(vals)
         group_vals = self.utils.grouper(all_insert_sequence_uniq_info_ill_vals, len(all_insert_sequence_uniq_info_ill_vals))
-        my_sql_1 = """INSERT IGNORE INTO sequence_uniq_info_ill
-                            (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids)
-                            VALUES """ % (self.table_names["sequence_table_name"])
-        my_sql_2 = """ON DUPLICATE KEY UPDATE
-                   updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-                   taxonomy_id = VALUES(taxonomy_id),
-                   gast_distance = VALUES(gast_distance),
-                   refssu_count = VALUES(refssu_count),
-                   rank_id = VALUES(rank_id),
-                   refhvr_ids = VALUES(refhvr_ids);
-               """  % (taxonomy_id)
-        query_tmpl = my_sql_1 + "%s " + my_sql_2
+        
+        fields = "%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids" % (self.table_names["sequence_table_name"])
+        query_tmpl = self.my_conn.make_sql_for_groups("sequence_uniq_info_ill", fields)
+        
+
+        
+#         my_sql_1 = """INSERT IGNORE INTO sequence_uniq_info_ill
+#                             (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids)
+#                             VALUES """ % (self.table_names["sequence_table_name"])
+#         my_sql_2 = """ON DUPLICATE KEY UPDATE
+#                    updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
+#                    taxonomy_id = VALUES(taxonomy_id),
+#                    gast_distance = VALUES(gast_distance),
+#                    refssu_count = VALUES(refssu_count),
+#                    rank_id = VALUES(rank_id),
+#                    refhvr_ids = VALUES(refhvr_ids);
+#                """  % (taxonomy_id)
+#         query_tmpl = my_sql_1 + "%s " + my_sql_2
         logger.debug("insert sequence_uniq_info_ill:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
