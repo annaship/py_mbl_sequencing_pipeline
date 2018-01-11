@@ -641,7 +641,7 @@ class dbUpload:
     def insert_pdr_info(self, run_info_ill_id):
         all_insert_pdr_info_vals = self.seq.prepare_pdr_info_values(run_info_ill_id, self.all_dataset_run_info_dict, self.db_server)
 
-        group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
+        group_vals = self.utils.grouper(all_insert_pdr_info_vals, len(all_insert_pdr_info_vals))
         sequence_table_name = self.table_names["sequence_table_name"]
         if (self.db_server == "vamps2"):
             fields = "dataset_id, %s_id, seq_count, classifier_id" % sequence_table_name
@@ -677,7 +677,7 @@ class dbUpload:
             self.silva_taxonomy_info_per_seq_list.append(vals)
         fields = "sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id"
         query_tmpl = self.my_conn.make_sql_for_groups("silva_taxonomy_info_per_seq", fields)
-        group_vals = self.utils.grouper(self.silva_taxonomy_info_per_seq_list, 10000)
+        group_vals = self.utils.grouper(self.silva_taxonomy_info_per_seq_list, len(self.silva_taxonomy_info_per_seq_list))
         logger.debug("insert silva_taxonomy_info_per_seq:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
@@ -712,8 +712,6 @@ class Taxonomy:
     def insert_whole_taxonomy(self):
         val_tmpl   = "('%s')"
         all_taxonomy = set([val_tmpl % taxonomy.rstrip() for taxonomy in self.taxa_content])
-#         x = len(all_taxonomy)
-#         y = self.utils.magnitude(x)
         group_vals = self.utils.grouper(all_taxonomy, len(all_taxonomy))
         query_tmpl = self.my_conn.make_sql_for_groups("taxonomy", "taxonomy")
         logger.debug("insert taxonomy:")
@@ -953,7 +951,7 @@ class Seq:
         my_sql_1 = "INSERT INTO %s (%s) VALUES " % (sequence_table_name, sequence_field_name)
         my_sql_2 = " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (sequence_field_name, sequence_field_name)
         query_tmpl = my_sql_1 + " %s " + my_sql_2
-        group_vals = self.utils.grouper(all_seq, 10000)
+        group_vals = self.utils.grouper(all_seq, len(all_seq))
         logger.debug("insert sequences:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
@@ -966,7 +964,7 @@ class Seq:
         query_tmpl = """SELECT %s, uncompress(%s) FROM %s WHERE %s in (COMPRESS(%s))"""
         val_tmpl   = "'%s'"
         try:
-            group_seq = self.utils.grouper(sequences, 10000)
+            group_seq = self.utils.grouper(sequences, len(sequences))
             for group in group_seq:
                 seq_part = '), COMPRESS('.join([val_tmpl % key for key in group])
                 my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
@@ -1014,7 +1012,7 @@ class Seq:
         fields = "sequence_id, silva_taxonomy_info_per_seq_id"
         sequence_uniq_info_values = ["(%s,  %s)"  % (i1, i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id]
         query_tmpl = self.my_conn.make_sql_for_groups("sequence_uniq_info", fields)
-        group_vals = self.utils.grouper(sequence_uniq_info_values, 10000)
+        group_vals = self.utils.grouper(sequence_uniq_info_values, len(sequence_uniq_info_values))
         logger.debug("insert sequence_uniq_info_ill:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
@@ -1030,7 +1028,7 @@ class Seq:
                 taxonomy_id = self.taxonomy.tax_id_dict[taxonomy]
                 vals = "(%s,  %s,  '%s',  '%s',  %s,  '%s')" % (sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
                 all_insert_sequence_uniq_info_ill_vals.append(vals)
-        group_vals = self.utils.grouper(all_insert_sequence_uniq_info_ill_vals, 10000)
+        group_vals = self.utils.grouper(all_insert_sequence_uniq_info_ill_vals, len(all_insert_sequence_uniq_info_ill_vals))
         my_sql_1 = """INSERT IGNORE INTO sequence_uniq_info_ill
                             (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids)
                             VALUES """ % (self.table_names["sequence_table_name"])
