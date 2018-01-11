@@ -944,17 +944,12 @@ class Seq:
         return list(set(sequences))
 
     def insert_seq(self, sequences):
-        sequence_field_name = self.table_names["sequence_field_name"]
-        sequence_table_name = self.table_names["sequence_table_name"]
         val_tmpl = "(COMPRESS('%s'))"
         all_seq = set([val_tmpl % seq for seq in sequences])
-        my_sql_1 = "INSERT INTO %s (%s) VALUES " % (sequence_table_name, sequence_field_name)
-        my_sql_2 = " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (sequence_field_name, sequence_field_name)
-        query_tmpl = my_sql_1 + " %s " + my_sql_2
         group_vals = self.utils.grouper(all_seq, len(all_seq))
+        query_tmpl = self.my_conn.make_sql_for_groups(self.table_names["sequence_table_name"], self.table_names["sequence_field_name"])
         logger.debug("insert sequences:")
         self.my_conn.run_groups(group_vals, query_tmpl)
-
 
     def get_seq_id_dict(self, sequences):
 #         TODO: ONCE IN CLASS
