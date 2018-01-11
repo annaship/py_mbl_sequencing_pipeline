@@ -14,6 +14,7 @@ from pipeline.pipelinelogging import logger
 from subprocess import call
 import getpass
 from itertools import izip_longest
+import math
 
 base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
 
@@ -486,6 +487,9 @@ class PipelneUtils:
     def print_both(self, message):
         print message
         logger.debug(message)
+        
+    def magnitude(self, x):
+        return int(math.log10(x))        
 
 class Dirs:
     """get input dir from args, create all other dirs
