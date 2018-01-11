@@ -152,7 +152,7 @@ class MyConnection:
             val_part = join_xpr.join([key for key in group if key is not None])
             my_sql = query_tmpl % (val_part)
             insert_info = self.execute_no_fetch(my_sql)
-            logger.debug("insert_info = %s" % insert_info)
+            logger.debug("insert info = %s" % insert_info)
 
     def make_sql_for_groups(self, table_name, fields):
         field_list = fields.split(",")
@@ -368,7 +368,7 @@ class dbUpload:
     def insert_test_contact(self):
         my_sql = '''INSERT IGNORE INTO contact (contact, email, institution, vamps_name, first_name, last_name)
                 VALUES ("guest user", "guest@guest.com", "guest institution", "guest", "guest", "user");'''
-        cursor_info = self.my_conn.execute_no_fetch(my_sql)
+        return self.my_conn.execute_no_fetch(my_sql)
 
     def get_contact_id(self, data_owner):
         my_sql = """SELECT %s_id FROM %s WHERE %s = '%s';""" % (self.table_names["contact"], self.table_names["contact"], self.table_names["username"], data_owner)
@@ -380,7 +380,7 @@ class dbUpload:
     def insert_rundate(self):
         my_sql = """INSERT IGNORE INTO run (run, run_prefix, platform) VALUES
             ('%s', 'illumin', '%s');""" % (self.rundate, self.runobj.platform)
-        cursor_info = self.my_conn.execute_no_fetch(my_sql)
+        return self.my_conn.execute_no_fetch(my_sql)
 
     def insert_project(self, content_row, contact_id):
         if (not contact_id):
@@ -403,13 +403,6 @@ class dbUpload:
             cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
-        """
-        TODO: get dataset_description
-                run_key_id      = self.get_id('run_key',      content_row.run_key)
-
-        dataset, dataset_description, project_id, created_at, updated_at,
-        """
-
         if self.db_server == "vamps2":
             project_id = self.get_id('project', content_row.project)
             my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description, project_id, created_at) VALUES
@@ -419,7 +412,7 @@ class dbUpload:
             my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
                 ('%s', '%s');
                 """ % (content_row.dataset, content_row.dataset_description)
-        cursor_info = self.my_conn.execute_no_fetch(my_sql)
+        return self.my_conn.execute_no_fetch(my_sql)
 
     def insert_run_info(self, content_row):
         run_key_id      = self.get_id('run_key',      content_row.run_key)
@@ -495,7 +488,6 @@ class dbUpload:
         elif (projects != "") and (datasets != ""):
             my_sql = my_sql1 + my_sql2 + my_sql3
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
-
 
     def del_sequence_uniq_info(self):
         my_sql = """DELETE FROM sequence_uniq_info_ill
@@ -658,16 +650,6 @@ class dbUpload:
         table_name = self.table_names["sequence_pdr_info_table_name"]
         query_tmpl = self.my_conn.make_sql_for_groups(table_name, fields)
         
-        if (self.db_server == "vamps2"):
-            my_sql_1 = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES
-                    """ % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
-            my_sql_2 = """ ON DUPLICATE KEY UPDATE dataset_id = VALUES(dataset_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count), classifier_id = VALUES(classifier_id);
-                    """ % (sequence_table_name, sequence_table_name)
-        elif (self.db_server == "env454"):
-            my_sql_1 = "INSERT INTO %s (run_info_ill_id, %s_id, seq_count) VALUES " % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
-            my_sql_2 = " ON DUPLICATE KEY UPDATE run_info_ill_id = VALUES(run_info_ill_id), %s_id = VALUES(%s_id), seq_count = VALUES(seq_count);" % (sequence_table_name, sequence_table_name)
-
-        query_tmpl = my_sql_1 + "%s " + my_sql_2
         logger.debug("insert sequence_pdr_info:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
@@ -730,10 +712,8 @@ class Taxonomy:
     def insert_whole_taxonomy(self):
         val_tmpl   = "('%s')"
         all_taxonomy = set([val_tmpl % taxonomy.rstrip() for taxonomy in self.taxa_content])
-        my_sql_1 = "INSERT IGNORE INTO taxonomy (taxonomy) VALUES "
-        my_sql_2 = " ON DUPLICATE KEY UPDATE taxonomy = VALUES(taxonomy);"
         group_vals = self.utils.grouper(all_taxonomy, 100)
-        query_tmpl = my_sql_1 + " %s " + my_sql_2
+        query_tmpl = self.my_conn.make_sql_for_groups("taxonomy", "taxonomy")
         logger.debug("insert taxonomy:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
