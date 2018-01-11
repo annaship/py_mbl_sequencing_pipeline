@@ -621,12 +621,7 @@ class dbUpload:
 
 
     def check_seq_upload(self):
-#         if (self.db_server == "vamps2"):
-#             file_seq_db_counts   = self.count_sequence_pdr_info2()
-#         elif (self.db_server == "env454"):
         file_seq_db_counts   = self.count_sequence_pdr_info()
-#        per primer_suite_lane
-#         file_seq_orig_count = self.count_seq_from_file()
         file_seq_orig_count = self.count_seq_from_files_grep()
 
         for pr_suite, file_seq_db_count in file_seq_db_counts.items():
@@ -656,7 +651,13 @@ class dbUpload:
 
         group_vals = self.utils.grouper(all_insert_pdr_info_vals, 10000)
         sequence_table_name = self.table_names["sequence_table_name"]
-
+        if (self.db_server == "vamps2"):
+            fields = "dataset_id, %s_id, seq_count, classifier_id" % sequence_table_name
+        elif (self.db_server == "env454"):
+            fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
+        table_name = self.table_names["sequence_pdr_info_table_name"]
+        query_tmpl = self.my_conn.make_sql_for_groups(table_name, fields)
+        
         if (self.db_server == "vamps2"):
             my_sql_1 = """INSERT INTO %s (dataset_id, %s_id, seq_count, classifier_id) VALUES
                     """ % (self.table_names["sequence_pdr_info_table_name"], sequence_table_name)
