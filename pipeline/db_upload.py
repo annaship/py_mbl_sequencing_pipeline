@@ -745,12 +745,7 @@ class Taxonomy:
             except:
                 raise
 
-# self.utils.print_array_w_title(self.uniqued_taxa_by_rank_dict, "self.uniqued_taxa_by_rank_dict made with for")
-
     def insert_taxa(self):
-        """
-        TODO: make all queries, then insert all? Benchmark!
-        """
         for rank, uniqued_taxa_by_rank in self.uniqued_taxa_by_rank_dict.items():
             insert_taxa_vals = '), ('.join(["'%s'" % key for key in uniqued_taxa_by_rank])
 
@@ -758,21 +753,8 @@ class Taxonomy:
             rows_affected = self.my_conn.execute_insert(shielded_rank_name, shielded_rank_name, insert_taxa_vals)
 #             self.utils.print_array_w_title(rows_affected, "rows affected by self.my_conn.execute_insert(%s, %s, insert_taxa_vals)" % (rank, rank))
 
-
     def shield_rank_name(self, rank):
         return "`"+rank+"`"
-
-        """
-        >>> obj1 = (6, 1, 2, 6, 3)
-        >>> obj2 = list(obj1) #Convert to list
-        >>> obj2.append(8)
-        >>> print obj2
-        [6, 1, 2, 6, 3, 8]
-        >>> obj1 = tuple(obj2) #Convert back to tuple
-        >>> print obj1
-        (6, 1, 2, 6, 3, 8)
-
-        """
 
     def get_all_rank_w_id(self):
         all_rank_w_id = self.my_conn.get_all_name_id("rank")
@@ -814,8 +796,6 @@ class Taxonomy:
 
 
     def insert_silva_taxonomy(self):
-
-        # self.utils.print_array_w_title(self.taxa_list_w_empty_ranks_ids_dict.values(), "===\nself.taxa_list_w_empty_ranks_ids_dict from def insert_silva_taxonomy")
 
         field_list = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
         all_insert_st_vals = self.make_insert_values(self.taxa_list_w_empty_ranks_ids_dict.values())
@@ -1016,7 +996,6 @@ class Seq:
         for fasta_id, gast in gast_dict.items():
             (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = gast
             seq  = self.fasta_dict[fasta_id]
-#             seq_upper = seq.upper()
             sequence_id = self.seq_id_dict[seq]
             rank_id = self.taxonomy.all_rank_w_id[rank]
             if taxonomy in self.taxonomy.tax_id_dict:
@@ -1029,20 +1008,6 @@ class Seq:
         fields = "%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids" % (self.table_names["sequence_table_name"])
         query_tmpl = self.my_conn.make_sql_for_groups("sequence_uniq_info_ill", fields)
         
-
-        
-#         my_sql_1 = """INSERT IGNORE INTO sequence_uniq_info_ill
-#                             (%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids)
-#                             VALUES """ % (self.table_names["sequence_table_name"])
-#         my_sql_2 = """ON DUPLICATE KEY UPDATE
-#                    updated = (CASE WHEN taxonomy_id <> %s THEN NOW() ELSE updated END),
-#                    taxonomy_id = VALUES(taxonomy_id),
-#                    gast_distance = VALUES(gast_distance),
-#                    refssu_count = VALUES(refssu_count),
-#                    rank_id = VALUES(rank_id),
-#                    refhvr_ids = VALUES(refhvr_ids);
-#                """  % (taxonomy_id)
-#         query_tmpl = my_sql_1 + "%s " + my_sql_2
         logger.debug("insert sequence_uniq_info_ill:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
