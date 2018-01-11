@@ -223,7 +223,7 @@ class dbUpload:
 
         self.db_cnf = {
             "vamps2": {"local":      {"host": "localhost", "db": "vamps2"},
-                       "production": {"host": "vampsdb",   "db": "vamps2"}
+                       "production": {"host": "vampsdev",   "db": "vamps2"}
                        },
             "env454": {"local":      {"host": "localhost", "db": "test_env454"},
                        "production": {"host": "bpcdb1",    "db": "env454"}
