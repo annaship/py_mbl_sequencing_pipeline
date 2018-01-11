@@ -321,7 +321,8 @@ class PipelneUtils:
         print title
         print message
         
-    def grouper(self, iterable, n, fillvalue=None):
+    def grouper(self, iterable, obj_len, fillvalue=None):
+        n = 10 ** self.magnitude(obj_len)
         args = [iter(iterable)] * n
         return izip_longest(*args, fillvalue=fillvalue)        
 

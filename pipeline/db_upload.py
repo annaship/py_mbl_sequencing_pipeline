@@ -712,7 +712,9 @@ class Taxonomy:
     def insert_whole_taxonomy(self):
         val_tmpl   = "('%s')"
         all_taxonomy = set([val_tmpl % taxonomy.rstrip() for taxonomy in self.taxa_content])
-        group_vals = self.utils.grouper(all_taxonomy, 100)
+#         x = len(all_taxonomy)
+#         y = self.utils.magnitude(x)
+        group_vals = self.utils.grouper(all_taxonomy, len(all_taxonomy))
         query_tmpl = self.my_conn.make_sql_for_groups("taxonomy", "taxonomy")
         logger.debug("insert taxonomy:")
         self.my_conn.run_groups(group_vals, query_tmpl)
