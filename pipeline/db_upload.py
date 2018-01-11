@@ -607,7 +607,7 @@ class dbUpload:
         except:
             print "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list)
             self.suffix_used = ""
-        print self.suffix_used
+#         print self.suffix_used
         suffix = self.fasta_dir + "/*" + self.suffix_used
         program_name = "grep"
         call_params  = " '>' " + suffix
@@ -631,7 +631,7 @@ class dbUpload:
 
         for pr_suite, file_seq_db_count in file_seq_db_counts.items():
             if (file_seq_orig_count == file_seq_db_count):
-                self.utils.print_both("All sequences from files made it to the db for %s %s: %s == %s\n" % (self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
+                self.utils.print_both("All sequences from files made it to %s for %s %s: %s == %s\n" % (self.db_server, self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
             else:
                 self.utils.print_both("Warning: Amount of sequences from files not equal to the one in the db for %s %s: %s != %s\n" % (self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
 #
