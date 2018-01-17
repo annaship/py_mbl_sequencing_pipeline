@@ -269,20 +269,24 @@ class dbUpload:
         return self.unique_fasta_files
 
     def send_mail(self):
-        program_name1 = "echo"
-        call_params1 = " 'Projects ? were uploaded to VAMPS2'"
-        command_line1 = program_name1 + call_params1
-
-        program_name2 = "mail"
-        call_params2 = ' -s "Vamps2 upload" ashipunova@mbl.edu'
-        command_line2 = program_name2 + call_params2
-
-        print "command_line1 = %s\ncommand_line2 = %s" % (command_line1, command_line2)
-
-        p1 = Popen(command_line1, stdout=PIPE, shell=True)
-        p2 = Popen(command_line2, stdin=p1.stdout, stdout=PIPE)
-        #         output = p2.stdout.read().split(" ")[0].strip()
+        # echo 'test' | mail ashipunova3@gmail.com
+        # program_name1 = "echo"
+        # call_params1 = " 'test' "
+        # command_line1 = program_name1 + call_params1
+        #
+        # program_name2 = "mail"
+        # call_params2 = " ashipunova3@gmail.com"
+        # command_line2 = program_name2 + call_params2
+        #
+        # print "command_line1 = %s\ncommand_line2 = %s" % (command_line1, command_line2)
+        # cmd = "echo 'Hi' | mail -aFrom:ashipunova@example.com -s 'TEST' ashipunova3@gmail.com"
+        p1 = Popen(['echo', 'test'], stdout=PIPE, shell=True)
+        p2 = Popen(['mail', ' -s "testt" ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
+        # #         output = p2.stdout.read().split(" ")[0].strip()
         output, err = p2.communicate()
+
+        Popen(['echo', 'AAAAA'])
+
         print "OOO output = "
         print output
 
