@@ -260,7 +260,16 @@ class dbUpload:
         if db_server == "vamps2":
             self.put_run_info()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
+        self.project_ids = []
 
+    def get_project_ids(self, projects_str):
+        # projects = self.get_project_names()
+        where_part = " WHERE project in ('%s')" % projects_str
+        my_sql = """SELECT %s, %s FROM %s %s""" % ("project", "project_id", "project", where_part)
+        res = self.my_conn.execute_fetch_select(my_sql)
+
+        project_and_ids = ["%s: %s" % (pr[0], pr[1]) for pr in res]
+        return ", ".join(project_and_ids)
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
@@ -268,10 +277,10 @@ class dbUpload:
 # needs return because how it's called from pipelineprocesor
         return self.unique_fasta_files
 
-    def send_mail(self):
-
-        p1 = Popen(['echo', 'test'], stdout=PIPE, shell=True)
-        p2 = Popen(['mail', ' -s "HI" ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
+    def send_mail(self, projects_str):
+        mail_body = ' %s' % projects_str
+        p1 = Popen(['echo', mail_body], stdout=PIPE, shell=True)
+        p2 = Popen(['mail', ' -s "Projects uploaded to VAMPS2" ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
         output, err = p2.communicate()
 
         # Popen(['echo', 'AAAAA'])
