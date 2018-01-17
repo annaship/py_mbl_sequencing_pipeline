@@ -269,26 +269,13 @@ class dbUpload:
         return self.unique_fasta_files
 
     def send_mail(self):
-        # echo 'test' | mail ashipunova3@gmail.com
-        # program_name1 = "echo"
-        # call_params1 = " 'test' "
-        # command_line1 = program_name1 + call_params1
-        #
-        # program_name2 = "mail"
-        # call_params2 = " ashipunova3@gmail.com"
-        # command_line2 = program_name2 + call_params2
-        #
-        # print "command_line1 = %s\ncommand_line2 = %s" % (command_line1, command_line2)
-        # cmd = "echo "hi" | mail  -s "TEST change" ashipunova3@gmail.com"
+
         p1 = Popen(['echo', 'test'], stdout=PIPE, shell=True)
-        p2 = Popen(['mail', ' ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
-        # #         output = p2.stdout.read().split(" ")[0].strip()
+        p2 = Popen(['mail', ' -s "HI" ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
         output, err = p2.communicate()
 
         # Popen(['echo', 'AAAAA'])
 
-        print "OOO output = "
-        print output
 
     def get_run_info_ill_id(self, filename_base):
 
