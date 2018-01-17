@@ -279,9 +279,14 @@ class dbUpload:
 
     def send_mail(self, projects_str):
         mail_body = 'Projects uploaded to VAMPS2: %s' % projects_str
-        p1 = Popen(['echo', mail_body], stdout=PIPE, shell=True)
+        p1 = Popen(['echo', 'Projects'], stdout=PIPE)
         p2 = Popen(['mail', ' -s ', ' TEST ', ' ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
-        output, err = p2.communicate()
+        # print repr(p2.communicate()[0])
+        p2.communicate()
+
+        # p1 = Popen(['echo', mail_body], stdout=PIPE, shell=True)
+        # p2 = Popen(['mail', ' -s ', ' TEST ', ' ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
+        # output, err = p2.communicate()
 
         # Popen(['echo', 'AAAAA'])
 
