@@ -54,4 +54,6 @@ Thumbs.db
 
 # IDE #
 #######
+.idea/
 .idea/*
+.idea/misc.xml
