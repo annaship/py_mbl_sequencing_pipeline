@@ -278,13 +278,13 @@ class dbUpload:
         return self.unique_fasta_files
 
     def send_mail(self, projects_str):
-        # mail_body = 'Projects uploaded to VAMPS2: %s' % projects_str
-        # p1 = Popen(['echo', mail_body], stdout=PIPE, shell=True)
-        # p2 = Popen(['mail', ' ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
-        # output, err = p2.communicate()
+        mail_body = 'Projects uploaded to VAMPS2: %s' % projects_str
+        p1 = Popen(['echo', mail_body], stdout=PIPE, shell=True)
+        p2 = Popen(['mail', ' -s ', ' TEST ', ' ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
+        output, err = p2.communicate()
 
         # Popen(['echo', 'AAAAA'])
-        call('echo "hi" | mail  -s "TEST change" ashipunova3@gmail.com')
+
 
 
     def get_run_info_ill_id(self, filename_base):
