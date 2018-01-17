@@ -277,10 +277,13 @@ class dbUpload:
         call_params2 = ' -s "Vamps2 upload" ashipunova@mbl.edu'
         command_line2 = program_name2 + call_params2
 
+        print "command_line1 = %s\ncommand_line2 = %s" % (command_line1, command_line2)
+
         p1 = Popen(command_line1, stdout=PIPE, shell=True)
         p2 = Popen(command_line2, stdin=p1.stdout, stdout=PIPE)
         #         output = p2.stdout.read().split(" ")[0].strip()
         output, err = p2.communicate()
+        print "OOO output = "
         print output
 
     def get_run_info_ill_id(self, filename_base):
