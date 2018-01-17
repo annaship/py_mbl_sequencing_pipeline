@@ -564,7 +564,9 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
         logger.debug("insert_pdf_info_query_time took %s sec to finish" % (insert_pdf_info_time))
         logger.debug("start_insert_taxonomy_upload_time took %s sec to finish" % (insert_taxonomy_time))
         logger.debug("insert_sequence_uniq_info_time took %s sec to finish" % (insert_sequence_uniq_info_time))
-        
+
+        my_file_to_db_upload.send_mail()
+
         return total_seq
         
     except:                       # catch everything

@@ -163,6 +163,7 @@ class MyConnection:
         my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
         return my_sql_1 + " %s " + my_sql_2
 
+
 class dbUpload:
     """db upload methods"""
     Name = "dbUpload"
@@ -204,7 +205,10 @@ class dbUpload:
             lane_name = self.runobj.lane_name
         else:
             lane_name = ''
+
         self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site)
+
+
         self.analysis_dir = self.dirs.check_dir(self.dirs.analysis_dir)
         self.fasta_dir    = self.dirs.check_dir(self.dirs.reads_overlap_dir)
         self.gast_dir     = self.dirs.check_dir(self.dirs.gast_dir)
@@ -264,6 +268,20 @@ class dbUpload:
 # needs return because how it's called from pipelineprocesor
         return self.unique_fasta_files
 
+    def send_mail(self):
+        program_name1 = "echo"
+        call_params1 = " 'Projects ? were uploaded to VAMPS2'"
+        command_line1 = program_name1 + call_params1
+
+        program_name2 = "mail"
+        call_params2 = ' -s "Vamps2 upload" ashipunova@mbl.edu'
+        command_line2 = program_name2 + call_params2
+
+        p1 = Popen(command_line1, stdout=PIPE, shell=True)
+        p2 = Popen(command_line2, stdin=p1.stdout, stdout=PIPE)
+        #         output = p2.stdout.read().split(" ")[0].strip()
+        output, err = p2.communicate()
+        print output
 
     def get_run_info_ill_id(self, filename_base):
 
@@ -904,26 +922,7 @@ class Seq:
     def prepare_fasta_dict(self, filename):
         read_fasta = fastalib.ReadFasta(filename)
         self.fasta_dict = dict(zip(read_fasta.ids, read_fasta.sequences))
-#         sequences  = [seq.upper() for seq in read_fasta.sequences] #here we make uppercase for VAMPS compartibility
         read_fasta.close()
-#         self.fasta_dict.update(temp_fasta_dict)
-#         return sequences
-
-#         self.fasta = fastalib.SequenceSource(filename)
-#
-#         while self.fasta.next():
-#             if self.fasta.pos % 1000 == 0 or self.fasta.pos == 1:
-#                 sys.stderr.write('\r[fastalib] Reading FASTA into memory: %s' % (self.fasta.pos))
-#                 sys.stderr.flush()
-#             self.fasta_dict[self.fasta.id] = self.fasta.seq
-#         sys.stderr.write('\n')
-
-
-#         read_fasta = fastalib.ReadFasta(filename)
-#         self.fasta_dict = dict((id, seq) for s_id, seq in read_fasta)
-#         read_fasta.close()
-
-
 
     def make_seq_upper(self, filename):
         sequences  = [seq.upper() for seq in self.fasta_dict.values()] #here we make uppercase for VAMPS compartibility
@@ -956,12 +955,6 @@ class Seq:
             if len(sequences) == 0:
                 self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
             raise
-
-#     def get_sequence_id(self, seq):
-#         my_sql = """SELECT %s_id FROM sequence_ill WHERE COMPRESS('%s') = sequence_comp;""" % (seq, self.table_names["sequence_table_name"])
-#         res    = self.my_conn.execute_fetch_select(my_sql)
-#         if res:
-#             return int(res[0][0])
         
     def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_server):
         all_insert_pdr_info_vals = []
