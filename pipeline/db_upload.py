@@ -260,15 +260,13 @@ class dbUpload:
         if db_server == "vamps2":
             self.put_run_info()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
-        self.project_ids = []
 
     def get_project_ids(self, projects_str):
-        # projects = self.get_project_names()
         where_part = " WHERE project in ('%s')" % projects_str
         my_sql = """SELECT %s, %s FROM %s %s""" % ("project", "project_id", "project", where_part)
         res = self.my_conn.execute_fetch_select(my_sql)
 
-        project_and_ids = ["%s: %s" % (pr[0], pr[1]) for pr in res]
+        project_and_ids = ["%s id = %s" % (pr[0], pr[1]) for pr in res]
         return ", ".join(project_and_ids)
 
     def get_fasta_file_names(self):
