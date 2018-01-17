@@ -285,7 +285,7 @@ class dbUpload:
         # #         output = p2.stdout.read().split(" ")[0].strip()
         output, err = p2.communicate()
 
-        Popen(['echo', 'AAAAA'])
+        # Popen(['echo', 'AAAAA'])
 
         print "OOO output = "
         print output
