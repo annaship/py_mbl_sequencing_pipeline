@@ -279,9 +279,9 @@ class dbUpload:
         # command_line2 = program_name2 + call_params2
         #
         # print "command_line1 = %s\ncommand_line2 = %s" % (command_line1, command_line2)
-        # cmd = "echo 'Hi' | mail -aFrom:ashipunova@example.com -s 'TEST' ashipunova3@gmail.com"
+        # cmd = "echo "hi" | mail  -s "TEST change" ashipunova3@gmail.com"
         p1 = Popen(['echo', 'test'], stdout=PIPE, shell=True)
-        p2 = Popen(['mail', ' -s "testt" ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
+        p2 = Popen(['mail', ' ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
         # #         output = p2.stdout.read().split(" ")[0].strip()
         output, err = p2.communicate()
 
