@@ -163,7 +163,6 @@ class MyConnection:
         my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
         return my_sql_1 + " %s " + my_sql_2
 
-
 class dbUpload:
     """db upload methods"""
     Name = "dbUpload"
@@ -205,10 +204,7 @@ class dbUpload:
             lane_name = self.runobj.lane_name
         else:
             lane_name = ''
-
         self.dirs = Dirs(self.runobj.vamps_user_upload, dir_prefix, self.runobj.platform, lane_name = lane_name, site = site)
-
-
         self.analysis_dir = self.dirs.check_dir(self.dirs.analysis_dir)
         self.fasta_dir    = self.dirs.check_dir(self.dirs.reads_overlap_dir)
         self.gast_dir     = self.dirs.check_dir(self.dirs.gast_dir)
