@@ -278,9 +278,9 @@ class dbUpload:
         return self.unique_fasta_files
 
     def send_mail(self, projects_str):
-        mail_body = ' %s' % projects_str
+        mail_body = 'Projects uploaded to VAMPS2: %s' % projects_str
         p1 = Popen(['echo', mail_body], stdout=PIPE, shell=True)
-        p2 = Popen(['mail', ' -s "Projects uploaded to VAMPS2" ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
+        p2 = Popen(['mail', ' ashipunova3@gmail.com' ], stdin=p1.stdout, stdout=PIPE)
         output, err = p2.communicate()
 
         # Popen(['echo', 'AAAAA'])
