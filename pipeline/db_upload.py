@@ -262,12 +262,14 @@ class dbUpload:
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
     def get_project_ids(self, projects_str):
-        where_part = " WHERE project in ('%s')" % projects_str
-        my_sql = """SELECT %s, %s FROM %s %s""" % ("project", "project_id", "project", where_part)
-        res = self.my_conn.execute_fetch_select(my_sql)
+        # silva_taxonomy_ids = self.my_conn.get_all_name_id(table_name, "", field_names, where_part)
 
-        project_and_ids = ["%s id = %s" % (pr[0], pr[1]) for pr in res]
-        return ", ".join(project_and_ids)
+
+        where_part = " WHERE project in ('%s')" % projects_str
+        res = self.my_conn.get_all_name_id("project", "", "", where_part)
+
+        project_and_ids = ["%s, id = %s" % (pr[0], pr[1]) for pr in res]
+        return "; ".join(project_and_ids)
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
@@ -282,20 +284,6 @@ class dbUpload:
         except Exception, error:
             print error
         process.communicate(body)
-
-
-    def send_mail(self, projects_str):
-        recipient = 'ashipunova3@gmail.com'
-        subject = 'test'
-        body = 'testing mail through python'
-
-        self.send_message(recipient, subject, body)
-
-    # mail_body = ' Projects uploaded to VAMPS2: %s ' % projects_str
-        # p1 = Popen(['echo', mail_body], stdout=PIPE)
-        # p2 = Popen(['mail', ' ashipunova3@gmail.com ', ' -s ', ' "TEST projects" ' ], stdin=p1.stdout, stdout=PIPE)
-        # p2.communicate()
-
 
 
     def get_run_info_ill_id(self, filename_base):

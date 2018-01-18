@@ -505,7 +505,10 @@ def file_to_db_upload_main(runobj, full_upload):
     projects_str = print_projects(runobj)
 
     projects_and_ids = my_file_to_db_upload.get_project_ids(projects_str)
-    my_file_to_db_upload.send_mail(projects_and_ids)
+
+    my_file_to_db_upload.send_message('ashipunova3@gmail.com', 'Projects uploaded to VAMPS2', projects_and_ids)
+
+
 
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
