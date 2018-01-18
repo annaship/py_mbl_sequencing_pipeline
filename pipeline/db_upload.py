@@ -275,11 +275,26 @@ class dbUpload:
 # needs return because how it's called from pipelineprocesor
         return self.unique_fasta_files
 
+    def send_message(self, recipient, subject, body):
+        try:
+            process = Popen(['mail', '-s', subject, recipient],
+                                       stdin=PIPE)
+        except Exception, error:
+            print error
+        process.communicate(body)
+
+
     def send_mail(self, projects_str):
-        mail_body = ' Projects uploaded to VAMPS2: %s ' % projects_str
-        p1 = Popen(['echo', mail_body], stdout=PIPE)
-        p2 = Popen(['mail', ' ashipunova3@gmail.com ', ' -s ', ' "TEST projects" ' ], stdin=p1.stdout, stdout=PIPE)
-        p2.communicate()
+        recipient = 'ashipunova3@gmail.com'
+        subject = 'test'
+        body = 'testing mail through python'
+
+        self.send_message(recipient, subject, body)
+
+    # mail_body = ' Projects uploaded to VAMPS2: %s ' % projects_str
+        # p1 = Popen(['echo', mail_body], stdout=PIPE)
+        # p2 = Popen(['mail', ' ashipunova3@gmail.com ', ' -s ', ' "TEST projects" ' ], stdin=p1.stdout, stdout=PIPE)
+        # p2.communicate()
 
 
 
