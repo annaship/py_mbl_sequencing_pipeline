@@ -268,8 +268,13 @@ class dbUpload:
         where_part = " WHERE project in ('%s')" % projects_str
         res = self.my_conn.get_all_name_id("project", "", "", where_part)
 
-        project_and_ids = ["%s, id = %s" % (pr[0], pr[1]) for pr in res]
-        return "; ".join(project_and_ids)
+        try:
+            project_and_ids = ["%s, id = %s" % (pr[0], pr[1]) for pr in res]
+            return "; ".join(project_and_ids)
+        except Exception, error:
+            print "problems with res:"
+            print res
+            print error
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
