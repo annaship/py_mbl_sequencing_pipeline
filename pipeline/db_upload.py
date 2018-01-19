@@ -274,8 +274,11 @@ class dbUpload:
         res = self.my_conn.get_all_name_id("project", "", "", where_part)
 
         try:
-            project_and_ids = ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
-            return "; ".join(project_and_ids)
+            projects, pr_ids = zip(*res)
+            pr_ids_str = (str(w) for w in pr_ids)
+            project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str) )
+                # ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
+            return project_and_ids
         except Exception, error:
             print "problems with res:"
             print res
@@ -609,10 +612,6 @@ class dbUpload:
     def get_primer_suite_name(self):
         primer_suites = [v.primer_suite for v in self.runobj.samples.itervalues()]
         return list(set(primer_suites))
-
-    # def get_project_names(self):
-    #     projects = [v.project for v in self.runobj.samples.itervalues()]
-    #     return '", "'.join(set(projects))
 
     def get_dataset_names(self):
         datasets = [v.dataset for v in self.runobj.samples.itervalues()]
