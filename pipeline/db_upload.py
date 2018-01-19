@@ -257,19 +257,24 @@ class dbUpload:
         self.suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
         self.suffix_used        = ""
         self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
+        self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
+        self.used_project_ids = []
         if db_server == "vamps2":
             self.put_run_info()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
-    def get_project_ids(self, projects_str):
-        # silva_taxonomy_ids = self.my_conn.get_all_name_id(table_name, "", field_names, where_part)
 
+    def collect_project_ids(self, run_info_ill_id):
+        dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
+        self.used_project_ids.append(self.all_project_dataset_ids_dict[dataset_id])
 
-        where_part = " WHERE project in ('%s')" % projects_str
+    def get_project_names(self):
+        used_project_ids_str = (str(w) for w in set(self.used_project_ids))
+        where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
         res = self.my_conn.get_all_name_id("project", "", "", where_part)
 
         try:
-            project_and_ids = ["%s, id = %s" % (pr[0], pr[1]) for pr in res]
+            project_and_ids = ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
             return "; ".join(project_and_ids)
         except Exception, error:
             print "problems with res:"
@@ -301,6 +306,12 @@ class dbUpload:
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])
+
+    def get_project_id_per_dataset_id(self):
+        all_project_id_per_dataset_id_sql = "SELECT dataset_id, project_id FROM dataset"
+        res = self.my_conn.execute_fetch_select(all_project_id_per_dataset_id_sql)
+        return dict([(r, d) for r, d in res])
+
 
     def get_dataset_per_run_info_id(self):
         all_dataset_run_info_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
@@ -473,19 +484,6 @@ class dbUpload:
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
 
-
-#         my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
-#                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
-#                                                     file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
-#                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',
-#                                                     '%s', %s, '%s', '%s', '%s', %s,
-#                                                     '%s', %s, %s, '%s', %s);
-#         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode,
-#                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
-#                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
-
-#         self.utils.print_both("insert run_info sql = %s" % my_sql)
-
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
         self.utils.print_both("insert run_info: %s" % cursor_info)
 
@@ -612,9 +610,9 @@ class dbUpload:
         primer_suites = [v.primer_suite for v in self.runobj.samples.itervalues()]
         return list(set(primer_suites))
 
-    def get_project_names(self):
-        projects = [v.project for v in self.runobj.samples.itervalues()]
-        return '", "'.join(set(projects))
+    # def get_project_names(self):
+    #     projects = [v.project for v in self.runobj.samples.itervalues()]
+    #     return '", "'.join(set(projects))
 
     def get_dataset_names(self):
         datasets = [v.dataset for v in self.runobj.samples.itervalues()]

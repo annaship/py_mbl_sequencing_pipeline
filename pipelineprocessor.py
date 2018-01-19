@@ -502,9 +502,9 @@ def file_to_db_upload_main(runobj, full_upload):
         logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
     my_file_to_db_upload.check_seq_upload()
-    projects_str = print_projects(runobj)
+    projects_list = print_projects(runobj)
 
-    projects_and_ids = my_file_to_db_upload.get_project_ids(projects_str)
+    projects_and_ids = my_file_to_db_upload.get_project_names()
 
     my_file_to_db_upload.send_message('ashipunova3@gmail.com', 'Projects uploaded to VAMPS2', projects_and_ids)
 
@@ -518,7 +518,7 @@ def print_projects(runobj):
     projects_list = list(set([runobj.samples[key].project for key in runobj.samples]))
     projects_str = ", ".join(projects_list)
     logger.debug("Projects in this run: %s" % projects_str)
-    return projects_str
+    return projects_list
 
 
 
@@ -546,7 +546,8 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
         
         filename_base_no_suff = get_filename_base_no_suff(filename)
         
-        run_info_ill_id       = my_file_to_db_upload.get_run_info_ill_id(filename_base_no_suff)        
+        run_info_ill_id       = my_file_to_db_upload.get_run_info_ill_id(filename_base_no_suff)
+        my_file_to_db_upload.collect_project_ids(run_info_ill_id)
         seq_in_file           = len(my_file_to_db_upload.seq.fasta_dict)
         my_file_to_db_upload.put_seq_statistics_in_file(filename, seq_in_file)
         total_seq += seq_in_file
