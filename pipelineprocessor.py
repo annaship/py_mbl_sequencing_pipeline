@@ -502,23 +502,19 @@ def file_to_db_upload_main(runobj, full_upload):
         logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
     my_file_to_db_upload.check_seq_upload()
-    projects_list = print_projects(runobj)
+
 
     projects_and_ids = my_file_to_db_upload.get_project_names()
 
     my_file_to_db_upload.send_message('ashipunova3@gmail.com', 'Projects uploaded to VAMPS2', projects_and_ids)
 
-
+    logger.debug("Projects in this run: %s" % projects_and_ids)
 
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
     print "The whole upload took %s s" % whole_elapsed
   
-def print_projects(runobj):
-    projects_list = list(set([runobj.samples[key].project for key in runobj.samples]))
-    projects_str = ", ".join(projects_list)
-    logger.debug("Projects in this run: %s" % projects_str)
-    return projects_list
+
 
 
 
