@@ -97,13 +97,13 @@ class MBLPipelineFastaUtils:
             if len(deleted_id_list) == 0:
                 continue
             for line in names_fh.readlines():
-                #print lane_key,'line',line
+                #print(lane_key,'line',line)
                 lst = line.strip().split()
                 id = lst[0]                 # a read_id
                 dupes = lst[1].split(',')   # a list of read_ids
                 newdupes = []
                 if id in deleted_id_list:
-                    #print 'found id',id,dupes
+                    #print('found id',id,dupes)
                     if len(dupes) == 1:
                         continue
                     for subid in dupes:
@@ -119,7 +119,7 @@ class MBLPipelineFastaUtils:
                 else:
                     # This id is not in deleted list
                     for subid in dupes:
-                        #print 'looking through dupes',subid
+                        #print('looking through dupes',subid)
                         if subid in deleted_id_list:
                             pass
                         else:
@@ -155,12 +155,12 @@ class MBLPipelineFastaUtils:
             # open unique file and read a line
             uniquesfasta = fa.SequenceSource(original_unique_file)
             while uniquesfasta.next():
-                #print uniquesfasta.id,self.orphans[lane_key]
+                #print(uniquesfasta.id,self.orphans[lane_key])
 
                 if uniquesfasta.id in self.orphans[lane_key].keys():
-                    #print "found orphan",uniquesfasta.id
+                    #print("found orphan",uniquesfasta.id)
                     uniquesfasta.id = self.orphans[lane_key][uniquesfasta.id][0]
-                    #print "new id",uniquesfasta.id
+                    #print("new id",uniquesfasta.id)
                 if uniquesfasta.id not in deleted_id_list:
                     new_unique_file.store(uniquesfasta)
             new_unique_file.close()
@@ -192,14 +192,14 @@ class MBLPipelineFastaUtils:
                 lst = line.strip().split()
 
                 names[lst[0]] = lst[1].split(',')
-            #print names
+            #print(names)
             fasta = fa.SequenceSource(new_unique_file)
 
 
             while fasta.next():
                 fasta.id
                 uniques[fasta.seq] = fasta.id
-            #print uniques
+            #print(uniques)
             sorted_uniques = mysort( uniques, names )
 
             for item in sorted_uniques:
