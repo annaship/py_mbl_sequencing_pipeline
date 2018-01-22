@@ -1,5 +1,7 @@
 import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+
 import constants as C
 from subprocess import Popen, PIPE, call
 from shlex import split
@@ -10,26 +12,37 @@ from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 import IlluminaUtils.lib.fastalib as fastalib
 from collections import defaultdict
-from itertools import izip_longest
+import pipeline.utils as pipe_util
+
+if pipe_util.it_is_py3():
+    from itertools import zip_longest
+else:
+    from itertools import izip_longest
 
 try:
-    import MySQLdb
+    import pymysql
+    # import MySQLdb
 except MySQLdb.Error:
     e = sys.exc_info()[1]
-    message = """
-    MySQLdb ERROR
-      To load the correct module, try running these commands before running the pipeline:
+    print(e)
+    if e == NameError:
+        import PyMySQL
+    else:
+        message = """
+        MySQLdb ERROR
+          To load the correct module, try running these commands before running the pipeline:
 
-source /xraid/bioware/Modules/etc/profile.modules
-module load bioware
-    """
-    PipelneUtils.print_both(message)
-    PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
-    raise
+    source /xraid/bioware/Modules/etc/profile.modules
+    module load bioware
+        """
+        PipelneUtils.print_both(message)
+        PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
+        raise
 except:                       # catch everything
-#     PipelneUtils.print_both("Unexpected:")
+    #     PipelneUtils.print_both("Unexpected:")
+    #     PipelneUtils.print_both(sys.exc_info()[0])
+    print("EEE")
     print("Unexpected:")         # handle unexpected exceptions
-#     PipelneUtils.print_both(sys.exc_info()[0])
     print(sys.exc_info()[0])     # info about curr exception (type,value,traceback)
     raise
 

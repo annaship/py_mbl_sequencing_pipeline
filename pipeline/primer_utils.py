@@ -10,8 +10,7 @@ import constants as C
 try:
     import Levenshtein
 except:
-    text = 
-    '''
+    text = '''
     You need Levenshtein module installed to run this software.
 
     Here is a fast implementation of Levenshtein distance for Python:
