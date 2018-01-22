@@ -20,40 +20,14 @@ else:
     from itertools import izip_longest
 
 try:
-    import pymysql
-    # import MySQLdb
-except MySQLdb.Error:
+    import pymysql as mysql
+except NameError:
+    import MySQLdb as mysql
+except:
     e = sys.exc_info()[1]
     print(e)
-    if e == NameError:
-        import PyMySQL
-    else:
-        message = """
-        MySQLdb ERROR
-          To load the correct module, try running these commands before running the pipeline:
-
-    source /xraid/bioware/Modules/etc/profile.modules
-    module load bioware
-        """
-        PipelneUtils.print_both(message)
-        PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
-        raise
-except:                       # catch everything
-    #     PipelneUtils.print_both("Unexpected:")
-    #     PipelneUtils.print_both(sys.exc_info()[0])
-    print("EEE")
-    print("Unexpected:")         # handle unexpected exceptions
-    print(sys.exc_info()[0])     # info about curr exception (type,value,traceback)
     raise
 
-#     sys.exit("""
-#     MySQLdb ERROR
-#       To load the correct module, try running these commands before running the pipeline:
-#
-# source /xraid/bioware/Modules/etc/profile.modules
-# module load bioware
-#
-#     """)
 class MyConnection:
     """
     Connection to env454
@@ -80,23 +54,14 @@ class MyConnection:
 
             if self.utils.is_local():
                 host = "127.0.0.1"
-#                 if db == "env454":
-#                     port_env = 3308
-#                     read_default_file = os.path.expanduser("~/.my.cnf_server")
-#                 else:
-#                     db = "test_env454"
                 read_default_file = "~/.my.cnf_local"
-            self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+            self.conn   = mysql.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
             self.cursor = self.conn.cursor()
-            self.cursorD = self.conn.cursor (MySQLdb.cursors.DictCursor)
-            # self.escape = self.conn.escape()
-
-        except (AttributeError, MySQLdb.OperationalError):
-            self.conn = MySQLdb.connect(host=host, db=db, read_default_file=read_default_file, port=port_env)
+            self.cursorD = self.conn.cursor (mysql.cursors.DictCursor)
+        except (AttributeError, mysql.OperationalError):
+            self.conn = mysql.connect(host=host, db=db, read_default_file=read_default_file, port=port_env)
             self.cursor = self.conn.cursor()
-
-
-        except MySQLdb.Error:
+        except mysql.Error:
             e = sys.exc_info()[1]
             self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
             raise
@@ -109,7 +74,7 @@ class MyConnection:
 
 
     def connect(self, host, db, read_default_file, port_env):
-        return MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+        return mysql.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
 
 
     def execute_fetch_select(self, sql):
