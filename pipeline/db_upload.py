@@ -936,8 +936,13 @@ class Seq:
             for group in group_seq:
                 seq_part = '), COMPRESS('.join([val_tmpl % key for key in group])
                 my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
+
+                print("MMM my_sql")
+                print(my_sql)
+
                 res        = self.my_conn.execute_fetch_select(my_sql)
                 one_seq_id_dict = dict((y.upper(), int(x)) for x, y in res)
+
                 self.seq_id_dict.update(one_seq_id_dict)
         except:
             if len(sequences) == 0:
