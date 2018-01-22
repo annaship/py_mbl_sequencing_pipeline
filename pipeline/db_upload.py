@@ -12,7 +12,8 @@ import IlluminaUtils.lib.fastalib as fastalib
 
 try:
     import MySQLdb
-except MySQLdb.Error, e:
+except MySQLdb.Error:
+    e = sys.exc_info()[1]
     message = """
     MySQLdb ERROR
       To load the correct module, try running these commands before running the pipeline:
@@ -73,7 +74,8 @@ class MyConnection:
             self.cursor = self.conn.cursor()
             # self.escape = self.conn.escape()
 
-        except MySQLdb.Error, e:
+        except MySQLdb.Error:
+            e = sys.exc_info()[1]
             self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
             raise
         except:                       # catch everything
@@ -295,7 +297,9 @@ class dbUpload:
             with open(gast_file_name) as fd:
                 gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])
             return gast_dict
-        except IOError, e:
+        except IOError:
+            e = sys.exc_info()[1]
+            
 #            print(dir(e))
 #['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__getslice__', '__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__', '__unicode__', 'args', 'errno', 'filename', 'message', 'strerror']
 #            print("errno = %s" % e.errno)
@@ -303,8 +307,9 @@ class dbUpload:
             if e.errno == 2:
                 # suppress "No such file or directory" error
                 pass
-#         except OSError, e:
-        except TypeError, e:
+        except TypeError:
+            e = sys.exc_info()[1]
+            
             self.utils.print_both("Check if there is a gast file under %s for %s." % (self.gast_dir, filename))
             pass
         except:
@@ -397,7 +402,8 @@ class dbUpload:
                        refhvr_ids = '%s';
                    """ % (sequence_ill_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip(),
                           taxonomy_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
-                except Exception, e:
+                except Exception:
+                    e = sys.exc_info()[1]
                     logger.debug("Error = %s" % e)
                     raise
 
