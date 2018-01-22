@@ -27,6 +27,7 @@ from pipeline.db_upload import MyConnection
 from pipeline.utils import PipelneUtils
 import re
 #import pipeline.fastalib
+import string
 
 class MetadataUtils:
     """
@@ -361,10 +362,12 @@ class MetadataUtils:
         return (error, warn)
     
     def convert_primer_suites(self, suite):
+        import re
         if type(suite) is list:
-            conv_suite = [item.lower().translate(None, '_- ') for item in suite]
+            conv_suite = [re.sub(r'[_ -]', '', item.lower()) for item in suite]
         if type(suite) is str:
-            conv_suite = suite.lower().translate(None, '_- ')
+            conv_suite = re.sub(r'[_ -]', '', suite.lower())
+                # suite.lower().translate(None, '_- ')
         return conv_suite
         
     def check_project_name(self, data):
