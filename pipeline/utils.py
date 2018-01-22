@@ -333,8 +333,8 @@ class PipelneUtils:
         return [v for k, v in hey if k.lower() == needle.lower()]
 
     def print_array_w_title(self, message, title = 'message'):
-        print title
-        print message
+        print(title)
+        print(message)
         
     def grouper(self, iterable, obj_len, fillvalue=None):
         n = 10 ** self.magnitude(obj_len)
