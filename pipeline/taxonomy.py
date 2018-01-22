@@ -188,9 +188,9 @@ def consensus(taxObjects, majority):
             else:
                 naCnt = tallies[k];
 
-            #print 'in newtax1',k,tallies[k],taxCount
+            #print('in newtax1',k,tallies[k],taxCount)
             vote = int(( float(tallies[k]) / float(taxCount) ) * 100)
-            #print 'in newtax2',k,vote,majority
+            #print('in newtax2',k,vote,majority)
             if k != "NA" and vote > topPct:
                 topPct = vote
 

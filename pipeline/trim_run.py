@@ -97,10 +97,10 @@ class TrimRun( object ):
         os.environ['PATH'] = '/opt/sge/bin/lx24-amd64:'+path
 
         self.runbin={}
-#         print 'SAMPLES: '
+#         print('SAMPLES: ')
 #         for idx_key in self.runobj.samples:
-#                 print idx_key,self.runobj.samples[idx_key]
-#         print 'SAMPLES: '
+#                 print(idx_key,self.runobj.samples[idx_key])
+#         print('SAMPLES: ')
         if self.runobj.vamps_user_upload:
             for idx_key in self.runobj.samples:
                 sample = self.runobj.samples[idx_key]
@@ -134,7 +134,7 @@ class TrimRun( object ):
                 #  PrimerSuite Class
                 #
                 #####################
-                print self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key
+                print(self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key)
 
                 self.psuite[idx_key] = PrimerSuite(self.runobj, self.taxonomic_domain[idx_key],self.dna_regions[idx_key],idx_key)
                 #self.runbin['psuite'][idx_key]= PrimerSuite(self.taxonomic_domain[idx_key],self.dna_regions[idx_key])
@@ -271,7 +271,7 @@ class TrimRun( object ):
 
 
             file_path = os.path.join(self.indir,file_info["name"])
-            print 'FILE',file_path
+            print('FILE',file_path)
             logger.debug(file_info["name"]+' parsing format: '+parsing_format)
             # sff and fasta (non-mbl) get their lane info from this .ini field
             lane = file_info["lane"]
@@ -340,7 +340,7 @@ class TrimRun( object ):
                 seq             = trim_data.get('trimmed_sequence',None)
                 delete_reason   = trim_data.get('delete_reason',None)
 
-                # print out a fasta file for each lane_tag
+                # print(out a fasta file for each lane_tag)
                 if(lane_tag and not deleted):
                     # should have all this data
                     exact_left      = trim_data.get('exact_left',None)
@@ -372,7 +372,7 @@ class TrimRun( object ):
             if count > 0:
                 good_idx_keys.append(idx_key)
             count_uniques = count_uniques + count
-        print 'Seqs Passed: ',self.number_of_good_sequences
+        print('Seqs Passed: ',self.number_of_good_sequences)
         return ('SUCCESS',self.number_of_good_sequences,good_idx_keys)
 
     def filter_illumina(self, write_files = False):
@@ -435,14 +435,14 @@ class TrimRun( object ):
 #        for key in self.idx_keys:
 #            project = self.runobj.samples[key].project
 #            file_prefixes.append(self.runobj.samples[key].file_prefix)
-#        print file_prefixes
+#        print(file_prefixes)
 #        for p in sorted(file_prefixes):
 #            if p.find('_R1_') > 0:
-#                #print 'R1 ',os.path.join(config.input_directory,file)
+#                #print('R1 ',os.path.join(config.input_directory,file))
 #                file = p+".filtered.fastq"
 #                config.pair_1.append(os.path.join(config.input_directory,file))
 #            if p.find('_R2_') > 0:
-#                #print 'R2 ',os.path.join(config.input_directory,file)
+#                #print('R2 ',os.path.join(config.input_directory,file))
 #                file = p+".filtered.fastq"
 #                config.pair_2.append(os.path.join(config.input_directory,file))
 #
@@ -452,10 +452,10 @@ class TrimRun( object ):
 #
 #        for file in sorted(file_list):
 #            if file.find('_R1_') > 0:
-#                #print 'R1 ',os.path.join(config.input_directory,file)
+#                #print('R1 ',os.path.join(config.input_directory,file))
 #                config.pair_1.append(os.path.join(config.input_directory,file))
 #            if file.find('_R2_') > 0:
-#                #print 'R2 ',os.path.join(config.input_directory,file)
+#                #print('R2 ',os.path.join(config.input_directory,file))
 #                config.pair_2.append(os.path.join(config.input_directory,file))
 #
 #        illumina_trimmer.main(config)
@@ -554,7 +554,7 @@ class TrimRun( object ):
                 seq             = trim_data.get('trimmed_sequence',None)
                 delete_reason   = trim_data.get('delete_reason',None)
 
-                # print out a fasta file for each lane_tag
+                # print(out a fasta file for each lane_tag)
                 if(lane_tag and not deleted):
                     # should have all this data
                     exact_left      = trim_data.get('exact_left',None)
@@ -790,7 +790,7 @@ class TrimRun( object ):
 
         ###################################################################
         #
-        #   10-print out files of unique trimmed sequence
+        #   10-print(out files of unique trimmed sequence)
         #           and deleted ids
         #    for each amplification:
         #       fasta file          is this needed?
@@ -840,15 +840,15 @@ class TrimRun( object ):
                     abundfa.write(abundFileName,'a')
 
             except:
-                print "**********fail abund **************"
+                print("**********fail abund **************")
                 success_code = ('FAIL','abund',idx_key)
 
             # Write uniques.fa file
-            #print 'UNIQUES',self.uniques
+            #print('UNIQUES',self.uniques)
             try:
                 for seq in self.uniques[idx_key]:
                     read_id = self.uniques[idx_key][seq]
-                    print uniquesFileName,read_id,seq
+                    print(uniquesFileName,read_id,seq)
                     uniquefa = sfasta(read_id, seq)
                     uniquefa.write(uniquesFileName,'a')
                 logger.debug("\nwrote uniques file " + uniquesFileName)
@@ -887,7 +887,7 @@ class TrimRun( object ):
 
 
 
-        # print out readids that failed the key test: one file only
+        # print(out readids that failed the key test: one file only)
         if 'nokey' in self.deleted_ids and self.deleted_ids['nokey']:
             nokeyFileName = os.path.join(self.trimming_dir,'nokey.deleted.txt')
             f_del = open(nokeyFileName,"w")
@@ -897,11 +897,11 @@ class TrimRun( object ):
 
         if True:
             print
-            print 'Output Directory:', './'+self.outdir
-            print self.number_of_raw_sequences,  "raw sequences read"
+            print('Output Directory:', './'+self.outdir)
+            print(self.number_of_raw_sequences,  "raw sequences read")
             pct = '%.1f' % ((float(self.number_of_good_sequences)/self.number_of_raw_sequences) *100)
-            print self.number_of_good_sequences, "sequences passed" ,pct+'%'
-            print "Unique Counts:"
+            print(self.number_of_good_sequences, "sequences passed" ,pct+'%')
+            print("Unique Counts:")
             count_uniques = 0
             good_idx_keys = []
             for idx_key in self.runobj.run_keys:
@@ -909,8 +909,8 @@ class TrimRun( object ):
                 if count > 0:
                     good_idx_keys.append(idx_key)
                 count_uniques = count_uniques + count
-                print "   ",idx_key,self.dna_regions[idx_key],count
-            print "   Total Uniques:",count_uniques
+                print("   ",idx_key,self.dna_regions[idx_key],count)
+            print("   Total Uniques:",count_uniques)
 
 
         #####
