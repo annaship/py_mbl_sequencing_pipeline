@@ -241,13 +241,13 @@ class RunConfig:
                 self.database_host  = general_config['database_host']
                 self.site           = general_config['site']
                 self.load_vamps_database = general_config['load_vamps_database']
-                if general_config.has_key("archaea"):
+                if "archaea" in general_config:
                     self.archaea    = general_config['archaea']
-                if general_config.has_key("do_perfect"):
+                if "do_perfect" in general_config:
                     self.do_perfect = general_config['do_perfect']
                 else:
                     self.do_perfect = C.pipeline_run_items[self.platform]['do_perfect']
-                if general_config.has_key("lane_name"):
+                if "lane_name" in general_config:
                     self.lane_name = general_config['lane_name']
                 else:
                     self.lane_name = C.pipeline_run_items[self.platform]['lane_name']
