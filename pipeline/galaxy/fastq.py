@@ -180,7 +180,7 @@ class fastqSolexaRead( fastqSequencingRead ):
     quality_max = 62
     score_system = 'solexa'
     sequence_space = 'base'
-    
+
 class fastqCSSangerRead( fastqSequencingRead ):
     format = 'cssanger' #color space
     ascii_min = 33
@@ -225,7 +225,7 @@ class fastqCSSangerRead( fastqSequencingRead ):
             rval.sequence = self.color_space_converter.to_color_space( transform.reverse( self.color_space_converter.to_base_space( rval.sequence ) ), adapter_base = adapter )
         else:
             rval.sequence = transform.reverse( rval.sequence )
-        
+
         if rval.is_ascii_encoded():
             rval.quality = rval.quality[::-1]
         else:
@@ -359,7 +359,7 @@ class fastqAggregator( object ):
                 return [ halfed ]
             return[ halfed - 1, halfed ]
         read_count = self.get_read_count_for_column( i )
-        
+
         min_score = self.get_score_min_for_column( i )
         max_score = self.get_score_max_for_column( i )
         sum_score = self.get_score_sum_for_column( i )
@@ -381,7 +381,7 @@ class fastqAggregator( object ):
         #determine iqr and step
         iqr = q3 - q1
         step = 1.5 * iqr
-        
+
         #Determine whiskers and outliers
         outliers = []
         score_list = sorted( self.get_score_list_for_column( i ) )
@@ -392,7 +392,7 @@ class fastqAggregator( object ):
                 break
             else:
                 outliers.append( score )
-        
+
         right_whisker = q3 + step
         score_list.reverse()
         for score in score_list:
@@ -401,17 +401,17 @@ class fastqAggregator( object ):
                 break
             else:
                 outliers.append( score )
-        
-        column_stats = { 'read_count': read_count, 
-                         'min_score': min_score, 
-                         'max_score': max_score, 
-                         'sum_score': sum_score, 
-                         'mean_score': mean_score, 
-                         'q1': q1, 
-                         'med_score': med_score, 
-                         'q3': q3, 
-                         'iqr': iqr, 
-                         'left_whisker': left_whisker, 
+
+        column_stats = { 'read_count': read_count,
+                         'min_score': min_score,
+                         'max_score': max_score,
+                         'sum_score': sum_score,
+                         'mean_score': mean_score,
+                         'q1': q1,
+                         'med_score': med_score,
+                         'q3': q3,
+                         'iqr': iqr,
+                         'left_whisker': left_whisker,
                          'right_whisker': right_whisker,
                          'outliers': outliers }
         return column_stats
@@ -431,9 +431,9 @@ class fastqReader( object ):
             #remove empty lines, apparently extra new lines at end of file is common?
             if fastq_header:
                 break
-                
+
         assert fastq_header.startswith( '@' ), 'Invalid fastq header: %s' % fastq_header
-        rval = fastqSequencingRead.get_class_by_format( self.format )()        
+        rval = fastqSequencingRead.get_class_by_format( self.format )()
         rval.identifier = fastq_header
         while True:
             line = self.file.readline()
@@ -473,7 +473,7 @@ class fastqVerboseErrorReader( fastqReader ):
     def next( self ):
         last_good_end_offset = self.file.tell()
         last_readline_count = self.file.readline_count
-        try: 
+        try:
             block = super( fastqVerboseErrorReader, self ).next()
             self.last_good_identifier = block.identifier
             return block
@@ -579,7 +579,7 @@ class fastqJoiner( object ):
             identifier = read1.identifier[:-2]
         else:
             identifier = read1.identifier
-        
+
         #use force quality encoding, if not present force to encoding of first read
         force_quality_encoding = self.force_quality_encoding
         if not force_quality_encoding:
@@ -587,7 +587,7 @@ class fastqJoiner( object ):
                 force_quality_encoding = 'ascii'
             else:
                 force_quality_encoding = 'decimal'
-        
+
         new_read1 = read1.convert_read_to_format( self.format, force_quality_encoding = force_quality_encoding )
         new_read2 = read2.convert_read_to_format( self.format, force_quality_encoding = force_quality_encoding )
         rval = FASTQ_FORMATS[ self.format ]()
@@ -626,7 +626,7 @@ class fastqJoiner( object ):
                 is_first = False
         return is_first
 
-class fastqSplitter( object ):   
+class fastqSplitter( object ):
     def split( self, fastq_read ):
         length = len( fastq_read )
         #Only reads of even lengths can be split

@@ -10,32 +10,32 @@
 # Date: May 2008
 #
 # Copyright (C) 2008 Marine Biological Laborotory, Woods Hole, MA
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # For a copy of the GNU General Public License, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 # or visit http://www.gnu.org/copyleft/gpl.html
 #
 # Keywords : remove the space before the colon and list keywords separated by a space
-# 
+#
 ########################################
 
 #
-# 
+#
 class Taxonomy:
     """
     Create taxonomic objects
     Return classes or full text of a taxonomy object
-    
+
     """
     def __init__(self, tax_string):
         self.tax_string = tax_string
@@ -46,7 +46,7 @@ class Taxonomy:
         for name in temp:
             # Trim leading and trailing spaces
             self.data.append(name.strip())
-            
+
         # Remove trailing NAs and replace internal blanks with "Unassigned"
         assigned = 0
         for i in range(7,-1,-1):
@@ -57,16 +57,16 @@ class Taxonomy:
             if i not in self.data and assigned == 1:
                 self.data[i] = "Unassigned"
 
-        
+
         self.outstring = ';'.join(self.data)
-        
+
     def taxstring(self):
         """
         # Return the object as a ";" delimited string
         """
-        #return self.outstring        
+        #return self.outstring
         return ';'.join(self.data)
-    
+
     def depth(self):
         """
         # Return the depth of an object - last rank with valid taxonomy
@@ -76,54 +76,54 @@ class Taxonomy:
         for i in range(0,len(self.data)):
             if i < len(self.data) and self.data[i] != "NA" and self.data[i] != "" and self.data[i] != "Unassigned":
                 depth = ranks[i]
-                
+
         return depth
-        
+
     def domain(self):
         """
         # Return the domain of an object
         """
         return self.data[0]
-        
+
     def phylum(self):
         """
         # Return the phylum of an object
         """
         return self.data[1]
-        
+
     def class_name(self):
         """
         # Return the class of an object
         """
         return self.data[2]
-        
+
     def order(self):
         """
         # Return the order of an object
         """
         return self.data[3]
-        
+
     def family(self):
         """
         # Return the family of an object
         """
         return self.data[4]
-        
+
     def genus(self):
         """
         # Return the genus of an object
         """
         return self.data[5]
-        
+
     def strain(self):
         """
         # Return the strain of an object
         """
         return self.data[6]
-        
-    
-        
-# consensus is not in the Class Taxonomy    
+
+
+
+# consensus is not in the Class Taxonomy
 def consensus(taxObjects, majority):
     """
     Calculate consensus of an array of taxonomic objects
@@ -148,27 +148,27 @@ def consensus(taxObjects, majority):
     minRank = "NA"
     ranks = ("domain", "phylum", "class", "order", "family", "genus", "species", "strain" )
 
-    # 
+    #
     # Calculate the Consensus
     #
 
     # Flesh out the taxonomies so they all have indices to 7
-    
+
     for t in taxObjects:
         for i in range(0,7):
             if len(t.data) - 1 < i:
                 # If no value for that depth, add it
                 t.data.append("NA")
-        
+
     done = False
     # For each taxonomic rank
     for i in range(0,7):
-    
+
         # Initializes hashes with the counts of each tax assignment
         tallies = {} # for each tax value -- how many objects have this taxonomy
         rankCnt=0 # How many different taxa values are there for that rank
         maxCnt=0 # what was the size of the most common taxon
-        naCnt=0 # how many are unassigned 
+        naCnt=0 # how many are unassigned
         topPct=0 # used to determine if we are done with the taxonomy or not
 
         # Step through the taxonomies and count them
@@ -182,7 +182,7 @@ def consensus(taxObjects, majority):
         for k in tallies.iterkeys():
             if k != "NA":
                 rankCnt += 1
-                minRankIndex = i 
+                minRankIndex = i
                 if tallies[k] > maxCnt:
                     maxCnt = tallies[k]
             else:
@@ -193,13 +193,13 @@ def consensus(taxObjects, majority):
             #print 'in newtax2',k,vote,majority
             if k != "NA" and vote > topPct:
                 topPct = vote
-            
+
             if not done and vote >= majority:
-                
-                newTax.append(k) 
+
+                newTax.append(k)
                 if k != "NA":
-                    conVote = vote 
-            
+                    conVote = vote
+
         if topPct < majority:
             done = True
 
@@ -216,7 +216,7 @@ def consensus(taxObjects, majority):
         taxReturn.append( Taxonomy("Unknown") ) #If no consensus at all, call it Unknown
     else:
         taxReturn.append( Taxonomy(';'.join(newTax)) ) # taxonomy object for consensus
-    
+
     #if (! $taxReturn[0]) {$taxReturn[0] = "NA";}
     if not taxReturn[0]:
         taxReturn[0] = "Unknown" # 20081126 - empty tax should be 'Unknown'

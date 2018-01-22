@@ -288,7 +288,7 @@ class fasta:
 		self.parse(lines, verbose)
 
 	def parse(self, lines, verbose):
-		""" 
+		"""
 		perform the effective parsing of lines
 		(i.e. a series of lines as:
 		> Id comment OR >Id comment

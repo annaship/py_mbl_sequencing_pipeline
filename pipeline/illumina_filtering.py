@@ -17,25 +17,25 @@ ACTION_METHODS = { 'min':min, 'max':max, 'sum':sum, 'mean':mean }
 
 class IlluminaFiltering:
     """From Sue's original perl script called illumina_filtering:
-    
+
     reads an Illumina fastq file and outputs a new filtered file
          Filtering can be on chastity, Ns, mate exists, B-tails, etc.
          Based partially on minoche_filtering_pipeline.pl, but with more controls
          /bioware/illumina_scripts/minoche_filtering_pipeline.pl
-         
+
         Usage:  illumina_filtering.pl -chastity -N -Btail -len min_length -trim trim_length -clip clip_bases -unmated mate.fastq -in input.fastq -failed failed.fastq -out output.fastq -outmate outmate.fastq
-    
-          ex:  illumina_filtering.pl -chastity -in PhiX_TTAGGC_L008_R1_001.fastq -out PhiX_TTAGGC_L008_R1_001.chaste.fastq 
-               illumina_filtering.pl -chastity -N -in PhiX_TTAGGC_L008_R1_001.fastq -failed PhiX_TTAGGC_L008_R1_001.failed.fastq -out PhiX_TTAGGC_L008_R1_001.chaste.fastq 
-               illumina_filtering.pl -unmated PhiX_TTAGGC_L008_R2_001.chaste.N.fastq -outmate PhiX_TTAGGC_L008_R2_001.chaste.N.mated.fastq -in PhiX_TTAGGC_L008_R1_001.chaste.N.fastq -out PhiX_TTAGGC_L008_R1_001.chaste.N.mated.fastq 
-    
-        Options:  
+
+          ex:  illumina_filtering.pl -chastity -in PhiX_TTAGGC_L008_R1_001.fastq -out PhiX_TTAGGC_L008_R1_001.chaste.fastq
+               illumina_filtering.pl -chastity -N -in PhiX_TTAGGC_L008_R1_001.fastq -failed PhiX_TTAGGC_L008_R1_001.failed.fastq -out PhiX_TTAGGC_L008_R1_001.chaste.fastq
+               illumina_filtering.pl -unmated PhiX_TTAGGC_L008_R2_001.chaste.N.fastq -outmate PhiX_TTAGGC_L008_R2_001.chaste.N.mated.fastq -in PhiX_TTAGGC_L008_R1_001.chaste.N.fastq -out PhiX_TTAGGC_L008_R1_001.chaste.N.mated.fastq
+
+        Options:
                -in          input fastq file
                -out         output fastq file of reads passing quality filters
                -failed      output fastq file of reads failing quality filters
                -unmated     input mate fastq file to compare for removing reads that no longer have a mate
                -outmate     output fastq file for mated reads from -unmated input file
-    
+
                -chastity    remove reads that do not pass the Illumina chastity filter
                -N           remove reads that contain an ambiguous base
                -Btail       remove reads that contain a Btail
@@ -53,7 +53,7 @@ class IlluminaFiltering:
         self.outdir         = os.path.join(self.runobj.output_dir,"illumina_filtered")
         if not os.path.exists(self.outdir):
             os.mkdir(self.outdir)
-            
+
     def compare( self, aggregated_value, operator, threshold_value ):
         if operator == '>':
             return aggregated_value > threshold_value
@@ -84,10 +84,10 @@ class IlluminaFiltering:
                 if not excluded_list or self.compare( aggregate_action( excluded_list ), operator, threshold_value ):
                     return True
         return False
-    
-    def trim_by_quality(self, infile=None, 
-                        format='sanger',        wsize=1,        wstep=1,            trim_ends='53', 
-                        agg_action='min',       exc_count=0,    score_comp='>=',    qual_score=0,   
+
+    def trim_by_quality(self, infile=None,
+                        format='sanger',        wsize=1,        wstep=1,            trim_ends='53',
+                        agg_action='min',       exc_count=0,    score_comp='>=',    qual_score=0,
                         filter_first50=False,   filter_Ns=False,filter_Nx=0,        failed_fastq=False,
                         length=0,               trim=0,         clip=0,             keep_zero_length=False):
         #format
@@ -103,27 +103,27 @@ class IlluminaFiltering:
         clip_length         = clip
         if not infile:
             sys.exit( "illumina_fastq_trimmer: Need to specify an input file" )
-        
+
         if window_size < 1:
             sys.exit( 'illumina_fastq_trimmer: You must specify a strictly positive window size' )
-        
+
         if window_step < 1:
             sys.exit( 'illumina_fastq_trimmer: You must specify a strictly positive step size' )
-            
+
         print "\nRunning illumina Filtering"
-        
+
         in_filepath = os.path.join(self.indir,infile)
         try:
             filebase    = infile.split('/')[1].split('.')[0]
         except:
             filebase    = infile.split('.')[0]
-            
+
         out_filename    = filebase+".filtered.fastq"
         out_filepath    = os.path.join(self.outdir, out_filename)
-        
-        
-        
-            
+
+
+
+
         #determine an exhaustive list of window indexes that can be excluded from aggregation
         exclude_window_indexes = []
         last_exclude_indexes = []
@@ -168,18 +168,18 @@ class IlluminaFiltering:
             # Put chastity code here
             #print fastq_read.identifier
             seq = fastq_read.get_sequence()
-            
+
             desc_items = fastq_read.identifier.split(':')
-                
+
             if desc_items[7] == 'Y':
                 count_of_unchaste += 1
                 #print 'failed chastity'
                 if failed_fastq:
                     fail.write( fastq_read )
                 continue
-            
+
             # Filter reads with ambiguous bases
-            if filter_Ns:                
+            if filter_Ns:
                 countN = seq.count('N')
                 if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
                     #print 'failed Ns',infile
@@ -187,18 +187,18 @@ class IlluminaFiltering:
                     if failed_fastq:
                         fail.write( fastq_read )
                     continue
-            
-            
-            
+
+
+
             # Filter reads below first 50 base quality
-            if filter_first50:                
+            if filter_first50:
                 first50 = 50
                 first50_maxQ = 30
                 first50_maxQ_count = 34
-                
+
                 quals = fastq_read.get_decimal_quality_scores()[:first50]
                 count_lt30 = 0
-                
+
                 for q in quals:
                     if q < first50_maxQ:
                         count_lt30 += 1
@@ -208,15 +208,15 @@ class IlluminaFiltering:
                         fail.write( fastq_read )
                     count_of_first50 += 1
                     continue
-                    
+
             ##### END CHASTITY #####################
             ############################################################################################
             ##### START Btails CODE ################
             quality_list = fastq_read.get_decimal_quality_scores()
-            
+
             for trim_end in trim_ends:
-                
-                
+
+
                 if trim_end == '5':
                     lwindow_position = 0 #left position of window
                     while True:
@@ -240,33 +240,33 @@ class IlluminaFiltering:
                             fastq_read = fastq_read.slice( None, rwindow_position )
                             break
                         rwindow_position -= window_step
-                        
-            ######## END Btails CODE ###############################            
+
+            ######## END Btails CODE ###############################
             ############################################################################################
             # put  length/trim/clip code here
             quality_list = fastq_read.get_decimal_quality_scores()
-            
+
             if filter_length:
                 if len(quality_list) < filter_length:
                     print 'failed length'
                     if failed_fastq:
                         fail.write( fastq_read )
                     continue
-            
-            # Trim initial bases -- remove first 10 bases from read 2   
+
+            # Trim initial bases -- remove first 10 bases from read 2
             if clip_length:
                 # remove from the front:
                 fastq_read = fastq_read.slice( clip_length, None )
                 count_of_trimmed += 1
-                
+
             # Trim to max length -- read 2 trim to 90.
             if trim_length:
                 if len(quality_list) > trim_length:
                     # remove from the end:
                     fastq_read = fastq_read.slice( None, len(fastq_read.get_sequence()) - trim_length )
                     count_of_trimmed += 1
-            
-            
+
+
             if keep_zero_length or len( fastq_read ):
                 out.write( fastq_read )
             else:
@@ -287,6 +287,6 @@ class IlluminaFiltering:
             print "%i reads of zero length were excluded from the output." % num_reads_excluded
 
         return out_filename
-        
-        
+
+
 if __name__ == "__main__": trim_by_quality()

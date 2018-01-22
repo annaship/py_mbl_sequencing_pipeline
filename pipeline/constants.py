@@ -207,7 +207,7 @@ pipeline_run_items = {
                 'require_distal':True,
                 'do_perfect':True,
                 'lane_name':''
-			},            
+			},
 '454' : {   'input_file_format':'sff',
 			'input_file_suffix':'sff',
 			'platform':'454',
@@ -288,7 +288,7 @@ output_root_mbl         = '/groups/g454/run_new_pipeline/'
 
 output_root_mbl_local   = '/Users/ashipunova/BPC/py_mbl_sequencing_pipeline/test'
 # cmd_path_local          = "/Users/ashipunova/bin/illumina-utils/", "/Users/ashipunova/bin/illumina-utils/illumina-utils/scripts/"
-cmd_path_local          = "/usr/local/bin/" 
+cmd_path_local          = "/usr/local/bin/"
 cmd_path_vamps          = "/groups/vampsweb/seqinfobin/"
 ############# defaults for illumina ################################################################
 # perfect_overlap_cmd       = "iu-analyze-v6-complete-overlaps"
