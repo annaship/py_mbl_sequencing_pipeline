@@ -25,11 +25,11 @@ def it_is_py3():
 if it_is_py3():
     import string
     base_complement_translator = bytes.maketrans(b"ACGTRYMK", b"TGCAYRKM")
-    from itertools import zip_longest
+    from itertools import zip_longest as izip_longest
 else:
     from string import maketrans
     base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
-    from itertools import izip_longest
+    from itertools import izip_longest as izip_longest
 
 # the json expected files get loaded and parsed into Unicode strings
 # but the asserts won't work comparing unicode to ascii so we need change them
