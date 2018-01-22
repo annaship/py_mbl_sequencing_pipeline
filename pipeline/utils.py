@@ -126,7 +126,7 @@ options = {
 }
 
 def wait_for_cluster_to_finish(my_running_id_list):
-    #print 'My IDs',running_id_list
+    #print('My IDs',running_id_list)
     logger.debug('Max run time set to ' + str(C.cluster_max_wait) + ' seconds')
     logger.debug('These are my running qsub IDs ' + str(my_running_id_list))
     my_working_id_list = my_running_id_list
@@ -139,7 +139,7 @@ def wait_for_cluster_to_finish(my_running_id_list):
 
         qstat_codes = get_qstat_id_list()
         if not qstat_codes['id']:
-            #print 'No qstat ids'
+            #print('No qstat ids')
             logger.debug("id list not found: may need to increase initial_interval if you haven't seen running ids.")
             return ('SUCCESS','id list not found','',)
         if 'Eqw' in qstat_codes['code']:
@@ -148,7 +148,7 @@ def wait_for_cluster_to_finish(my_running_id_list):
 
         got_one = False
 
-        #print 'working ids',my_working_id_list
+        #print('working ids',my_working_id_list)
         if my_working_id_list[0] in qstat_codes['id']:
 
             got_one = True
@@ -172,7 +172,7 @@ def wait_for_cluster_to_finish(my_running_id_list):
         if not my_working_id_list:
             return ('SUCCESS','not my_working_id_list','')
         #if not got_one:
-            #print 'IN not got one',
+            #print('IN not got one',)
         #    return ('SUCCESS','not got one','')
 
         time.sleep(C.cluster_check_interval)
@@ -193,13 +193,13 @@ def get_qstat_id_list():
     qstat_cmd = 'qstat'
     qstat_codes={}
     output = subprocess.check_output(qstat_cmd)
-    #print output
+    #print(output)
     output_list = output.strip().split("\n")[2:]
     qstat_codes['id'] = [n.split()[0] for n in output_list]
     qstat_codes['name'] = [n.split()[2] for n in output_list]
     qstat_codes['user'] = [n.split()[3] for n in output_list]
     qstat_codes['code'] = [n.split()[4] for n in output_list]
-    #print 'Found IDs',qstat_ids
+    #print('Found IDs',qstat_ids)
 
 
 
@@ -243,14 +243,14 @@ def extract_zipped_file(run_date, outdir, filename):
         try:
             data = zf.read(filename)
         except KeyError:
-            print 'ERROR: Did not find %s in zip file' % filename
+            print('ERROR: Did not find %s in zip file' % filename)
         else:
-            print filename, ':'
-            print repr(data)
+            print(filename, ':')
+            print(repr(data))
         print
         zf.close()
     else:
-        print "No zipfile archive found:",archivename
+        print("No zipfile archive found:",archivename)
 
 def zip_up_directory(run_date, dirPath, mode='a'):
     """
@@ -272,7 +272,7 @@ def zip_up_directory(run_date, dirPath, mode='a'):
 
     for i in zf.infolist():
         dt = datetime.datetime(*(i.date_time))
-        print "%s\tSize: %sb\tCompressed: %sb\t\tModified: %s" % (i.filename, i.file_size, i.compress_size, dt.ctime())
+        print("%s\tSize: %sb\tCompressed: %sb\t\tModified: %s" % (i.filename, i.file_size, i.compress_size, dt.ctime()))
         os.remove(i.filename)
 
     zf.close()
@@ -304,10 +304,10 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
     query = "update vamps_upload_status set status='%s', status_message='%s', date='%s' where id='%s'" % (status, message, today, id)
     try:
         cursor.execute(query)
-        #print "executing",query
+        #print("executing",query)
     except:
         conn.rollback()
-        print "ERROR status update failed"
+        print("ERROR status update failed")
     else:
         conn.commit()
 
@@ -394,10 +394,10 @@ class PipelneUtils:
             with open(out_file, "a") as myfile:
                 myfile.write(str(fa_file_name) + ": " + str(seq_in_file) + "\n")
         except Exception:
-            print Exception
+            print(Exception)
 
     def is_local(self):
-        print os.uname()[1]
+        print(os.uname()[1])
         dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local", "Annas-MacBook.local"]
         if os.uname()[1] in dev_comps:
             return True
@@ -405,7 +405,7 @@ class PipelneUtils:
             return False
 
     def is_vamps(self):
-        print os.uname()[1]
+        print(os.uname()[1])
         dev_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private']
         if os.uname()[1] in dev_comps:
             return True
@@ -415,39 +415,39 @@ class PipelneUtils:
     def check_if_array_job_is_done(self, job_name):
         cluster_done = False
         check_qstat_cmd_line = "qstat -r | grep %s | wc -l" % job_name
-        print "check_qstat_cmd_line = %s" % check_qstat_cmd_line
+        print("check_qstat_cmd_line = %s" % check_qstat_cmd_line)
         try:
             p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
             (output, err) = p.communicate()
             num_proc = int(output)
-            print "qstat is running %s '%s' processes" % (num_proc, job_name)
+            print("qstat is running %s '%s' processes" % (num_proc, job_name))
     #         pprint(p)
 
             if (num_proc == 0):
                 cluster_done = True
-    #         print "cluster_done from check_if_cluster_is_done = %s" % cluster_done
+    #         print("cluster_done from check_if_cluster_is_done = %s" % cluster_done)
         except:
-            print "%s can be done only on a cluster." % job_name
+            print("%s can be done only on a cluster." % job_name)
             raise
         return cluster_done
 
     def run_until_done_on_cluster(self, job_name):
         start = time.time()
         time_before = self.get_time_now()
-        print "time_before = %s" % time_before
-        print "Waiting for the cluster..."
+        print("time_before = %s" % time_before)
+        print("Waiting for the cluster...")
         while True:
             if self.is_local():
                 time.sleep(1)
             else:
                 time.sleep(120)
             cluster_done = self.check_if_array_job_is_done(job_name)
-            print "cluster_done = %s" % cluster_done
+            print("cluster_done = %s" % cluster_done)
             if (cluster_done):
                 break
 
         elapsed = (time.time() - start)
-        print "Cluster is done with %s in: %s" % (job_name, elapsed)
+        print("Cluster is done with %s in: %s" % (job_name, elapsed))
 
     def get_time_now(self):
         """date and hour only!"""
@@ -455,7 +455,7 @@ class PipelneUtils:
 # '2009-01-05 22'
 
     def print_both(self, message):
-        print message
+        print(message)
         logger.debug(message)
 
 class Dirs:
@@ -487,7 +487,7 @@ example of getting all directory name in illumina_files
             os.makedirs(dir_name)
         except OSError:
             if os.path.isdir(dir_name):
-                print "\nDirectory %s already exists."  % (dir_name)
+                print("\nDirectory %s already exists."  % (dir_name))
 #                 confirm_msg = "Do you want to continue? (Yes / No) "
 #                 answer = raw_input(confirm_msg)
 #                 if answer != 'Yes':
@@ -555,7 +555,7 @@ example of getting all directory name in illumina_files
     def delete_file(self, filename):
         try:
             os.remove(filename)
-            print "DELETE %s" % (filename)
+            print("DELETE %s" % (filename))
         except OSError:
             pass
 #         def clean_list_by_ext
@@ -569,7 +569,7 @@ example of getting all directory name in illumina_files
                 full_name = os.path.join(dirname, file_name)
                 (file_base, file_extension) = os.path.splitext(os.path.join(dirname, file_name))
                 files[full_name] = (dirname, file_base, file_extension)
-    #        print "len(files) = %s" % len(files)
+    #        print("len(files) = %s" % len(files))
         return files
 
     def get_all_files_by_ext(self, walk_dir_name, extension):
@@ -579,14 +579,14 @@ example of getting all directory name in illumina_files
       try:
         call(['chmod', '-R', 'ug+w', dir_name])
       except Exception:
-        print "call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name)
-        print Exception
+        print("call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name))
+        print(Exception)
         pass
 
 
 
 
 if __name__=='__main__':
-    print "GTTCAAAGAYTCGATGATTCAC"
-    print revcomp("GTTCAAAGAYTCGATGATTCAC")
+    print("GTTCAAAGAYTCGATGATTCAC")
+    print(revcomp("GTTCAAAGAYTCGATGATTCAC"))
 

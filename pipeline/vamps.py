@@ -140,7 +140,7 @@ class Vamps:
                  self.projects(key, ds_count, files)
                  self.info(key, files)
             else:
-                print "no tagtax file found or no dataset_count -- continuing to next dataset..."
+                print("no tagtax file found or no dataset_count -- continuing to next dataset...")
 
     def load_vamps_db(self):
         """
@@ -156,7 +156,7 @@ class Vamps:
                      if ret_value[:5] == 'ERROR':
                         return ret_value
             else:
-                print "no tagtax file found or no dataset_count -- continuing to next dataset..."
+                print("no tagtax file found or no dataset_count -- continuing to next dataset...")
         return 'SUCCESS'
 
     def gather_files_per_key(self, key):
@@ -170,7 +170,7 @@ class Vamps:
 
         if not os.path.exists(file_collector['tagtax_file']):
             self.logger.warning("Could not find tagtax_file file: "+file_collector['tagtax_file'])
-        #print key,self.runobj.platform
+        #print(key,self.runobj.platform)
 
         if self.runobj.vamps_user_upload:
 
@@ -210,7 +210,7 @@ class Vamps:
             dataset_count = subprocess.check_output(grep_cmd).strip()
         except:
             dataset_count = 0
-        print key,": Sequence Count", dataset_count
+        print(key,": Sequence Count", dataset_count)
 
         # output files to be created:
         file_collector['taxes_file']                = os.path.join(out_gast_dir,'vamps_data_cube_uploads.txt')
@@ -232,7 +232,7 @@ class Vamps:
         fill vamps_data_cube, vamps_junk_data_cube and vamps_taxonomy files
         """
         self.logger.info("Starting vamps_upload: taxonomy")
-        print "Starting vamps_upload: taxonomy"
+        print("Starting vamps_upload: taxonomy")
         # SUMMED create a look-up
         if self.runobj.vamps_user_upload:
             project = self.runobj.project
@@ -279,7 +279,7 @@ class Vamps:
         tax_collector={}
         summer=0
         for tax,knt in taxa_lookup.iteritems():
-            print tax,knt
+            print(tax,knt)
             summer += knt
             datarow = ['',project,dataset]
 
@@ -306,7 +306,7 @@ class Vamps:
             datarow.append(self.runobj.classifier)
 
             w = "\t".join(datarow)
-            #print w
+            #print(w)
             fh1.write(w+"\n")
 
             tax_collector[tax]['rank'] = rank
@@ -338,14 +338,14 @@ class Vamps:
                 if taxon in tax_collector:
                     knt = tax_collector[taxon]['knt']
                 else:
-                    print 'ERROR tax not found in tax_collector: assigning zero'
+                    print('ERROR tax not found in tax_collector: assigning zero')
                     knt = 0
                 idx = len(ranks_subarray)
                 l=[]
                 for k in range(3,idx+3):
                     l.append(line[k])
                 tax = ';'.join(l)
-                #print 'rl tax',ranks_list,tax
+                #print('rl tax',ranks_list,tax)
 
 
                 if tax in rank_list_lookup:
@@ -359,7 +359,7 @@ class Vamps:
 
 
 
-            #print 'tax2',tax
+            #print('tax2',tax)
             taxa = tax.split(';')
             #if taxa[0] in C.domains:
             rank = len( taxa ) -1
@@ -380,7 +380,7 @@ class Vamps:
                 datarow.append(self.runobj.classifier)
 
                 w = "\t".join(datarow)
-                #print w
+                #print(w)
                 fh2.write(w+"\n")
 
 
@@ -399,7 +399,7 @@ class Vamps:
                 continue
             items = line.strip().split()
             taxon_string = items[0]
-            #print taxon_string
+            #print(taxon_string)
             if taxon_string in taxon_string_lookup:
                 taxon_string_lookup[taxon_string] += 1
             else:
@@ -418,7 +418,7 @@ class Vamps:
                     num_kids = '1'
                 datarow.append(num_kids)
                 w = "\t".join(datarow)
-                #print 'w',w
+                #print('w',w)
                 fh3.write(w+"\n")
         fh3.close()
 
@@ -431,7 +431,7 @@ class Vamps:
         """
 
         self.logger.info("Starting vamps_upload: sequences")
-        print "Starting vamps_upload: sequences"
+        print("Starting vamps_upload: sequences")
         if self.runobj.vamps_user_upload:
             project = self.runobj.project
             dataset = key
@@ -479,10 +479,10 @@ class Vamps:
                 cnt = defline_items[-1].split(':')[1]
                 seq = f.seq.upper()
                 if id in read_id_lookup:
-                    print 'FOUND TAX for sequences file'
+                    print('FOUND TAX for sequences file')
                     tax = read_id_lookup[id]
                 else:
-                    print 'NO TAX for sequences file'
+                    print('NO TAX for sequences file')
                     tax = ''
 
                 if tax in tax_collector:
@@ -514,7 +514,7 @@ class Vamps:
                 datarow.append(id)
                 datarow.append(project_dataset)
                 w = "\t".join(datarow)
-                #print 'w',w
+                #print('w',w)
                 fh.write(w+"\n")
 
 
@@ -566,7 +566,7 @@ class Vamps:
         fill vamps_project_info.txt file
         """
         self.logger.info("Starting vamps_upload: projects_info")
-        print "Starting vamps_upload: projects_info"
+        print("Starting vamps_upload: projects_info")
         if self.runobj.vamps_user_upload:
             user = self.runobj.user
             project = self.runobj.project
@@ -615,7 +615,7 @@ class Vamps:
 
         """
         self.logger.info("Starting load VAMPS data")
-        print "Starting load VAMPS data"
+        print("Starting load VAMPS data")
 
         # USER: vamps_db_tables
         execute_error = False
@@ -655,7 +655,7 @@ class Vamps:
         #
         #  DATA_CUBE
         #
-        print "loading "+key+": data_cube"
+        print("loading "+key+": data_cube")
         if os.path.exists(file_collector['taxes_file']):
             for line in open(file_collector['taxes_file'],'r'):
                 line = line.strip().split("\t")
@@ -668,7 +668,7 @@ class Vamps:
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7],
                             line[8],line[9],line[10],line[11],line[12],line[13],line[14],line[15])
                 #myconn.execute_no_fetch(qDataCube)
-                #print qDataCube
+                #print(qDataCube)
                 try:
                     rows_affected = cursor.execute(qDataCube)
                 except:
@@ -677,7 +677,7 @@ class Vamps:
                 else:
                     self.conn.commit()
         else:
-            print "taxes file not found for dataset "+key
+            print("taxes file not found for dataset "+key)
             execute_error=True
         if execute_error:
             return 'ERROR: loading data_cube table'
@@ -685,7 +685,7 @@ class Vamps:
         #
         # SUMMED (JUNK) DATA_CUBE
         #
-        print "loading "+key+": junk_data_cube"
+        print("loading "+key+": junk_data_cube")
         if os.path.exists(file_collector['summed_taxes_file']):
             for line in open(file_collector['summed_taxes_file'],'r'):
                 line = line.strip().split("\t")
@@ -698,7 +698,7 @@ class Vamps:
                             % (summed_cube_table,
                             line[0],line[1],line[2],line[3],line[4],line[5],line[6],line[7], line[8])
                 #myconn.execute_no_fetch(qSummedCube)
-                #print qSummedCube
+                #print(qSummedCube)
                 try:
                     cursor.execute(qSummedCube)
                 except:
@@ -707,7 +707,7 @@ class Vamps:
                 else:
                     self.conn.commit()
         else:
-            print "summed taxes file not found for dataset "+key
+            print("summed taxes file not found for dataset "+key)
             execute_error=True
         if execute_error:
             return 'ERROR: loading summed(junk)_data_cube table'
@@ -715,7 +715,7 @@ class Vamps:
         #
         #  TAXONOMY
         #
-        print "loading "+key+": taxonomy"
+        print("loading "+key+": taxonomy")
         if os.path.exists(file_collector['distinct_taxes_file']):
             for line in open(file_collector['distinct_taxes_file'],'r'):
                 line = line.strip().split("\t")
@@ -734,7 +734,7 @@ class Vamps:
                 else:
                     self.conn.commit()
         else:
-            print "distinct taxes file not found for dataset "+key
+            print("distinct taxes file not found for dataset "+key)
             execute_error=True
         if execute_error:
             return 'ERROR: loading taxonomy table'
@@ -742,7 +742,7 @@ class Vamps:
         #
         #  SEQUENCES
         #
-        print "loading "+key+": sequences"
+        print("loading "+key+": sequences")
         if os.path.exists(file_collector['sequences_file']):
             for line in open(file_collector['sequences_file'],'r'):
                 line = line.strip().split("\t")
@@ -766,7 +766,7 @@ class Vamps:
                 else:
                     self.logger.info("Sequences line error: "+"\t".join(line))
         else:
-            print "sequences file not found for dataset "+key
+            print("sequences file not found for dataset "+key)
             execute_error=True
         if execute_error:
             return 'ERROR: loading sequences table'
@@ -774,7 +774,7 @@ class Vamps:
         #
         #  EXPORT
         #
-#         print "loading "+key+": export"
+#         print("loading "+key+": export")
 #         if os.path.exists(file_collector['export_file']):
 #             for line in open(file_collector['export_file'],'r'):
 #                 line = line.strip().split("\t")
@@ -798,7 +798,7 @@ class Vamps:
 #                 else:
 #                     self.conn.commit()
 #         else:
-#             print "export file not found for dataset "+key
+#             print("export file not found for dataset "+key)
 #             execute_error=True
 #         if execute_error:
 #             return 'ERROR: loading export table'
@@ -806,7 +806,7 @@ class Vamps:
         #
         #  PROJECTS_DATASETS
         #
-        print "loading "+key+": projects_datasets"
+        print("loading "+key+": projects_datasets")
         if os.path.exists(file_collector['projects_datasets_file']):
             for line in open(file_collector['projects_datasets_file'],'r'):
                 line = line.strip().split("\t")
@@ -838,7 +838,7 @@ class Vamps:
                 else:
                     self.conn.commit()
         else:
-            print "project_datasets file not found for dataset "+key
+            print("project_datasets file not found for dataset "+key)
             execute_error=True
         if execute_error:
             return 'ERROR: loading datasets table(s)'
@@ -846,7 +846,7 @@ class Vamps:
         #
         # INFO
         #
-        print "loading "+key+": info"
+        print("loading "+key+": info")
         if os.path.exists(file_collector['project_info_file']):
             for line in open(file_collector['project_info_file'],'r'):
                 line = line.strip().split("\t")
@@ -878,7 +878,7 @@ class Vamps:
                 else:
                     self.conn.commit()
         else:
-            print "upload_info file not found for dataset "+key
+            print("upload_info file not found for dataset "+key)
             execute_error=True
         if execute_error:
             return 'ERROR: loading info table'
@@ -886,7 +886,7 @@ class Vamps:
         #
         # USERS
         #
-        print "loading users:"+key
+        print("loading users:"+key)
 
         qUser = "insert ignore into %s (project, user)\
                     VALUES('%s','%s')" \
