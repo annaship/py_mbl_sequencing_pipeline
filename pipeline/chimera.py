@@ -492,48 +492,6 @@ class Chimera:
         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.indir))
         self.dirs.chmod_all(self.indir)
         logger.debug('sh_script_file_name: ' +  sh_script_file_name)
-#         logger.debug('command_line: ' +  command_line)
-
-#         for idx_key in self.input_file_names:
-# #             print("idx_key, self.input_file_names[idx_key] = %s, %s" % (idx_key, self.input_file_names))
-#             input_file_name  = os.path.join(self.indir,  self.input_file_names[idx_key] + self.chg_suffix)
-#             output_file_name = os.path.join(self.outdir, self.input_file_names[idx_key])
-#             dna_region       = self.runobj.samples[idx_key].dna_region
-# #             print("dna_region = %s" % dna_region)
-#             if dna_region in C.regions_to_chimera_check:
-#                 chimera_region_found = True
-#             else:
-#                 logger.debug('region not checked: ' +  dna_region)
-#                 continue
-#
-# #             print("input_file_name = %s \noutput_file_name = %s" % (input_file_name, output_file_name))
-#             ref_db     = self.get_ref_db(dna_region)
-# #             ref_db     = "/groups/g454/blastdbs/rRNA16S.gold.fasta"
-#
-# #             print("dna_region = %s; ref_db = %s; ref_or_novo = %s" % (dna_region, ref_db, ref_or_novo))
-#
-#             #uchime_cmd = self.create_chimera_cmd(input_file_name, output_file_name, ref_or_novo, ref_db)
-#             uchime_cmd = self.create_chimera_cmd()
-#             self.utils.print_both("\n==================\n%s command: %s" % (ref_or_novo, uchime_cmd))
-#
-#             try:
-#                 logger.info("chimera checking command: " + str(uchime_cmd))
-# #                 self.utils.call_sh_script(script_name_w_path, where_to_run)
-#
-#
-#                 output[idx_key] = subprocess.Popen(uchime_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#
-#             except OSError, e:
-#                 self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
-#                 if self.utils.is_local():
-#                     print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
-#                 else:
-#                     print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
-#                     self.utils.print_both("Error: Execution of %s failed: %s" % (uchime_cmd, e))
-#                     raise
-
-
-# ???
         if not chimera_region_found:
             return ('NOREGION', 'No regions found that need checking', '')
         else:
@@ -678,7 +636,8 @@ class Chimera:
         try:
             file_open = open(file_name)
             return len([l for l in file_open.readlines() if l.startswith('>')])
-        except IOError, e:
+        except IOError:
+            e = sys.exc_info()[1]
             self.utils.print_both(e)
             return 0
             # print("%s\nThere is no such file: %s" % (e, file_name))
@@ -772,7 +731,8 @@ class Chimera:
 
 
 
-                except OSError, e:
+                except OSError:
+                    e = sys.exc_info()[1]                    
                     self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
                     if self.utils.is_local():
                         print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
@@ -873,7 +833,8 @@ class Chimera:
                             print >>sys.stderr, "Error: uchime ref may be broke"
                             self.utils.print_both("Error: uchime ref may be broke")
 
-                except OSError, e:
+                except OSError:
+                    e = sys.exc_info()[1]
                     print >>sys.stderr, "Error: Execution of chimera_reference failed: %s" % (uchime_cmd, e)
                     self.utils.print_both("Error: Execution of chimera_reference failed: %s" % (uchime_cmd, e))
                     raise
