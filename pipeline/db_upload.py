@@ -1,5 +1,6 @@
 import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import constants as C
 from subprocess import Popen, PIPE
 from shlex import split
