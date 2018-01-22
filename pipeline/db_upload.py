@@ -1,5 +1,7 @@
 import sys
 import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+
 import constants as C
 from subprocess import Popen, PIPE, call
 from shlex import split
@@ -10,36 +12,22 @@ from pipeline.pipelinelogging import logger
 from pipeline.utils import Dirs, PipelneUtils
 import IlluminaUtils.lib.fastalib as fastalib
 from collections import defaultdict
-from itertools import izip_longest
+import pipeline.utils as pipe_util
+
+if pipe_util.it_is_py3():
+    from itertools import zip_longest
+else:
+    from itertools import izip_longest
 
 try:
-    import MySQLdb
-except MySQLdb.Error, e:
-    message = """
-    MySQLdb ERROR
-      To load the correct module, try running these commands before running the pipeline:
-
-source /xraid/bioware/Modules/etc/profile.modules
-module load bioware
-    """
-    PipelneUtils.print_both(message)
-    PipelneUtils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
-    raise
-except:                       # catch everything
-#     PipelneUtils.print_both("Unexpected:")
-    print "Unexpected:"         # handle unexpected exceptions
-#     PipelneUtils.print_both(sys.exc_info()[0])
-    print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+    import pymysql as mysql
+except NameError:
+    import MySQLdb as mysql
+except:
+    e = sys.exc_info()[1]
+    print(e)
     raise
 
-#     sys.exit("""
-#     MySQLdb ERROR
-#       To load the correct module, try running these commands before running the pipeline:
-#
-# source /xraid/bioware/Modules/etc/profile.modules
-# module load bioware
-#
-#     """)
 class MyConnection:
     """
     Connection to env454
@@ -66,35 +54,27 @@ class MyConnection:
 
             if self.utils.is_local():
                 host = "127.0.0.1"
-#                 if db == "env454":
-#                     port_env = 3308
-#                     read_default_file = os.path.expanduser("~/.my.cnf_server")
-#                 else:
-#                     db = "test_env454"
                 read_default_file = "~/.my.cnf_local"
-            self.conn   = MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+            self.conn   = mysql.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
             self.cursor = self.conn.cursor()
-            self.cursorD = self.conn.cursor (MySQLdb.cursors.DictCursor)
-            # self.escape = self.conn.escape()
-
-        except (AttributeError, MySQLdb.OperationalError):
-            self.conn = MySQLdb.connect(host=host, db=db, read_default_file=read_default_file, port=port_env)
+            self.cursorD = self.conn.cursor (mysql.cursors.DictCursor)
+        except (AttributeError, mysql.OperationalError):
+            self.conn = mysql.connect(host=host, db=db, read_default_file=read_default_file, port=port_env)
             self.cursor = self.conn.cursor()
-
-
-        except MySQLdb.Error, e:
+        except mysql.Error:
+            e = sys.exc_info()[1]
             self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
             raise
         except:                       # catch everything
             self.utils.print_both("Unexpected:")
             self.utils.print_both(sys.exc_info()[0])
-#             print "Unexpected:"         # handle unexpected exceptions
-#             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+#             print("Unexpected:"         # handle unexpected exceptions)
+#             print(sys.exc_info()[0]     # info about curr exception (type,value,traceback))
             raise                       # re-throw caught exception
 
 
     def connect(self, host, db, read_default_file, port_env):
-        return MySQLdb.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
+        return mysql.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
 
 
     def execute_fetch_select(self, sql):
@@ -116,7 +96,7 @@ class MyConnection:
 #                 logger.debug("affected_rows = "  + str(self.conn.affected_rows()))
 #             logger.debug(self.cursor._info)
 #             _info    str: Records: 238  Duplicates: 66  Warnings: 0
-            return self.cursor._info
+            # return self.cursor._info
 
 
     def execute_insert(self, table_name, field_name, val_list, ignore = "IGNORE"):
@@ -124,9 +104,9 @@ class MyConnection:
             sql = "INSERT %s INTO %s (%s) VALUES (%s) " % (ignore, table_name, field_name, val_list)
             sql = sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (field_name, field_name)
 
-#             print 'sql',sql
+#             print('sql',sql)
             #if table_name == 'dataset' or table_name == 'project':
-            #    print 'sql',sql
+            #    print('sql',sql)
             if self.cursor:
                 self.cursor.execute(sql)
                 self.conn.commit()
@@ -279,10 +259,11 @@ class dbUpload:
             project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str) )
                 # ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
             return project_and_ids
-        except Exception, error:
-            print "problems with res:"
-            print res
-            print error
+        except Exception:
+            error = sys.exc_info()[1]
+            print("problems with res:")
+            print(res)
+            print(error)
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
@@ -294,8 +275,9 @@ class dbUpload:
         try:
             process = Popen(['mail', '-s', subject, recipient],
                                        stdin=PIPE)
-        except Exception, error:
-            print error
+        except Exception:
+            error = sys.exc_info()[1]
+            print(error)
         process.communicate(body)
 
 
@@ -337,7 +319,7 @@ class dbUpload:
 #         todo: if filename in make_gast_files_dict, use it full path
         gast_file_names = self.make_gast_files_dict()
         gast_file_name_path = ""
-        for gast_file_name_path, tpls in gast_file_names.iteritems():
+        for gast_file_name_path, tpls in gast_file_names.items():
             if any(t.endswith(filename) for t in tpls):
                 return gast_file_name_path
 
@@ -350,16 +332,17 @@ class dbUpload:
                 gast_content = fd.readlines()
             self.gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in gast_content[1:]])
 #             gast_dict.remove([k for k in gast_dict if k[0] == 'taxonomy'][0])
-        except IOError, e:
-#            print dir(e)
+        except IOError:
+            e = sys.exc_info()[1]
+#            print(dir(e))
 #['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__getslice__', '__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__', '__unicode__', 'args', 'errno', 'filename', 'message', 'strerror']
-#            print "errno = %s" % e.errno
+#            print("errno = %s" % e.errno)
             logger.debug("errno = %s" % e.errno)
             if e.errno == 2:
                 # suppress "No such file or directory" error
                 pass
-#         except OSError, e:
-        except TypeError, e:
+        except TypeError:
+            error = sys.exc_info()[1]
             self.utils.print_both("Check if there is a gast file under %s for %s." % (self.gast_dir, filename))
             pass
         except:
@@ -463,7 +446,7 @@ class dbUpload:
         #overlap = content_row.overlap
         #if (content_row.overlap == 'complete'):
         #    overlap = 0
-        
+
         # no project_id
         if (self.db_server == "vamps2"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
@@ -610,15 +593,15 @@ class dbUpload:
 # #             int(res[0][0])
 #
     def get_primer_suite_name(self):
-        primer_suites = [v.primer_suite for v in self.runobj.samples.itervalues()]
+        primer_suites = [v.primer_suite for v in self.runobj.samples.values()]
         return list(set(primer_suites))
 
     def get_dataset_names(self):
-        datasets = [v.dataset for v in self.runobj.samples.itervalues()]
+        datasets = [v.dataset for v in self.runobj.samples.values()]
         return '", "'.join(set(datasets))
 
     def get_lane(self):
-        lane = [v.lane for v in self.runobj.samples.itervalues()]
+        lane = [v.lane for v in self.runobj.samples.values()]
         return set(lane)
 
     def count_seq_from_file(self):
@@ -640,9 +623,9 @@ class dbUpload:
         try:
             self.suffix_used = list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
         except:
-            print "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list)
+            print("self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
             self.suffix_used = ""
-#         print self.suffix_used
+#         print(self.suffix_used)
         suffix = self.fasta_dir + "/*" + self.suffix_used
         program_name = "grep"
         call_params  = " '>' " + suffix
@@ -651,7 +634,7 @@ class dbUpload:
         p2 = Popen(split("wc -l"), stdin=p1.stdout, stdout=PIPE)
 #         output = p2.stdout.read().split(" ")[0].strip()
         output, err = p2.communicate()
-#         print output
+#         print(output)
         return int(output.strip())
 
 
@@ -679,8 +662,8 @@ class dbUpload:
             self.taxonomy.insert_split_taxonomy()
         elif (self.db_server == "env454"):
             self.taxonomy.insert_whole_taxonomy()
-            self.taxonomy.get_taxonomy_id_dict()      
-    
+            self.taxonomy.get_taxonomy_id_dict()
+
     def insert_pdr_info(self, run_info_ill_id):
         all_insert_pdr_info_vals = self.seq.prepare_pdr_info_values(run_info_ill_id, self.all_dataset_run_info_dict, self.db_server)
 
@@ -692,7 +675,7 @@ class dbUpload:
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
         query_tmpl = self.my_conn.make_sql_for_groups(table_name, fields)
-        
+
         logger.debug("insert sequence_pdr_info:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
@@ -826,11 +809,11 @@ class Taxonomy:
 
     def insert_silva_taxonomy(self):
         all_insert_st_vals = []
-        
+
         for arr in self.taxa_list_w_empty_ranks_ids_dict.values():
             insert_dat_vals = ', '.join("'%s'" % key for key in arr)
             all_insert_st_vals.append('(%s)' % insert_dat_vals)
-                    
+
         fields = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
         query_tmpl = self.my_conn.make_sql_for_groups("silva_taxonomy", fields)
         group_vals = self.utils.grouper(all_insert_st_vals, len(all_insert_st_vals))
@@ -960,7 +943,7 @@ class Seq:
             if len(sequences) == 0:
                 self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
             raise
-        
+
     def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_server):
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.fasta_dict.items():
@@ -968,19 +951,19 @@ class Seq:
                 self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
 #             seq_upper = seq.upper()
             sequence_id = self.seq_id_dict[seq]
-        
+
             seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
-        
-            if (db_server == "vamps2"):       
+
+            if (db_server == "vamps2"):
                 dataset_id = all_dataset_run_info_dict[run_info_ill_id]
                 vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
             elif (db_server == "env454"):
                 vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
-         
+
             all_insert_pdr_info_vals.append(vals)
-        
+
         return all_insert_pdr_info_vals
-          
+
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
         sequence_ids_strs = [str(i) for i in self.seq_id_dict.values()]
         where_part = 'WHERE sequence_id in (%s)' % ', '.join(sequence_ids_strs)
@@ -1008,10 +991,10 @@ class Seq:
                         """ % (sequence_id, taxonomy_id, distance, refssu_count, rank_id, refhvr_ids.rstrip())
                 all_insert_sequence_uniq_info_ill_vals.append(vals)
         group_vals = self.utils.grouper(all_insert_sequence_uniq_info_ill_vals, len(all_insert_sequence_uniq_info_ill_vals))
-        
+
         fields = "%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids" % (self.table_names["sequence_table_name"])
         query_tmpl = self.my_conn.make_sql_for_groups("sequence_uniq_info_ill", fields)
-        
+
         logger.debug("insert sequence_uniq_info_ill:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 

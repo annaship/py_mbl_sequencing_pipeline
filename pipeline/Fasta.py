@@ -284,11 +284,11 @@ class fasta:
 		"To load a generic fasta file from disk."
 		lines = open(fname,'r').readlines()
 		if verbose:
-			print fname, ": Read ",len(lines),' lines'
+			print(fname, ": Read ",len(lines),' lines')
 		self.parse(lines, verbose)
 
 	def parse(self, lines, verbose):
-		""" 
+		"""
 		perform the effective parsing of lines
 		(i.e. a series of lines as:
 		> Id comment OR >Id comment
@@ -342,7 +342,7 @@ class fasta:
 			self.data[curId] = sfasta(id = curId, seq = seq, cmt = comment)
 			
 		if verbose:
-			print "%s : Read %d sequences" % (self.name,self.nSeq)
+			print("%s : Read %d sequences" % (self.name,self.nSeq))
 
 	def __getitem__(self,key):
 		"""
@@ -528,10 +528,10 @@ class fasta:
 		outSet = fasta()
 
 		for aId in theList:
-			print aId
+			print(aId)
 			outSet.data[aId] = self.data[aId]
 		if verbose:
-			print "Sub selection of ",len(outSet.data),"(wanted ",len(theList),") among ",len(self.data)
+			print("Sub selection of ",len(outSet.data),"(wanted ",len(theList),") among ",len(self.data))
 		return outSet
 
 

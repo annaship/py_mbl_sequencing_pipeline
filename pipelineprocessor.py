@@ -73,7 +73,7 @@ def process(runobj, steps):
     for step in C.existing_steps:
         if step in requested_steps:
             # call the method in here
-            print 'RUN',step
+            print('RUN', step)
             step_method = globals()[step]
             step_method(runobj)
 
@@ -83,7 +83,7 @@ def validate(runobj):
     pass
     #v = MetadataUtils(run, validate=True)
     
-    #print 'Validates:  Configfile and Run Object'
+    #print('Validates:  Configfile and Run Object')
     #runobj.run_status_file_h.write(strftime("%Y-%m-%d %H:%M:%S", gmtime.time())+"\tConfigFile Validated\n")
 
     
@@ -203,7 +203,7 @@ def chimera(runobj):
     else:
         chimera_code='FAIL'
     
-    #print chimera_cluster_ids
+    #print(chimera_cluster_ids)
     runobj.chimera_status_file_h = open(runobj.chimera_status_file_name,"w")
     if chimera_code == 'PASS':  
         
@@ -287,32 +287,32 @@ def illumina_chimera(runobj):
     start = time.time()
     mychimera = Chimera(runobj)
 #     elapsed = (time.time() - start)
-#     print elapsed
-    print "Preparing input files (replacing \"frequency:\" with \";size=\" and capitalize reads)"
+#     print(elapsed)
+    print("Preparing input files (replacing \"frequency:\" with \";size=\" and capitalize reads)")
 
 #     start = time.time()
 #     mychimera.illumina_freq_to_size_in_chg()
 #     elapsed = (time.time() - start)
-#     print "1a) illumina_freq_to_size_in_chg time: %s" % elapsed
+#     print("1a) illumina_freq_to_size_in_chg time: %s" % elapsed)
     start = time.time()
     mychimera.call_illumina_sed("from_frequency_to_size")
     elapsed = (time.time() - start)
-    print "call_illumina_sed from_frequency_to_size time: %s" % elapsed
+    print("call_illumina_sed from_frequency_to_size time: %s" % elapsed)
 #     
-    print "START chimera checking"
+    print("START chimera checking")
 #     c_den = 
     mychimera.chimera_checking()
-# #     print "c_den - check denovo res: %s" % c_den
-#     print c_den
+# #     print("c_den - check denovo res: %s" % c_den)
+#     print(c_den)
 #     c_den = 
 #     mychimera.chimera_checking("ref")
-#     print c_den
+#     print(c_den)
 #     todo: use run_until_done_on_cluster from utils
     """run after cluster is done with it work:"""
     start = time.time()  
     time_before = utils.get_time_now()
-    print "time_before = %s" % time_before
-    print "Waiting for the cluster..."
+    print("time_before = %s" % time_before)
+    print("Waiting for the cluster...")
     while True:
         if utils.is_local():
             sleep(1)  
@@ -321,12 +321,12 @@ def illumina_chimera(runobj):
         else:
             sleep(120)        
             cluster_done = mychimera.check_if_cluster_is_done(time_before)
-            print "cluster_done = %s" % cluster_done
+            print("cluster_done = %s" % cluster_done)
             if (cluster_done):
                 break
     
     elapsed = (time.time() - start)
-    print "Cluster is done with both chimera checkings in: %s" % elapsed     
+    print("Cluster is done with both chimera checkings in: %s" % elapsed     )
     
     mychimera.check_if_chimera_dir_empty()
     
@@ -335,23 +335,23 @@ def illumina_chimera(runobj):
 #     start = time.time()
 #     mychimera.illumina_size_to_freq_in_chimer()
 #     elapsed = (time.time() - start)
-#     print "2a) illumina_size_to_freq_in_chimer time: %s" % elapsed
+#     print("2a) illumina_size_to_freq_in_chimer time: %s" % elapsed)
     start = time.time()
     mychimera.call_illumina_sed("from_size_to_frequency")
     elapsed = (time.time() - start)
-    print "call_illumina_sed from_size_to_frequency time: %s" % elapsed
+    print("call_illumina_sed from_size_to_frequency time: %s" % elapsed)
     
 #     start = time.time()
-#     print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
+#     print("Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo")
 #     mychimera.check_chimeric_stats()
 #     elapsed = (time.time() - start)
-#     print "check_chimeric_stats time: %s" % elapsed
+#     print("check_chimeric_stats time: %s" % elapsed)
     
     start = time.time()
-    print "Creating nonchimeric files in %s" % mychimera.indir
+    print("Creating nonchimeric files in %s" % mychimera.indir)
     mychimera.move_out_chimeric()
     elapsed = (time.time() - start)
-    print "move_out_chimeric time: %s" % elapsed
+    print("move_out_chimeric time: %s" % elapsed)
     
     
 def illumina_chimera_after_cluster(runobj):  
@@ -361,26 +361,26 @@ def illumina_chimera_after_cluster(runobj):
     start = time.time()
     mychimera.illumina_size_to_freq_in_chimer()
     elapsed = (time.time() - start)
-    print "illumina_size_to_freq_in_chimer time: %s" % elapsed
+    print("illumina_size_to_freq_in_chimer time: %s" % elapsed)
     
 #     start = time.time()
-#     print "Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo"
+#     print("Check chimeric statistics. If ref > 15% and ratio ref to de-novo > 2 use only de-novo")
 #     mychimera.check_chimeric_stats()
 #     elapsed = (time.time() - start)
-#     print "check_chimeric_stats time: %s" % elapsed
+#     print("check_chimeric_stats time: %s" % elapsed)
     
     start = time.time()
-    print "Creating nonchimeric files in %s" % mychimera.indir
+    print("Creating nonchimeric files in %s" % mychimera.indir)
     mychimera.move_out_chimeric()
     elapsed = (time.time() - start)
-    print "move_out_chimeric time: %s" % elapsed
-    print "illumina_chimera_after_cluster time = %s" % str(elapsed)
+    print("move_out_chimeric time: %s" % elapsed)
+    print("illumina_chimera_after_cluster time = %s" % str(elapsed))
 
 def illumina_chimera_only(runobj):  
     start = time.time()
     illumina_chimera(runobj)
     elapsed = (time.time() - start)
-    print "illumina_chimera_only time = %s" % str(elapsed)
+    print("illumina_chimera_only time = %s" % str(elapsed))
 
 def illumina_files_demultiplex_only(runobj):  
     start = time.time()
@@ -388,7 +388,7 @@ def illumina_files_demultiplex_only(runobj):
     illumina_files.open_dataset_files()
     illumina_files.split_files(compressed = runobj.compressed)
     elapsed = (time.time() - start)
-    print "illumina_files demultiplex only time = %s" % str(elapsed)
+    print("illumina_files demultiplex only time = %s" % str(elapsed))
 
 def illumina_files(runobj):  
     utils = PipelneUtils()
@@ -420,14 +420,14 @@ def illumina_files(runobj):
     utils.run_until_done_on_cluster(script_file_name)
 #     illumina_chimera(runobj)
     elapsed = (time.time() - start)
-    print "illumina_files time = %s" % str(elapsed)
+    print("illumina_files time = %s" % str(elapsed))
         
         
 def env454run_info_upload(runobj):
 # my_file_to_db_upload = dbUpload(runobj, db_server="vamps2")
     my_read_csv = dbUpload(runobj)
     wrapped   = wrapper(my_read_csv.put_run_info)
-    print "put_run_info time = %s" % timeit.timeit(wrapped, number=1) 
+    print("put_run_info time = %s" % timeit.timeit(wrapped, number=1) )
     
 # def get_sequences(my_file_to_db_upload, filenames):
 #     utils = PipelneUtils()
@@ -512,7 +512,7 @@ def file_to_db_upload_main(runobj, full_upload):
 
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
-    print "The whole upload took %s s" % whole_elapsed
+    print("The whole upload took %s s" % whole_elapsed)
   
 
 
@@ -530,8 +530,8 @@ def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
         insert_seq_time = timeit.timeit(wrapped, number=1)
         logger.debug("insert_seq() took %s sec to finish" % insert_seq_time)
     except:                       # catch everything
-        print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
-        print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+        print("\r[pipelineprocessor] Unexpected:")         # handle unexpected exceptions
+        print(sys.exc_info()[0])     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception   
 
 def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
@@ -573,8 +573,8 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
         return total_seq
         
     except:                       # catch everything
-        print "\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions
-        print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+        print("\r[pipelineprocessor] Unexpected:")         # handle unexpected exceptions
+        print(sys.exc_info()[0])     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception             
       
 # def upload_w_time(my_file_to_db_upload, sql):
@@ -707,7 +707,7 @@ def vampsupload(runobj):
         if runobj.vamps_user_upload:
             write_status_to_vamps_db( runobj.site, runobj.run, "GAST_ERROR", result_code )
     elif runobj.vamps_user_upload:
-        print "Finished loading VAMPS data",result_code
+        print("Finished loading VAMPS data", result_code)
         write_status_to_vamps_db( runobj.site, runobj.run, 'GAST_SUCCESS', 'Loading VAMPS Finished' )
     # check here for completion of 
     # 1-file creation
@@ -721,12 +721,12 @@ def status(runobj):
     lines = f.readlines()
     f.close()
     
-    print "="*40
-    print "STATUS LOG: "
+    print("="*40)
+    print("STATUS LOG: ")
     for line in lines:
         line =line.strip()
-        print line
-    print "="*40+"\n"
+        print(line)
+    print("="*40+"\n")
     
 def clean(runobj):
     """
@@ -737,10 +737,10 @@ def clean(runobj):
     if answer == 'y' or answer == 'Y':
         
         for (archiveDirPath, dirNames, fileNames) in os.walk(runobj.output_dir):
-            print "Removing run:",runobj.run_date
+            print("Removing run:",runobj.run_date)
             for file in fileNames:
                 filePath = os.path.join(runobj.output_dir,file)
-                print filePath
+                print(filePath)
                 os.remove(os.path.join(runobj.output_dir,file))
                 # should we also remove STATUS.txt and *.ini and start again?
                 # the directory will remain with an empty STATUS.txt file
@@ -755,7 +755,7 @@ def get_keys(runobj):
         # if illumina they are index_runkey_lane concatenation
         # if 454 the are lane_key
         if runobj.vamps_user_upload:
-            #print 'KEYS: '+' '.join(runobj.run_keys)
+            #print('KEYS: '+' '.join(runobj.run_keys))
             idx_keys=runobj.samples.keys()
         else:
             if runobj.platform == 'illumina':  

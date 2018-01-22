@@ -51,9 +51,11 @@ temp_data
 ehthumbs.db
 Icon?
 Thumbs.db
+*.bak
+*/*.bak
 
 # IDE #
-#######
+######################
 .idea/
 .idea/*
 .idea/misc.xml
