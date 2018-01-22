@@ -679,10 +679,10 @@ water-marine
         self.res_headers = ["env_sample_source_id" if x=="env_sample_source" else x for x in headers]
 
     def configDictionaryFromFile_ini(self, config_file_path):
-        import ConfigParser
+        import configparser
 
         configDict = {}
-        user_config = ConfigParser.ConfigParser()
+        user_config = configparser.ConfigParser()
         user_config.read(config_file_path)
 
         for section in user_config.sections():
