@@ -1,4 +1,5 @@
 import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 import subprocess
 import constants as C
 import time
@@ -7,7 +8,10 @@ import datetime
 from contextlib import closing
 import zipfile
 import zlib
-from string import maketrans
+if sys.version_info[0] < 3:
+    from string import maketrans
+else:
+    import string
 import collections
 sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
 from pipeline.pipelinelogging import logger
