@@ -14,7 +14,8 @@ from itertools import izip_longest
 
 try:
     import MySQLdb
-except MySQLdb.Error, e:
+except MySQLdb.Error:
+    e = sys.exc_info()[1]
     message = """
     MySQLdb ERROR
       To load the correct module, try running these commands before running the pipeline:
@@ -27,9 +28,9 @@ module load bioware
     raise
 except:                       # catch everything
 #     PipelneUtils.print_both("Unexpected:")
-    print("Unexpected:"         # handle unexpected exceptions)
+    print("Unexpected:")         # handle unexpected exceptions
 #     PipelneUtils.print_both(sys.exc_info()[0])
-    print(sys.exc_info()[0]     # info about curr exception (type,value,traceback))
+    print(sys.exc_info()[0])     # info about curr exception (type,value,traceback)
     raise
 
 #     sys.exit("""
@@ -82,7 +83,8 @@ class MyConnection:
             self.cursor = self.conn.cursor()
 
 
-        except MySQLdb.Error, e:
+        except MySQLdb.Error:
+            e = sys.exc_info()[1]
             self.utils.print_both("Error %d: %s" % (e.args[0], e.args[1]))
             raise
         except:                       # catch everything
@@ -279,7 +281,8 @@ class dbUpload:
             project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str) )
                 # ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
             return project_and_ids
-        except Exception, error:
+        except Exception:
+            error = sys.exc_info()[1]
             print("problems with res:")
             print(res)
             print(error)
@@ -294,7 +297,8 @@ class dbUpload:
         try:
             process = Popen(['mail', '-s', subject, recipient],
                                        stdin=PIPE)
-        except Exception, error:
+        except Exception:
+            error = sys.exc_info()[1]
             print(error)
         process.communicate(body)
 
@@ -350,7 +354,8 @@ class dbUpload:
                 gast_content = fd.readlines()
             self.gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in gast_content[1:]])
 #             gast_dict.remove([k for k in gast_dict if k[0] == 'taxonomy'][0])
-        except IOError, e:
+        except IOError:
+            e = sys.exc_info()[1]
 #            print(dir(e))
 #['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__getslice__', '__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__', '__unicode__', 'args', 'errno', 'filename', 'message', 'strerror']
 #            print("errno = %s" % e.errno)
@@ -358,8 +363,8 @@ class dbUpload:
             if e.errno == 2:
                 # suppress "No such file or directory" error
                 pass
-#         except OSError, e:
-        except TypeError, e:
+        except TypeError:
+            error = sys.exc_info()[1]
             self.utils.print_both("Check if there is a gast file under %s for %s." % (self.gast_dir, filename))
             pass
         except:

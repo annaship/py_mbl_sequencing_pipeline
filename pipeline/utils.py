@@ -13,7 +13,6 @@ sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pi
 from pipeline.pipelinelogging import logger
 from subprocess import call
 import getpass
-from itertools import izip_longest
 import math
 
 
@@ -26,9 +25,11 @@ def it_is_py3():
 if it_is_py3():
     import string
     base_complement_translator = bytes.maketrans(b"ACGTRYMK", b"TGCAYRKM")
+    from itertools import zip_longest
 else:
     from string import maketrans
     base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
+    from itertools import izip_longest
 
 # the json expected files get loaded and parsed into Unicode strings
 # but the asserts won't work comparing unicode to ascii so we need change them
