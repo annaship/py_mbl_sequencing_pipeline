@@ -38,7 +38,7 @@ def convert_unicode_dictionary_to_str(data):
     if isinstance(data, unicode):
         return str(data)
     elif isinstance(data, collections.Mapping):
-        return dict(map(convert_unicode_dictionary_to_str, data.iteritems()))
+        return dict(map(convert_unicode_dictionary_to_str, data.items()))
     elif isinstance(data, collections.Iterable):
         return type(data)(map(convert_unicode_dictionary_to_str, data))
     else:
@@ -223,7 +223,7 @@ def get_qstat_id_list():
 
 def find_key(dic, val):
     """return the first key of dictionary dic given the value"""
-    return [k for k, v in dic.iteritems() if v == val][0]
+    return [k for k, v in dic.items() if v == val][0]
 
 def mysort(uniques,names):
     """ Sorts the uniques using the uniques and names hashes:

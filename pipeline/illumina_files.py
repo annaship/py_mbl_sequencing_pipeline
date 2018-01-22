@@ -87,7 +87,7 @@ class IlluminaFiles:
         self.out_files["unknown"] = fq.FastQOutput(os.path.join(self.out_file_path, "unknown" + ".fastq"))
 
     def close_dataset_files(self):
-        [o_file[1].close() for o_file in self.out_files.iteritems()]
+        [o_file[1].close() for o_file in self.out_files.items()]
         return
 
 #     def perfect_reads(self):

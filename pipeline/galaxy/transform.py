@@ -40,9 +40,9 @@ class ColorSpaceConverter( object ):
     color_to_base_dict[ 'T' ] = { '0':'T', '1':'G', '2':'C', '3':'A', '4':'N', '5':'N', '6':'N', '.':'N' }
     color_to_base_dict[ 'N' ] = { '0':'N', '1':'N', '2':'N', '3':'N', '4':'N', '5':'N', '6':'N', '.':'N' }
     base_to_color_dict = {}
-    for base, color_dict in color_to_base_dict.iteritems():
+    for base, color_dict in color_to_base_dict.items():
         base_to_color_dict[ base ] = {}
-        for key, value in color_dict.iteritems():
+        for key, value in color_dict.items():
             base_to_color_dict[ base ][ value ] = key
         base_to_color_dict[ base ][ 'N' ] = '4' #force ACGT followed by N to be '4', because this is now 'processed' data; we could force to '.' (non-processed data) also
     base_to_color_dict[ 'N' ].update( { 'A':'5', 'C':'5', 'G':'5', 'T':'5', 'N':'6' } )

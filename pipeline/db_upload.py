@@ -354,7 +354,7 @@ class dbUpload:
 #         todo: if filename in make_gast_files_dict, use it full path
         gast_file_names = self.make_gast_files_dict()
         gast_file_name_path = ""
-        for gast_file_name_path, tpls in gast_file_names.iteritems():
+        for gast_file_name_path, tpls in gast_file_names.items():
             if any(t.endswith(filename) for t in tpls):
                 return gast_file_name_path
 

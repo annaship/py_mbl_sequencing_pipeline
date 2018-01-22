@@ -278,7 +278,7 @@ class Vamps:
                             "strain", "rank", "knt", "frequency", "dataset_count", "classifier"]) + "\n")
         tax_collector={}
         summer=0
-        for tax,knt in taxa_lookup.iteritems():
+        for tax,knt in taxa_lookup.items():
             print(tax,knt)
             summer += knt
             datarow = ['',project,dataset]
@@ -355,7 +355,7 @@ class Vamps:
 
 
 
-        for tax,knt in rank_list_lookup.iteritems():
+        for tax,knt in rank_list_lookup.items():
 
 
 
@@ -405,7 +405,7 @@ class Vamps:
             else:
                 taxon_string_lookup[taxon_string] = 1
 
-        for taxon_string,v in taxon_string_lookup.iteritems():
+        for taxon_string,v in taxon_string_lookup.items():
             datarow = ['']
             datarow.append(taxon_string)
             taxa = taxon_string.split(';')

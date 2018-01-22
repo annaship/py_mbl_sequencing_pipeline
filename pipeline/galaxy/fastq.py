@@ -343,7 +343,7 @@ class fastqAggregator( object ):
     def get_score_max_for_column( self, column ):
         return max( self.nuc_index_quality[ column ].keys() )
     def get_score_sum_for_column( self, column ):
-        return sum( score * count for score, count in self.nuc_index_quality[ column ].iteritems() )
+        return sum( score * count for score, count in self.nuc_index_quality[ column ].items() )
     def get_score_at_position_for_column( self, column, position ):
         score_value_dict = self.nuc_index_quality[ column ]
         scores = sorted( score_value_dict.keys() )

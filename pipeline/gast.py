@@ -592,7 +592,7 @@ class Gast:
                 #######################################
                 # first we need to open the gast_filename
                 gastconcat_fh     = open(gastconcat_filename, 'w')
-                for id, value in concat.iteritems():
+                for id, value in concat.items():
                     #print('trying gastconcat', id, value)
                     gastconcat_fh.write( id + "\t" + concat[id]['distance'] + "\t" + ' '.join(concat[id]['refhvrs']) + "\n" )
                 gastconcat_fh.close()
