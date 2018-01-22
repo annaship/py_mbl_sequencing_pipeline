@@ -269,7 +269,7 @@ class dbUpload:
         self.used_project_ids.append(self.all_project_dataset_ids_dict[dataset_id])
 
     def get_project_names(self):
-        used_project_ids_str = (str(w) for w in set(self.used_project_ids))
+        used_project_ids_str = (str(w) for w in set(self.used_project_ids) if w is not None)
         where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
         res = self.my_conn.get_all_name_id("project", "", "", where_part)
 
