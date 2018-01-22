@@ -24,9 +24,9 @@ module load bioware
     raise
 except:                       # catch everything
     PipelneUtils.print_both("Unexpected:")
-#     print "Unexpected:"         # handle unexpected exceptions
+#     print("Unexpected:"         # handle unexpected exceptions)
     PipelneUtils.print_both(sys.exc_info()[0])
-#     print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+#     print(sys.exc_info()[0]     # info about curr exception (type,value,traceback))
     raise
 
 #     sys.exit("""
@@ -77,8 +77,8 @@ class MyConnection:
         except:                       # catch everything
             self.utils.print_both("Unexpected:")
             self.utils.print_both(sys.exc_info()[0])
-#             print "Unexpected:"         # handle unexpected exceptions
-#             print sys.exc_info()[0]     # info about curr exception (type,value,traceback)
+#             print("Unexpected:"         # handle unexpected exceptions)
+#             print(sys.exc_info()[0]     # info about curr exception (type,value,traceback))
             raise                       # re-throw caught exception
 
     def execute_fetch_select(self, sql):
@@ -97,7 +97,7 @@ class MyConnection:
             self.cursor.execute(sql)
             self.conn.commit()
 #            if (self.conn.affected_rows()):
-#            print dir(self.cursor)
+#            print(dir(self.cursor))
             return self.cursor.lastrowid
 #        logger.debug("rows = "  + str(self.rows))
 
@@ -222,7 +222,7 @@ class dbUpload:
     #         val_tmpl   = "'%s'"
     #         my_sql     = query_tmpl % (self.sequence_table_name, self.sequence_field_name, ')), (COMPRESS('.join([val_tmpl % key for key in sequences]))
     #         seq_id     = self.my_conn.execute_no_fetch(my_sql)
-    # #         print "sequences in file: %s" % (len(sequences))
+    # #         print("sequences in file: %s" % (len(sequences)))
     #         self.utils.print_both("sequences in file: %s\n" % (len(sequences)))
     #         return seq_id
     #     except self.my_conn.conn.cursor._mysql_exceptions.Error as err:
@@ -273,7 +273,7 @@ class dbUpload:
         sequence_ill_id = self.seq_id_dict[seq_upper]
 
         seq_count       = int(fasta.id.split('|')[-1].split(':')[-1])
-#        print run_info_ill_id, sequence_ill_id, seq_count
+#        print(run_info_ill_id, sequence_ill_id, seq_count)
         my_sql          = """INSERT IGNORE INTO sequence_pdr_info_ill (run_info_ill_id, sequence_ill_id, seq_count)
                              VALUES (%s, %s, %s)""" % (run_info_ill_id, sequence_ill_id, seq_count)
 
@@ -305,9 +305,9 @@ class dbUpload:
                 gast_dict = dict([(l.split("\t")[0], l.split("\t")[1:]) for l in fd])
             return gast_dict
         except IOError, e:
-#            print dir(e)
+#            print(dir(e))
 #['__class__', '__delattr__', '__dict__', '__doc__', '__format__', '__getattribute__', '__getitem__', '__getslice__', '__hash__', '__init__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__setstate__', '__sizeof__', '__str__', '__subclasshook__', '__unicode__', 'args', 'errno', 'filename', 'message', 'strerror']
-#            print "errno = %s" % e.errno
+#            print("errno = %s" % e.errno)
             logger.debug("errno = %s" % e.errno)
             if e.errno == 2:
                 # suppress "No such file or directory" error
@@ -659,9 +659,9 @@ class dbUpload:
         try:
             self.suffix_used = list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
         except:
-            print "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list)
+            print("self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
             self.suffix_used = ""
-        print self.suffix_used
+        print(self.suffix_used)
         suffix = self.fasta_dir + "/*" + self.suffix_used
         program_name = "grep"
         call_params  = " '>' " + suffix
@@ -670,13 +670,13 @@ class dbUpload:
         p2 = Popen(split("wc -l"), stdin=p1.stdout, stdout=PIPE)
 #         output = p2.stdout.read().split(" ")[0].strip()
         output, err = p2.communicate()
-#         print output
+#         print(output)
         return int(output.strip())
 
 
     def check_seq_upload(self):
         file_seq_db_counts   = self.count_sequence_pdr_info_ill()
-#        print "file_seq_db_count = %s" % file_seq_db_count
+#        print("file_seq_db_count = %s" % file_seq_db_count)
 #         file_seq_orig_count = self.count_seq_from_file()
         file_seq_orig_count = self.count_seq_from_files_grep()
 
