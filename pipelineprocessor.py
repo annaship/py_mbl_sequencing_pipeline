@@ -530,8 +530,8 @@ def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
         insert_seq_time = timeit.timeit(wrapped, number=1)
         logger.debug("insert_seq() took %s sec to finish" % insert_seq_time)
     except:                       # catch everything
-        print("\r[pipelineprocessor] Unexpected:"         # handle unexpected exceptions)
-        print(sys.exc_info()[0]     # info about curr exception (type,value,traceback))
+        print("\r[pipelineprocessor] Unexpected:")         # handle unexpected exceptions
+        print(sys.exc_info()[0])     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception   
 
 def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
