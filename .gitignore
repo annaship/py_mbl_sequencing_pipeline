@@ -51,3 +51,7 @@ temp_data
 ehthumbs.db
 Icon?
 Thumbs.db
+
+# IDE #
+######################
+.idea/
