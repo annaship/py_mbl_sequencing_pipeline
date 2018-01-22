@@ -42,7 +42,7 @@ def run_gast2tax(args):
         runobj.user = ''
         runobj.run = ''
         # for vamps this has to be True and empty list
-        print 'VUU ',args.vamps_user_upload
+        print('VUU ',args.vamps_user_upload)
         runobj.vamps_user_upload = args.vamps_user_upload
         runobj.platform = args.platform
         runobj.site = args.site
@@ -55,7 +55,7 @@ def run_gast2tax(args):
 
         ( refdb, taxdb ) = mygast.get_reference_databases(args.dna_region)
 
-        #print tax_file
+        #print(tax_file)
         max_gast_distance = C.max_gast_distance['default']
         if args.dna_region in C.max_gast_distance:
             max_gast_distance = C.max_gast_distance[args.dna_region]
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
         """
     if  len(sys.argv) == 1:
-        print usage
+        print(usage)
         sys.exit()
 
 

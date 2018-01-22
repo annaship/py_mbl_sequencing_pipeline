@@ -32,7 +32,7 @@ class Gast:
         self.test   = True
         self.utils  = PipelneUtils()
 
-        print 'SITE', self.runobj.site
+        print('SITE', self.runobj.site)
         self.use_cluster = self.runobj.use_cluster
         if self.runobj.vamps_user_upload:
             self.idx_keys  = [self.runobj.user+self.runobj.run]
@@ -158,8 +158,8 @@ class Gast:
         self.logger.info("xCluster nodes set to: "+str(cluster_nodes))
         for key in self.iterator:
             key_counter += 1
-            print "\nDirectory", str(key_counter), key
-            print 'use_cluster:', self.use_cluster
+            print("\nDirectory", str(key_counter), key)
+            print('use_cluster:', self.use_cluster)
             if self.runobj.vamps_user_upload:
                 output_dir  = os.path.join(self.global_gast_dir, key)
                 gast_dir    = os.path.join(self.global_gast_dir, key)
@@ -173,8 +173,8 @@ class Gast:
                     unique_file = os.path.join(output_dir, 'unique.fa')
                 names_file  = os.path.join(output_dir, 'names')
                 #datasets_file = os.path.join(self.global_gast_dir, 'datasets')
-                #print 'gast_dir:', gast_dir
-                print 'unique_file:', unique_file
+                #print('gast_dir:', gast_dir)
+                print('unique_file:', unique_file)
             else:
                 if self.runobj.platform == 'illumina':
                     output_dir  = os.path.join(self.global_gast_dir, key)
@@ -191,7 +191,7 @@ class Gast:
             if key_counter >= self.limit:
                 pass
 
-            #print 'samples', key, self.runobj.samples
+            #print('samples', key, self.runobj.samples)
             if key in self.runobj.samples:
                 dna_region = self.runobj.samples[key].dna_region
             else:
@@ -218,7 +218,7 @@ class Gast:
 
 
             if os.path.exists(unique_file) and (os.path.getsize(unique_file) > 0):
-                print "cluster nodes: "+str(cluster_nodes)
+                print("cluster nodes: "+str(cluster_nodes))
                 i = 0
                 if cluster_nodes:
                     grep_cmd = ['grep', '-c', '>', unique_file]
@@ -302,7 +302,7 @@ class Gast:
                             fh.write(grep_cmd + "\n")
                             fh.close()
                             # make script executable and run it
-                            #print script_filename
+                            #print(script_filename)
 
                             #os.chmod(script_filename, stat.S_IRWXU)
                             subprocess.Popen('chmod +x '+script_filename, shell=True)
@@ -314,14 +314,14 @@ class Gast:
                             # cluster aware directories /xraid2-2/vampsweb/vamps and /xraid2-2/vampsweb/vampsdev
                             #qsub_cmd = C.qsub_cmd + " " + script_filename
                             self.logger.debug("qsub command: "+qsub_cmd)
-                            #print 'qsub CMD:',qsub_cmd
+                            #print('qsub CMD:',qsub_cmd)
                             proc = subprocess.check_output(qsub_cmd, shell=True)
                             self.logger.debug('proc: '+proc)
-                            #print 'proc: ',proc
+                            #print('proc: ',proc)
                             try:
                                 lines = proc.split("\n")
                                 for line in lines:
-                                    #print 'LINE',line
+                                    #print('LINE',line)
                                     items = line.split()
                                     if items[0] == 'Your' and items[1] == 'job':
                                         qsub_id = items[2]
@@ -332,7 +332,7 @@ class Gast:
 
                             # proc.communicate will block - probably not what we want
                             #(stdout, stderr) = proc.communicate() #block the last onehere
-                            #print stderr, stdout
+                            #print(stderr, stdout)
                             time.sleep(0.1)
 
                         else:
@@ -349,13 +349,13 @@ class Gast:
                     usearch_filename= os.path.join(gast_dir, "uc")
                     clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
                     gast_file_list = [clustergast_filename_single]
-                    #print usearch_filename, clustergast_filename_single
+                    #print(usearch_filename, clustergast_filename_single)
 
                     us_cmd = self.get_usearch_cmd(unique_file, refdb, usearch_filename, self.runobj.use64bit)
-                    #print us_cmd
+                    #print(us_cmd)
                     subprocess.call(us_cmd, shell=True)
                     grep_cmd = self.get_grep_cmd(usearch_filename, clustergast_filename_single)
-                    #print grep_cmd
+                    #print(grep_cmd)
                     subprocess.call(grep_cmd, shell=True)
             else:
                 self.logger.warning( "unique_file not found or zero size: "+unique_file)
@@ -365,11 +365,11 @@ class Gast:
             'check if clusters are done'
             # wait here for all the clustergast scripts to finish
 
-            print "Checking cluster jobs"
+            print("Checking cluster jobs")
             result = self.waiting_on_cluster( self.runobj.site, qsub_id_list )
             time.sleep(10)
 
-            print 'USEARCH: cluster jobs are complete'
+            print('USEARCH: cluster jobs are complete')
 
         for key in self.iterator:
 
@@ -388,7 +388,7 @@ class Gast:
                 # gast file
 
                 clustergast_filename_single   = os.path.join(gast_dir, "gast"+dna_region)
-                print "Concatenating ds.gast_x files into"+clustergast_filename_single
+                print("Concatenating ds.gast_x files into"+clustergast_filename_single)
                 clustergast_fh = open(clustergast_filename_single, 'w')
                 # have to turn off cluster above to be able to 'find' these files for concatenation
                 for n in range(1, C.cluster_nodes-1):
@@ -403,26 +403,7 @@ class Gast:
                 clustergast_fh.flush()
                 clustergast_fh.close()
 
-
-#         if not self.test:
-#             # remove tmp files
-#             for n in range(i+1):
-#                 #print "Trying to remove "+os.path.join(gast_dir, "uc_"+str(n))
-#                 if os.path.exists(os.path.join(gast_dir, "uc_"+str(n))):
-#                     os.remove(os.path.join(gast_dir, "uc_"+str(n)))
-#                     pass
-#                 #print "Trying to remove "+os.path.join(gast_dir, "samp_"+str(n))
-#                 if os.path.exists(os.path.join(gast_dir, "samp_"+str(n))):
-#                     os.remove(os.path.join(gast_dir, "samp_"+str(n)))
-#                     pass
-#                 #print "Trying to remove "+os.path.join(self.gast_dir, key+".gast_"+str(n))
-#                 if os.path.exists(os.path.join(gast_dir, key+".gast_"+str(n))):
-#                     os.remove(os.path.join(gast_dir, key+".gast_"+str(n)))
-#                     pass
-
-
-
-        print "Finished clustergast"
+        print("Finished clustergast")
         self.logger.info("Finished clustergast")
         #sys.exit()
         return {'status':"GAST_SUCCESS", 'message':"Clustergast Finished"}
@@ -507,8 +488,8 @@ class Gast:
 
 
                 names_fh.close()
-            #print nonhits
-            #print copies
+            #print(nonhits)
+            #print(copies)
 
             #######################################
             #
@@ -539,13 +520,13 @@ class Gast:
                         frequency   = s[4]
                     else:
                         self.logger.debug("gast_cleanup: wrong field count")
-                    #print read_id, refhvr_id
+                    #print(read_id, refhvr_id)
                     # if this was in the gast table zero it out because it had a valid hit
                     # so we don't insert them as non-hits later
                     if read_id in nonhits:
                         del nonhits[read_id]
-                        #print 'deleling', read_id
-                    #print 'nonhits', nonhits
+                        #print('deleling', read_id)
+                    #print('nonhits', nonhits)
                     if read_id not in copies:
                         self.logger.info(read_id+' not in names copies: Skipping')
                         continue
@@ -554,7 +535,7 @@ class Gast:
                     for id in copies[read_id]:
 
                         if id != read_id:
-                            #print id, read_id, distance, refhvr_id
+                            #print(id, read_id, distance, refhvr_id)
                             gast_fh.write( id + "\t" + refhvr_id + "\t" + distance + "\t" + alignment +"\t"+frequency+"\n" )
 
 
@@ -583,7 +564,7 @@ class Gast:
                 clustergast_fh.close()
                 #then open again and get data for gast concat
                 concat = {}
-                #print clustergast_filename_single
+                #print(clustergast_filename_single)
                 'create content for the gast_concat table'
                 # M01925:91:000000000-A7PJY:1:1102:19152:21839	DQ874340_1_1390	0.007	264I151M975I	99
                 for line in open(clustergast_filename_single, 'r'):
@@ -594,7 +575,7 @@ class Gast:
                     except:
                         refhvr_id = data[1]
                     distance = data[2]
-                    #print 'data', data
+                    #print('data', data)
                     if id in concat:
                         concat[id]['refhvrs'].append(refhvr_id)
                     else:
@@ -612,7 +593,7 @@ class Gast:
                 # first we need to open the gast_filename
                 gastconcat_fh     = open(gastconcat_filename, 'w')
                 for id, value in concat.iteritems():
-                    #print 'trying gastconcat', id, value
+                    #print('trying gastconcat', id, value)
                     gastconcat_fh.write( id + "\t" + concat[id]['distance'] + "\t" + ' '.join(concat[id]['refhvrs']) + "\n" )
                 gastconcat_fh.close()
 
@@ -621,7 +602,7 @@ class Gast:
                 self.runobj.run_status_file_h.write(json.dumps({'status':'WARNING', 'message':"No clustergast file found: "+clustergast_filename_single+" Continuing"})+"\n")
 
 
-        print "Finished gast_cleanup"
+        print("Finished gast_cleanup")
         self.logger.info("Finished gast_cleanup")
         return {'status':"GAST_SUCCESS", 'message':"gast_cleanup finished"}
 
@@ -632,7 +613,7 @@ class Gast:
         self.runobj.run_status_file_h.write(json.dumps({'status':'STARTING_GAST2TAX'})+"\n")
         key_counter = 0
         qsub_prefix = 'gast2tax_sub_'
-        #print tax_file
+        #print(tax_file)
         tax_files = []
         qsub_id_list=[]
         for key in self.iterator:
@@ -768,31 +749,13 @@ class Gast:
             maxwaittime = C.maxwaittime  # seconds
             sleeptime   = C.sleeptime    # seconds
             counter3 = 0
-            print "Checking cluster jobs"
+            print("Checking cluster jobs")
             result = self.waiting_on_cluster( self.runobj.site, qsub_id_list )
             time.sleep(10)
 
-            print 'gast2tax: cluster jobs are complete'
+            print('gast2tax: cluster jobs are complete')
 
-
-
-
-#                 counter3 += 1
-#                 if counter3 >= maxwaittime / sleeptime:
-#                     raise Exception("Max wait time exceeded in gast.py: gast2tax")
-#
-#                 #print temp_file_list
-#                 if os.path.exists(tagtax_long_filename) and os.path.getsize(tagtax_long_filename) > 100:
-#                     # remove from tmp list
-#                     self.logger.debug("Found file: "+tagtax_long_filename+" - Continuing")
-#                     c = True
-#                 else:
-#                     self.logger.info("waiting for tagtax files to fill...")
-#                     self.logger.info("\ttime: "+str(counter3 * sleeptime))
-#                     time.sleep(sleeptime)
-
-
-        print "Finished gast2tax"
+        print("Finished gast2tax")
         return {'status':"GAST_SUCCESS", 'message':"gast2tax finished"}
 
 
@@ -804,13 +767,7 @@ class Gast:
             dna_region = 'v4v6'
         if dna_region == 'v6v4a':
             dna_region = 'v4v6a'
-        print  'dna_region ', dna_region
-        # try this first:
-
-       #  if os.path.exists(os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')):
-#             refdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.udb')
-#             taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
-#             self.db_type='udb'
+        print( 'dna_region ', dna_region)
 
         refdb = os.path.join(self.refdb_dir, 'refssu.fa')
         taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
@@ -828,7 +785,7 @@ class Gast:
                     taxdb = os.path.join(self.refdb_dir, 'ref'+dna_region+'.tax')
                     self.db_type='db'
                 else:
-                    #print 'could not find refdb '+os.path.join(self.refdb_dir, C.refdbs[dna_region])+".udb - Using full length"
+                    #print('could not find refdb '+os.path.join(self.refdb_dir, C.refdbs[dna_region])+".udb - Using full length")
                     refdb = os.path.join(self.refdb_dir, 'refssu.fa')
                     taxdb = os.path.join(self.refdb_dir, 'refssu.tax')
                     self.db_type='db'
@@ -987,7 +944,7 @@ class Gast:
         tagtax_long_fh = open(tagtax_long_filename, 'w')
         tagtax_long_fh.write("\t".join(["read_id", "taxonomy", "distance", "rank", "refssu_count", "vote", "minrank", "taxa_counts", "max_pcts", "na_pcts", "refhvr_ids"])+"\n")
         gast_file          = os.path.join(gast_dir, "gast"+dna_region)
-        print gast_file
+        print(gast_file)
         if not os.path.exists(gast_file):
             self.logger.info("gast:assign_taxonomy: Could not find gast file: "+gast_file+". Returning")
             return results
@@ -999,7 +956,7 @@ class Gast:
                 data.append("")
             # 0=id, 1=ref, 2=dist, 3=align 4=frequency
             #if data[0]==test_read:
-            #    print 'found test in gastv6 ', data[1].split('|')[0], data[2], data[3]
+            #    print('found test in gastv6 ', data[1].split('|')[0], data[2], data[3])
 
             read_id = data[0]
             if read_id in results:
@@ -1017,19 +974,19 @@ class Gast:
             frequency   = 0
             refs_for    = {}
 
-            #print 'read_id', read_id
+            #print('read_id', read_id)
             'assing taxonomyt method, either fake or real'
             if read_id not in results:
                 results[read_id]=["Unknown", '1', "NA", '0', '0', "NA", "0;0;0;0;0;0;0;0", "0;0;0;0;0;0;0;0", "100;100;100;100;100;100;100;100"]
                 refs_for[read_id] = [ "NA" ]
             else:
                 'it is in results[]'
-                #print 'read_id in res', read_id, results[read_id]
+                #print('read_id in res', read_id, results[read_id])
                 #if read_id == test_read_id:
-                #    print 'found ', test_read_id, results[test_read_id]
+                #    print('found ', test_read_id, results[test_read_id])
                 for i in range( 0, len(results[read_id])):
                     #for resultread_id in results[read_id]:
-                    #print 'resread_id', results[read_id]
+                    #print('resread_id', results[read_id])
                     ref = results[read_id][i][0]
                     if ref in ref_taxa:
                         for tax in ref_taxa[ref]:
@@ -1040,12 +997,12 @@ class Gast:
 
                     if read_id in refs_for:
                         #if read_id ==test_read_id:
-                        #    print '2', read_id, refs_for[test_read_id]
+                        #    print('2', read_id, refs_for[test_read_id])
                         if results[read_id][i][0] not in refs_for[read_id]:
                             refs_for[read_id].append(results[read_id][i][0])
                     else:
                         #if read_id == test_read_id:
-                        #    print '1', read_id, results[read_id][i][0]
+                        #    print('1', read_id, results[read_id][i][0])
                         refs_for[read_id] = [results[read_id][i][0]]
 
                     # should all be the same distance for the duplicates
@@ -1060,19 +1017,19 @@ class Gast:
                 #    taxon = taxon[:-3]
                 #tax_counter[taxon]
                 rank = taxReturn[0].depth()
-                #print read_id, taxon, rank, taxReturn[0], taxReturn[1]
+                #print(read_id, taxon, rank, taxReturn[0], taxReturn[1])
                 if not taxon: taxon = "Unknown"
 
                 # (taxonomy, distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts)
                 results[read_id] = [ taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5] ]
-                #print "\t".join([read_id, taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5]]) + "\n"
+                #print("\t".join([read_id, taxon, str(distance), rank, str(len(taxObjects)), str(taxReturn[1]), taxReturn[2], taxReturn[3], taxReturn[4], taxReturn[5]]) + "\n")
 #read_id_id taxonomy        distance        rank    refssu_count    vote    minrank taxa_counts     max_pcts        na_pcts refhvr_ids
 #D4ZHLFP1:25:B022DACXX:3:1101:12919:40734 1:N:0:TGACCA|frequency:162     Bacteria;Proteobacteria;Gammaproteobacteria     0.117   class   2       100     genus   1;1;1;2;2;2;0;0 100;100;100;50;50;50;0;0        0;0;0;0;0;0;100;100     v6_CI671
 #D4ZHLFP1:25:B022DACXX:3:1101:10432:76870 1:N:0:TGACCA|frequency:105     Bacteria;Proteobacteria;Gammaproteobacteria     0.017   class   1       100     class   1;1;1;0;0;0;0;0 100;100;100;0;0;0;0;0   0;0;0;100;100;100;100;100       v6_BW306
 
             # Replace hash with final taxonomy results, for each copy of the sequence
             for d in dupes:
-               # print OUT join("\t", $d, @{$results{$read_id}}, join(", ", sort @{$refs_for{$read_id}})) . "\n";
+               # print(OUT join("\t", $d, @{$results{$read_id}}, join(", ", sort @{$refs_for{$read_id}})) . "\n";)
                 d = d.strip()
                 tagtax_long_fh.write( d+"\t"+"\t".join(results[read_id])+"\t"+', '.join(sorted(refs_for[read_id]))  + "\n")
                 tagtax_terse_fh.write(d+"\t"+results[read_id][0]+"\t"+results[read_id][2]+"\t"+results[read_id][3]+"\t"+', '.join(sorted(refs_for[read_id]))+"\t"+results[read_id][1]+"\t"+str(frequency)+"\n")
@@ -1101,7 +1058,7 @@ class Gast:
 
                     # the -x means do not store frequency data in defline of fasta file
                     fastaunique_cmd = C.fastaunique_cmd +" -x -i "+self.runobj.fasta_file+" -o "+unique_file+" -n "+names_file
-                    print fastaunique_cmd
+                    print(fastaunique_cmd)
 
                     subprocess.call(fastaunique_cmd, shell=True)
 
@@ -1153,36 +1110,36 @@ class Gast:
         web_user = site+'httpd'
         qstat_user = subprocess.check_output(['whoami'])
         qstat_cmd = ['qstat', '-u', qstat_user.strip()]
-        print ' qstat cmd: ',qstat_cmd
+        print(' qstat cmd: ',qstat_cmd)
         qstat_codes={}
         output = subprocess.check_output(qstat_cmd)
-        #print output
+        #print(output)
         output_list = output.strip().split("\n")[2:]
         qstat_codes['id'] = [n.split()[0] for n in output_list]
         qstat_codes['name'] = [n.split()[2] for n in output_list]
         qstat_codes['user'] = [n.split()[3] for n in output_list]
         qstat_codes['code'] = [n.split()[4] for n in output_list]
-        #print 'Found IDs',qstat_ids
+        #print('Found IDs',qstat_ids)
 
         return qstat_codes
 
     def waiting_on_cluster(self, site, my_working_id_list):
-        print 'my_working_id_list',my_working_id_list
+        print('my_working_id_list',my_working_id_list)
         c = False
         maxwaittime = C.maxwaittime  # 50000 seconds
         sleeptime   = C.sleeptime    # 5 seconds
         wait_counter = 0
-        #print maxwaittime,sleeptime
+        #print(maxwaittime,sleeptime)
         time.sleep(sleeptime)
         got_one = False
         while my_working_id_list:
 
             qstat_codes = self.get_qstat_id_list(site)
-            #print 'qstat_codes',qstat_codes['id']
+            #print('qstat_codes',qstat_codes['id'])
             if not qstat_codes['id']:
-                #print 'No qstat ids'
+                #print('No qstat ids')
                 #print("id list not found: may need to increase initial_interval if you haven't seen running ids.")
-                print ('qstat id list not found')
+                print('qstat id list not found')
                 if not got_one:
                     # empty out list we have seen some ids and now empty
                     my_working_id_list = []
@@ -1191,7 +1148,7 @@ class Gast:
 
             got_one = False
 
-            #print 'working ids',my_working_id_list
+            #print('working ids',my_working_id_list)
             #for id in my_working_id_list:
             #    if id not in qstat_codes['id']:
 
@@ -1204,12 +1161,12 @@ class Gast:
 
 
                 if code[:1] == 'E':
-                    print ('FAIL','Found Eqw code',my_working_id_list[0])
+                    print('FAIL','Found Eqw code',my_working_id_list[0])
                 elif code == 'qw':
                     print("id is still queued: " +  str(my_working_id_list[0]) + " " + str(code))
                     wait_counter = 0  # gets reset to '0' when id is still queued
                 elif code == 'r':
-                    print my_working_id_list[0],"is running..."
+                    print(my_working_id_list[0],"is running...")
                     wait_counter = 0  # gets reset to '0' when id is stll running
 
                 else:
@@ -1217,11 +1174,11 @@ class Gast:
             elif my_working_id_list:
                 # here we did NOT find the id: my_working_id_list[0] in the list of ids from qstat -u
                 # so we assume it is done.
-                print 'removing: ', my_working_id_list[0]
+                print('removing: ', my_working_id_list[0])
                 my_working_id_list = my_working_id_list[1:]  # pop it off and throw it away
                 wait_counter = 0  # gets reset to '0' when an id is found/removed
 
-            print 'my_working_id_list length:',len(my_working_id_list)
+            print('my_working_id_list length:',len(my_working_id_list))
             wait_counter +=1
             time.sleep(sleeptime)
             # using a counter that gets reset (max_wait_counter) when an id is found/removed
