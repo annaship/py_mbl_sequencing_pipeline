@@ -934,7 +934,7 @@ class Seq:
         try:
             group_seq = self.utils.grouper(sequences, len(sequences))
             for group in group_seq:
-                seq_part = '), COMPRESS('.join([val_tmpl % key for key in group])
+                seq_part = '), COMPRESS('.join([val_tmpl % key for key in group if key is not None])
                 my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
 
                 print("MMM my_sql")
