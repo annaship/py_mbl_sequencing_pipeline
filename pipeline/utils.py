@@ -8,17 +8,25 @@ import datetime
 from contextlib import closing
 import zipfile
 import zlib
-if sys.version_info[0] < 3:
-    from string import maketrans
-else:
-    import string
 import collections
 sys.path.append('/bioware/linux/seqinfo/bin/python_pipeline/py_mbl_sequencing_pipeline')
 from pipeline.pipelinelogging import logger
 from subprocess import call
 import getpass
 
-base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
+
+def it_is_py3():
+    if sys.version_info[0] < 3:
+        return False
+    if sys.version_info[0] >= 3:
+        return True
+        
+if it_is_py3():
+    import string
+    base_complement_translator = bytes.maketrans(b"ACGTRYMK", b"TGCAYRKM")
+else:
+    from string import maketrans
+    base_complement_translator = maketrans("ACGTRYMK", "TGCAYRKM")
 
 # the json expected files get loaded and parsed into Unicode strings
 # but the asserts won't work comparing unicode to ascii so we need change them
