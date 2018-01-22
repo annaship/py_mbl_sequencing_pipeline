@@ -96,7 +96,7 @@ class MyConnection:
 #                 logger.debug("affected_rows = "  + str(self.conn.affected_rows()))
 #             logger.debug(self.cursor._info)
 #             _info    str: Records: 238  Duplicates: 66  Warnings: 0
-            return self.cursor._info
+            # return self.cursor._info
 
 
     def execute_insert(self, table_name, field_name, val_list, ignore = "IGNORE"):
@@ -593,15 +593,15 @@ class dbUpload:
 # #             int(res[0][0])
 #
     def get_primer_suite_name(self):
-        primer_suites = [v.primer_suite for v in self.runobj.samples.itervalues()]
+        primer_suites = [v.primer_suite for v in self.runobj.samples.values()]
         return list(set(primer_suites))
 
     def get_dataset_names(self):
-        datasets = [v.dataset for v in self.runobj.samples.itervalues()]
+        datasets = [v.dataset for v in self.runobj.samples.values()]
         return '", "'.join(set(datasets))
 
     def get_lane(self):
-        lane = [v.lane for v in self.runobj.samples.itervalues()]
+        lane = [v.lane for v in self.runobj.samples.values()]
         return set(lane)
 
     def count_seq_from_file(self):
