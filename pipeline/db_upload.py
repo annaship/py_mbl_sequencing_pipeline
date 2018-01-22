@@ -955,7 +955,11 @@ class Seq:
             if (not run_info_ill_id):
                 self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
 #             seq_upper = seq.upper()
-            sequence_id = self.seq_id_dict[seq]
+            try:
+                sequence_id = self.seq_id_dict[seq]
+            except:
+                print("SSS %s" % seq)
+                print self.seq_id_dict
 
             seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
 
