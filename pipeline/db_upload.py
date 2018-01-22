@@ -950,6 +950,9 @@ class Seq:
             raise
 
     def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_server):
+        print("DDD")
+        print(self.seq_id_dict)
+
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.fasta_dict.items():
             if (not run_info_ill_id):
@@ -959,7 +962,6 @@ class Seq:
                 sequence_id = self.seq_id_dict[seq]
             except:
                 print("SSS %s" % seq)
-                print self.seq_id_dict
 
             seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
 
