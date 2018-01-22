@@ -27,7 +27,7 @@ def configDictionaryFromFile_ini(config_file_path):
     configDict = {}
     user_config = ConfigParser.ConfigParser()
     user_config.read(config_file_path)
-    #print "config_file_path:",config_file_path
+    #print("config_file_path:",config_file_path)
     for section in user_config.sections():
         section_dict = configDict[section] = {}
         for option in user_config.options(section):
@@ -107,13 +107,13 @@ class RunConfig:
 
         self.initializeFromDictionary(config_dict)
 
-        print "self.vamps_user_upload",self.vamps_user_upload
+        print("self.vamps_user_upload",self.vamps_user_upload)
         if not self.vamps_user_upload:
 
             # primers should be in json format in a file and that file should be specified in the general section
-            # print "curr dir: " + os.getcwd()
-            # print "curr file all: " + os.path.realpath(__file__)
-            # print "curr file dir: " + os.path.dirname(os.path.realpath(__file__))
+            # print("curr dir: " + os.getcwd())
+            # print("curr file all: " + os.path.realpath(__file__))
+            # print("curr file dir: " + os.path.dirname(os.path.realpath(__file__)))
             # primer_file = open(config_dict['general']['primer_file'])
             primer_file = open(os.path.join(self.base_python_dir, "config/mbl_primers.json"))
             ascii_primer_str = primer_file.read()
@@ -156,7 +156,7 @@ class RunConfig:
     def initializeFromDictionary(self, configDict):
         # get the general stuff
         general_config = configDict['general']
-        print    'General Config0:',general_config
+        print(   'General Config0:',general_config)
         #if general_config['gast_data_source'] != 'database':
         self.run             = general_config['run']
         self.platform       = general_config.get('platform', "unknown")
@@ -268,7 +268,7 @@ class RunConfig:
         if 'gast_input_source' in general_config:
             self.gast_input_source = general_config['gast_input_source']
 
-        print    'General Config:',general_config
+        print(   'General Config:',general_config)
         if 'files_list' in general_config:
             input_file_names = general_config['files_list']
             self.input_files = ','.join(general_config['files_list'])
@@ -283,7 +283,7 @@ class RunConfig:
 
 
         self.input_file_info = {}
-        print general_config
+        print(general_config)
         for idx,input_file in enumerate(input_file_names):
 
             if "input_file_format" in general_config:
@@ -396,7 +396,7 @@ class RunConfig:
             sample.dataset_description  = lane_run_dict['dataset_description']
             sample.project              = lane_run_dict['project']
             sample.dataset              = lane_run_dict['dataset']
-#             print 'lane_run_key '+lane_run_key
+#             print('lane_run_key '+lane_run_key)
             if self.vamps_user_upload:
                 # required for 454
                 sample.direction = lane_run_dict['direction']

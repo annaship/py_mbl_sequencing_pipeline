@@ -557,7 +557,7 @@ class MetadataUtils:
                     try:
                         new_val = [str(j[0]) for j in self.env if j[1] == values[v]][0]
                     except:
-                        print("""There was an error in env_sample_source. Please check your metadata.)
+                        text = """There was an error in env_sample_source. Please check your metadata.
 Possible values:
 -----------
 air
@@ -583,6 +583,7 @@ water-freshwater
 water-marine
 -----------
 """
+                        print(text)
                         raise
                     fh.write("env_sample_source_id = "+new_val+"\n")
                 else:

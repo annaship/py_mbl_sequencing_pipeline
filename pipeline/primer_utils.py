@@ -10,14 +10,15 @@ import constants as C
 try:
     import Levenshtein
 except:
-    print '''
+    text = 
+    '''
     You need Levenshtein module installed to run this software.
 
     Here is a fast implementation of Levenshtein distance for Python:
 
         http://code.google.com/p/pylevenshtein/
-
 '''
+    print(text)
     sys.exit(-1)
 
 def count_keys(hash):
@@ -43,7 +44,7 @@ def trim_stop_seq( stop_seqs, seq, trim_type, start, end ):
                 #return anchor,seq[pos:],seq[:pos+anchor_length]
             if dist >= C.max_divergence:
                 pass
-            #print pos,seq_window,dist1,dist2
+            #print(pos,seq_window,dist1,dist2)
 
     return '','',seq
 
@@ -195,7 +196,7 @@ def trim_proximal_primer(primer_list, seq):
     p_primer_found = "";
     offset         = 0;
     for primer in primer_list:
-        #print primer
+        #print(primer)
         prim_len = len(primer)
         idx = seq.find(primer)
         if(idx != -1):
@@ -222,7 +223,7 @@ def expand(seq):
     bases = ['A','C','G','T']
 
     seq = seq.replace('.','N')
-        #print '1',primer
+        #print('1',primer)
     workingPrimers.append(seq.upper())
 
 
@@ -242,7 +243,7 @@ def expand(seq):
         elif ('R' in d):
             workingPrimers.append(d.replace('R','A',1))
             workingPrimers.append(d.replace('R','G',1))
-            #print '1',d.replace('R','G',1)
+            #print('1',d.replace('R','G',1))
 
         elif ('Y' in d):
             workingPrimers.append(d.replace('Y','C',1))
@@ -311,7 +312,7 @@ def expand(seq):
             else:
                 preceder = d[d.find('*')-1:d.find('*')]
                 preceder_plus = d[d.find('*')-1:d.find('*')+1]
-                #print preceder,preceder_plus
+                #print(preceder,preceder_plus)
                 # the preceding base doesn't exist': remove '*' and preceding base
                 workingPrimers.append(d.replace(preceder_plus,'',1))
                 # the preceding base exists once: remove '*' only
@@ -458,7 +459,7 @@ if __name__=='__main__':
             result_template_strings = ["xA", "xC", "xG", "xT", "yA", "yC", "yG", "yT"]
             self.assertEqual(set(expand(placeholder_base + "N")), set(self.replace_template_xy(result_template_strings, new_x, new_y)))
 
-    print "expanded: " + str(expand(revcomp("GTGAATCATCGAYTCTTTGAAC")))
+    print("expanded: " + str(expand(revcomp("GTGAATCATCGAYTCTTTGAAC"))))
 
 
     logger.setLevel(logging.DEBUG)
