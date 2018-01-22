@@ -26,7 +26,7 @@ import constants as C
 from pipeline.db_upload import MyConnection
 from pipeline.utils import PipelneUtils
 import re
-#import pipeline.fastalib
+import pipeline.utils
 
 class MetadataUtils:
     """
@@ -302,7 +302,7 @@ class MetadataUtils:
         warn = False
         for item in data:
             if item == 'general':
-                for k,v in data[item].iteritems():
+                for k,v in data[item].items():
                     if not k:
                         #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
                         logger.warning("(key: "+item+") key for: '"+v+"' is missing or corrupt - Continuing")
@@ -313,7 +313,7 @@ class MetadataUtils:
 
         for item in data:
             if item != 'general':
-                for k,v in data[item].iteritems():
+                for k,v in data[item].items():
                     if not k:
                         #sys.exit("ERROR: key for: '"+v+"' is missing or corrupt - Exiting")
                         logger.warning("(key: "+item+") key for: '"+v+"' is missing or corrupt - Continuing")
@@ -361,10 +361,16 @@ class MetadataUtils:
         return (error, warn)
 
     def convert_primer_suites(self, suite):
+        import string
+        if pipeline.utils.it_is_py3():
+            table = bytes.maketrans(b'- ', b'__')
+        else:
+            table = string.maketrans('- ', '__')
+        
         if type(suite) is list:
-            conv_suite = [item.lower().translate(None, '_- ') for item in suite]
+            conv_suite = [item.lower().translate(table) for item in suite]
         if type(suite) is str:
-            conv_suite = suite.lower().translate(None, '_- ')
+            conv_suite = suite.lower().translate(table)
         return conv_suite
 
     def check_project_name(self, data):
@@ -469,7 +475,7 @@ class MetadataUtils:
 
     def get_confirmation(self, steps, general_data):
         print("\n")
-        for item,value in general_data.iteritems():
+        for item,value in general_data.items():
             #print(len(value))
             if type(value) != bool and len(value) > 80:
                 tmp = value.split(',')
@@ -506,7 +512,7 @@ class MetadataUtils:
         keys_list = []
         if self.check_headers(headers_clean):
             logger.info("CSV headers okay")
-            for k,values in content.iteritems():
+            for k,values in content.items():
                 keys_list.append(values['barcode_index']+"_"+values['run_key']+"_"+values['lane'])
 
         fh = open(new_ini_file,'w')
@@ -545,7 +551,7 @@ class MetadataUtils:
             fh.write("input_files = \n")
         #fh.write(getattr(args,'force_runkey', ""))
 
-        for k, values in content.iteritems():
+        for k, values in content.items():
             fh.write("\n")
             if self.general_config_dict['platform'] in C.illumina_list:
                 fh.write("["+values['barcode_index']+"_"+values['run_key']+"_"+values['lane']+"]\n")
