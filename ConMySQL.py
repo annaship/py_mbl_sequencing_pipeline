@@ -1,7 +1,12 @@
 #!/bioware/python/bin/python
 
 import os
-import MySQLdb
+try:
+    import pymysql
+except ModuleNotFoundError:
+    import MySQLdb
+except:
+    raise
 
 class New(object):
 
