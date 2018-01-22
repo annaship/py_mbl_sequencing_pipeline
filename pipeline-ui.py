@@ -37,7 +37,7 @@ from pipelineprocessor import process
 import pprint
 
 # pycogent
-import cogent
+# import cogent
 
 import pipeline.constants as C
 # read a config file and convert to a dictionary
