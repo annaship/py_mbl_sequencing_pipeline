@@ -9,7 +9,7 @@ import re
 from pipeline.pipelinelogging import logger
 #import logging
 #import constants as C
-            
+
 class readCSV:
     """read CSV submition data"""
     Name = "readCSV"
@@ -45,7 +45,7 @@ class readCSV:
         self.sequence_uniq_info_ill_table_name = "sequence_uniq_info_ill"
         self.taxonomy_table_name               = "taxonomy"
         #Fields:
-        self.sequence_field_name               = "sequence_comp" 
+        self.sequence_field_name               = "sequence_comp"
         self.header_end_commas                        = 0
 
 
@@ -63,7 +63,7 @@ class readCSV:
                 If we are on the first line, create the headers list from the first row, clean it first
                 """
                 if not row[-1]:
-                    row, self.header_end_commas = self.empty_ends_columns(row)                    
+                    row, self.header_end_commas = self.empty_ends_columns(row)
                 headers = row
             else:
                 """
@@ -75,23 +75,23 @@ class readCSV:
             rownum += 1
 
         """
-        print dir(myReader)
+        print(dir(myReader))
         ['__class__', '__delattr__', '__doc__', '__format__', '__getattribute__', '__hash__', '__init__', '__iter__', '__new__', '__reduce__',
          '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'dialect', 'line_num', 'next']
-        """ 
+        """
         return content
-    
+
     def empty_ends_columns(self, row):
         end_commas = 0
         if self.header_end_commas:
             row        = row[:-self.header_end_commas]
             end_commas = self.header_end_commas
-        else:                
+        else:
             while row[-1] is '':
                 row.pop()
                 end_commas += 1
         if end_commas:
             return row, end_commas
-    
+
     def create_conf(self):
         pass

@@ -9,14 +9,15 @@ import sys
 try:
     import Levenshtein
 except:
-    print '''
+    text = 
+    '''
     You need Levenshtein module installed to run this software.
 
     Here is a fast implementation of Levenshtein distance for Python:
 
         http://code.google.com/p/pylevenshtein/
-
 '''
+    print(text)
     sys.exit(-1)
 
 
@@ -56,7 +57,7 @@ class DictDotNotationWrapper(object):
     basically you can reach items in the dictionary with dot notation) (so you can ignore this one if
     you're trying to understand what this program does).
     """
-    
+
     def __init__(self, dictionary):
         self.dictionary = dictionary
 
@@ -91,7 +92,7 @@ def generate_tuples(start, freedom, length, direction = -1, step = 0, list_of_tu
         list_of_tuples.append((-(start), -(start - length)))
     else:
         list_of_tuples.append((start, start + length))
-    
+
     if step == freedom * 2:
         return list_of_tuples
 
@@ -125,20 +126,20 @@ def find_best_distance(sequence, valid_anchor_sequences, max_divergence, list_of
 
         if len(non_perfect_matches):
             best_loc_for_every_anchor.append((anchor, sorted(non_perfect_matches, reverse=True)[0]))
-    
-    # potential FIXME: OK. at this point, 'best_loc_for_every_anchor' is such a list that every member of this 
+
+    # potential FIXME: OK. at this point, 'best_loc_for_every_anchor' is such a list that every member of this
     # list is an anchor from 'valid_anchor_sequences' and the location within the 'sequence' where the sequence
     # is most similar to this anchor. The data structure for every item in this list looks like this:
     #
     #    ('GGAGCGGTGGAAT', (0.7692307692307693, (-344, -331)))
     #
     # it reads "the best distance of GGAGCGGTGGAAT to every oligonucleotide in the given sequence was at sequence[-344:-331]"
-    # 
+    #
     # but it is important to remember that this 'best' is coming from a sorted list. so, there may be equally good ones that left out
     # and maybe some of them were better candidates. this issue becomes even more of a challenge when we pick 'best_anchor' in the next
     # line by sorting this list. just by chance, from two equaly good candidates, the one that could be more prefferable in terms of the
     # trimming location in the sequence might be beaten by another one during the sorting. at some point we might want to plug
-    # in a probabilistic logic here to pick competing locations (maybe equally distant options could be ranked based on a 
+    # in a probabilistic logic here to pick competing locations (maybe equally distant options could be ranked based on a
     # pre-computed mixture of gaussian curves for a given region to pick the most appealing location to use as an anchor):
 
     best_loc_for_every_anchor_sorted = sorted(best_loc_for_every_anchor, key = lambda k: k[1][0], reverse=True)
@@ -150,7 +151,7 @@ def find_best_distance(sequence, valid_anchor_sequences, max_divergence, list_of
 
 def colorize(sequence, location):
     Green = lambda s: '\033[30m\033[42m' + s + '' + '\033[0m'
-   
+
     return sequence[0:location[0]] + Green(sequence[location[0]:location[1]]) + sequence[location[1]:]
 
 def main(s):
@@ -168,7 +169,7 @@ def main(s):
             # used anchors at the beginning of the list
             if s.valid_anchor_sequences.index(anchor) != 0:
                 s.valid_anchor_sequences.insert(0, s.valid_anchor_sequences.pop(s.valid_anchor_sequences.index(anchor)))
-            
+
             # busines time.
             trimmed = trim_sequence(input.seq, location, s)
 
@@ -203,7 +204,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--input-fasta', required=True, metavar = 'FASTA_FILE',
                         help = 'Sequences file to be trimmed in FASTA format')
     parser.add_argument('-r', '--region', required=True, metavar = 'REGION',
-                        help = 'Region in the 16S rRNA gene. Available options: %s' % 
+                        help = 'Region in the 16S rRNA gene. Available options: %s' %
                                     ', '.join(Settings().available_regions()), choices = Settings().available_regions())
     parser.add_argument('-a', '--anchor-sequences', required=True, metavar = 'ANCHORS_FILE',
                         help = 'Input file that contains the list of valid anchor sequences')
@@ -214,7 +215,7 @@ if __name__ == '__main__':
                                 information on maximum divergence.')
 
     args = parser.parse_args()
-   
+
     s = Settings(args.region).region_settings
 
     s.input_fasta = u.SequenceSource(args.input_fasta)

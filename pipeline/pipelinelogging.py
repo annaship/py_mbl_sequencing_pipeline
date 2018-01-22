@@ -16,9 +16,9 @@ FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 # this gets rid of double messages:
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 
-# Remove the default FileHandlers if present. 
+# Remove the default FileHandlers if present.
 handler = logging.handlers.RotatingFileHandler(os.path.join(os.getcwd(),"pipeline.log"), maxBytes=10000000, backupCount=10)
 logger.addHandler(handler)
-handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")) 
+handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
 
