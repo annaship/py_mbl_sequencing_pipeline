@@ -9,14 +9,15 @@ import sys
 try:
     import Levenshtein
 except:
-    print '''
+    text = 
+    '''
     You need Levenshtein module installed to run this software.
 
     Here is a fast implementation of Levenshtein distance for Python:
 
         http://code.google.com/p/pylevenshtein/
-
 '''
+    print(text)
     sys.exit(-1)
 
 
