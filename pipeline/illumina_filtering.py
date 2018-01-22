@@ -110,7 +110,7 @@ class IlluminaFiltering:
         if window_step < 1:
             sys.exit( 'illumina_fastq_trimmer: You must specify a strictly positive step size' )
 
-        print "\nRunning illumina Filtering"
+        print("\nRunning illumina Filtering")
 
         in_filepath = os.path.join(self.indir,infile)
         try:
@@ -166,14 +166,14 @@ class IlluminaFiltering:
         for num_reads, fastq_read in enumerate( fastqReader( fp, format = format ) ):
             ############################################################################################
             # Put chastity code here
-            #print fastq_read.identifier
+            #print(fastq_read.identifier)
             seq = fastq_read.get_sequence()
 
             desc_items = fastq_read.identifier.split(':')
 
             if desc_items[7] == 'Y':
                 count_of_unchaste += 1
-                #print 'failed chastity'
+                #print('failed chastity')
                 if failed_fastq:
                     fail.write( fastq_read )
                 continue
@@ -182,7 +182,7 @@ class IlluminaFiltering:
             if filter_Ns:
                 countN = seq.count('N')
                 if countN > 1 or (countN == 1 and seq[filter_Nx-1:filter_Nx] != 'N'):
-                    #print 'failed Ns',infile
+                    #print('failed Ns',infile)
                     count_of_Ns += 1
                     if failed_fastq:
                         fail.write( fastq_read )
@@ -203,7 +203,7 @@ class IlluminaFiltering:
                     if q < first50_maxQ:
                         count_lt30 += 1
                 if count_lt30 >= first50_maxQ_count:
-                    #print 'failed first50'
+                    #print('failed first50')
                     if failed_fastq:
                         fail.write( fastq_read )
                     count_of_first50 += 1
@@ -248,7 +248,7 @@ class IlluminaFiltering:
 
             if filter_length:
                 if len(quality_list) < filter_length:
-                    print 'failed length'
+                    print('failed length')
                     if failed_fastq:
                         fail.write( fastq_read )
                     continue
@@ -274,17 +274,17 @@ class IlluminaFiltering:
         out.close()
         if failed_fastq:
             fail.close()
-        print "file:",infile
-        print 'count_of_trimmed             (for length):', count_of_trimmed
-        print 'count_of_first50 (avg first50 quals < 34):', count_of_first50
-        print "count_of_unchaste             ('Y' in id):", count_of_unchaste
-        print 'count_of_Ns                (reads with N):', count_of_Ns
+        print("file:",infile)
+        print('count_of_trimmed             (for length):', count_of_trimmed)
+        print('count_of_first50 (avg first50 quals < 34):', count_of_first50)
+        print("count_of_unchaste             ('Y' in id):", count_of_unchaste)
+        print('count_of_Ns                (reads with N):', count_of_Ns)
         if num_reads is None:
-            print "No valid FASTQ reads could be processed."
+            print("No valid FASTQ reads could be processed.")
         else:
-            print "%i FASTQ reads were processed." % ( num_reads + 1 )
+            print("%i FASTQ reads were processed." % ( num_reads + 1 ))
         if num_reads_excluded:
-            print "%i reads of zero length were excluded from the output." % num_reads_excluded
+            print("%i reads of zero length were excluded from the output." % num_reads_excluded)
 
         return out_filename
 
