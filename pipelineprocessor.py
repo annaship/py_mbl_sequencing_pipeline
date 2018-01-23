@@ -506,7 +506,7 @@ def file_to_db_upload_main(runobj, full_upload):
 
     projects_and_ids = my_file_to_db_upload.get_project_names()
 
-    my_file_to_db_upload.send_message('ashipunova3@gmail.com', 'Projects uploaded to VAMPS2', projects_and_ids)
+    my_file_to_db_upload.send_message('ashipunova3@gmail.com', 'Projects uploaded to %s' % db_server, projects_and_ids)
 
     logger.debug("Projects in this run: %s" % projects_and_ids)
 

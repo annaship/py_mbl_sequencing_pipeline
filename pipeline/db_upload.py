@@ -275,7 +275,7 @@ class dbUpload:
         except Exception:
             error = sys.exc_info()[1]
             print(error)
-        process.communicate(body)
+        process.communicate(body.encode())
 
 
     def get_run_info_ill_id(self, filename_base):
