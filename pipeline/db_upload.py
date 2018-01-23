@@ -965,8 +965,14 @@ class Seq:
                 seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
 
                 if (db_server == "vamps2"):
-                    dataset_id = all_dataset_run_info_dict[run_info_ill_id]
-                    vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+                    try:
+                        dataset_id = all_dataset_run_info_dict[run_info_ill_id]
+                        vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+                    except KeyError:
+                        print("No such run info, please check a file name and the csv file")
+                    except:
+                        raise
+
                 elif (db_server == "env454"):
                     vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
 
