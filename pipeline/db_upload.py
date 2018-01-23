@@ -96,7 +96,10 @@ class MyConnection:
 #                 logger.debug("affected_rows = "  + str(self.conn.affected_rows()))
 #             logger.debug(self.cursor._info)
 #             _info    str: Records: 238  Duplicates: 66  Warnings: 0
-            # return self.cursor._info
+            try:
+                return self.cursor._result.message
+            except:
+                return self.cursor._info
 
 
     def execute_insert(self, table_name, field_name, val_list, ignore = "IGNORE"):
