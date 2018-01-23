@@ -288,7 +288,7 @@ class dbUpload:
                     WHERE file_prefix = '%s'
                     and run = '%s';
         """ % (filename_base, self.rundate)
-        print("MMM get_run_info_ill_id sql")
+        print("MMM get_run_info_ill_id sql: %s" % my_sql)
 
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
