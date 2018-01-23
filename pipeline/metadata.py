@@ -63,9 +63,6 @@ class MetadataUtils:
             self.save_ini_file(new_ini_file)
         else:
             self.convert_csv_to_ini(new_ini_file)
-        'TODO: Andy, what mean the next two lines?'
-#        self.general_config_dict['configPath']
-#        self.general_config_dict['configPath_original'] = self.general_config_dict['configPath']
         self.general_config_dict['configPath'] = new_ini_file
 
         # change path and type to new ini

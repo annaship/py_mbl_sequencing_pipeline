@@ -428,12 +428,7 @@ def env454run_info_upload(runobj):
     my_read_csv = dbUpload(runobj)
     wrapped   = wrapper(my_read_csv.put_run_info)
     print("put_run_info time = %s" % timeit.timeit(wrapped, number=1) )
-    
-# def get_sequences(my_file_to_db_upload, filenames):
-#     utils = PipelneUtils()
-# 
-#     sequences = [my_file_to_db_upload.make_seq_upper(filename) for filename in filenames]
-#     return utils.flatten_list_of_lists(sequences)
+
 
 def wrapper(func, *args, **kwargs):
     def wrapped():
@@ -513,9 +508,6 @@ def file_to_db_upload_main(runobj, full_upload):
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
     print("The whole upload took %s s" % whole_elapsed)
-  
-
-
 
 
 def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
@@ -543,34 +535,39 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
         filename_base_no_suff = get_filename_base_no_suff(filename)
         
         run_info_ill_id       = my_file_to_db_upload.get_run_info_ill_id(filename_base_no_suff)
-        my_file_to_db_upload.collect_project_ids(run_info_ill_id)
-        seq_in_file           = len(my_file_to_db_upload.seq.fasta_dict)
-        my_file_to_db_upload.put_seq_statistics_in_file(filename, seq_in_file)
-        total_seq += seq_in_file
+        if run_info_ill_id:
+            my_file_to_db_upload.collect_project_ids(run_info_ill_id)
+            seq_in_file           = len(my_file_to_db_upload.seq.fasta_dict)
+            my_file_to_db_upload.put_seq_statistics_in_file(filename, seq_in_file)
+            total_seq += seq_in_file
 
-        start_fasta_next = time.time()
-                    
-        start_insert_pdf_info_time = 0
-        start_insert_pdf_info_time = time.time()
-        my_file_to_db_upload.insert_pdr_info(run_info_ill_id)
-        insert_pdf_info_time = (time.time() - start_insert_pdf_info_time)
+            start_fasta_next = time.time()
 
-        start_insert_taxonomy_time = 0
-        start_insert_taxonomy_time = time.time()
-        my_file_to_db_upload.insert_taxonomy()
-        insert_taxonomy_time = (time.time() - start_insert_taxonomy_time)
+            start_insert_pdf_info_time = 0
+            start_insert_pdf_info_time = time.time()
+            my_file_to_db_upload.insert_pdr_info(run_info_ill_id)
+            insert_pdf_info_time = (time.time() - start_insert_pdf_info_time)
 
-        insert_sequence_uniq_info_time = 0
-        start_insert_sequence_uniq_info_time = time.time()
-        my_file_to_db_upload.insert_sequence_uniq_info()
-        insert_sequence_uniq_info_time = (time.time() - start_insert_sequence_uniq_info_time)
-        
-        logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-        logger.debug("insert_pdf_info_query_time took %s sec to finish" % (insert_pdf_info_time))
-        logger.debug("start_insert_taxonomy_upload_time took %s sec to finish" % (insert_taxonomy_time))
-        logger.debug("insert_sequence_uniq_info_time took %s sec to finish" % (insert_sequence_uniq_info_time))
+            start_insert_taxonomy_time = 0
+            start_insert_taxonomy_time = time.time()
+            my_file_to_db_upload.insert_taxonomy()
+            insert_taxonomy_time = (time.time() - start_insert_taxonomy_time)
 
-        return total_seq
+            insert_sequence_uniq_info_time = 0
+            start_insert_sequence_uniq_info_time = time.time()
+            my_file_to_db_upload.insert_sequence_uniq_info()
+            insert_sequence_uniq_info_time = (time.time() - start_insert_sequence_uniq_info_time)
+
+            logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
+            logger.debug("insert_pdf_info_query_time took %s sec to finish" % (insert_pdf_info_time))
+            logger.debug("start_insert_taxonomy_upload_time took %s sec to finish" % (insert_taxonomy_time))
+            logger.debug("insert_sequence_uniq_info_time took %s sec to finish" % (insert_sequence_uniq_info_time))
+
+            return total_seq
+        else:
+            utils = PipelneUtils()
+            utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % filename_base_no_suff)
+            return 0
         
     except:                       # catch everything
         print("\r[pipelineprocessor] Unexpected:")         # handle unexpected exceptions

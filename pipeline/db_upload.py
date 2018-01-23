@@ -242,8 +242,7 @@ class dbUpload:
 
 
     def collect_project_ids(self, run_info_ill_id):
-        print("DDD run_info_ill_id = %s" % run_info_ill_id)
-        print("DDD self.all_dataset_run_info_dict = ")
+
         print(self.all_dataset_run_info_dict)
         try:
             dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
@@ -293,7 +292,6 @@ class dbUpload:
                     WHERE file_prefix = '%s'
                     and run = '%s';
         """ % (filename_base, self.rundate)
-        print("MMM get_run_info_ill_id sql: %s" % my_sql)
 
         res    = self.my_conn.execute_fetch_select(my_sql)
         if res:
@@ -463,7 +461,6 @@ class dbUpload:
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, content_row.tubelabel, content_row.barcode,
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
-            print("VVV my_sql = %s" % my_sql)
 
         elif (self.db_server == "env454"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
@@ -571,33 +568,8 @@ class dbUpload:
                 self.utils.print_both("Unexpected error from 'count_sequence_pdr_info':", sys.exc_info()[0])
                 raise
         return results
-#
-#     def count_sequence_pdr_info_ill(self):
-#         results = {}
-#         primer_suites = self.get_primer_suite_name()
-#         lane          = self.get_lane().pop()
-#         for primer_suite in primer_suites:
-#             primer_suite_lane = primer_suite + ", lane " + lane
-#             my_sql = """SELECT count(%s_id)
-#                         FROM %s
-#                           JOIN run_info_ill USING(run_info_ill_id)
-#                           JOIN run USING(run_id)
-#                           JOIN primer_suite using(primer_suite_id)
-#                         WHERE run = '%s'
-#                           AND lane = %s
-#                           AND primer_suite = '%s';
-#                           """ % (self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"], self.rundate, lane, primer_suite)
-#             res    = self.my_conn.execute_fetch_select(my_sql)
-#             try:
-#                 if (int(res[0][0]) > 0):
-#                     results[primer_suite_lane] = int(res[0][0])
-# #                     results.append(int(res[0][0]))
-#             except Exception:
-#                 self.utils.print_both("Unexpected error from 'count_sequence_pdr_info_ill':", sys.exc_info()[0])
-#                 raise
-#         return results
-# #             int(res[0][0])
-#
+
+
     def get_primer_suite_name(self):
         primer_suites = [v.primer_suite for v in self.runobj.samples.values()]
         return list(set(primer_suites))
@@ -979,8 +951,8 @@ class Seq:
                 all_insert_pdr_info_vals.append(vals)
                 return all_insert_pdr_info_vals
             except:
-                print("FFF0 %s" % fasta_id)
-                print("SSS0 %s" % seq)
+                print("FFF0 fasta_id %s" % fasta_id)
+                print("SSS0 seq %s" % seq)
                 raise
 
 
