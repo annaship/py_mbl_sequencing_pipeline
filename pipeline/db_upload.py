@@ -92,9 +92,6 @@ class MyConnection:
         if self.cursor:
             self.cursor.execute(sql)
             self.conn.commit()
-#             if (self.conn.affected_rows()):
-#                 logger.debug("affected_rows = "  + str(self.conn.affected_rows()))
-#             logger.debug(self.cursor._info)
 #             _info    str: Records: 238  Duplicates: 66  Warnings: 0
             try:
                 return self.cursor._result.message
@@ -107,9 +104,6 @@ class MyConnection:
             sql = "INSERT %s INTO %s (%s) VALUES (%s) " % (ignore, table_name, field_name, val_list)
             sql = sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (field_name, field_name)
 
-#             print('sql',sql)
-            #if table_name == 'dataset' or table_name == 'project':
-            #    print('sql',sql)
             if self.cursor:
                 self.cursor.execute(sql)
                 self.conn.commit()
