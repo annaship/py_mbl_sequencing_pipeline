@@ -261,8 +261,8 @@ class dbUpload:
             raise
 
     def collect_project_ids(self, run_info_ill_id):
-
-        print(self.all_dataset_run_info_dict)
+        # print("self.all_dataset_run_info_dict")
+        # print(self.all_dataset_run_info_dict)
         try:
             dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
             self.used_project_ids.append(self.all_project_dataset_ids_dict[dataset_id])
@@ -468,7 +468,6 @@ class dbUpload:
         illumina_index_id = self.get_id('illumina_index', content_row.barcode_index)
         # use self.runobj.idx_keys?
         file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
-        print("FFF file_prefix = %s" % file_prefix)
 
         if (self.db_server == "vamps2"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
@@ -491,6 +490,8 @@ class dbUpload:
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode,
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
+
+        print("insert run_info query: %s" % my_sql)
 
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
         self.utils.print_both("insert run_info: %s" % cursor_info)
