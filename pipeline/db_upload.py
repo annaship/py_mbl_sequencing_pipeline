@@ -958,7 +958,7 @@ class Seq:
         for fasta_id, seq in self.fasta_dict.items():
             if (not run_info_ill_id):
                 self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to %s" % db_server)
-#             seq_upper = seq.upper()
+                break
             try:
                 sequence_id = self.seq_id_dict[seq]
 
@@ -979,8 +979,8 @@ class Seq:
                 all_insert_pdr_info_vals.append(vals)
                 return all_insert_pdr_info_vals
             except:
-                print("FFF %s" % fasta_id)
-                print("SSS %s" % seq)
+                print("FFF0 %s" % fasta_id)
+                print("SSS0 %s" % seq)
                 raise
 
 
