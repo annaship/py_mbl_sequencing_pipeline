@@ -453,7 +453,7 @@ class PipelneUtils:
 
     def is_vamps(self):
         print(os.uname()[1])
-        dev_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private']
+        dev_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private', 'vampsdev', 'vampsdb']
         if os.uname()[1] in dev_comps:
             return True
         else:

@@ -162,10 +162,13 @@ class dbUpload:
 
     """
     def __init__(self, runobj = None, db_server = None):
+        print("DDD1 db_server: %s" % db_server)
         if db_server is None:
-            db_server = "env454"
+            db_server = "vampsdev"
 
         self.db_server   = db_server
+        print("DDD2 db_server: %s" % db_server)
+
         self.utils       = PipelneUtils()
         self.runobj      = runobj
         self.rundate     = self.runobj.run
