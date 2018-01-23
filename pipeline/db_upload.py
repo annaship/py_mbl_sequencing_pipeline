@@ -162,13 +162,10 @@ class dbUpload:
 
     """
     def __init__(self, runobj = None, db_server = None):
-        print("DDD1 db_server: %s" % db_server)
         if db_server is None:
             db_server = "vampsdev"
 
         self.db_server   = db_server
-        print("DDD2 db_server: %s" % db_server)
-
         self.utils       = PipelneUtils()
         self.runobj      = runobj
         self.rundate     = self.runobj.run
@@ -245,6 +242,9 @@ class dbUpload:
 
 
     def collect_project_ids(self, run_info_ill_id):
+        print("DDD run_info_ill_id = %s" % run_info_ill_id)
+        print("DDD self.all_dataset_run_info_dict = ")
+        print(self.all_dataset_run_info_dict)
         dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
         self.used_project_ids.append(self.all_project_dataset_ids_dict[dataset_id])
 
