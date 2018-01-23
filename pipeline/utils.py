@@ -608,7 +608,8 @@ example of getting all directory name in illumina_files
             print("DELETE %s" % (filename))
         except OSError:
             pass
-#         def clean_list_by_ext
+
+
     def get_all_files(self, walk_dir_name, ext = ""):
         files = {}
         for dirname, dirnames, filenames in os.walk(walk_dir_name, followlinks=True):

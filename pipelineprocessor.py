@@ -472,15 +472,15 @@ def file_to_db_upload_main(runobj, full_upload):
     my_file_to_db_upload = dbUpload(runobj, db_server = db_server)
 
 #     dbUpload(runobj)
-    filenames       = my_file_to_db_upload.get_fasta_file_names()
-    if not filenames:
+#     filenames       = my_file_to_db_upload.get_fasta_file_names()
+    if not my_file_to_db_upload.filenames:
         logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_file_to_db_upload.fasta_dir)
 
 #     sequences = get_sequences(my_file_to_db_upload, filenames)
     get_and_up_seq_time = time.time()
     total_seq = 0
     
-    for filename in filenames:
+    for filename in my_file_to_db_upload.filenames:
         my_file_to_db_upload.seq.prepare_fasta_dict(filename)
         sequences = my_file_to_db_upload.seq.make_seq_upper(filename)
         if full_upload:

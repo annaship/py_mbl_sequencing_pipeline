@@ -236,10 +236,23 @@ class dbUpload:
         self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
         self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
         self.used_project_ids = []
+        self.filenames = self.get_fasta_file_names()
+        self.fa_files_cnts_in_dir = 0
+        self.fa_files_cnts_in_csv = 0
         if db_server == "vamps2":
+            if not self.check_files_csv():
+                print("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
             self.put_run_info()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
+    def check_files_csv(self):
+        try:
+            self.fa_files_cnts_in_dir = len(self.filenames)
+            self.fa_files_cnts_in_csv = len(self.runobj.run_keys)
+            return (self.fa_files_cnts_in_dir == self.fa_files_cnts_in_csv)
+        except:
+            print("There is a problem with files in the csv and/or in %s" % (self.fasta_dir))
+            raise
 
     def collect_project_ids(self, run_info_ill_id):
 
