@@ -936,10 +936,6 @@ class Seq:
             for group in group_seq:
                 seq_part = '), COMPRESS('.join([val_tmpl % key for key in group if key is not None])
                 my_sql     = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
-
-                print("MMM my_sql")
-                print(my_sql)
-
                 res        = self.my_conn.execute_fetch_select(my_sql)
                 one_seq_id_dict = dict((y.upper(), int(x)) for x, y in res)
 
@@ -960,20 +956,22 @@ class Seq:
 #             seq_upper = seq.upper()
             try:
                 sequence_id = self.seq_id_dict[seq]
+
+                seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
+
+                if (db_server == "vamps2"):
+                    dataset_id = all_dataset_run_info_dict[run_info_ill_id]
+                    vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+                elif (db_server == "env454"):
+                    vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
+
+                all_insert_pdr_info_vals.append(vals)
+                return all_insert_pdr_info_vals
             except:
+                print("FFF %s" % fasta_id)
                 print("SSS %s" % seq)
+                raise
 
-            seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
-
-            if (db_server == "vamps2"):
-                dataset_id = all_dataset_run_info_dict[run_info_ill_id]
-                vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
-            elif (db_server == "env454"):
-                vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
-
-            all_insert_pdr_info_vals.append(vals)
-
-        return all_insert_pdr_info_vals
 
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
         sequence_ids_strs = [str(i) for i in self.seq_id_dict.values()]
