@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 import constants as C
 from subprocess import Popen, PIPE, call
 from shlex import split
-from time import sleep, time, gmtime, strftime
+import time
 
 from pipeline.get_ini import readCSV
 from pipeline.pipelinelogging import logger
@@ -868,13 +868,26 @@ class Taxonomy:
     def get_silva_taxonomy_ids(self):
         self.make_silva_taxonomy_rank_list_w_ids_dict()
 
+        start1 = time.time()
+
         sql_part = ""
-        for taxonomy, rank_w_id_list in self.silva_taxonomy_rank_list_w_ids_dict.items()[:-1]:
+
+        first_part = list(self.silva_taxonomy_rank_list_w_ids_dict.values())[:-1]
+        last_dict = list(self.silva_taxonomy_rank_list_w_ids_dict.values())[-1]
+        for rank_w_id_list in first_part:
             a = self.make_rank_name_id_t_id_str(rank_w_id_list)
             sql_part += "(%s) OR " % a
 
-        a_last = self.make_rank_name_id_t_id_str(self.silva_taxonomy_rank_list_w_ids_dict.values()[-1])
+        a_last = self.make_rank_name_id_t_id_str(last_dict)
         sql_part += "(%s)" % a_last
+        elapsed1 = (time.time() - start1)
+        print("QQQ sql_part1 time: %s s" % elapsed1)
+
+        start2 = time.time()
+        sql_part_list = ["(%s)" % self.make_rank_name_id_t_id_str(rank_w_id_list) for rank_w_id_list in self.silva_taxonomy_rank_list_w_ids_dict.values()]
+        sql_part2 = " OR ".join(sql_part_list)
+        elapsed2 = (time.time() - start2)
+        print("QQQ2 sql_part2 time: %s s" % elapsed2)
 
         field_names = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
         table_name  = "silva_taxonomy"
