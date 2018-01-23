@@ -957,7 +957,7 @@ class Seq:
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.fasta_dict.items():
             if (not run_info_ill_id):
-                self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
+                self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to %s" % db_server)
 #             seq_upper = seq.upper()
             try:
                 sequence_id = self.seq_id_dict[seq]
