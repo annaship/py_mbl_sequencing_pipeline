@@ -501,9 +501,17 @@ def file_to_db_upload_main(runobj, full_upload):
 
     projects_and_ids = my_file_to_db_upload.get_project_names()
 
-    my_file_to_db_upload.send_message('ashipunova3@gmail.com', 'Projects uploaded to %s' % db_server, projects_and_ids)
+    utils = PipelneUtils()
+    if utils.is_local():
+        my_email = 'ashipunova@mbl.edu'
+    else:
+        my_email = 'vamps@mbl.edu'
 
-    logger.debug("In this run: %s, %s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt))
+    ready_email_body = "In this run: %s, %s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
+
+    my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_server, ready_email_body)
+
+    logger.debug(ready_email_body)
 
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)
