@@ -760,7 +760,7 @@ class Taxonomy:
         self.taxa_list_w_empty_ranks_dict = {taxonomy: tax_list + [""] * (len(self.ranks) - len(tax_list)) for taxonomy, tax_list in self.taxa_list_dict.items()}
 
     def get_taxa_by_rank(self):
-        self.taxa_by_rank = zip(*self.taxa_list_w_empty_ranks_dict.values())
+        self.taxa_by_rank = list(zip(*self.taxa_list_w_empty_ranks_dict.values()))
 
     def make_uniqued_taxa_by_rank_dict(self):
         for rank in self.ranks:
