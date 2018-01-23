@@ -479,7 +479,7 @@ def file_to_db_upload_main(runobj, full_upload):
 #     sequences = get_sequences(my_file_to_db_upload, filenames)
     get_and_up_seq_time = time.time()
     total_seq = 0
-    
+
     for filename in my_file_to_db_upload.filenames:
         my_file_to_db_upload.seq.prepare_fasta_dict(filename)
         sequences = my_file_to_db_upload.seq.make_seq_upper(filename)
@@ -503,7 +503,7 @@ def file_to_db_upload_main(runobj, full_upload):
 
     my_file_to_db_upload.send_message('ashipunova3@gmail.com', 'Projects uploaded to %s' % db_server, projects_and_ids)
 
-    logger.debug("Projects in this run: %s" % projects_and_ids)
+    logger.debug("In this run: %s, %s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt))
 
     logger.debug("total_seq = %s" % total_seq)
     whole_elapsed = (time.time() - whole_start)

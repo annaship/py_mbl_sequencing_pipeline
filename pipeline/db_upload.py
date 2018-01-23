@@ -239,8 +239,14 @@ class dbUpload:
         self.filenames = self.get_fasta_file_names()
         self.fa_files_cnts_in_dir = 0
         self.fa_files_cnts_in_csv = 0
+        self.equal_amnt_files_txt = ""
+        self.equal_amnt_files = self.check_files_csv()
         if db_server == "vamps2":
-            if not self.check_files_csv():
+            if not self.equal_amnt_files:
+                self.equal_amnt_files_txt = """WARNING: There is different amount of files (%s vs. %s) in the csv and in %s
+                """ % (self.fa_files_cnts_in_csv, self.fa_files_cnts_in_dir,
+                       self.fasta_dir)
+
                 print("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
             self.put_run_info()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
