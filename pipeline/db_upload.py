@@ -245,8 +245,13 @@ class dbUpload:
         print("DDD run_info_ill_id = %s" % run_info_ill_id)
         print("DDD self.all_dataset_run_info_dict = ")
         print(self.all_dataset_run_info_dict)
-        dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
-        self.used_project_ids.append(self.all_project_dataset_ids_dict[dataset_id])
+        try:
+            dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
+            self.used_project_ids.append(self.all_project_dataset_ids_dict[dataset_id])
+        except KeyError:
+            print("No such run info, please check a file name and the csv file")
+        except:
+            raise
 
     def get_project_names(self):
         used_project_ids_str = (str(w) for w in set(self.used_project_ids) if w is not None)
@@ -444,12 +449,10 @@ class dbUpload:
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
         primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
         illumina_index_id = self.get_id('illumina_index', content_row.barcode_index)
+        # use self.runobj.idx_keys?
         file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
-        #overlap = content_row.overlap
-        #if (content_row.overlap == 'complete'):
-        #    overlap = 0
+        print("FFF file_prefix = %s" % file_prefix)
 
-        # no project_id
         if (self.db_server == "vamps2"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
@@ -460,6 +463,7 @@ class dbUpload:
         """ % (run_key_id, self.run_id, content_row.lane, dataset_id, content_row.tubelabel, content_row.barcode,
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
+            print("VVV my_sql = %s" % my_sql)
 
         elif (self.db_server == "env454"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
