@@ -868,26 +868,12 @@ class Taxonomy:
     def get_silva_taxonomy_ids(self):
         self.make_silva_taxonomy_rank_list_w_ids_dict()
 
-        start1 = time.time()
-
         sql_part = ""
-
-        first_part = list(self.silva_taxonomy_rank_list_w_ids_dict.values())[:-1]
-        last_dict = list(self.silva_taxonomy_rank_list_w_ids_dict.values())[-1]
-        for rank_w_id_list in first_part:
-            a = self.make_rank_name_id_t_id_str(rank_w_id_list)
-            sql_part += "(%s) OR " % a
-
-        a_last = self.make_rank_name_id_t_id_str(last_dict)
-        sql_part += "(%s)" % a_last
-        elapsed1 = (time.time() - start1)
-        print("QQQ sql_part1 time: %s s" % elapsed1)
-
         start2 = time.time()
         sql_part_list = ["(%s)" % self.make_rank_name_id_t_id_str(rank_w_id_list) for rank_w_id_list in self.silva_taxonomy_rank_list_w_ids_dict.values()]
-        sql_part2 = " OR ".join(sql_part_list)
+        sql_part = " OR ".join(sql_part_list)
         elapsed2 = (time.time() - start2)
-        print("QQQ2 sql_part2 time: %s s" % elapsed2)
+        # print("QQQ2 sql_part2 time: %s s" % elapsed2)
 
         field_names = "domain_id, phylum_id, klass_id, order_id, family_id, genus_id, species_id, strain_id"
         table_name  = "silva_taxonomy"
@@ -939,6 +925,7 @@ class Seq:
 
     def get_seq_id_dict(self, sequences):
 #         TODO: ONCE IN CLASS
+
         sequence_field_name = self.table_names["sequence_field_name"]
         sequence_table_name = self.table_names["sequence_table_name"]
         id_name    = self.table_names["sequence_table_name"] + "_id"
@@ -947,10 +934,11 @@ class Seq:
         try:
             group_seq = self.utils.grouper(sequences, len(sequences))
             for group in group_seq:
+                # key for conv.escape_string(key) in group if key is not None
                 seq_part = '), COMPRESS('.join([val_tmpl % key for key in group if key is not None])
                 my_sql = query_tmpl % (id_name, sequence_field_name, sequence_table_name, sequence_field_name, seq_part)
                 res = self.my_conn.execute_fetch_select(my_sql)
-                one_seq_id_dict = dict((y.upper(), int(x)) for x, y in res)
+                one_seq_id_dict = dict((y.decode().upper(), int(x)) for x, y in res)
 
                 self.seq_id_dict.update(one_seq_id_dict)
         except:
@@ -959,8 +947,6 @@ class Seq:
             raise
 
     def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_server):
-        print("DDD")
-        print(self.seq_id_dict)
 
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.fasta_dict.items():
@@ -968,7 +954,7 @@ class Seq:
                 self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to env454")
 #             seq_upper = seq.upper()
             try:
-                sequence_id = self.seq_id_dict[seq.encode('UTF-8')]
+                sequence_id = self.seq_id_dict[seq]
 
                 seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
 
