@@ -194,9 +194,9 @@ class dbUpload:
         # logger.error("self.utils.is_local() LLL1 db upload")
         # logger.error(self.utils.is_local())
         self.table_names_dict = {"vamps2": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence",
-                                             "sequence_pdr_info_table_name": "sequence_pdr_info", "contact": "user", "username": "username"},
+                                             "sequence_pdr_info_table_name": "sequence_pdr_info", "contact": "user", "username": "username", "connect_pr_dat_table": "dataset"},
                                  "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill",
-                                             "sequence_pdr_info_table_name": "sequence_pdr_info_ill", "contact": "contact", "username": "vamps_name"}}
+                                             "sequence_pdr_info_table_name": "sequence_pdr_info_ill", "contact": "contact", "username": "vamps_name", "connect_pr_dat_table": "run_info_ill"}}
 
         self.db_cnf = {
             "vamps2": {"local":      {"host": "localhost", "db": "vamps2"},
@@ -317,7 +317,8 @@ class dbUpload:
             return int(res[0][0])
 
     def get_project_id_per_dataset_id(self):
-        all_project_id_per_dataset_id_sql = "SELECT dataset_id, project_id FROM dataset"
+        all_project_id_per_dataset_id_sql = "SELECT dataset_id, project_id FROM %s" % self.table_names["connect_pr_dat_table"]
+
         res = self.my_conn.execute_fetch_select(all_project_id_per_dataset_id_sql)
         return dict([(r, d) for r, d in res])
 
