@@ -511,7 +511,8 @@ def file_to_db_upload_main(runobj, full_upload):
 
     my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_server, ready_email_body)
 
-    utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % ", ".join(no_run_info_list))
+    if len(no_run_info_list) > 0:
+        utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % ", ".join(no_run_info_list))
 
 
     logger.debug(ready_email_body)
