@@ -479,6 +479,7 @@ def file_to_db_upload_main(runobj, full_upload):
 #     sequences = get_sequences(my_file_to_db_upload, filenames)
     get_and_up_seq_time = time.time()
     total_seq = 0
+    no_run_info_list = []
 
     for filename in my_file_to_db_upload.filenames:
         my_file_to_db_upload.seq.prepare_fasta_dict(filename)
@@ -493,7 +494,7 @@ def file_to_db_upload_main(runobj, full_upload):
         logger.debug("get_and_up_seq took %s" % get_and_up_seq_time_end)
         
         start_c = time.time()
-        total_seq = total_seq + file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload)
+        total_seq = total_seq + file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_list, full_upload)
         logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
     my_file_to_db_upload.check_seq_upload()
@@ -506,9 +507,12 @@ def file_to_db_upload_main(runobj, full_upload):
     # else:
     #     my_email = 'vamps@mbl.edu'
 
-    ready_email_body = "In this run: %s, %s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
+    ready_email_body = "In this run: %s,\n%s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
 
     my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_server, ready_email_body)
+
+    utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % ", ".join(no_run_info_list))
+
 
     logger.debug(ready_email_body)
 
@@ -533,7 +537,7 @@ def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
         print(sys.exc_info()[0])     # info about curr exception (type,value,traceback)
         raise                       # re-throw caught exception   
 
-def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
+def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_list, full_upload):
     total_seq = 0
 
     try:
@@ -573,7 +577,9 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, full_upload):
             return total_seq
         else:
             utils = PipelneUtils()
-            utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % filename_base_no_suff)
+
+            no_run_info_list.append(filename_base_no_suff)
+            utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % filename)
             return 0
         
     except:                       # catch everything
