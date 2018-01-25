@@ -212,10 +212,20 @@ class dbUpload:
         else:
             is_local = "production"
 
-        self.table_names = self.table_names_dict[self.db_server]
+        try:
+            self.table_names = self.table_names_dict[self.db_server]
+            host = self.db_cnf[self.db_server][is_local]["host"]
+            db   = self.db_cnf[self.db_server][is_local]["db"]
+        except KeyError:
+            self.db_server = "env454"
+            self.table_names = self.table_names_dict[self.db_server]
+            host = self.db_cnf[self.db_server][is_local]["host"]
+            db   = self.db_cnf[self.db_server][is_local]["db"]
+        except:
+            raise
 
-        host = self.db_cnf[self.db_server][is_local]["host"]
-        db   = self.db_cnf[self.db_server][is_local]["db"]
+
+
         self.my_conn = MyConnection(host, db)
 
         self.taxonomy = Taxonomy(self.my_conn)
@@ -317,7 +327,11 @@ class dbUpload:
             return int(res[0][0])
 
     def get_project_id_per_dataset_id(self):
-        all_project_id_per_dataset_id_sql = "SELECT dataset_id, project_id FROM %s" % self.table_names["connect_pr_dat_table"]
+        env454_where_part = ""
+        if self.db_server == "env454":
+            env454_where_part = """WHERE file_prefix in ('%s')""" % ("', '".join(self.runobj.run_keys))
+        all_project_id_per_dataset_id_sql = """SELECT dataset_id, project_id FROM %s %s 
+                                            """ % (self.table_names["connect_pr_dat_table"], env454_where_part)
 
         res = self.my_conn.execute_fetch_select(all_project_id_per_dataset_id_sql)
         return dict([(r, d) for r, d in res])
@@ -970,11 +984,11 @@ class Seq:
                     vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
 
                 all_insert_pdr_info_vals.append(vals)
-                return all_insert_pdr_info_vals
             except:
                 print("FFF0 fasta_id %s" % fasta_id)
                 print("SSS0 seq %s" % seq)
                 raise
+        return all_insert_pdr_info_vals
 
 
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):

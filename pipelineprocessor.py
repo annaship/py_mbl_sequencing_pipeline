@@ -478,7 +478,7 @@ def file_to_db_upload_main(runobj, full_upload):
 
 #     sequences = get_sequences(my_file_to_db_upload, filenames)
     get_and_up_seq_time = time.time()
-    total_seq = 0
+    total_time = 0
     no_run_info_list = []
 
     for filename in my_file_to_db_upload.filenames:
@@ -494,7 +494,7 @@ def file_to_db_upload_main(runobj, full_upload):
         logger.debug("get_and_up_seq took %s" % get_and_up_seq_time_end)
         
         start_c = time.time()
-        total_seq = total_seq + file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_list, full_upload)
+        total_time = total_time + file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_list, full_upload)
         logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
     my_file_to_db_upload.check_seq_upload()
@@ -517,7 +517,7 @@ def file_to_db_upload_main(runobj, full_upload):
 
     logger.debug(ready_email_body)
 
-    logger.debug("total_seq = %s" % total_seq)
+    logger.debug("total_time = %s" % total_time)
     whole_elapsed = (time.time() - whole_start)
     print("The whole upload took %s s" % whole_elapsed)
 
@@ -539,7 +539,7 @@ def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
         raise                       # re-throw caught exception   
 
 def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_list, full_upload):
-    total_seq = 0
+    total_time = 0
 
     try:
         my_file_to_db_upload.get_gast_result(os.path.basename(filename))
@@ -551,7 +551,7 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_li
             my_file_to_db_upload.collect_project_ids(run_info_ill_id)
             seq_in_file           = len(my_file_to_db_upload.seq.fasta_dict)
             my_file_to_db_upload.put_seq_statistics_in_file(filename, seq_in_file)
-            total_seq += seq_in_file
+            total_time += seq_in_file
 
             start_fasta_next = time.time()
 
@@ -575,7 +575,7 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_li
             logger.debug("start_insert_taxonomy_upload_time took %s sec to finish" % (insert_taxonomy_time))
             logger.debug("insert_sequence_uniq_info_time took %s sec to finish" % (insert_sequence_uniq_info_time))
 
-            return total_seq
+            return total_time
         else:
             utils = PipelneUtils()
 
