@@ -683,14 +683,9 @@ class dbUpload:
             self.taxonomy.get_taxonomy_id_dict()
 
     def insert_pdr_info(self, run_info_ill_id):
-        logger.debug("insert_pdr_info start")
-        logger.debug("RRR run_info_ill_id = %s" % run_info_ill_id)
-
         all_insert_pdr_info_vals = self.seq.prepare_pdr_info_values(run_info_ill_id, self.all_dataset_run_info_dict, self.db_server)
-        logger.debug("VVV all_insert_pdr_info_vals for insert_pdr_info = %s" % all_insert_pdr_info_vals)
 
         group_vals = self.utils.grouper(all_insert_pdr_info_vals, len(all_insert_pdr_info_vals))
-
         sequence_table_name = self.table_names["sequence_table_name"]
         if (self.db_server == "vamps2"):
             fields = "dataset_id, %s_id, seq_count, classifier_id" % sequence_table_name
@@ -698,7 +693,6 @@ class dbUpload:
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
         query_tmpl = self.my_conn.make_sql_for_groups(table_name, fields)
-        logger.debug("QQQ query_tmpl for insert_pdr_info = %s" % query_tmpl)
 
         logger.debug("insert sequence_pdr_info:")
         self.my_conn.run_groups(group_vals, query_tmpl)
