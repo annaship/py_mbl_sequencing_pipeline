@@ -665,12 +665,8 @@ class dbUpload:
                 self.utils.print_both("All sequences from files made it to %s for %s %s: %s == %s\n" % (self.db_server, self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
             else:
                 self.utils.print_both("Warning: Amount of sequences from files not equal to the one in the db for %s %s: %s != %s\n" % (self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
-#
-#                 ("Oops, amount of sequences from files not equal to the one in the db for %.\nIn file: %s != in db: %s\n==============" % (pr_suite, file_seq_orig_count, file_seq_db_count))
 
     def put_seq_statistics_in_file(self, filename, seq_in_file):
-#        if os.path.exists(file_full):
-#            os.remove(file_full)
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)
 
     def insert_taxonomy(self):
@@ -693,7 +689,7 @@ class dbUpload:
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
         query_tmpl = self.my_conn.make_sql_for_groups(table_name, fields)
-
+        
         logger.debug("insert sequence_pdr_info:")
         self.my_conn.run_groups(group_vals, query_tmpl)
 
