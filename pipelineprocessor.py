@@ -557,6 +557,10 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_li
 
             start_insert_pdf_info_time = 0
             start_insert_pdf_info_time = time.time()
+
+            logger.debug("insert_pdr_info")
+            logger.debug("UUU run_info_ill_id = %s" % run_info_ill_id)
+
             my_file_to_db_upload.insert_pdr_info(run_info_ill_id)
             insert_pdf_info_time = (time.time() - start_insert_pdf_info_time)
 
