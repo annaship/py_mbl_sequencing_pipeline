@@ -245,7 +245,7 @@ class dbUpload:
         self.suffix_used        = ""
         self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
         self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
-        self.used_project_ids = []
+        self.used_project_ids = defaultdict(list)
         self.filenames = self.get_fasta_file_names()
         self.fa_files_cnts_in_dir = 0
         self.fa_files_cnts_in_csv = 0
@@ -270,19 +270,20 @@ class dbUpload:
             print("There is a problem with files in the csv and/or in %s" % (self.fasta_dir))
             raise
 
+    # TODO: Do once loop over all used run_info_ill_id in self.all_project_dataset_ids_dict
     def collect_project_ids(self, run_info_ill_id):
         # print("self.all_dataset_run_info_dict")
         # print(self.all_dataset_run_info_dict)
         try:
             dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
-            self.used_project_ids.append(self.all_project_dataset_ids_dict[dataset_id])
+            self.used_project_ids[dataset_id] = self.all_project_dataset_ids_dict[dataset_id]
         except KeyError:
             print("No such run info, please check a file name and the csv file")
         except:
             raise
 
     def get_project_names(self):
-        used_project_ids_str = (str(w) for w in set(self.used_project_ids) if w is not None)
+        used_project_ids_str = (str(w) for w in set(self.used_project_ids.values()) if w is not None)
         where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
         res = self.my_conn.get_all_name_id("project", "", "", where_part)
 
@@ -342,9 +343,9 @@ class dbUpload:
         res = self.my_conn.execute_fetch_select(all_dataset_run_info_sql)
         return dict([(r, d) for r, d in res])
 
-    def get_id(self, table_name, value):
+    def get_id(self, table_name, value, and_part = ""):
         id_name = table_name + '_id'
-        my_sql  = """SELECT %s FROM %s WHERE %s = '%s';""" % (id_name, table_name, table_name, value)
+        my_sql  = """SELECT %s FROM %s WHERE %s = '%s' %s;""" % (id_name, table_name, table_name, value, and_part)
         res     = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])
@@ -476,8 +477,12 @@ class dbUpload:
         run_key_id      = self.get_id('run_key',      content_row.run_key)
         if not (self.run_id):
             self.run_id = self.get_id('run',          self.rundate)
-        dataset_id      = self.get_id('dataset',      content_row.dataset)
         project_id      = self.get_id('project',      content_row.project)
+        dataset_id      = self.get_id('dataset',      content_row.dataset)
+        if (self.db_server == "vamps2"):
+            and_part = " and project_id = %s" % project_id
+            dataset_id = self.get_id('dataset', content_row.dataset, and_part = and_part)
+
         dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
         primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
         illumina_index_id = self.get_id('illumina_index', content_row.barcode_index)
