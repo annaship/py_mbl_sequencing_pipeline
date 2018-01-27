@@ -491,7 +491,7 @@ def file_to_db_upload_main(runobj, full_upload):
         logger.debug("get_seq_id_dict() took %s sec to finish" % get_seq_id_dict_time)
 
         get_and_up_seq_time_end = (time.time() - get_and_up_seq_time)
-        logger.debug("get_and_up_seq took %s" % get_and_up_seq_time_end)
+        logger.debug("get_and_up_seq took %s s" % get_and_up_seq_time_end)
         
         start_c = time.time()
         total_time = total_time + file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_list, full_upload)
