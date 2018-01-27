@@ -508,7 +508,7 @@ def file_to_db_upload_main(runobj, full_upload):
     #     my_email = 'vamps@mbl.edu'
 
     # ready_email_body = "In this run: %s,\n%s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
-    ready_email_body = "In this run: %s,\n%s" % (projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
+    ready_email_body = "In this run: %s\n%s" % (projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
 
     my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_server, ready_email_body)
 
