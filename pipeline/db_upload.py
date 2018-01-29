@@ -922,12 +922,14 @@ class Seq:
 
     def prepare_fasta_dict(self, filename):
         read_fasta = fastalib.ReadFasta(filename)
-        self.fasta_dict = dict(zip(read_fasta.ids, read_fasta.sequences))
+        seq_list  = self.make_seq_upper(read_fasta.sequences)
+        self.fasta_dict = dict(zip(read_fasta.ids, seq_list))
         read_fasta.close()
+        return seq_list
 
-    def make_seq_upper(self, filename):
-        sequences  = [seq.upper() for seq in self.fasta_dict.values()] #here we make uppercase for VAMPS compartibility
-        return list(set(sequences))
+    def make_seq_upper(self, seq_list):
+        sequences  = [seq.upper() for seq in seq_list] #here we make uppercase for VAMPS compartibility
+        return sequences
 
     def insert_seq(self, sequences):
         val_tmpl = "(COMPRESS('%s'))"

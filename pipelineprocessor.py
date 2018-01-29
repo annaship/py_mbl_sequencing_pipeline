@@ -482,8 +482,7 @@ def file_to_db_upload_main(runobj, full_upload):
     no_run_info_list = []
 
     for filename in my_file_to_db_upload.filenames:
-        my_file_to_db_upload.seq.prepare_fasta_dict(filename)
-        sequences = my_file_to_db_upload.seq.make_seq_upper(filename)
+        sequences = my_file_to_db_upload.seq.prepare_fasta_dict(filename)
         if full_upload:
             file_to_db_upload_seq(my_file_to_db_upload, filename, sequences)
         wrapped   = wrapper(my_file_to_db_upload.seq.get_seq_id_dict, sequences)
