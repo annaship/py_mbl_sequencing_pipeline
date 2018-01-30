@@ -214,8 +214,12 @@ class dbUpload:
 
         try:
             self.table_names = self.table_names_dict[self.db_server]
-            host = self.db_cnf[self.db_server][is_local]["host"]
+            if self.runobj.database_host:
+                host = self.runobj.database_host
+            else:
+                host = self.db_cnf[self.db_server][is_local]["host"]
             db   = self.db_cnf[self.db_server][is_local]["db"]
+
         except KeyError:
             self.db_server = "env454"
             self.table_names = self.table_names_dict[self.db_server]
