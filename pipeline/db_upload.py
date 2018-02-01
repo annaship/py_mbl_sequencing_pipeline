@@ -20,12 +20,12 @@ else:
     from itertools import izip_longest
 
 try:
-    import mysqlclient as mysql
+    import pymysql as mysql
 except ImportError:
-    try:
-        import pymysql as mysql
-    except ImportError:
-        import MySQLdb as mysql
+    # try:
+    #     import mysqlclient as mysql
+    # except ImportError:
+    import MySQLdb as mysql
 
 
 class MyConnection:
