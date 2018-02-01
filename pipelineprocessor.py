@@ -466,10 +466,10 @@ def file_to_db_upload_main(runobj, full_upload):
 
 #     my_file_to_db_upload = dbUpload(runobj, db_server="vamps2")
     try:
-        db_server = runobj.database_name
+        db_name = runobj.database_name
     except:
-        db_server = "env454"
-    my_file_to_db_upload = dbUpload(runobj, db_server = db_server)
+        db_name = "env454"
+    my_file_to_db_upload = dbUpload(runobj, db_name = db_name)
 
 #     dbUpload(runobj)
 #     filenames       = my_file_to_db_upload.get_fasta_file_names()
@@ -510,7 +510,7 @@ def file_to_db_upload_main(runobj, full_upload):
     ready_email_body = """Uploaded to %s on %s\nIn this run: %s\n%s
     """ % (runobj.database_name, runobj.database_host, projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
 
-    my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_server, ready_email_body)
+    my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_name, ready_email_body)
 
     if len(no_run_info_list) > 0:
         utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % ", ".join(no_run_info_list))
