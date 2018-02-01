@@ -55,7 +55,6 @@ class MyConnection:
             if self.utils.is_local():
                 host = "127.0.0.1"
                 read_default_file = "~/.my.cnf_local"
-            print("read_default_file = %s" % read_default_file)
             self.conn   = mysql.connect(host = host, db = db, read_default_file = read_default_file, port = port_env)
             self.cursor = self.conn.cursor()
             self.cursorD = self.conn.cursor (mysql.cursors.DictCursor)
