@@ -476,7 +476,8 @@ class PipelneUtils:
             for k, v in items:
                 reverse_linked_q.append((this_key_chain + [k], v))
         # if we haven't returned by this point, we've exhausted all the contents
-        raise KeyError
+
+        return False
 
 
 

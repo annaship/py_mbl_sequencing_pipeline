@@ -745,7 +745,7 @@ water-marine
 
         if not PipelneUtils.find_in_nested_dict(C.db_cnf, {'host': collector['database_host'], 'db': collector['database_name']}):
             sys.exit("""Please check -db_host and -db_name parameters, 
-            the current combination does not exist: 'host' = %s, 'db' = %s """ % (collector['database_host'], collector['database_name']))
+            the current combination does not exist: 'db_host' = %s, 'db_name' = %s """ % (collector['database_host'], collector['database_name']))
 
         if self.args.platform in C.illumina_list:
             print("Starting Illumina Pipeline")
