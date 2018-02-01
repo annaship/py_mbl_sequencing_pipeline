@@ -197,44 +197,13 @@ class dbUpload:
                                              "sequence_pdr_info_table_name": "sequence_pdr_info_ill", "contact": "contact", "username": "vamps_name", "connect_pr_dat_table": "run_info_ill"}}
 
         self.get_conn()
+
+        find_dict = {'host': self.runobj.database_host, 'db': self.runobj.database_name}
+        self.current_db_host_name_arr = self.utils.find_in_nested_dict(C.db_cnf, find_dict)
         try:
-            self.table_names = self.table_names_dict[self.db_server]
+            self.table_names = self.table_names_dict[self.current_db_host_name_arr[0]]
         except:
             raise
-
-        # self.db_cnf = {
-        #     "vamps2": {"local":      {"host": "localhost", "db": "vamps2"},
-        #                "production": {"host": "vampsdb",   "db": "vamps2"}
-        #                },
-        #     "env454": {"local":      {"host": "localhost", "db": "test_env454"},
-        #                "production": {"host": "bpcdb1",    "db": "env454"}
-        #                }
-        #             }
-        #
-        # if self.utils.is_local():
-        #     is_local = "local"
-        # else:
-        #     is_local = "production"
-        #
-        # try:
-        #     self.table_names = self.table_names_dict[self.db_server]
-        #     if self.runobj.database_host:
-        #         host = self.runobj.database_host
-        #     else:
-        #         host = self.db_cnf[self.db_server][is_local]["host"]
-        #     db   = self.db_cnf[self.db_server][is_local]["db"]
-        #
-        # except KeyError:
-        #     self.db_server = "env454"
-        #     self.table_names = self.table_names_dict[self.db_server]
-        #     host = self.db_cnf[self.db_server][is_local]["host"]
-        #     db   = self.db_cnf[self.db_server][is_local]["db"]
-        # except:
-        #     raise
-        #
-        #
-        #
-        # self.my_conn = MyConnection(host, db)
 
         self.taxonomy = Taxonomy(self.my_conn)
         self.seq      = Seq(self.taxonomy, self.table_names)
@@ -259,7 +228,7 @@ class dbUpload:
         self.fa_files_cnts_in_csv = 0
         self.equal_amnt_files_txt = ""
         self.equal_amnt_files = self.check_files_csv()
-        if db_server == "vamps2":
+        if self.current_db_host_name_arr[0] == "vamps2":
             if not self.equal_amnt_files:
                 self.equal_amnt_files_txt = """WARNING: There is different amount of files (%s vs. %s) in the csv and in %s
                 """ % (self.fa_files_cnts_in_csv, self.fa_files_cnts_in_dir,
@@ -270,18 +239,6 @@ class dbUpload:
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
     def get_conn(self):
-        # if db_server is None:
-        #     db_server = "vampsdev"
-        # self.runobj.database_name
-        # self.db_cnf = {
-        #     "vamps2": {"local":       {"host": "localhost", "db": "vamps2"},
-        #                "production":  {"host": "vampsdb",   "db": "vamps2"},
-        #                "development": {"host": "vampsdev",  "db": "vamps2"}
-        #                },
-        #     "env454": {"local":      {"host": "localhost", "db": "test_env454"},
-        #                "production": {"host": "bpcdb1",    "db": "env454"}
-        #                }
-        #             }
 
         if self.utils.is_local():
             is_local = "local"
@@ -291,7 +248,6 @@ class dbUpload:
         try:
             host = self.runobj.database_host
             db   = self.runobj.database_name
-        # except KeyError:
         except:
             self.db_server = "env454"
             host = C.db_cnf[self.db_server][is_local]["host"]
@@ -368,7 +324,7 @@ class dbUpload:
 
     def get_project_id_per_dataset_id(self):
         env454_where_part = ""
-        if self.db_server == "env454":
+        if self.current_db_host_name_arr[0] == "env454":
             env454_where_part = """WHERE file_prefix in ('%s')""" % ("', '".join(self.runobj.run_keys))
         all_project_id_per_dataset_id_sql = """SELECT dataset_id, project_id FROM %s %s 
                                             """ % (self.table_names["connect_pr_dat_table"], env454_where_part)
@@ -484,7 +440,7 @@ class dbUpload:
         if (not contact_id):
             self.utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")
 
-        if self.db_server == "vamps2":
+        if self.current_db_host_name_arr[0] == "vamps2":
             fields = "project, title, project_description, rev_project_name, funding, owner_user_id, created_at"
             vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
             """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
@@ -492,7 +448,7 @@ class dbUpload:
             query_tmpl = self.my_conn.make_sql_for_groups("project", fields)
             self.my_conn.run_groups(group_vals, query_tmpl)
 
-        elif self.db_server == "env454":
+        elif self.current_db_host_name_arr[0] == "env454":
             my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
                 ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
                 """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
@@ -501,12 +457,12 @@ class dbUpload:
             cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
-        if self.db_server == "vamps2":
+        if self.current_db_host_name_arr[0] == "vamps2":
             project_id = self.get_id('project', content_row.project)
             my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description, project_id, created_at) VALUES
                 ('%s', '%s', %s, NOW());
                 """ % (content_row.dataset, content_row.dataset_description, project_id)
-        elif self.db_server == "env454":
+        elif self.current_db_host_name_arr[0] == "env454":
             my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
                 ('%s', '%s');
                 """ % (content_row.dataset, content_row.dataset_description)
@@ -518,7 +474,7 @@ class dbUpload:
             self.run_id = self.get_id('run',          self.rundate)
         project_id      = self.get_id('project',      content_row.project)
         dataset_id      = self.get_id('dataset',      content_row.dataset)
-        if (self.db_server == "vamps2"):
+        if (self.current_db_host_name_arr[0] == "vamps2"):
             and_part = " and project_id = %s" % project_id
             dataset_id = self.get_id('dataset', content_row.dataset, and_part = and_part)
 
@@ -528,7 +484,7 @@ class dbUpload:
         # use self.runobj.idx_keys?
         file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
 
-        if (self.db_server == "vamps2"):
+        if (self.current_db_host_name_arr[0] == "vamps2"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
                                                     file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
@@ -539,7 +495,7 @@ class dbUpload:
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
 
-        elif (self.db_server == "env454"):
+        elif (self.current_db_host_name_arr[0] == "env454"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
                                                     file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
@@ -621,10 +577,10 @@ class dbUpload:
         primer_suites = self.get_primer_suite_name()
         lane          = self.get_lane().pop()
 
-        if (self.db_server == "vamps2"):
+        if (self.current_db_host_name_arr[0] == "vamps2"):
             join_add = """ JOIN dataset using(dataset_id)
                        JOIN run_info_ill USING(dataset_id) """
-        elif (self.db_server == "env454"):
+        elif (self.current_db_host_name_arr[0] == "env454"):
             join_add = """ JOIN run_info_ill USING(run_info_ill_id) """
 
         for primer_suite in primer_suites:
@@ -711,20 +667,20 @@ class dbUpload:
     def insert_taxonomy(self):
         # TODO: mv to Taxonomy?
         self.taxonomy.get_taxonomy_from_gast(self.gast_dict)
-        if (self.db_server == "vamps2"):
+        if (self.current_db_host_name_arr[0] == "vamps2"):
             self.taxonomy.insert_split_taxonomy()
-        elif (self.db_server == "env454"):
+        elif (self.current_db_host_name_arr[0] == "env454"):
             self.taxonomy.insert_whole_taxonomy()
             self.taxonomy.get_taxonomy_id_dict()
 
     def insert_pdr_info(self, run_info_ill_id):
-        all_insert_pdr_info_vals = self.seq.prepare_pdr_info_values(run_info_ill_id, self.all_dataset_run_info_dict, self.db_server)
+        all_insert_pdr_info_vals = self.seq.prepare_pdr_info_values(run_info_ill_id, self.all_dataset_run_info_dict, self.db_server, self.current_db_host_name_arr[0])
 
         group_vals = self.utils.grouper(all_insert_pdr_info_vals, len(all_insert_pdr_info_vals))
         sequence_table_name = self.table_names["sequence_table_name"]
-        if (self.db_server == "vamps2"):
+        if (self.current_db_host_name_arr[0] == "vamps2"):
             fields = "dataset_id, %s_id, seq_count, classifier_id" % sequence_table_name
-        elif (self.db_server == "env454"):
+        elif (self.current_db_host_name_arr[0] == "env454"):
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
         query_tmpl = self.my_conn.make_sql_for_groups(table_name, fields)
@@ -733,10 +689,10 @@ class dbUpload:
         self.my_conn.run_groups(group_vals, query_tmpl)
 
     def insert_sequence_uniq_info(self):
-        if (self.db_server == "vamps2"):
+        if (self.current_db_host_name_arr[0] == "vamps2"):
             self.insert_silva_taxonomy_info_per_seq()
             self.seq.insert_sequence_uniq_info2()
-        elif (self.db_server == "env454"):
+        elif (self.current_db_host_name_arr[0] == "env454"):
             self.seq.insert_sequence_uniq_info_ill(self.gast_dict)
 
     def insert_silva_taxonomy_info_per_seq(self):
@@ -1001,7 +957,7 @@ class Seq:
                 self.utils.print_both(("ERROR: There are no sequences, please check if there are correct fasta files in the directory %s") % self.fasta_dir)
             raise
 
-    def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_server):
+    def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_server, current_db_host_name):
 
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.fasta_dict.items():
@@ -1013,7 +969,7 @@ class Seq:
 
                 seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
 
-                if (db_server == "vamps2"):
+                if (current_db_host_name == "vamps2"):
                     try:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
                         vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
@@ -1022,7 +978,7 @@ class Seq:
                     except:
                         raise
 
-                elif (db_server == "env454"):
+                elif (current_db_host_name == "env454"):
                     vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
 
                 all_insert_pdr_info_vals.append(vals)

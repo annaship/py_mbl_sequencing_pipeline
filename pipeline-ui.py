@@ -268,6 +268,7 @@ if __name__ == '__main__':
     del v
     v = MetadataUtils( configuration_dictionary = data_object )
     v.convert_and_save_ini(data_object['output_dir'])
+
     data_object = v.validate(data_object['output_dir'])
     #general_data = v.get_general_data()
 

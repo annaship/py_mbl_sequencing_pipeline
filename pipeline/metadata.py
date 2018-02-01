@@ -743,7 +743,8 @@ water-marine
             # no configPath
             collector= self.get_values( self.args )
 
-        if not PipelneUtils.find_in_nested_dict(C.db_cnf, {'host': collector['database_host'], 'db': collector['database_name']}):
+        collector['current_db_host_name'] = self.utils.find_in_nested_dict(C.db_cnf, {'host': collector['database_host'], 'db': collector['database_name']})
+        if not collector['current_db_host_name']:
             sys.exit("""Please check -db_host and -db_name parameters, 
             the current combination does not exist: 'db_host' = %s, 'db_name' = %s """ % (collector['database_host'], collector['database_name']))
 
@@ -776,7 +777,7 @@ water-marine
         else:
             collector['configPath'] = ""
         # these are all the bool items in the collector
-        # they need to be converted fron str to bool here
+        # they need to be converted from str to bool here
         for i in collector:
             if collector[i] == 'True' or collector[i] == 'true':
                 collector[i] = True

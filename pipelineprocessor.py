@@ -465,9 +465,9 @@ def file_to_db_upload_main(runobj, full_upload):
     whole_start     = time.time()
 
 #     my_file_to_db_upload = dbUpload(runobj, db_server="vamps2")
-    if (runobj.database_name):
+    try:
         db_server = runobj.database_name
-    else:
+    except:
         db_server = "env454"
     my_file_to_db_upload = dbUpload(runobj, db_server = db_server)
 

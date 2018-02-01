@@ -459,7 +459,7 @@ class PipelneUtils:
         else:
             return False
 
-    def find_in_nested_dict(nested_dict, to_find):
+    def find_in_nested_dict(self, nested_dict, to_find):
         reverse_linked_q = list()
         reverse_linked_q.append((list(), nested_dict))
         while reverse_linked_q:
