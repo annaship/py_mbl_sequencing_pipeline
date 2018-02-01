@@ -280,6 +280,7 @@ class dbUpload:
     def get_project_names(self):
         used_project_ids_str = (str(w) for w in set(self.used_project_ids.values()) if w is not None)
         where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
+        logger.debug("PPP Project_ids: %s, datset_ids:  %s" % (set(self.used_project_ids.values()), set(self.used_project_ids.keys())))
         res = self.my_conn.get_all_name_id("project", "", "", where_part)
 
         try:
