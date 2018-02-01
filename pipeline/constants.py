@@ -222,6 +222,19 @@ pipeline_run_items = {
                 'baseoutputdir':'output'
                 }
 }
+
+db_cnf = {
+    "vamps2": {
+        "local"      : {"host": "localhost", "db": "vamps2"},
+        "production" : {"host": "vampsdb", "db": "vamps2"},
+        "development": {"host": "vampsdev", "db": "vamps2"}
+    },
+    "env454": {
+        "local"     : {"host": "localhost", "db": "test_env454"},
+        "production": {"host": "bpcdb1", "db": "env454"}
+    }
+}
+
 # this is the maximum distance from the end of the sequence where script
 # will accept a distal primer (if found)
 distal_from_end  = 12

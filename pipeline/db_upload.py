@@ -162,8 +162,6 @@ class dbUpload:
 
     """
     def __init__(self, runobj = None, db_server = None):
-        if db_server is None:
-            db_server = "vampsdev"
 
         self.db_server   = db_server
         self.utils       = PipelneUtils()
@@ -198,39 +196,45 @@ class dbUpload:
                                  "env454": {"sequence_field_name": "sequence_comp", "sequence_table_name": "sequence_ill",
                                              "sequence_pdr_info_table_name": "sequence_pdr_info_ill", "contact": "contact", "username": "vamps_name", "connect_pr_dat_table": "run_info_ill"}}
 
-        self.db_cnf = {
-            "vamps2": {"local":      {"host": "localhost", "db": "vamps2"},
-                       "production": {"host": "vampsdb",   "db": "vamps2"}
-                       },
-            "env454": {"local":      {"host": "localhost", "db": "test_env454"},
-                       "production": {"host": "bpcdb1",    "db": "env454"}
-                       }
-                    }
-
-        if self.utils.is_local():
-            is_local = "local"
-        else:
-            is_local = "production"
-
+        self.get_conn()
         try:
             self.table_names = self.table_names_dict[self.db_server]
-            if self.runobj.database_host:
-                host = self.runobj.database_host
-            else:
-                host = self.db_cnf[self.db_server][is_local]["host"]
-            db   = self.db_cnf[self.db_server][is_local]["db"]
-
-        except KeyError:
-            self.db_server = "env454"
-            self.table_names = self.table_names_dict[self.db_server]
-            host = self.db_cnf[self.db_server][is_local]["host"]
-            db   = self.db_cnf[self.db_server][is_local]["db"]
         except:
             raise
 
-
-
-        self.my_conn = MyConnection(host, db)
+        # self.db_cnf = {
+        #     "vamps2": {"local":      {"host": "localhost", "db": "vamps2"},
+        #                "production": {"host": "vampsdb",   "db": "vamps2"}
+        #                },
+        #     "env454": {"local":      {"host": "localhost", "db": "test_env454"},
+        #                "production": {"host": "bpcdb1",    "db": "env454"}
+        #                }
+        #             }
+        #
+        # if self.utils.is_local():
+        #     is_local = "local"
+        # else:
+        #     is_local = "production"
+        #
+        # try:
+        #     self.table_names = self.table_names_dict[self.db_server]
+        #     if self.runobj.database_host:
+        #         host = self.runobj.database_host
+        #     else:
+        #         host = self.db_cnf[self.db_server][is_local]["host"]
+        #     db   = self.db_cnf[self.db_server][is_local]["db"]
+        #
+        # except KeyError:
+        #     self.db_server = "env454"
+        #     self.table_names = self.table_names_dict[self.db_server]
+        #     host = self.db_cnf[self.db_server][is_local]["host"]
+        #     db   = self.db_cnf[self.db_server][is_local]["db"]
+        # except:
+        #     raise
+        #
+        #
+        #
+        # self.my_conn = MyConnection(host, db)
 
         self.taxonomy = Taxonomy(self.my_conn)
         self.seq      = Seq(self.taxonomy, self.table_names)
@@ -264,6 +268,37 @@ class dbUpload:
                 print("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
             self.put_run_info()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
+
+    def get_conn(self):
+        # if db_server is None:
+        #     db_server = "vampsdev"
+        # self.runobj.database_name
+        # self.db_cnf = {
+        #     "vamps2": {"local":       {"host": "localhost", "db": "vamps2"},
+        #                "production":  {"host": "vampsdb",   "db": "vamps2"},
+        #                "development": {"host": "vampsdev",  "db": "vamps2"}
+        #                },
+        #     "env454": {"local":      {"host": "localhost", "db": "test_env454"},
+        #                "production": {"host": "bpcdb1",    "db": "env454"}
+        #                }
+        #             }
+
+        if self.utils.is_local():
+            is_local = "local"
+        else:
+            is_local = "production"
+
+        try:
+            host = self.runobj.database_host
+            db   = self.runobj.database_name
+        # except KeyError:
+        except:
+            self.db_server = "env454"
+            host = C.db_cnf[self.db_server][is_local]["host"]
+            db   = C.db_cnf[self.db_server][is_local]["db"]
+
+        self.my_conn = MyConnection(host, db)
+
 
     def check_files_csv(self):
         try:

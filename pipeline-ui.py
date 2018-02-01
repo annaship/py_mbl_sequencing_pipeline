@@ -212,7 +212,7 @@ if __name__ == '__main__':
     # set logging
 
 
-    print("\nLog Level set to:",args.loglevel)
+    print("\nLog Level set to:", args.loglevel)
     logger.setLevel(args.loglevel.upper() )
 
     logger.info("Starting pipeline")
