@@ -267,8 +267,10 @@ class dbUpload:
 
     # TODO: Do once loop over all used run_info_ill_id in self.all_project_dataset_ids_dict
     def collect_project_ids(self, run_info_ill_id):
-        # print("self.all_dataset_run_info_dict")
+        # print("EEE self.all_dataset_run_info_dict")
         # print(self.all_dataset_run_info_dict)
+        # print("RRR run_info_ill_id")
+        # print(run_info_ill_id)
         try:
             dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
             self.used_project_ids[dataset_id] = self.all_project_dataset_ids_dict[dataset_id]

@@ -344,7 +344,7 @@ qsub_cmd            = '/usr/local/sge/bin/lx24-amd64/qsub'
 clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #mothur_cmd          = '/bioware/mothur/mothur'
 #fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
-fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
+fastaunique_cmd     = 'python2 /bioware/seqinfo/bin/fastaunique'
 #local commands
 fastasampler_cmd_local = cmd_path_local + 'fastasampler'
 calcnodes_cmd_local    = cmd_path_local + 'calcnodes'
