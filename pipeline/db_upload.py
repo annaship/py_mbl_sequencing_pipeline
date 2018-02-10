@@ -479,12 +479,11 @@ class dbUpload:
             fields = "dataset, dataset_description, project_id, created_at"
             dataset_values = "('%s', '%s', %s, NOW())" % (content_row.dataset, content_row.dataset_description, project_id)
             uniq_fields = ['dataset', 'project_id']
-            my_sql = self.my_conn.make_sql_w_duplicate("dataset", fields, uniq_fields) % dataset_values
         elif self.db_server == "env454":
             fields = "dataset, dataset_description"
             dataset_values = "('%s', '%s')" % (content_row.dataset, content_row.dataset_description)
             uniq_fields = ['dataset', 'dataset_description']
-            my_sql = self.my_conn.make_sql_w_duplicate("dataset", fields, uniq_fields) % dataset_values
+        my_sql = self.my_conn.make_sql_w_duplicate("dataset", fields, uniq_fields) % dataset_values
         return self.my_conn.execute_no_fetch(my_sql)
 
     def insert_run_info(self, content_row):
