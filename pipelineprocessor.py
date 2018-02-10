@@ -483,6 +483,9 @@ def file_to_db_upload_main(runobj, full_upload):
 
     for filename in my_file_to_db_upload.filenames:
         sequences = my_file_to_db_upload.seq.prepare_fasta_dict(filename)
+        if not (len(sequences)):
+            logger.debug("There are 0 sequences in filename = %s" % filename)
+            continue
         if full_upload:
             file_to_db_upload_seq(my_file_to_db_upload, filename, sequences)
         wrapped   = wrapper(my_file_to_db_upload.seq.get_seq_id_dict, sequences)
@@ -524,14 +527,12 @@ def file_to_db_upload_main(runobj, full_upload):
 
 def file_to_db_upload_seq(my_file_to_db_upload, filename, sequences):
 #     for filename in filenames:
+    insert_seq_time_start = time.time()
+
     try:
         logger.debug("\n----------------\nfilename = %s" % filename)
-#             sequences = my_file_to_db_upload.make_seq_upper(filename)
-        if not (len(sequences)):
-            logger.debug("There are 0 sequences in filename = %s" % filename)
- 
-        wrapped = wrapper(my_file_to_db_upload.seq.insert_seq, sequences)
-        insert_seq_time = timeit.timeit(wrapped, number=1)
+        my_file_to_db_upload.seq.insert_seq(sequences)
+        insert_seq_time = (time.time() - insert_seq_time_start)
         logger.debug("insert_seq() took %s sec to finish" % insert_seq_time)
     except:                       # catch everything
         print("\r[pipelineprocessor] Unexpected:")         # handle unexpected exceptions
