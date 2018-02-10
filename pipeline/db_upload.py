@@ -187,6 +187,7 @@ class dbUpload:
         self.rundate     = self.runobj.run
         self.use_cluster = 1
         self.unique_fasta_files = []
+        self.all_errors = [] #(+seq_errors)
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -304,20 +305,22 @@ class dbUpload:
 
     def get_project_names(self):
         used_project_ids_str = (str(w) for w in set(self.used_project_ids.values()) if w is not None)
-        where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
-        res = self.my_conn.get_all_name_id("project", "", "", where_part)
+        if len(set(used_project_ids_str)) == 0:
+            err_msg = "No project were uploaded! Please check files in %s" % (self.fasta_dir)
+            self.all_errors.append(err_msg)
+            logger.debug(err_msg)
 
         try:
+            where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
+            res = self.my_conn.get_all_name_id("project", "", "", where_part)
+
             projects, pr_ids = zip(*res)
             pr_ids_str = (str(w) for w in pr_ids)
             project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str) )
                 # ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
             return project_and_ids
-        except Exception:
-            error = sys.exc_info()[1]
-            print("problems with res:")
-            print(res)
-            print(error)
+        except:
+            pass
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
@@ -403,7 +406,9 @@ class dbUpload:
                 pass
         except TypeError:
             error = sys.exc_info()[1]
-            self.utils.print_both("Check if there is a gast file under %s for %s." % (self.gast_dir, filename))
+            err_msg = "Check if there is a gast file under %s for %s." % (self.gast_dir, filename)
+            self.utils.print_both(err_msg)
+            self.all_errors.append(err_msg)
             pass
         except:
             # reraise the exception, as it's an unexpected error
@@ -422,10 +427,11 @@ class dbUpload:
 #             self.get_contact_v_info()
             contact_id = self.get_contact_id(value.data_owner)
             if (not contact_id):
-                logger.error("""ERROR: There is no such contact info on %s,
-                    please check if the user %s has an account on VAMPS""" % (self.db_server, value.data_owner))
-                sys.exit("""ERROR: There is no such contact info on %s,
-                    please check if the user %s has an account on VAMPS""" % (self.db_server, value.data_owner))
+                err_msg = """ERROR: There is no such contact info on %s,
+                    please check if the user %s has an account on VAMPS""" % (self.db_server, value.data_owner)
+                self.all_errors.append(err_msg)
+                logger.error(err_msg)
+                sys.exit(err_msg)
             self.insert_project(value, contact_id)
             self.insert_dataset(value)
 
@@ -455,7 +461,9 @@ class dbUpload:
 
     def insert_project(self, content_row, contact_id):
         if (not contact_id):
-            self.utils.print_both("ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS")
+            err_msg = "ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS"
+            self.utils.print_both(err_msg)
+            self.all_errors.append(err_msg)
 
         if self.db_server == "vamps2":
             fields = "project, title, project_description, rev_project_name, funding, owner_user_id, created_at"
@@ -935,6 +943,8 @@ class Seq:
         self.refhvr_id   = ""
         self.the_rest    = ""
 
+        self.seq_errors = []
+
     def prepare_fasta_dict(self, filename):
         read_fasta = fastalib.ReadFasta(filename)
         seq_list  = self.make_seq_upper(read_fasta.sequences)
@@ -982,7 +992,9 @@ class Seq:
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.fasta_dict.items():
             if (not run_info_ill_id):
-                self.utils.print_both("ERROR: There is no run info yet, please check if it's uploaded to %s" % db_server)
+                err_msg = "ERROR: There is no run info yet, please check if it's uploaded to %s" % db_server
+                self.utils.print_both(err_msg)
+                self.seq_errors.append(err_msg)
                 break
             try:
                 sequence_id = self.seq_id_dict[seq]
@@ -1007,7 +1019,6 @@ class Seq:
                 print("SSS0 seq %s" % seq)
                 raise
         return all_insert_pdr_info_vals
-
 
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
         sequence_ids_strs = [str(i) for i in self.seq_id_dict.values()]

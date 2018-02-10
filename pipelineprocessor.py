@@ -461,7 +461,6 @@ def file_to_db_upload_main(runobj, full_upload):
     sequence_uniq_info_ill
 
     """
-
     whole_start     = time.time()
 
 #     my_file_to_db_upload = dbUpload(runobj, db_server="vamps2")
@@ -474,7 +473,9 @@ def file_to_db_upload_main(runobj, full_upload):
 #     dbUpload(runobj)
 #     filenames       = my_file_to_db_upload.get_fasta_file_names()
     if not my_file_to_db_upload.filenames:
-        logger.debug("\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_file_to_db_upload.fasta_dir)
+        err_msg = "\nThere is something wrong with fasta files or their names, please check pathes, contents and suffixes in %s." % my_file_to_db_upload.fasta_dir
+        my_file_to_db_upload.all_errors.append(err_msg)
+        logger.debug(err_msg)
 
 #     sequences = get_sequences(my_file_to_db_upload, filenames)
     get_and_up_seq_time = time.time()
@@ -484,7 +485,9 @@ def file_to_db_upload_main(runobj, full_upload):
     for filename in my_file_to_db_upload.filenames:
         sequences = my_file_to_db_upload.seq.prepare_fasta_dict(filename)
         if not (len(sequences)):
-            logger.debug("There are 0 sequences in filename = %s" % filename)
+            err_msg = "There are 0 sequences in filename = %s" % filename
+            logger.debug(err_msg)
+            my_file_to_db_upload.all_errors.append(err_msg)
             continue
         if full_upload:
             file_to_db_upload_seq(my_file_to_db_upload, filename, sequences)
@@ -515,10 +518,14 @@ def file_to_db_upload_main(runobj, full_upload):
     my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_server, ready_email_body)
 
     if len(no_run_info_list) > 0:
-        utils.print_both("ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % ", ".join(no_run_info_list))
-
+        err_msg = "ERROR: There is no run info for %s yet, please check if it's in the csv and uploaded to the db" % ", ".join(no_run_info_list)
+        utils.print_both(err_msg)
+        my_file_to_db_upload.all_errors.append(err_msg)
 
     logger.debug(ready_email_body)
+
+    my_file_to_db_upload.all_errors.extend(my_file_to_db_upload.seq.seq_errors)
+    logger.debug('\n=====\nERRORS: \n' + ';\n'.join(my_file_to_db_upload.all_errors))
 
     logger.debug("total_time = %s" % total_time)
     whole_elapsed = (time.time() - whole_start)
