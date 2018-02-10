@@ -148,6 +148,14 @@ class MyConnection:
         my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (unique_key_fields_arr[-1].strip(), unique_key_fields_arr[-1].strip())
         return my_sql_1 + " %s " + my_sql_2
 
+    def insert_bulk_data(self, key, values):
+        query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
+        val_tmpl   = "'%s'"
+        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % v for v in values]))
+        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (key, key)
+
+        cursor_info = self.execute_no_fetch(my_sql)
+
 
 class dbUpload:
     """db upload methods"""
@@ -404,9 +412,9 @@ class dbUpload:
     def put_run_info(self, content = None):
 
         run_keys = list(set([run_key.split('_')[1] for run_key in self.runobj.run_keys]))
-        self.insert_bulk_data('run_key', run_keys)
+        self.my_conn.insert_bulk_data('run_key', run_keys)
         dna_regions = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
-        self.insert_bulk_data('dna_region', dna_regions)
+        self.my_conn.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
 
         for key in self.runobj.samples:
@@ -422,14 +430,6 @@ class dbUpload:
             self.insert_dataset(value)
 
             self.insert_run_info(value)
-
-    def insert_bulk_data(self, key, values):
-        query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
-        val_tmpl   = "'%s'"
-        my_sql     = query_tmpl % (key, key, '), ('.join([val_tmpl % v for v in values]))
-        my_sql     = my_sql + " ON DUPLICATE KEY UPDATE %s = VALUES(%s);" % (key, key)
-
-        cursor_info = self.my_conn.execute_no_fetch(my_sql)
 
     def get_contact_v_info(self):
         """
@@ -463,6 +463,8 @@ class dbUpload:
             """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
             group_vals = self.utils.grouper([vals], 1)
             query_tmpl = self.my_conn.make_sql_for_groups("project", fields)
+            # query_tmpl = self.my_conn.make_sql_w_duplicate("project", fields, ["project"])
+
             self.my_conn.run_groups(group_vals, query_tmpl)
 
         elif self.db_server == "env454":
