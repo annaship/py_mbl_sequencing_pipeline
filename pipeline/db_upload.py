@@ -305,22 +305,22 @@ class dbUpload:
 
     def get_project_names(self):
         used_project_ids_str = (str(w) for w in set(self.used_project_ids.values()) if w is not None)
-        if len(set(used_project_ids_str)) == 0:
+        if len(list(used_project_ids_str)) == 0:
             err_msg = "No project were uploaded! Please check files in %s" % (self.fasta_dir)
             self.all_errors.append(err_msg)
             logger.debug(err_msg)
+        else:
+            try:
+                where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
+                res = self.my_conn.get_all_name_id("project", "", "", where_part)
 
-        try:
-            where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
-            res = self.my_conn.get_all_name_id("project", "", "", where_part)
-
-            projects, pr_ids = zip(*res)
-            pr_ids_str = (str(w) for w in pr_ids)
-            project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str) )
-                # ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
-            return project_and_ids
-        except:
-            pass
+                projects, pr_ids = zip(*res)
+                pr_ids_str = (str(w) for w in pr_ids)
+                project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str) )
+                    # ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
+                return project_and_ids
+            except:
+                pass
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
