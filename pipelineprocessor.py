@@ -73,7 +73,7 @@ def process(runobj, steps):
     for step in C.existing_steps:
         if step in requested_steps:
             # call the method in here
-            logger.debug('RUN', step)
+            logger.debug('RUN: %s' % step)
             step_method = globals()[step]
             step_method(runobj)
 
@@ -382,7 +382,9 @@ def illumina_chimera_only(runobj):
     elapsed = (time.time() - start)
     logger.debug("illumina_chimera_only time = %s" % str(elapsed))
 
-def illumina_files_demultiplex_only(runobj):  
+def illumina_files_demultiplex_only(runobj):
+    logger.debug("Start Demultiplex Illumina files by index/run_key/lane")
+
     start = time.time()
     illumina_files = IlluminaFiles(runobj)
     illumina_files.open_dataset_files()
@@ -390,7 +392,9 @@ def illumina_files_demultiplex_only(runobj):
     elapsed = (time.time() - start)
     logger.debug("illumina_files demultiplex only time = %s" % str(elapsed))
 
-def illumina_files(runobj):  
+def illumina_files(runobj):
+    logger.debug("Start Overlap, filter and unique reads")
+
     utils = PipelneUtils()
     start = time.time()
 #     illumina_files_demultiplex_only(runobj)
@@ -424,7 +428,8 @@ def illumina_files(runobj):
         
         
 def env454run_info_upload(runobj):
-# my_file_to_db_upload = dbUpload(runobj, db_server="vamps2")
+    logger.debug("Start Run info upload to db")
+
     my_read_csv = dbUpload(runobj)
     wrapped   = wrapper(my_read_csv.put_run_info)
     logger.debug("put_run_info time = %s" % timeit.timeit(wrapped, number=1) )
@@ -442,11 +447,14 @@ def get_filename_base_no_suff(filename):
         filename_base_no_suff   = "_".join(filename.split("/")[-1].split("_")[:3]).replace('MERGED', '1')
     return filename_base_no_suff 
 
-def file_to_db_upload(runobj):  
+def file_to_db_upload(runobj):
+    logger.debug("Start Data upload to db")
+
     full_upload = True
     file_to_db_upload_main(runobj, full_upload)
 
 def file_to_db_upload_no_seq(runobj):  
+    logger.debug("Start Data upload to db (no sequence")
     full_upload = False
     file_to_db_upload_main(runobj, full_upload)
 
@@ -513,7 +521,7 @@ def file_to_db_upload_main(runobj, full_upload):
     #     my_email = 'vamps@mbl.edu'
 
     # ready_email_body = "In this run: %s,\n%s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
-    ready_email_body = "In this run: %s\n%s" % (projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
+    ready_email_body = "In this run (%s): %s\n%s" % (runobj.run, projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
 
     my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_server, ready_email_body)
 
@@ -727,7 +735,7 @@ def vampsupload(runobj):
         if runobj.vamps_user_upload:
             write_status_to_vamps_db( runobj.site, runobj.run, "GAST_ERROR", result_code )
     elif runobj.vamps_user_upload:
-        logger.debug("Finished loading VAMPS data", result_code)
+        logger.debug("Finished loading VAMPS data. %s" % result_code)
         write_status_to_vamps_db( runobj.site, runobj.run, 'GAST_SUCCESS', 'Loading VAMPS Finished' )
     # check here for completion of 
     # 1-file creation

@@ -60,7 +60,7 @@ class IlluminaFiles:
         """
         TODO: *) fastq_file_names method to collect all file_names with full path or directories_names (see get_all_files()?)
         """
-#        print("compressed = %s" %       compressed)
+#        logger.debug("compressed = %s" %       compressed)
 #        compressed = ast.literal_eval(compressed)
         (in_files_r1, in_files_r2) = self.get_fastq_file_names(self.in_file_path)
 #         correct_file_names = self.get_correct_file_names(in_files_r1)
@@ -69,7 +69,7 @@ class IlluminaFiles:
             self.read2(in_files_r2, compressed)
             self.create_inis()
         else:
-#             print("ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes.")
+#             logger.debug("ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes.")
 #             logger.debug("ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes.")
             self.utils.print_both("ERROR: There is something wrong with fastq file names. Please check if they start with correct indexes.")
         self.close_dataset_files()
@@ -208,12 +208,12 @@ class IlluminaFiles:
                 message = traceback.format_exc()
                 self.utils.print_both(message)
     #or
-#     print(sys.exc_info()[0])
+#     logger.debug(sys.exc_info()[0])
 
                 self.utils.print_both("Problems with program_name = %s" % (program_name))
                 raise
 
-#             print("HERE: program_name = " % (program_name))
+#             logger.debug("HERE: program_name = " % (program_name))
 #             call([program_name, "--fast-merge", "--compute-qual-dicts", ini_file_name, idx_key])
 
     def get_config_values(self, key):
@@ -290,18 +290,10 @@ class IlluminaFiles:
         for full_name in files.keys():
             if files[full_name][0].endswith('_MERGED'):
                 n +=1
-#                print("%s fasta file: %s" % (n, full_name))
+#                logger.debug("%s fasta file: %s" % (n, full_name))
                 program_name = C.filter_mismatch_cmd
                 if self.utils.is_local():
                     program_name = C.filter_mismatch_cmd_local
-#                 output_flag = "--output " + full_name + "_FILTERED"
-# TODO:    Remove!!!
-#                 output_flag = "-o " + full_name + "_FILTERED"
-#                 output_flag = "-o TTAGGC_NNNNTGACT_1_MERGED_FILTERED"
-
-#                 print("output_flag = %s" % (output_flag))
-#                 print("%s %s %s" % (program_name, full_name, output_flag))
-#                 call([program_name, full_name, output_flag])
                 call([program_name, full_name])
 
     def uniq_fa_cluster(self):
@@ -332,7 +324,6 @@ class IlluminaFiles:
 #             if files[full_name][1] == ".fa" or files[full_name][0].endswith('_MERGED_FILTERED'):
             if files[full_name][1] == ".fa" or files[full_name][0].endswith(C.filtered_suffix):
                 n +=1
-#                print("%s fasta file: %s" % (n, full_name))
                 program_name = C.fastaunique_cmd
                 if self.utils.is_local():
                     program_name = C.fastaunique_cmd_local
@@ -345,13 +336,9 @@ class IlluminaFiles:
         for idx_key in self.runobj.samples.keys():
             primer_suite = self.runobj.samples[idx_key].primer_suite.lower()
 
-            # print("PPP primer_suite = ")
-            # print(primer_suite)
-
             if primer_suite in C.primers_dict:
                 proximal_primer = C.primers_dict[primer_suite]["proximal_primer"]
                 distal_primer = C.primers_dict[primer_suite]["distal_primer"]
-                # print("RRR proximal_primer: %s. distal_primer: %s" % (proximal_primer, distal_primer))
             else:
                 self.utils.print_both("ERROR! Something wrong with the primer suite name: %s. NB: For v6mod it suppose to be 'Archaeal V6mod Suite'\n" % (primer_suite))
             primers[idx_key] = (proximal_primer, distal_primer)
@@ -363,9 +350,6 @@ class IlluminaFiles:
             run_key = idx_key.split('_')[1].replace("N", ".");
             "todo: check if works w/o NNNN when there is a proper csv"
             email = self.runobj.samples[idx_key].email
-#        for dataset in self.dataset_emails.keys():
-#            dataset_idx_base = dataset + "_" + self.dataset_index[dataset]
-#            print("dataset = %s, self.dataset_emails[dataset] = %s" % (dataset, self.dataset_emails[dataset]))
             text = """[general]
 project_name = %s
 researcher_email = %s
@@ -380,7 +364,7 @@ pair_2 = %s
             "That's for parital overlap (v4v5 and hapto miseq illumina)"
             if not self.runobj.do_perfect:
                 primers = self.get_primers()
-                # print("run_key = %s, idx_key = %s, primers[idx_key][0], primers[idx_key][1] = %s" (run_key, idx_key, primers[idx_key][0], primers[idx_key][1]))
+                # logger.debug("run_key = %s, idx_key = %s, primers[idx_key][0], primers[idx_key][1] = %s" (run_key, idx_key, primers[idx_key][0], primers[idx_key][1]))
                 text += """
 # following section is optional
 [prefixes]
@@ -485,12 +469,6 @@ pair_1_prefix = ^""" + run_key + primers[idx_key][0] + "\npair_2_prefix = ^" + p
             f_input  = fq.FastQSource(file_r2, compressed)
             while f_input.next(trim_to = C.trimming_length):
                 e = f_input.entry
-
-#                 start = time.time()
-#                 time_before = self.utils.get_time_now()
-#                 e.sequence = self.remove_end_ns_strip(e.sequence)
-#                 elapsed = (time.time() - start)
-#                 print("remove_end_ns_strip with strip is done in: %s" % (elapsed))
 
                 if (int(e.pair_no) == 2) and (e.header_line in self.id_dataset_idx):
                     file_name = self.id_dataset_idx[e.header_line] + "_R2"
