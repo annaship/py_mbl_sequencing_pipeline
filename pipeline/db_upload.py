@@ -627,13 +627,17 @@ class dbUpload:
         field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id, updated_at"
         field_names_arr = field_names_str.split(", ")
         table_name = "required_metadata_info"
-        my_sql = '"%s", ' * len(field_names_arr)
+        vals_part = '"%s", ' * len(field_names_arr) - 1
+        all_insert_req_vals = []
         for file_prefix, metadata_dict in self.metadata_info_all.items():
             values_arr = [str(metadata_dict[f]) for f in field_names_arr]
-            vals =  my_sql % tuple(values_arr) + ' NOW()'
-        group_vals = self.utils.grouper([vals], 1)
+            vals =  vals_part % tuple(values_arr) + ' NOW()'
+            all_insert_req_vals.append('(%s)' % vals)
 
-        my_sql = self.my_conn.make_sql_for_groups(table_name, field_names_str) % values
+        group_vals = self.utils.grouper(all_insert_req_vals, 1)
+        query_tmpl = self.my_conn.make_sql_for_groups(table_name, field_names_str)
+
+        res = self.my_conn.run_groups(group_vals, query_tmpl, join_xpr=', ')
 
     def insert_primer(self):
         pass
