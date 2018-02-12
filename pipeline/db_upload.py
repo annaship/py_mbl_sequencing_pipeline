@@ -88,11 +88,22 @@ class MyConnection:
                 raise
         return res
 
+    """
+    for msg in cur.fetchwarnings():
+    print "Warning: {msg}".format(msg=msg[2])
+
+    """
+
+    def show_warnings(self):
+        wrngs = self.conn.show_warnings()
+        if wrngs:
+            logger.debug(wrngs)
+
     def execute_no_fetch(self, sql):
         if self.cursor:
             self.cursor.execute(sql)
             self.conn.commit()
-#             _info    str: Records: 238  Duplicates: 66  Warnings: 0
+            self.show_warnings()
             try:
                 return self.cursor._result.message
             except:
@@ -107,6 +118,7 @@ class MyConnection:
             if self.cursor:
                 self.cursor.execute(sql)
                 self.conn.commit()
+                self.show_warnings()
                 return (self.cursor.rowcount, self.cursor.lastrowid)
         except:
             self.utils.print_both(("ERROR: query = %s") % sql)
