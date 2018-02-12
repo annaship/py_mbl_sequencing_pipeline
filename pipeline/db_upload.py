@@ -292,7 +292,36 @@ class dbUpload:
 
                 logger.debug("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
             self.put_run_info()
+            self.put_required_metadata()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
+
+    def put_required_metadata(self):
+        """
+        runobj.configPath['GCGGTA_NNNNTGATA_1'].keys() =
+        dict_keys(['adaptor', 'amp_operator', 'barcode', 'barcode_index', 'data_owner', 'dataset', 'dataset_description', 'dna_region', 'email', 'env_sample_source_id', 'first_name', 'funding', 'insert_size', 'institution', 'lane', 'last_name', 'overlap', 'platform', 'primer_suite', 'project', 'project_description', 'project_title', 'read_length', 'run', 'run_key', 'seq_operator', 'tubelabel'])
+        :return:
+        """
+        """dataset_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dataset
+         collection_date - None
+         env_biome_id - None
+         latitude - None
+         longitude - None
+         target_gene_id - 16s or 18s
+         dna_region_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dna_region
+         sequencing_platform_id - runobj.platform
+         domain_id - runobj.samples['GCGGTA_NNNNTGATA_1'].taxonomic_domain
+         geo_loc_name_id - None
+         env_feature_id - None
+         env_material_id - None
+         env_package_id - ? runobj.samples['GCGGTA_NNNNTGATA_1'].env_sample_source_id
+         created_at - None
+         updated_at - runobj.configPath['general']['date']
+         adapter_sequence_id - runobj.samples['GCGGTA_NNNNTGATA_1'].run_key
+         illumina_index_id - from runobj.run_keys or from each runobj.samples['GCGGTA_NNNNTGATA_1'].barcode_index
+         primer_suite_id - runobj.samples['GCGGTA_NNNNTGATA_1'].primer_suite
+         run_id - self.run_id
+         """
+        pass
 
     def check_files_csv(self):
         try:
