@@ -143,22 +143,22 @@ class MyConnection:
             insert_info = self.execute_no_fetch(my_sql)
             logger.debug("insert info = %s" % insert_info)
 
-    def make_sql_for_groups(self, table_name, fields):
-        field_list = fields.split(",")
-        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields)
+    def make_sql_for_groups(self, table_name, fields_str):
+        field_list = fields_str.split(",")
+        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields_str)
         my_sql_2 =  " ON DUPLICATE KEY UPDATE "
         for field_name in field_list[:-1]:
             my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
         my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
         return my_sql_1 + " %s " + my_sql_2
 
-    def make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
-        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields_str)
-        my_sql_2 =  " ON DUPLICATE KEY UPDATE "
-        for field_name in unique_key_fields_arr[:-1]:
-            my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
-        my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (unique_key_fields_arr[-1].strip(), unique_key_fields_arr[-1].strip())
-        return my_sql_1 + " %s " + my_sql_2
+    # def make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
+    #     my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields_str)
+    #     my_sql_2 =  " ON DUPLICATE KEY UPDATE "
+    #     for field_name in unique_key_fields_arr[:-1]:
+    #         my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
+    #     my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (unique_key_fields_arr[-1].strip(), unique_key_fields_arr[-1].strip())
+    #     return my_sql_1 + " %s " + my_sql_2
 
     def insert_bulk_data(self, key, values):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
@@ -507,8 +507,8 @@ class dbUpload:
         elif self.db_server == "env454":
             fields = "dataset, dataset_description"
             dataset_values = "('%s', '%s')" % (content_row.dataset, content_row.dataset_description)
-            uniq_fields = ['dataset', 'dataset_description']
-        my_sql = self.my_conn.make_sql_w_duplicate("dataset", fields, uniq_fields) % dataset_values
+            # uniq_fields = ['dataset', 'dataset_description']
+        my_sql = self.my_conn.make_sql_for_groups("dataset", fields) % dataset_values
         return self.my_conn.execute_no_fetch(my_sql)
 
     def get_all_metadata_info(self):
@@ -623,7 +623,17 @@ class dbUpload:
          primer_suite_id - runobj.samples['GCGGTA_NNNNTGATA_1'].primer_suite
          run_id - self.run_id
          """
-        pass
+
+        field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id, updated_at"
+        field_names_arr = field_names_str.split(", ")
+        table_name = "required_metadata_info"
+        my_sql = '"%s", ' * len(field_names_arr)
+        for file_prefix, metadata_dict in self.metadata_info_all.items():
+            values_arr = [str(metadata_dict[f]) for f in field_names_arr]
+            vals =  my_sql % tuple(values_arr) + ' NOW()'
+        group_vals = self.utils.grouper([vals], 1)
+
+        my_sql = self.my_conn.make_sql_for_groups(table_name, field_names_str) % values
 
     def insert_primer(self):
         pass
