@@ -295,34 +295,6 @@ class dbUpload:
             self.put_required_metadata()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
-    def put_required_metadata(self):
-        """
-        runobj.configPath['GCGGTA_NNNNTGATA_1'].keys() =
-        dict_keys(['adaptor', 'amp_operator', 'barcode', 'barcode_index', 'data_owner', 'dataset', 'dataset_description', 'dna_region', 'email', 'env_sample_source_id', 'first_name', 'funding', 'insert_size', 'institution', 'lane', 'last_name', 'overlap', 'platform', 'primer_suite', 'project', 'project_description', 'project_title', 'read_length', 'run', 'run_key', 'seq_operator', 'tubelabel'])
-        :return:
-        """
-        """dataset_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dataset
-         collection_date - None
-         env_biome_id - None
-         latitude - None
-         longitude - None
-         target_gene_id - 16s or 18s
-         dna_region_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dna_region
-         sequencing_platform_id - runobj.platform
-         domain_id - runobj.samples['GCGGTA_NNNNTGATA_1'].taxonomic_domain
-         geo_loc_name_id - None
-         env_feature_id - None
-         env_material_id - None
-         env_package_id - ? runobj.samples['GCGGTA_NNNNTGATA_1'].env_sample_source_id
-         created_at - None
-         updated_at - runobj.configPath['general']['date']
-         adapter_sequence_id - runobj.samples['GCGGTA_NNNNTGATA_1'].run_key
-         illumina_index_id - from runobj.run_keys or from each runobj.samples['GCGGTA_NNNNTGATA_1'].barcode_index
-         primer_suite_id - runobj.samples['GCGGTA_NNNNTGATA_1'].primer_suite
-         run_id - self.run_id
-         """
-        pass
-
     def check_files_csv(self):
         try:
             self.fa_files_cnts_in_dir = len(self.filenames)
@@ -455,6 +427,8 @@ class dbUpload:
             # reraise the exception, as it's an unexpected error
             raise
 
+
+
     def put_run_info(self, content = None):
 
         run_keys = list(set([run_key.split('_')[1] for run_key in self.runobj.run_keys]))
@@ -537,7 +511,58 @@ class dbUpload:
         my_sql = self.my_conn.make_sql_w_duplicate("dataset", fields, uniq_fields) % dataset_values
         return self.my_conn.execute_no_fetch(my_sql)
 
+    def get_all_info(self):
+        metadata_info_all = defaultdict(list)
+        for key in self.runobj.samples:
+            # print(self.runobj.samples.vars)
+            for metadata_name, metadata_value in self.runobj.samples[key].var_dict.items():
+                metadata_info_all[metadata_name].append(metadata_value)
+
+        for key in self.runobj.samples:
+            content_row = self.runobj.samples[key]
+            metadata_info_all['dataset_id'].append(self.get_id('dataset', content_row.dataset))
+            metadata_info_all['dna_region_id'].append(self.get_id('dna_region', content_row.dna_region))
+
+
+    def get_info(self, content_row):
+        metadata_info = {}
+        self.get_all_info()
+        metadata_info['adaptor'] = content_row.adaptor
+        metadata_info['amp_operator'] = content_row.amp_operator
+        metadata_info['barcode'] = content_row.barcode
+        metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
+        metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
+        metadata_info[
+            'file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
+        metadata_info['illumina_index_id'] = self.get_id('illumina_index', content_row.barcode_index)
+        metadata_info['insert_size'] = content_row.insert_size
+        metadata_info['lane'] = content_row.lane
+        metadata_info['overlap'] = content_row.overlap
+        metadata_info['platform'] = self.runobj.platform
+        metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
+        metadata_info['project_id'] = self.get_id('project', content_row.project)
+        metadata_info['read_length'] = content_row.read_length
+        metadata_info['run_id'] = self.run_id
+        if not (self.run_id):
+            metadata_info['run_id'] = self.get_id('run', self.rundate)
+        metadata_info['run_key_id'] = self.get_id('run_key', content_row.run_key)
+        metadata_info['seq_operator'] = content_row.seq_operator
+        metadata_info['tubelabel'] = content_row.tubelabel
+
+        if (self.db_server == "vamps2"):
+            metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
+            and_part = " and project_id = %s" % metadata_info['project_id']
+            metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
+            metadata_info['domain_id'] = content_row.taxonomic_domain
+            metadata_info['env_package_id'] = content_row.env_sample_source_id #?
+            metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', self.runobj.platform)
+            # metadata_info['target_gene_id'] - 16s or 18s (if Euk or ITS)
+            metadata_info['updated_at'] = self.runobj.configPath['general']['date']
+
+        return metadata_info
+
     def insert_run_info(self, content_row):
+        self.get_info(content_row)
         run_key_id      = self.get_id('run_key',      content_row.run_key)
         if not (self.run_id):
             self.run_id = self.get_id('run',          self.rundate)
@@ -579,6 +604,35 @@ class dbUpload:
 
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
         self.utils.print_both("insert run_info: %s" % cursor_info)
+
+
+    def put_required_metadata(self):
+        """
+        runobj.configPath['GCGGTA_NNNNTGATA_1'].keys() =
+        dict_keys(['adaptor', 'amp_operator', 'barcode', 'barcode_index', 'data_owner', 'dataset', 'dataset_description', 'dna_region', 'email', 'env_sample_source_id', 'first_name', 'funding', 'insert_size', 'institution', 'lane', 'last_name', 'overlap', 'platform', 'primer_suite', 'project', 'project_description', 'project_title', 'read_length', 'run', 'run_key', 'seq_operator', 'tubelabel'])
+        :return:
+        """
+        """dataset_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dataset
+         collection_date - None
+         env_biome_id - None
+         latitude - None
+         longitude - None
+         target_gene_id - 16s or 18s
+         dna_region_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dna_region
+         sequencing_platform_id - runobj.platform
+         domain_id - runobj.samples['GCGGTA_NNNNTGATA_1'].taxonomic_domain
+         geo_loc_name_id - None
+         env_feature_id - None
+         env_material_id - None
+         env_package_id - ? runobj.samples['GCGGTA_NNNNTGATA_1'].env_sample_source_id
+         created_at - None
+         updated_at - runobj.configPath['general']['date']
+         adapter_sequence_id - runobj.samples['GCGGTA_NNNNTGATA_1'].run_key
+         illumina_index_id - from runobj.run_keys or from each runobj.samples['GCGGTA_NNNNTGATA_1'].barcode_index
+         primer_suite_id - runobj.samples['GCGGTA_NNNNTGATA_1'].primer_suite
+         run_id - self.run_id
+         """
+        pass
 
     def insert_primer(self):
         pass
