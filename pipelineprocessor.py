@@ -515,10 +515,11 @@ def file_to_db_upload_main(runobj, full_upload):
     projects_and_ids = my_file_to_db_upload.get_project_names()
 
     utils = PipelneUtils()
-    # if utils.is_local():
-    my_email = 'ashipunova@mbl.edu'
-    # else:
-    #     my_email = 'vamps@mbl.edu'
+    if db_server == 'vamps2':
+        my_email = 'vamps@mbl.edu'
+    else:
+        my_email = 'ashipunova@mbl.edu'
+
 
     # ready_email_body = "In this run: %s,\n%s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
     ready_email_body = "In this run (%s): %s\n%s" % (runobj.run, projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
