@@ -78,7 +78,6 @@ class Chimera:
             self.refdb_local = C.chimera_checking_refdb_local
         self.its_refdb   = C.chimera_checking_its_refdb
         self.input_file_names  = self.make_chimera_input_illumina_file_names()
-#         pprint(self.run_keys)
 #         self.output_file_names = self.make_chimera_output_illumina_file_names(self.input_file_names)
 
     def get_ref_db(self, dna_region):
@@ -177,7 +176,7 @@ class Chimera:
             tuple_name = from_size_to_frequency
 
         regex          = re.compile(r"%s" % tuple_name.find)
-#         print("find = %s, replace = %s" % (find, replace))
+#         logger.debug("find = %s, replace = %s" % (find, replace))
         if (not tuple_name.cur_file_names) and (tuple_name == from_frequency_to_size):
             self.utils.print_both('ERROR: Did not find uniqued files ("%s") in %s, please check if the previous step has finished. Exiting.\n' % (C.filtered_suffix + ".unique" , self.indir))
             sys.exit()
@@ -193,13 +192,13 @@ class Chimera:
         replace1 = ";size="
         regex1   = re.compile(r"%s" % find1)
 
-#         print("cur_file_names: ")
+#         logger.debug("cur_file_names: ")
 #         pprint(cur_file_names)
         cur_dirname        = self.get_current_dirname()
         cur_file_names     = self.get_current_filenames(cur_dirname)
         change_from_suffix = ""
         change_to_suffix   = self.chg_suffix
-#         print("find = %s, replace = %s" % (find, replace))
+#         logger.debug("find = %s, replace = %s" % (find, replace))
 
         for cur_file_name in cur_file_names:
             file_name = os.path.join(cur_dirname, cur_file_name)
@@ -210,7 +209,7 @@ class Chimera:
                         line1 = regex1.sub(replace1, line)
                     else:
                         line1 = line.upper()
-#                     print(line1)
+#                     logger.debug(line1)
                     target.write(line1)
 
 
@@ -257,7 +256,7 @@ class Chimera:
 
             if (num_proc == 0):
                 cluster_done = True
-    #         print("cluster_done from check_if_cluster_is_done = %s" % cluster_done)
+    #         logger.debug("cluster_done from check_if_cluster_is_done = %s" % cluster_done)
         except:
             self.utils.print_both("Chimera checking can be done only on a cluster.")
             raise
@@ -302,8 +301,8 @@ class Chimera:
 
             uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
             """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add)
-            print("UUU = uchime_cmd = %s" % uchime_cmd)
-            print("+++")
+            logger.debug("UUU = uchime_cmd = %s" % uchime_cmd)
+            logger.debug("+++")
             command_line.append(uchime_cmd)
 
         return command_line
@@ -346,15 +345,15 @@ class Chimera:
             uchime_cmd = ""
         uchime_cmd += " "
         uchime_cmd += self.usearch_cmd
-        print("self.usearch_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
+        logger.debug("self.usearch_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
 
         uchime_cmd += uchime_cmd_append + input_file_name
-        print("uchime_cmd_append FROM create_chimera_cmd = %s" % (uchime_cmd_append))
+        logger.debug("uchime_cmd_append FROM create_chimera_cmd = %s" % (uchime_cmd_append))
 
 
         uchime_cmd += db_cmd_append
 
-        print("db_cmd_append FROM create_chimera_cmd = %s" % (db_cmd_append))
+        logger.debug("db_cmd_append FROM create_chimera_cmd = %s" % (db_cmd_append))
 
         uchime_cmd += " -uchimeout " + output_file_name
         """if we need nonchimeric for denovo and db separate we might create them here
@@ -366,7 +365,7 @@ class Chimera:
         uchime_cmd += " -notrunclabels"
 
 
-        print("uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
+        logger.debug("uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
         return uchime_cmd
 
     # temp! take from util. change illumina-files to use util, too
@@ -423,7 +422,7 @@ class Chimera:
         chimera_region_found = False
 
         file_list   = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
-        print("FFF = file_list = %s" % (file_list))
+        logger.debug("FFF = file_list = %s" % (file_list))
 
 #         TODO: method
         dna_region = list(set([self.runobj.samples[idx_key].dna_region for idx_key in self.input_file_names]))[0]
@@ -450,7 +449,7 @@ class Chimera:
         file_ratio = self.check_chimeric_stats()
 
         for file_name in chimera_file_names:
-#             print("from get_chimeric_ids: file_name = %s" % file_name)
+#             logger.debug("from get_chimeric_ids: file_name = %s" % file_name)
             if file_name.endswith(self.chimeric_suffix):
                 both_or_denovo = self.get_chimeras_suffix(file_ratio, file_name)
 #                 TODO: run ones for each file_base = ".".join(file_name.split(".")[0:3]) (for txt and db)
@@ -481,7 +480,7 @@ class Chimera:
         (percent_ref, ratio) = file_ratio[".".join(file_name.split(".")[0:3])]
 
         chimeric_fa_suffix = ""
-#         print("percent_ref = %s, ratio = %s" % (percent_ref, ratio))
+#         logger.debug("percent_ref = %s, ratio = %s" % (percent_ref, ratio))
 #         if (percent_ref > 15) and (ratio > 2):
         if ratio > 3:
             chimeric_fa_suffix = self.chimeras_suffix + self.denovo_suffix + self.chimeric_suffix
@@ -513,7 +512,7 @@ class Chimera:
         filenames             = self.get_basenames(self.get_current_filenames(self.outdir))
         file_ratio            = {}
         for file_basename in filenames:
-            # print(file_basename)
+            # logger.debug(file_basename)
             all_lines      = 0
             ref_lines      = 0
             denovo_lines   = 0
@@ -549,7 +548,7 @@ class Chimera:
                 self.utils.print_both("=" * 50)
 
                 self.utils.print_both(file_basename)
-                # print("all_lines_file_name = %s, ref_lines_file_name = %s, denovo_lines_file_name = %s" % (all_lines_file_name, ref_lines_file_name, denovo_lines_file_name))
+                # logger.debug("all_lines_file_name = %s, ref_lines_file_name = %s, denovo_lines_file_name = %s" % (all_lines_file_name, ref_lines_file_name, denovo_lines_file_name))
                 self.utils.print_both("all_lines = %s, ref_lines = %s, denovo_lines = %s" % (all_lines, ref_lines, denovo_lines))
                 self.utils.print_both("ratio = %s" % ratio)
                 self.utils.print_both("percent_ref = %s, percent_denovo = %s" % (percent_ref, percent_denovo))
@@ -572,10 +571,8 @@ class Chimera:
         try:
             return float(ref_num or 0) / float(denovo_num or 0)
         except ZeroDivisionError:
-            # print("There is no denovo chimeras to count ratio.")
+            # logger.debug("There is no denovo chimeras to count ratio.")
             pass
-        else:
-            raise
 
     def get_fa_lines_count(self, file_name):
         # todo: use fastalib to get cnt?
@@ -587,18 +584,15 @@ class Chimera:
             e = sys.exc_info()[1]
             self.utils.print_both(e)
             return 0
-            # print("%s\nThere is no such file: %s" % (e, file_name))
-        else:
-            raise
+            # logger.error("%s\nThere is no such file: %s" % (e, file_name))
 
     def percent_count(self, all_lines, chimeric_count):
         try:
             return float(chimeric_count or 0) * 100 / float(all_lines or 0)
         except ZeroDivisionError:
-            # print("There is no denovo chimeras to count ratio.")
+            # logger.error("There is no denovo chimeras to count ratio.")
             pass
-        else:
-            raise
+
 
 
 
@@ -769,10 +763,10 @@ class Chimera:
                     logger.info("vsearch version: " % (self.utils.get_vsearch_version))
                     logger.info("chimera reference command: " + str(uchime_cmd))
                     output[idx_key] = subprocess.check_output(uchime_cmd, shell=True)
-                    #print('outsplit',output[idx_key].split()[2])
+                    #logger.debug('outsplit',output[idx_key].split()[2])
                     cluster_id_list.append(output[idx_key].split()[2])
-                    #print('Have %d bytes in output' % len(output))
-                    #print('ref',idx_key,output,len(output))
+                    #logger.debug('Have %d bytes in output' % len(output))
+                    #logger.debug('ref',idx_key,output,len(output))
                     if len(output[idx_key]) < 50 and len(output[idx_key]) > 40:
                         logger.debug(idx_key + " uchime ref seems to have been submitted successfully")
                     else:

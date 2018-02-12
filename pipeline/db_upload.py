@@ -278,7 +278,7 @@ class dbUpload:
                 """ % (self.fa_files_cnts_in_csv, self.fa_files_cnts_in_dir,
                        self.fasta_dir)
 
-                print("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
+                logger.debug("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
             self.put_run_info()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
@@ -288,7 +288,7 @@ class dbUpload:
             self.fa_files_cnts_in_csv = len(self.runobj.run_keys)
             return (self.fa_files_cnts_in_dir == self.fa_files_cnts_in_csv)
         except:
-            print("There is a problem with files in the csv and/or in %s" % (self.fasta_dir))
+            logger.error("There is a problem with files in the csv and/or in %s" % (self.fasta_dir))
             raise
 
     # TODO: Do once loop over all used run_info_ill_id in self.all_project_dataset_ids_dict
@@ -299,7 +299,7 @@ class dbUpload:
             dataset_id = self.all_dataset_run_info_dict[run_info_ill_id]
             self.used_project_ids[dataset_id] = self.all_project_dataset_ids_dict[dataset_id]
         except KeyError:
-            print("No such run info, please check a file name and the csv file")
+            logger.error("No such run info, please check a file name and the csv file")
         except:
             raise
 
@@ -334,7 +334,7 @@ class dbUpload:
                                        stdin=PIPE)
         except Exception:
             error = sys.exc_info()[1]
-            print(error)
+            logger.error(error)
         process.communicate(body.encode())
 
 
@@ -534,7 +534,7 @@ class dbUpload:
                content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
                                                     file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
 
-        print("insert run_info query: %s" % my_sql)
+        logger.debug("insert run_info query: %s" % my_sql)
 
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
         self.utils.print_both("insert run_info: %s" % cursor_info)
@@ -664,7 +664,7 @@ class dbUpload:
         try:
             self.suffix_used = list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
         except:
-            print("self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
+            logger.error("self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
             self.suffix_used = ""
 #         print(self.suffix_used)
         suffix = self.fasta_dir + "/*" + self.suffix_used
@@ -1006,7 +1006,7 @@ class Seq:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
                         vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
                     except KeyError:
-                        print("No such run info, please check a file name and the csv file")
+                        logger.error("No such run info, please check a file name and the csv file")
                     except:
                         raise
 
@@ -1015,8 +1015,8 @@ class Seq:
 
                 all_insert_pdr_info_vals.append(vals)
             except:
-                print("FFF0 fasta_id %s" % fasta_id)
-                print("SSS0 seq %s" % seq)
+                logger.error("FFF0 fasta_id %s" % fasta_id)
+                logger.error("SSS0 seq %s" % seq)
                 raise
         return all_insert_pdr_info_vals
 

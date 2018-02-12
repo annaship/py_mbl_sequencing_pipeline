@@ -19,6 +19,7 @@ logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 # Remove the default FileHandlers if present.
 handler = logging.handlers.RotatingFileHandler(os.path.join(os.getcwd(),"pipeline.log"), maxBytes=10000000, backupCount=10)
 logger.addHandler(handler)
+logger.debug("log path: %s" % handler)
 handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
 

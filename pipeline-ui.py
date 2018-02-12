@@ -279,11 +279,11 @@ if __name__ == '__main__':
         # view CONFIG file contents
         fh = open(os.path.join(dirs.analysis_dir,  data_object['general']['run']+'.ini'))
         lines = fh.readlines()
-        print("\n=== START ===\n")
+        logger.debug("\n=== START ===\n")
         for line in lines:
             line = line.strip()
-            print(line)
-        print("==== END ====\n")
+            logger.debug(line)
+        logger.debug("==== END ====\n")
         sys.exit()
     elif answer != 'c':
         sys.exit()

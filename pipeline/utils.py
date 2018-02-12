@@ -258,14 +258,14 @@ def extract_zipped_file(run_date, outdir, filename):
         try:
             data = zf.read(filename)
         except KeyError:
-            print('ERROR: Did not find %s in zip file' % filename)
+            logger.error('ERROR: Did not find %s in zip file' % filename)
         else:
-            print(filename, ':')
-            print(repr(data))
+            logger.error(filename, ':')
+            logger.error(repr(data))
         print
         zf.close()
     else:
-        print("No zipfile archive found:",archivename)
+        logger.error("No zipfile archive found:",archivename)
 
 def zip_up_directory(run_date, dirPath, mode='a'):
     """
@@ -287,7 +287,7 @@ def zip_up_directory(run_date, dirPath, mode='a'):
 
     for i in zf.infolist():
         dt = datetime.datetime(*(i.date_time))
-        print("%s\tSize: %sb\tCompressed: %sb\t\tModified: %s" % (i.filename, i.file_size, i.compress_size, dt.ctime()))
+        logger.debug("%s\tSize: %sb\tCompressed: %sb\t\tModified: %s" % (i.filename, i.file_size, i.compress_size, dt.ctime()))
         os.remove(i.filename)
 
     zf.close()
@@ -322,7 +322,7 @@ def write_status_to_vamps_db(site='vampsdev', id='0', status='Test', message='')
         #print("executing",query)
     except:
         conn.rollback()
-        print("ERROR status update failed")
+        logger.error("ERROR status update failed")
     else:
         conn.commit()
 
@@ -441,10 +441,10 @@ class PipelneUtils:
             with open(out_file, "a") as myfile:
                 myfile.write(str(fa_file_name) + ": " + str(seq_in_file) + "\n")
         except Exception:
-            print(Exception)
+            logger.error(Exception)
 
     def is_local(self):
-        print(os.uname()[1])
+        logger.debug(os.uname()[1])
         dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local", "Annas-MacBook.local"]
         if os.uname()[1] in dev_comps:
             return True
@@ -452,7 +452,7 @@ class PipelneUtils:
             return False
 
     def is_vamps(self):
-        print(os.uname()[1])
+        logger.debug(os.uname()[1])
         dev_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private', 'vampsdev', 'vampsdb']
         if os.uname()[1] in dev_comps:
             return True
@@ -462,39 +462,39 @@ class PipelneUtils:
     def check_if_array_job_is_done(self, job_name):
         cluster_done = False
         check_qstat_cmd_line = "qstat -r | grep %s | wc -l" % job_name
-        print("check_qstat_cmd_line = %s" % check_qstat_cmd_line)
+        logger.debug("check_qstat_cmd_line = %s" % check_qstat_cmd_line)
         try:
             p = subprocess.Popen(check_qstat_cmd_line, stdout=subprocess.PIPE, shell=True)
             (output, err) = p.communicate()
             num_proc = int(output)
-            print("qstat is running %s '%s' processes" % (num_proc, job_name))
+            logger.debug("qstat is running %s '%s' processes" % (num_proc, job_name))
     #         pprint(p)
 
             if (num_proc == 0):
                 cluster_done = True
     #         print("cluster_done from check_if_cluster_is_done = %s" % cluster_done)
         except:
-            print("%s can be done only on a cluster." % job_name)
+            logger.error("%s can be done only on a cluster." % job_name)
             raise
         return cluster_done
 
     def run_until_done_on_cluster(self, job_name):
         start = time.time()
         time_before = self.get_time_now()
-        print("time_before = %s" % time_before)
-        print("Waiting for the cluster...")
+        logger.debug("time_before = %s" % time_before)
+        logger.debug("Waiting for the cluster...")
         while True:
             if self.is_local():
                 time.sleep(1)
             else:
                 time.sleep(120)
             cluster_done = self.check_if_array_job_is_done(job_name)
-            print("cluster_done = %s" % cluster_done)
+            logger.debug("cluster_done = %s" % cluster_done)
             if (cluster_done):
                 break
 
         elapsed = (time.time() - start)
-        print("Cluster is done with %s in: %s" % (job_name, elapsed))
+        logger.debug("Cluster is done with %s in: %s" % (job_name, elapsed))
 
     def get_time_now(self):
         """date and hour only!"""
@@ -537,7 +537,7 @@ example of getting all directory name in illumina_files
             os.makedirs(dir_name)
         except OSError:
             if os.path.isdir(dir_name):
-                print("\nDirectory %s already exists."  % (dir_name))
+                logger.error("\nDirectory %s already exists."  % (dir_name))
 #                 confirm_msg = "Do you want to continue? (Yes / No) "
 #                 answer = raw_input(confirm_msg)
 #                 if answer != 'Yes':
@@ -605,7 +605,7 @@ example of getting all directory name in illumina_files
     def delete_file(self, filename):
         try:
             os.remove(filename)
-            print("DELETE %s" % (filename))
+            logger.debug("DELETE %s" % (filename))
         except OSError:
             pass
 
@@ -630,12 +630,12 @@ example of getting all directory name in illumina_files
       try:
         call(['chmod', '-R', 'ug+w', dir_name])
       except Exception:
-        print("call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name))
-        print(Exception)
+        logger.error("call(['chmod', '-R', 'ug+w', %s]) didn't work: \n" % (dir_name))
+        logger.error(Exception)
         pass
 
 
 if __name__=='__main__':
-    print("GTTCAAAGAYTCGATGATTCAC")
-    print(revcomp("GTTCAAAGAYTCGATGATTCAC"))
+    logger.debug("GTTCAAAGAYTCGATGATTCAC")
+    logger.debug(revcomp("GTTCAAAGAYTCGATGATTCAC"))
 
