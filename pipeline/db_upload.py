@@ -200,6 +200,7 @@ class dbUpload:
         self.use_cluster = 1
         self.unique_fasta_files = []
         self.all_errors = [] #(+seq_errors)
+        self.metadata_info_all = defaultdict(dict)
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -284,6 +285,7 @@ class dbUpload:
         self.fa_files_cnts_in_csv = 0
         self.equal_amnt_files_txt = ""
         self.equal_amnt_files = self.check_files_csv()
+        self.get_all_metadata_info()
         if db_server == "vamps2":
             if not self.equal_amnt_files:
                 self.equal_amnt_files_txt = """WARNING: There is different amount of files (%s vs. %s) in the csv and in %s
@@ -437,9 +439,7 @@ class dbUpload:
         self.my_conn.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
 
-        for key in self.runobj.samples:
-            value = self.runobj.samples[key]
-#             self.get_contact_v_info()
+        for key, value in self.runobj.samples.items():
             contact_id = self.get_contact_id(value.data_owner)
             if (not contact_id):
                 err_msg = """ERROR: There is no such contact info on %s,
@@ -450,7 +450,7 @@ class dbUpload:
             self.insert_project(value, contact_id)
             self.insert_dataset(value)
 
-            self.insert_run_info(value)
+            self.insert_run_info(key)
 
     def get_contact_v_info(self):
         """
@@ -511,73 +511,64 @@ class dbUpload:
         my_sql = self.my_conn.make_sql_w_duplicate("dataset", fields, uniq_fields) % dataset_values
         return self.my_conn.execute_no_fetch(my_sql)
 
-    def get_all_info(self):
-        metadata_info_all = defaultdict(list)
+    def get_all_metadata_info(self):
         for key in self.runobj.samples:
-            # print(self.runobj.samples.vars)
-            for metadata_name, metadata_value in self.runobj.samples[key].var_dict.items():
-                metadata_info_all[metadata_name].append(metadata_value)
-
-        for key in self.runobj.samples:
+            metadata_info = {}
             content_row = self.runobj.samples[key]
-            metadata_info_all['dataset_id'].append(self.get_id('dataset', content_row.dataset))
-            metadata_info_all['dna_region_id'].append(self.get_id('dna_region', content_row.dna_region))
+            metadata_info['adaptor'] = content_row.adaptor
+            metadata_info['amp_operator'] = content_row.amp_operator
+            metadata_info['barcode'] = content_row.barcode
+            metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
+            metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
+            metadata_info['file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
+            metadata_info['illumina_index_id'] = self.get_id('illumina_index', content_row.barcode_index)
+            metadata_info['insert_size'] = content_row.insert_size
+            metadata_info['lane'] = content_row.lane
+            metadata_info['overlap'] = content_row.overlap
+            metadata_info['platform'] = self.runobj.platform
+            metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
+            metadata_info['project_id'] = self.get_id('project', content_row.project)
+            metadata_info['read_length'] = content_row.read_length
+            metadata_info['run_id'] = self.run_id
+            if not (self.run_id):
+                metadata_info['run_id'] = self.get_id('run', self.rundate)
+            metadata_info['run_key_id'] = self.get_id('run_key', content_row.run_key)
+            metadata_info['seq_operator'] = content_row.seq_operator
+            metadata_info['tubelabel'] = content_row.tubelabel
 
+            if (self.db_server == "vamps2"):
+                metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
+                and_part = " and project_id = %s" % metadata_info['project_id']
+                metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
+                metadata_info['domain_id'] = content_row.taxonomic_domain
+                metadata_info['env_package_id'] = content_row.env_sample_source_id  # ?
+                metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', self.runobj.platform)
+                metadata_info['target_gene_id'] = '16s'
+                if content_row.taxonomic_domain.lower().startswith(("euk", "its")):
+                    metadata_info['target_gene_id'] = '18s'
+                metadata_info['updated_at'] = self.runobj.configPath['general']['date']
 
-    def get_info(self, content_row):
-        metadata_info = {}
-        self.get_all_info()
-        metadata_info['adaptor'] = content_row.adaptor
-        metadata_info['amp_operator'] = content_row.amp_operator
-        metadata_info['barcode'] = content_row.barcode
-        metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
-        metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
-        metadata_info[
-            'file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
-        metadata_info['illumina_index_id'] = self.get_id('illumina_index', content_row.barcode_index)
-        metadata_info['insert_size'] = content_row.insert_size
-        metadata_info['lane'] = content_row.lane
-        metadata_info['overlap'] = content_row.overlap
-        metadata_info['platform'] = self.runobj.platform
-        metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
-        metadata_info['project_id'] = self.get_id('project', content_row.project)
-        metadata_info['read_length'] = content_row.read_length
-        metadata_info['run_id'] = self.run_id
-        if not (self.run_id):
-            metadata_info['run_id'] = self.get_id('run', self.rundate)
-        metadata_info['run_key_id'] = self.get_id('run_key', content_row.run_key)
-        metadata_info['seq_operator'] = content_row.seq_operator
-        metadata_info['tubelabel'] = content_row.tubelabel
+            self.metadata_info_all[key] = metadata_info
 
-        if (self.db_server == "vamps2"):
-            metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
-            and_part = " and project_id = %s" % metadata_info['project_id']
-            metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
-            metadata_info['domain_id'] = content_row.taxonomic_domain
-            metadata_info['env_package_id'] = content_row.env_sample_source_id #?
-            metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', self.runobj.platform)
-            # metadata_info['target_gene_id'] - 16s or 18s (if Euk or ITS)
-            metadata_info['updated_at'] = self.runobj.configPath['general']['date']
+    def insert_run_info(self, file_prefix):
+        self.metadata_info_all
+        #
+        # run_key_id      = self.get_id('run_key',      content_row.run_key)
+        # if not (self.run_id):
+        #     self.run_id = self.get_id('run',          self.rundate)
+        # project_id      = self.get_id('project',      content_row.project)
+        # dataset_id      = self.get_id('dataset',      content_row.dataset)
+        # if (self.db_server == "vamps2"):
+        #     and_part = " and project_id = %s" % project_id
+        #     dataset_id = self.get_id('dataset', content_row.dataset, and_part = and_part)
+        #
+        # dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
+        # primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
+        # illumina_index_id = self.get_id('illumina_index', content_row.barcode_index)
+        # # use self.runobj.idx_keys?
+        # file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
 
-        return metadata_info
-
-    def insert_run_info(self, content_row):
-        self.get_info(content_row)
-        run_key_id      = self.get_id('run_key',      content_row.run_key)
-        if not (self.run_id):
-            self.run_id = self.get_id('run',          self.rundate)
-        project_id      = self.get_id('project',      content_row.project)
-        dataset_id      = self.get_id('dataset',      content_row.dataset)
-        if (self.db_server == "vamps2"):
-            and_part = " and project_id = %s" % project_id
-            dataset_id = self.get_id('dataset', content_row.dataset, and_part = and_part)
-
-        dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
-        primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
-        illumina_index_id = self.get_id('illumina_index', content_row.barcode_index)
-        # use self.runobj.idx_keys?
-        file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
-
+        # TODO: combine, use make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
         if (self.db_server == "vamps2"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
@@ -585,9 +576,9 @@ class dbUpload:
                                             VALUES (%s, %s, %s, %s, '%s', '%s',
                                                     '%s', %s, '%s', '%s', '%s', %s,
                                                     '%s', %s, %s, '%s', %s);
-        """ % (run_key_id, self.run_id, content_row.lane, dataset_id, content_row.tubelabel, content_row.barcode,
-               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
-                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
+        """ % (self.metadata_info_all[file_prefix]["run_key_id"], self.metadata_info_all[file_prefix]["run_id"], self.metadata_info_all[file_prefix]["lane"], self.metadata_info_all[file_prefix]["dataset_id"], self.metadata_info_all[file_prefix]["tubelabel"], self.metadata_info_all[file_prefix]["barcode"],
+               self.metadata_info_all[file_prefix]["adaptor"], self.metadata_info_all[file_prefix]["dna_region_id"], self.metadata_info_all[file_prefix]["amp_operator"], self.metadata_info_all[file_prefix]["seq_operator"], self.metadata_info_all[file_prefix]["overlap"], self.metadata_info_all[file_prefix]["insert_size"],
+                                                    file_prefix, self.metadata_info_all[file_prefix]["read_length"], self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform, self.metadata_info_all[file_prefix]["illumina_index_id"])
 
         elif (self.db_server == "env454"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
@@ -596,9 +587,9 @@ class dbUpload:
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',
                                                     '%s', %s, '%s', '%s', '%s', %s,
                                                     '%s', %s, %s, '%s', %s);
-        """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode,
-               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
-                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
+        """ % (run_key_id, self.run_id, self.metadata_info_all[file_prefix]["lane"], dataset_id, project_id, self.metadata_info_all[file_prefix]["tubelabel"], self.metadata_info_all[file_prefix]["barcode"],
+               self.metadata_info_all[file_prefix]["adaptor"], self.metadata_info_all[file_prefix]["dna_region_id"], self.metadata_info_all[file_prefix]["amp_operator"], self.metadata_info_all[file_prefix]["seq_operator"], self.metadata_info_all[file_prefix]["overlap"], self.metadata_info_all[file_prefix]["insert_size"],
+                                                    file_prefix, self.metadata_info_all[file_prefix]["read_length"], self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform, self.metadata_info_all[file_prefix]["illumina_index_id"])
 
         logger.debug("insert run_info query: %s" % my_sql)
 
