@@ -294,7 +294,7 @@ class dbUpload:
 
                 logger.debug("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
             self.put_run_info()
-            self.put_required_metadata()
+            res = self.put_required_metadata()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
     def check_files_csv(self):
@@ -536,16 +536,33 @@ class dbUpload:
             metadata_info['seq_operator'] = content_row.seq_operator
             metadata_info['tubelabel'] = content_row.tubelabel
 
+            # (('Warning', 1364, "Field 'env_biome_id' doesn't have a default value"),
+            # ('Warning', 1364, "Field 'geo_loc_name_id' doesn't have a default value"),
+            # ('Warning', 1364, "Field 'env_feature_id' doesn't have a default value"),
+            # ('Warning', 1364, "Field 'env_material_id' doesn't have a default value"),
+            # ('Warning', 1364, "Field 'env_package_id' doesn't have a default value"),
+            # ('Warning', 1265, "Data truncated for column 'target_gene_id' at row 1"), (
+            # 'Warning', 1366,
+            # "Incorrect integer value: 'Archaeal' for column 'domain_id' at row 1"), (
+            # 'Warning', 1452,
+            # 'Cannot add or update a child row: a foreign key constraint fails (`vamps2`.`required_metadata_info`, CONSTRAINT `required_metadata_info_ibfk_14` FOREIGN KEY (`domain_id`) REFERENCES `domain` (`domain_id`) ON UPDATE CASCADE)'))
+
             if (self.db_server == "vamps2"):
                 metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
-                and_part = " and project_id = %s" % metadata_info['project_id']
+                and_part = ' and project_id = %s' % metadata_info['project_id']
                 metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
-                metadata_info['domain_id'] = content_row.taxonomic_domain
+
+                # dict(zip(y, x))
+                metadata_info['domain_id'] = self.get_id('domain', content_row.taxonomic_domain)
                 metadata_info['env_package_id'] = content_row.env_sample_source_id  # ?
-                metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', self.runobj.platform)
-                metadata_info['target_gene_id'] = '16s'
+                platform = self.runobj.platform
+                if self.runobj.platform in C.illumina_list:
+                    platform = 'Illumina'
+                metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', platform)
+                target_gene = '16s'
                 if content_row.taxonomic_domain.lower().startswith(("euk", "its")):
-                    metadata_info['target_gene_id'] = '18s'
+                    target_gene = '18s'
+                metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene, and_part = ' and target_gene = "%s"' % target_gene)
                 metadata_info['updated_at'] = self.runobj.configPath['general']['date']
 
             self.metadata_info_all[key] = metadata_info
@@ -598,36 +615,11 @@ class dbUpload:
 
 
     def put_required_metadata(self):
-        """
-        runobj.configPath['GCGGTA_NNNNTGATA_1'].keys() =
-        dict_keys(['adaptor', 'amp_operator', 'barcode', 'barcode_index', 'data_owner', 'dataset', 'dataset_description', 'dna_region', 'email', 'env_sample_source_id', 'first_name', 'funding', 'insert_size', 'institution', 'lane', 'last_name', 'overlap', 'platform', 'primer_suite', 'project', 'project_description', 'project_title', 'read_length', 'run', 'run_key', 'seq_operator', 'tubelabel'])
-        :return:
-        """
-        """dataset_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dataset
-         collection_date - None
-         env_biome_id - None
-         latitude - None
-         longitude - None
-         target_gene_id - 16s or 18s
-         dna_region_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dna_region
-         sequencing_platform_id - runobj.platform
-         domain_id - runobj.samples['GCGGTA_NNNNTGATA_1'].taxonomic_domain
-         geo_loc_name_id - None
-         env_feature_id - None
-         env_material_id - None
-         env_package_id - ? runobj.samples['GCGGTA_NNNNTGATA_1'].env_sample_source_id
-         created_at - None
-         updated_at - runobj.configPath['general']['date']
-         adapter_sequence_id - runobj.samples['GCGGTA_NNNNTGATA_1'].run_key
-         illumina_index_id - from runobj.run_keys or from each runobj.samples['GCGGTA_NNNNTGATA_1'].barcode_index
-         primer_suite_id - runobj.samples['GCGGTA_NNNNTGATA_1'].primer_suite
-         run_id - self.run_id
-         """
 
-        field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id, updated_at"
+        field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id"
         field_names_arr = field_names_str.split(", ")
         table_name = "required_metadata_info"
-        vals_part = '"%s", ' * len(field_names_arr) - 1
+        vals_part = '"%s", ' * len(field_names_arr)
         all_insert_req_vals = []
         for file_prefix, metadata_dict in self.metadata_info_all.items():
             values_arr = [str(metadata_dict[f]) for f in field_names_arr]
@@ -635,7 +627,7 @@ class dbUpload:
             all_insert_req_vals.append('(%s)' % vals)
 
         group_vals = self.utils.grouper(all_insert_req_vals, 1)
-        query_tmpl = self.my_conn.make_sql_for_groups(table_name, field_names_str)
+        query_tmpl = self.my_conn.make_sql_for_groups(table_name, field_names_str + ', updated_at')
 
         res = self.my_conn.run_groups(group_vals, query_tmpl, join_xpr=', ')
 
