@@ -512,6 +512,7 @@ class dbUpload:
         return self.my_conn.execute_no_fetch(my_sql)
 
     def get_all_metadata_info(self):
+        domain_by_adj = dict(zip(C.domain_adj, C.domains))
         for key in self.runobj.samples:
             metadata_info = {}
             content_row = self.runobj.samples[key]
@@ -536,25 +537,24 @@ class dbUpload:
             metadata_info['seq_operator'] = content_row.seq_operator
             metadata_info['tubelabel'] = content_row.tubelabel
 
-            # (('Warning', 1364, "Field 'env_biome_id' doesn't have a default value"),
+            #
+            # ('Warning', 1364, "Field 'env_biome_id' doesn't have a default value"),
             # ('Warning', 1364, "Field 'geo_loc_name_id' doesn't have a default value"),
             # ('Warning', 1364, "Field 'env_feature_id' doesn't have a default value"),
             # ('Warning', 1364, "Field 'env_material_id' doesn't have a default value"),
-            # ('Warning', 1364, "Field 'env_package_id' doesn't have a default value"),
-            # ('Warning', 1265, "Data truncated for column 'target_gene_id' at row 1"), (
-            # 'Warning', 1366,
-            # "Incorrect integer value: 'Archaeal' for column 'domain_id' at row 1"), (
+            # ('Warning', 1364, "Field 'env_package_id' doesn't have a default value"), (
             # 'Warning', 1452,
-            # 'Cannot add or update a child row: a foreign key constraint fails (`vamps2`.`required_metadata_info`, CONSTRAINT `required_metadata_info_ibfk_14` FOREIGN KEY (`domain_id`) REFERENCES `domain` (`domain_id`) ON UPDATE CASCADE)'))
+            # 'Cannot add or update a child row: a foreign key constraint fails (`vamps2`.`required_metadata_info`, CONSTRAINT `required_metadata_info_ibfk_2` FOREIGN KEY (`env_feature_id`) REFERENCES `term` (`term_id`) ON UPDATE CASCADE)'))
 
             if (self.db_server == "vamps2"):
                 metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
                 and_part = ' and project_id = %s' % metadata_info['project_id']
                 metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
 
-                # dict(zip(y, x))
-                metadata_info['domain_id'] = self.get_id('domain', content_row.taxonomic_domain)
-                metadata_info['env_package_id'] = content_row.env_sample_source_id  # ?
+                #
+                metadata_info['domain_id'] = self.get_id('domain', domain_by_adj[content_row.taxonomic_domain])
+                env_sample_source = self.my_conn.execute_fetch_select("SELECT env_source_name FROM test_env454.env_sample_source WHERE env_sample_source_id = %s" % content_row.env_sample_source_id)[0][0]
+                metadata_info['env_package_id'] = self.get_id("env_package", env_sample_source) # ?
                 platform = self.runobj.platform
                 if self.runobj.platform in C.illumina_list:
                     platform = 'Illumina'
@@ -616,7 +616,7 @@ class dbUpload:
 
     def put_required_metadata(self):
 
-        field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id"
+        field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, env_package_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id"
         field_names_arr = field_names_str.split(", ")
         table_name = "required_metadata_info"
         vals_part = '"%s", ' * len(field_names_arr)
@@ -628,6 +628,12 @@ class dbUpload:
 
         group_vals = self.utils.grouper(all_insert_req_vals, 1)
         query_tmpl = self.my_conn.make_sql_for_groups(table_name, field_names_str + ', updated_at')
+
+        for group in group_vals:
+            val_part = ", ".join([key for key in group if key is not None])
+            my_sql = query_tmpl % (val_part)
+            print("PPP put_required_metadata sql:")
+            print(my_sql)
 
         res = self.my_conn.run_groups(group_vals, query_tmpl, join_xpr=', ')
 
