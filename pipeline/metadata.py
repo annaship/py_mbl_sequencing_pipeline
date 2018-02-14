@@ -417,15 +417,25 @@ class MetadataUtils:
                  #   logger.error("Dataset name cannot begin with a digit: "+dataset_name)
                   #  error = True
 
-        return (error,warn)
+        return (error, warn)
 
-
-    def check_projects_and_datasets(self,data):
+    def get_my_conn(self):
+        try:
+            host = self.general_config_dict['database_host']
+        except:
+            raise
+        try:
+            db = self.general_config_dict['database_name']
+        except:
+            raise
         if self.utils.is_local():
-            self.my_conn    = MyConnection(host = 'localhost', db="test_env454")
-        else:
-            self.my_conn     = MyConnection(host = 'bpcdb1', db="env454")
-        # self.my_conn     = MyConnection()
+            host = 'localhost'
+            db   = "test_env454"
+
+        self.my_conn = MyConnection(host = host, db = db)
+
+    def check_projects_and_datasets(self, data):
+        self.get_my_conn()
         project_dataset = {}
         projects = {}
         datasets = {}
@@ -733,6 +743,11 @@ water-marine
             # no configPath
             collector= self.get_values( self.args )
 
+        collector['current_db_host_name'] = self.utils.find_in_nested_dict(C.db_cnf, {'host': collector['database_host'], 'db': collector['database_name']})
+        if not collector['current_db_host_name']:
+            sys.exit("""Please check -db_host and -db_name parameters, 
+            the current combination does not exist: 'db_host' = %s, 'db_name' = %s """ % (collector['database_host'], collector['database_name']))
+
         if self.args.platform in C.illumina_list:
             print("Starting Illumina Pipeline")
             if not self.args.csvPath:
@@ -762,7 +777,7 @@ water-marine
         else:
             collector['configPath'] = ""
         # these are all the bool items in the collector
-        # they need to be converted fron str to bool here
+        # they need to be converted from str to bool here
         for i in collector:
             if collector[i] == 'True' or collector[i] == 'true':
                 collector[i] = True

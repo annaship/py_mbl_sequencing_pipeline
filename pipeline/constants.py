@@ -128,6 +128,19 @@ maximumLength   = ''
 minAvgQual      = 30
 maxN            = 0
 
+db_cnf = {
+    "vamps2": {
+        "local"      : {"host": "localhost", "db": "vamps2"},
+        "production" : {"host": "vampsdb", "db": "vamps2"},
+        "development": {"host": "vampsdev", "db": "vamps2"}
+    },
+    "env454": {
+        "local"      : {"host": "localhost", "db": "test_env454"},
+        "production" : {"host": "bpcdb1", "db": "env454"},
+        "development": {"host": "vampsdev", "db": "test"}
+    }
+}
+
 ##### DEFAULT PIPELINE RUN ITEMS ##################################################################
 # these should contain all the items that are possible for each platform with defaults
 #general_run_items = ['baseoutputdir' , 'run' , 'platform','configPath']
@@ -159,8 +172,10 @@ pipeline_run_items = {
             },
 'miseq' : {'input_file_format':'fastq',
                 'compressed':True,
-                'database_host':'vampsdev',
-                'database_name':'test',
+                'database_host': db_cnf['env454']['development']['host'],
+                'database_name': db_cnf['env454']['development']['db'],
+                # 'database_host':'vampsdev',
+                # 'database_name':'test',
                 'platform':'miseq',
                 'use_cluster':True,
                 'csvPath':'',
@@ -176,8 +191,8 @@ pipeline_run_items = {
 			},
 'nextseq' : {'input_file_format':'fastq',
                 'compressed':True,
-                'database_host':'vampsdev',
-                'database_name':'test',
+                'database_host': db_cnf['env454']['development']['host'],
+                'database_name': db_cnf['env454']['development']['db'],
                 'platform':'nextseq',
                 'use_cluster':True,
                 'csvPath':'',
@@ -193,8 +208,8 @@ pipeline_run_items = {
 			},
 'hiseq' : {'input_file_format':'fastq',
                 'compressed':True,
-                'database_host':'vampsdev',
-                'database_name':'test',
+                'database_host': db_cnf['env454']['development']['host'],
+                'database_name': db_cnf['env454']['development']['db'],
                 'platform':'hiseq',
                 'use_cluster':True,
                 'csvPath':'',
@@ -222,6 +237,8 @@ pipeline_run_items = {
                 'baseoutputdir':'output'
                 }
 }
+
+
 # this is the maximum distance from the end of the sequence where script
 # will accept a distal primer (if found)
 distal_from_end  = 12
@@ -327,7 +344,7 @@ qsub_cmd            = '/usr/local/sge/bin/lx24-amd64/qsub'
 clusterize_cmd      = '/bioware/seqinfo/bin/clusterize'
 #mothur_cmd          = '/bioware/mothur/mothur'
 #fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
-fastaunique_cmd     = '/bioware/seqinfo/bin/fastaunique'
+fastaunique_cmd     = 'python2 /bioware/seqinfo/bin/fastaunique'
 #local commands
 fastasampler_cmd_local = cmd_path_local + 'fastasampler'
 calcnodes_cmd_local    = cmd_path_local + 'calcnodes'
