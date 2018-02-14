@@ -260,7 +260,6 @@ class dbUpload:
         self.fa_files_cnts_in_csv = 0
         self.equal_amnt_files_txt = ""
         self.equal_amnt_files = self.check_files_csv()
-        self.get_all_metadata_info()
         if self.db_marker == "vamps2":
             if not self.equal_amnt_files:
                 self.equal_amnt_files_txt = """WARNING: There is different amount of files (%s vs. %s) in the csv and in %s
@@ -460,6 +459,8 @@ class dbUpload:
                 sys.exit(err_msg)
             self.insert_project(value, contact_id)
             self.insert_dataset(value)
+            # TODO: do once
+            self.get_all_metadata_info()
 
             self.insert_run_info(key)
 
@@ -520,6 +521,7 @@ class dbUpload:
             dataset_values = "('%s', '%s')" % (content_row.dataset, content_row.dataset_description)
             # uniq_fields = ['dataset', 'dataset_description']
         my_sql = self.my_conn.make_sql_for_groups("dataset", fields) % dataset_values
+        self.utils.print_both(my_sql)
         return self.my_conn.execute_no_fetch(my_sql)
 
     def get_all_metadata_info(self):
