@@ -45,49 +45,49 @@ import pipeline.constants as C
 
 
 if __name__ == '__main__':
-    usage = """
-        usage: ./pipeline-ui.py [options]
+    # usage = """
+    #     usage: ./pipeline-ui.py [options]
+    #
+    #         options:
+    #             -c/--configuration      configuration file with path  [required]
+    #
+    #             -f/--config_format      configuration file format: csv or ini [optional (default:csv)]
+    #
+    #             -p/--platform           Platform: illumina, 454 or ion_torrent [required]
+    #
+    #             -i/--input_directory    Directory where sequence files can be found [optional (default: ./)]
+    #
+    #             -r/--run                Run - number or date  [required]
+    #
+    #             -ft/--seq_file_type     File type for sequences: fasta, fastq or sff
+    #                                         [optional (default: fasta)]
+    #
+    #             -fs/--seq_file_suffix   File suffix - useful when there are additional files
+    #                                         in the input directory that you don't want to include. [optional (default: fa.unique)]
+    #             -archaea/--archaea               For illumina only [optional (default: "")]
+    #
+    #             -s/--steps              Steps to be performed by this pipeline (comma separated list)
+    #                                         Choices:    validate        - validates your metadata file
+    #                                                     status          - prints out status messages if any
+    #                                                     trim            - trims your sequences
+    #                                                     chimera         - performs chimera check on trimmed sequences
+    #                                                     upload_env454   - Load data into the env454 database
+    #                                                     gast            - assign taxonomy to the trimmed sequences using GAST
+    #                                                     upload_vamps    - load sequences and taxonomy to VAMPS
+    #                                                     clean           - removes run from database and filesystem
+    #
+    #             -l/--loglevel           Change the level of logging: info, debug, error   [optional (default: error)]
+    #
+    #     """
+    # """
+    # not use, remove!
+    #                 -b/--baseoutputdir       Base output directory where the run directory will be found.
+    #                                         The run directory will be created if it is not found.  [optional (default: ./)]
+    # """
 
-            options:
-                -c/--configuration      configuration file with path  [required]
-
-                -f/--config_format      configuration file format: csv or ini [optional (default:csv)]
-
-                -p/--platform           Platform: illumina, 454 or ion_torrent [required]
-
-                -i/--input_directory    Directory where sequence files can be found [optional (default: ./)]
-
-                -r/--run                Run - number or date  [required]
-
-                -ft/--seq_file_type     File type for sequences: fasta, fastq or sff
-                                            [optional (default: fasta)]
-
-                -fs/--seq_file_suffix   File suffix - useful when there are additional files
-                                            in the input directory that you don't want to include. [optional (default: fa.unique)]
-                -archaea/--archaea               For illumina only [optional (default: "")]
-
-                -s/--steps              Steps to be performed by this pipeline (comma separated list)
-                                            Choices:    validate        - validates your metadata file
-                                                        status          - prints out status messages if any
-                                                        trim            - trims your sequences
-                                                        chimera         - performs chimera check on trimmed sequences
-                                                        upload_env454   - Load data into the env454 database
-                                                        gast            - assign taxonomy to the trimmed sequences using GAST
-                                                        upload_vamps    - load sequences and taxonomy to VAMPS
-                                                        clean           - removes run from database and filesystem
-
-                -l/--loglevel           Change the level of logging: info, debug, error   [optional (default: error)]
-
-        """
-    """
-    not use, remove!
-                    -b/--baseoutputdir       Base output directory where the run directory will be found.
-                                            The run directory will be created if it is not found.  [optional (default: ./)]
-    """
-
-    if  len(sys.argv) == 1:
-        print(usage)
-        sys.exit()
+    # if  len(sys.argv) == 1:
+    #     print(usage)
+    #     sys.exit()
     #THE_DEFAULT_BASE_OUTPUT = '.'
 
     # required items: configuration file, run and platform only
