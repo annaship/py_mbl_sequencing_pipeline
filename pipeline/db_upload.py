@@ -222,7 +222,7 @@ class dbUpload:
             raise
 
         self.taxonomy = Taxonomy(self.my_conn)
-        self.seq      = Seq(self.taxonomy, self.table_names)
+        self.seq      = Seq(self.taxonomy, self.table_names, self.fasta_dir)
 
         self.gast_dict = {}
         self.silva_taxonomy_info_per_seq_list = []
@@ -1007,12 +1007,13 @@ class Taxonomy:
 
 
 class Seq:
-    def __init__(self, taxonomy, table_names):
+    def __init__(self, taxonomy, table_names, fasta_dir):
 
         self.utils       = PipelneUtils()
         self.taxonomy    = taxonomy
         self.my_conn     = self.taxonomy.my_conn
         self.table_names = table_names
+        self.fasta_dir   = fasta_dir
         self.seq_id_dict = {}
         self.fasta_dict  = {}
         self.seq_id_w_silva_taxonomy_info_per_seq_id = []
