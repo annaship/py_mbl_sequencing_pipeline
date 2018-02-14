@@ -512,6 +512,7 @@ class dbUpload:
         return self.my_conn.execute_no_fetch(my_sql)
 
     def get_all_metadata_info(self):
+        # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
         for key in self.runobj.samples:
             metadata_info = {}
@@ -537,21 +538,12 @@ class dbUpload:
             metadata_info['seq_operator'] = content_row.seq_operator
             metadata_info['tubelabel'] = content_row.tubelabel
 
-            #
-            # ('Warning', 1364, "Field 'env_biome_id' doesn't have a default value"),
-            # ('Warning', 1364, "Field 'geo_loc_name_id' doesn't have a default value"),
-            # ('Warning', 1364, "Field 'env_feature_id' doesn't have a default value"),
-            # ('Warning', 1364, "Field 'env_material_id' doesn't have a default value"),
-            # ('Warning', 1364, "Field 'env_package_id' doesn't have a default value"), (
-            # 'Warning', 1452,
-            # 'Cannot add or update a child row: a foreign key constraint fails (`vamps2`.`required_metadata_info`, CONSTRAINT `required_metadata_info_ibfk_2` FOREIGN KEY (`env_feature_id`) REFERENCES `term` (`term_id`) ON UPDATE CASCADE)'))
-
             if (self.db_server == "vamps2"):
                 metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
+
                 and_part = ' and project_id = %s' % metadata_info['project_id']
                 metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
 
-                #
                 metadata_info['domain_id'] = self.get_id('domain', domain_by_adj[content_row.taxonomic_domain])
                 env_sample_source = self.my_conn.execute_fetch_select("SELECT env_source_name FROM test_env454.env_sample_source WHERE env_sample_source_id = %s" % content_row.env_sample_source_id)[0][0]
                 metadata_info['env_package_id'] = self.get_id("env_package", env_sample_source) # ?
@@ -568,22 +560,6 @@ class dbUpload:
             self.metadata_info_all[key] = metadata_info
 
     def insert_run_info(self, file_prefix):
-        self.metadata_info_all
-        #
-        # run_key_id      = self.get_id('run_key',      content_row.run_key)
-        # if not (self.run_id):
-        #     self.run_id = self.get_id('run',          self.rundate)
-        # project_id      = self.get_id('project',      content_row.project)
-        # dataset_id      = self.get_id('dataset',      content_row.dataset)
-        # if (self.db_server == "vamps2"):
-        #     and_part = " and project_id = %s" % project_id
-        #     dataset_id = self.get_id('dataset', content_row.dataset, and_part = and_part)
-        #
-        # dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
-        # primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
-        # illumina_index_id = self.get_id('illumina_index', content_row.barcode_index)
-        # # use self.runobj.idx_keys?
-        # file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
 
         # TODO: combine, use make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
         if (self.db_server == "vamps2"):
