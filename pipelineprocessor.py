@@ -520,8 +520,6 @@ def file_to_db_upload_main(runobj, full_upload):
     else:
         my_email = 'ashipunova@mbl.edu'
 
-
-    # ready_email_body = "In this run: %s,\n%s\n%s" % (", ".join(runobj.run_keys), projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
     ready_email_body = """Uploaded to %s on %s\nIn this run: %s\n%s
     """ % (runobj.database_name, runobj.database_host, projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
 

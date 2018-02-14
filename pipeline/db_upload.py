@@ -313,8 +313,8 @@ class dbUpload:
             raise
 
     def get_project_names(self):
-        used_project_ids_str = (str(w) for w in set(self.used_project_ids.values()) if w is not None)
-        if len(list(used_project_ids_str)) == 0:
+        used_project_ids_str = [str(w) for w in set(self.used_project_ids.values()) if w is not None]
+        if len(used_project_ids_str) == 0:
             err_msg = "No project were uploaded! Please check files in %s" % (self.fasta_dir)
             self.all_errors.append(err_msg)
             logger.debug(err_msg)
@@ -322,7 +322,7 @@ class dbUpload:
             try:
                 where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
                 res = self.my_conn.get_all_name_id("project", "", "", where_part)
-
+                # can get project from self.runobj.samples['ATCACG_GACAG_1'].project etc.
                 projects, pr_ids = zip(*res)
                 pr_ids_str = (str(w) for w in pr_ids)
                 project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str) )
@@ -448,7 +448,12 @@ class dbUpload:
         dna_regions = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
         self.my_conn.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
+        self.insert_project_datasets()
+        self.get_all_metadata_info()
+        for key, value in self.runobj.samples.items():
+            self.insert_run_info(key)
 
+    def insert_project_datasets(self):
         for key, value in self.runobj.samples.items():
             contact_id = self.get_contact_id(value.data_owner)
             if (not contact_id):
@@ -460,16 +465,12 @@ class dbUpload:
             self.insert_project(value, contact_id)
             self.insert_dataset(value)
 
-            # TODO: do once
-            self.get_all_metadata_info()
-
-            self.insert_run_info(key)
-
     def get_contact_v_info(self):
         """
         TODO: get info from Hilary? from vamps?
         """
         pass
+
     def insert_test_contact(self):
         my_sql = '''INSERT IGNORE INTO contact (contact, email, institution, vamps_name, first_name, last_name)
                 VALUES ("guest user", "guest@guest.com", "guest institution", "guest", "guest", "user");'''
@@ -557,7 +558,7 @@ class dbUpload:
             metadata_info['project'] = content_row.project
             metadata_info['project_id'] = self.get_id('project', content_row.project)
             metadata_info['read_length'] = content_row.read_length
-            metadata_info['run'] = self.run
+            metadata_info['run'] = self.rundate
             metadata_info['run_id'] = self.run_id
             if not (self.run_id):
                 metadata_info['run_id'] = self.get_id('run', self.rundate)
