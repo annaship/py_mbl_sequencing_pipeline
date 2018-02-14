@@ -591,7 +591,7 @@ class dbUpload:
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',
                                                     '%s', %s, '%s', '%s', '%s', %s,
                                                     '%s', %s, %s, '%s', %s);
-        """ % (run_key_id, self.run_id, self.metadata_info_all[file_prefix]["lane"], dataset_id, project_id, self.metadata_info_all[file_prefix]["tubelabel"], self.metadata_info_all[file_prefix]["barcode"],
+        """ % (self.metadata_info_all[file_prefix]["run_key_id"], self.run_id, self.metadata_info_all[file_prefix]["lane"], self.metadata_info_all[file_prefix]["dataset_id"], self.metadata_info_all[file_prefix]["project_id"], self.metadata_info_all[file_prefix]["tubelabel"], self.metadata_info_all[file_prefix]["barcode"],
                self.metadata_info_all[file_prefix]["adaptor"], self.metadata_info_all[file_prefix]["dna_region_id"], self.metadata_info_all[file_prefix]["amp_operator"], self.metadata_info_all[file_prefix]["seq_operator"], self.metadata_info_all[file_prefix]["overlap"], self.metadata_info_all[file_prefix]["insert_size"],
                                                     file_prefix, self.metadata_info_all[file_prefix]["read_length"], self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform, self.metadata_info_all[file_prefix]["illumina_index_id"])
 
