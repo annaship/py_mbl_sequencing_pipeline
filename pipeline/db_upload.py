@@ -503,12 +503,6 @@ class dbUpload:
     def get_all_metadata_info(self):
         # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
-        if self.utils.is_local():
-            is_local = "local"
-        else:
-            is_local = "production"
-        env454_t_name = C.db_cnf["env454"][is_local]["db"]
-
         for key in self.runobj.samples:
             metadata_info = {}
             content_row = self.runobj.samples[key]
@@ -553,8 +547,7 @@ class dbUpload:
                 metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
 
                 metadata_info['domain_id'] = self.get_id('domain', domain_by_adj[content_row.taxonomic_domain])
-                env_sample_source_id = (content_row.env_sample_source_id)
-                env_sample_source = self.my_conn.execute_fetch_select("SELECT env_source_name FROM %s.env_sample_source WHERE env_sample_source_id = %s" % (env454_t_name, env_sample_source_id))[0][0]
+                env_sample_source = self.my_conn.execute_fetch_select("SELECT env_source_name FROM env_sample_source WHERE env_sample_source_id = %s" % (content_row.env_sample_source_id))[0][0]
                 metadata_info['env_package_id'] = self.get_id("env_package", env_sample_source)  # ?
                 platform = self.runobj.platform
                 if self.runobj.platform in C.illumina_list:
