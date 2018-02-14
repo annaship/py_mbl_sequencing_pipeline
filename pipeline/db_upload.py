@@ -108,6 +108,8 @@ class MyConnection:
                 return self.cursor._result.message
             except:
                 return self.cursor._info
+            else:
+                return self.cursor.rowcount
 
 
     def execute_insert(self, table_name, field_name, val_list, ignore = "IGNORE"):
