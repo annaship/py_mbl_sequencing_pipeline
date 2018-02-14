@@ -459,6 +459,7 @@ class dbUpload:
                 sys.exit(err_msg)
             self.insert_project(value, contact_id)
             self.insert_dataset(value)
+
             # TODO: do once
             self.get_all_metadata_info()
 
@@ -533,6 +534,14 @@ class dbUpload:
             metadata_info['adaptor'] = content_row.adaptor
             metadata_info['amp_operator'] = content_row.amp_operator
             metadata_info['barcode'] = content_row.barcode
+            metadata_info['contact_id'] = self.get_contact_id(content_row.data_owner)
+            if (not metadata_info['contact_id']):
+                err_msg = """ERROR: There is no such contact info on %s,
+                    please check if the user %s has an account on VAMPS""" % (self.db_marker, content_row.data_owner)
+                self.all_errors.append(err_msg)
+                logger.error(err_msg)
+                sys.exit(err_msg)
+
             metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
             metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
             metadata_info['file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
@@ -540,10 +549,15 @@ class dbUpload:
             metadata_info['insert_size'] = content_row.insert_size
             metadata_info['lane'] = content_row.lane
             metadata_info['overlap'] = content_row.overlap
+            if metadata_info['overlap'].endswith("complete"):
+                metadata_info['overlap'] = "complete" # hs_compete
+            metadata_info['overlap'] = content_row.overlap
             metadata_info['platform'] = self.runobj.platform
             metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
+            metadata_info['project'] = content_row.project
             metadata_info['project_id'] = self.get_id('project', content_row.project)
             metadata_info['read_length'] = content_row.read_length
+            metadata_info['run'] = self.run
             metadata_info['run_id'] = self.run_id
             if not (self.run_id):
                 metadata_info['run_id'] = self.get_id('run', self.rundate)
