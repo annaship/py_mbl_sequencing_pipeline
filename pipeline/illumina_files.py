@@ -140,7 +140,7 @@ class IlluminaFiles:
         merged_file_names = self.dirs.get_all_files_by_ext(self.dirs.reads_overlap_dir, "_MERGED")
         primer_suite = self.get_config_values('primer_suite')
         add_arg = ""
-        if any([s.lower().startswith("Archaeal".lower()) for s in primer_suite]):
+        if any([s.lower().startswith("archaeal") for s in primer_suite]):
             add_arg += " --archaea"
         program_name = C.trim_primers_cmd + add_arg
         script_file_name      = self.create_job_array_script(program_name, self.dirs.reads_overlap_dir, merged_file_names)

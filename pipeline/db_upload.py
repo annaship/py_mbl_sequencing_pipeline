@@ -145,22 +145,22 @@ class MyConnection:
             insert_info = self.execute_no_fetch(my_sql)
             logger.debug("insert info = %s" % insert_info)
 
-    def make_sql_for_groups(self, table_name, fields):
-        field_list = fields.split(",")
-        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields)
+    def make_sql_for_groups(self, table_name, fields_str):
+        field_list = fields_str.split(",")
+        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields_str)
         my_sql_2 =  " ON DUPLICATE KEY UPDATE "
         for field_name in field_list[:-1]:
             my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
         my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
         return my_sql_1 + " %s " + my_sql_2
 
-    def make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
-        my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields_str)
-        my_sql_2 =  " ON DUPLICATE KEY UPDATE "
-        for field_name in unique_key_fields_arr[:-1]:
-            my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
-        my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (unique_key_fields_arr[-1].strip(), unique_key_fields_arr[-1].strip())
-        return my_sql_1 + " %s " + my_sql_2
+    # def make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
+    #     my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields_str)
+    #     my_sql_2 =  " ON DUPLICATE KEY UPDATE "
+    #     for field_name in unique_key_fields_arr[:-1]:
+    #         my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
+    #     my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (unique_key_fields_arr[-1].strip(), unique_key_fields_arr[-1].strip())
+    #     return my_sql_1 + " %s " + my_sql_2
 
     def insert_bulk_data(self, key, values):
         query_tmpl = "INSERT IGNORE INTO %s (%s) VALUES (%s)"
@@ -200,6 +200,7 @@ class dbUpload:
         self.use_cluster = 1
         self.unique_fasta_files = []
         self.all_errors = [] #(+seq_errors)
+        self.metadata_info_all = defaultdict(dict)
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -258,7 +259,8 @@ class dbUpload:
         self.fa_files_cnts_in_dir = 0
         self.fa_files_cnts_in_csv = 0
         self.equal_amnt_files_txt = ""
-        self.equal_amnt_files     = self.check_files_csv()
+        self.equal_amnt_files = self.check_files_csv()
+        self.get_all_metadata_info()
         if self.db_marker == "vamps2":
             if not self.equal_amnt_files:
                 self.equal_amnt_files_txt = """WARNING: There is different amount of files (%s vs. %s) in the csv and in %s
@@ -267,7 +269,7 @@ class dbUpload:
 
                 logger.debug("WARNING: There is different amount of files in the csv and in %s" % (self.fasta_dir))
             self.put_run_info()
-            self.put_required_metadata()
+            res = self.put_required_metadata()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
     def get_conn(self):
@@ -448,20 +450,18 @@ class dbUpload:
         self.my_conn.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
 
-        for key in self.runobj.samples:
-            value = self.runobj.samples[key]
-#             self.get_contact_v_info()
+        for key, value in self.runobj.samples.items():
             contact_id = self.get_contact_id(value.data_owner)
             if (not contact_id):
                 err_msg = """ERROR: There is no such contact info on %s,
-                    please check if the user %s has an account on VAMPS""" % (self.db_server, value.data_owner)
+                    please check if the user %s has an account on VAMPS""" % (self.db_marker, value.data_owner)
                 self.all_errors.append(err_msg)
                 logger.error(err_msg)
                 sys.exit(err_msg)
             self.insert_project(value, contact_id)
             self.insert_dataset(value)
 
-            self.insert_run_info(value)
+            self.insert_run_info(key)
 
     def get_contact_v_info(self):
         """
@@ -512,82 +512,67 @@ class dbUpload:
     def insert_dataset(self, content_row):
         if self.db_marker == "vamps2":
             project_id = self.get_id('project', content_row.project)
-            my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description, project_id, created_at) VALUES
-                ('%s', '%s', %s, NOW());
-                """ % (content_row.dataset, content_row.dataset_description, project_id)
+            fields = "dataset, dataset_description, project_id, created_at"
+            dataset_values = "('%s', '%s', %s, NOW())" % (content_row.dataset, content_row.dataset_description, project_id)
+            uniq_fields = ['dataset', 'project_id']
         elif self.db_marker == "env454":
-            my_sql = """INSERT IGNORE INTO dataset (dataset, dataset_description) VALUES
-                ('%s', '%s');
-                """ % (content_row.dataset, content_row.dataset_description)
+            fields = "dataset, dataset_description"
+            dataset_values = "('%s', '%s')" % (content_row.dataset, content_row.dataset_description)
+            # uniq_fields = ['dataset', 'dataset_description']
+        my_sql = self.my_conn.make_sql_for_groups("dataset", fields) % dataset_values
         return self.my_conn.execute_no_fetch(my_sql)
 
-    def get_all_info(self):
-        metadata_info_all = defaultdict(list)
+    def get_all_metadata_info(self):
+        # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
+        domain_by_adj = dict(zip(C.domain_adj, C.domains))
         for key in self.runobj.samples:
-            # print(self.runobj.samples.vars)
-            for metadata_name, metadata_value in self.runobj.samples[key].var_dict.items():
-                metadata_info_all[metadata_name].append(metadata_value)
-
-        for key in self.runobj.samples:
+            metadata_info = {}
             content_row = self.runobj.samples[key]
-            metadata_info_all['dataset_id'].append(self.get_id('dataset', content_row.dataset))
-            metadata_info_all['dna_region_id'].append(self.get_id('dna_region', content_row.dna_region))
+            metadata_info['adaptor'] = content_row.adaptor
+            metadata_info['amp_operator'] = content_row.amp_operator
+            metadata_info['barcode'] = content_row.barcode
+            metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
+            metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
+            metadata_info['file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
+            metadata_info['illumina_index_id'] = self.get_id('illumina_index', content_row.barcode_index)
+            metadata_info['insert_size'] = content_row.insert_size
+            metadata_info['lane'] = content_row.lane
+            metadata_info['overlap'] = content_row.overlap
+            metadata_info['platform'] = self.runobj.platform
+            metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
+            metadata_info['project_id'] = self.get_id('project', content_row.project)
+            metadata_info['read_length'] = content_row.read_length
+            metadata_info['run_id'] = self.run_id
+            if not (self.run_id):
+                metadata_info['run_id'] = self.get_id('run', self.rundate)
+            metadata_info['run_key_id'] = self.get_id('run_key', content_row.run_key)
+            metadata_info['seq_operator'] = content_row.seq_operator
+            metadata_info['tubelabel'] = content_row.tubelabel
 
+            if (self.db_marker == "vamps2"):
+                metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
 
-    def get_info(self, content_row):
-        metadata_info = {}
-        self.get_all_info()
-        metadata_info['adaptor'] = content_row.adaptor
-        metadata_info['amp_operator'] = content_row.amp_operator
-        metadata_info['barcode'] = content_row.barcode
-        metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
-        metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
-        metadata_info[
-            'file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
-        metadata_info['illumina_index_id'] = self.get_id('illumina_index', content_row.barcode_index)
-        metadata_info['insert_size'] = content_row.insert_size
-        metadata_info['lane'] = content_row.lane
-        metadata_info['overlap'] = content_row.overlap
-        metadata_info['platform'] = self.runobj.platform
-        metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
-        metadata_info['project_id'] = self.get_id('project', content_row.project)
-        metadata_info['read_length'] = content_row.read_length
-        metadata_info['run_id'] = self.run_id
-        if not (self.run_id):
-            metadata_info['run_id'] = self.get_id('run', self.rundate)
-        metadata_info['run_key_id'] = self.get_id('run_key', content_row.run_key)
-        metadata_info['seq_operator'] = content_row.seq_operator
-        metadata_info['tubelabel'] = content_row.tubelabel
+                and_part = ' and project_id = %s' % metadata_info['project_id']
+                metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
 
-        if (self.db_server == "vamps2"):
-            metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
-            and_part = " and project_id = %s" % metadata_info['project_id']
-            metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part=and_part)
-            metadata_info['domain_id'] = content_row.taxonomic_domain
-            metadata_info['env_package_id'] = content_row.env_sample_source_id #?
-            metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', self.runobj.platform)
-            # metadata_info['target_gene_id'] - 16s or 18s (if Euk or ITS)
-            metadata_info['updated_at'] = self.runobj.configPath['general']['date']
+                metadata_info['domain_id'] = self.get_id('domain', domain_by_adj[content_row.taxonomic_domain])
+                env_sample_source = self.my_conn.execute_fetch_select("SELECT env_source_name FROM test_env454.env_sample_source WHERE env_sample_source_id = %s" % content_row.env_sample_source_id)[0][0]
+                metadata_info['env_package_id'] = self.get_id("env_package", env_sample_source) # ?
+                platform = self.runobj.platform
+                if self.runobj.platform in C.illumina_list:
+                    platform = 'Illumina'
+                metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', platform)
+                target_gene = '16s'
+                if content_row.taxonomic_domain.lower().startswith(("euk", "its")):
+                    target_gene = '18s'
+                metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene, and_part = ' and target_gene = "%s"' % target_gene)
+                metadata_info['updated_at'] = self.runobj.configPath['general']['date']
 
-        return metadata_info
+            self.metadata_info_all[key] = metadata_info
 
-    def insert_run_info(self, content_row):
-        self.get_info(content_row)
-        run_key_id      = self.get_id('run_key',      content_row.run_key)
-        if not (self.run_id):
-            self.run_id = self.get_id('run',          self.rundate)
-        project_id      = self.get_id('project',      content_row.project)
-        dataset_id      = self.get_id('dataset',      content_row.dataset)
-        if (self.db_marker == "vamps2"):
-            and_part = " and project_id = %s" % project_id
-            dataset_id = self.get_id('dataset', content_row.dataset, and_part = and_part)
+    def insert_run_info(self, file_prefix):
 
-        dna_region_id   = self.get_id('dna_region',   content_row.dna_region)
-        primer_suite_id = self.get_id('primer_suite', content_row.primer_suite)
-        illumina_index_id = self.get_id('illumina_index', content_row.barcode_index)
-        # use self.runobj.idx_keys?
-        file_prefix     = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane
-
+        # TODO: combine, use make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
         if (self.db_marker == "vamps2"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
                                                     adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
@@ -595,9 +580,9 @@ class dbUpload:
                                             VALUES (%s, %s, %s, %s, '%s', '%s',
                                                     '%s', %s, '%s', '%s', '%s', %s,
                                                     '%s', %s, %s, '%s', %s);
-        """ % (run_key_id, self.run_id, content_row.lane, dataset_id, content_row.tubelabel, content_row.barcode,
-               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
-                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
+        """ % (self.metadata_info_all[file_prefix]["run_key_id"], self.metadata_info_all[file_prefix]["run_id"], self.metadata_info_all[file_prefix]["lane"], self.metadata_info_all[file_prefix]["dataset_id"], self.metadata_info_all[file_prefix]["tubelabel"], self.metadata_info_all[file_prefix]["barcode"],
+               self.metadata_info_all[file_prefix]["adaptor"], self.metadata_info_all[file_prefix]["dna_region_id"], self.metadata_info_all[file_prefix]["amp_operator"], self.metadata_info_all[file_prefix]["seq_operator"], self.metadata_info_all[file_prefix]["overlap"], self.metadata_info_all[file_prefix]["insert_size"],
+                                                    file_prefix, self.metadata_info_all[file_prefix]["read_length"], self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform, self.metadata_info_all[file_prefix]["illumina_index_id"])
 
         elif (self.db_marker == "env454"):
             my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
@@ -606,9 +591,9 @@ class dbUpload:
                                             VALUES (%s, %s, %s, %s, %s, '%s', '%s',
                                                     '%s', %s, '%s', '%s', '%s', %s,
                                                     '%s', %s, %s, '%s', %s);
-        """ % (run_key_id, self.run_id, content_row.lane, dataset_id, project_id, content_row.tubelabel, content_row.barcode,
-               content_row.adaptor, dna_region_id, content_row.amp_operator, content_row.seq_operator, content_row.overlap, content_row.insert_size,
-                                                    file_prefix, content_row.read_length, primer_suite_id, self.runobj.platform, illumina_index_id)
+        """ % (run_key_id, self.run_id, self.metadata_info_all[file_prefix]["lane"], dataset_id, project_id, self.metadata_info_all[file_prefix]["tubelabel"], self.metadata_info_all[file_prefix]["barcode"],
+               self.metadata_info_all[file_prefix]["adaptor"], self.metadata_info_all[file_prefix]["dna_region_id"], self.metadata_info_all[file_prefix]["amp_operator"], self.metadata_info_all[file_prefix]["seq_operator"], self.metadata_info_all[file_prefix]["overlap"], self.metadata_info_all[file_prefix]["insert_size"],
+                                                    file_prefix, self.metadata_info_all[file_prefix]["read_length"], self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform, self.metadata_info_all[file_prefix]["illumina_index_id"])
 
         logger.debug("insert run_info query: %s" % my_sql)
 
@@ -617,32 +602,27 @@ class dbUpload:
 
 
     def put_required_metadata(self):
-        """
-        runobj.configPath['GCGGTA_NNNNTGATA_1'].keys() =
-        dict_keys(['adaptor', 'amp_operator', 'barcode', 'barcode_index', 'data_owner', 'dataset', 'dataset_description', 'dna_region', 'email', 'env_sample_source_id', 'first_name', 'funding', 'insert_size', 'institution', 'lane', 'last_name', 'overlap', 'platform', 'primer_suite', 'project', 'project_description', 'project_title', 'read_length', 'run', 'run_key', 'seq_operator', 'tubelabel'])
-        :return:
-        """
-        """dataset_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dataset
-         collection_date - None
-         env_biome_id - None
-         latitude - None
-         longitude - None
-         target_gene_id - 16s or 18s
-         dna_region_id - runobj.samples['GCGGTA_NNNNTGATA_1'].dna_region
-         sequencing_platform_id - runobj.platform
-         domain_id - runobj.samples['GCGGTA_NNNNTGATA_1'].taxonomic_domain
-         geo_loc_name_id - None
-         env_feature_id - None
-         env_material_id - None
-         env_package_id - ? runobj.samples['GCGGTA_NNNNTGATA_1'].env_sample_source_id
-         created_at - None
-         updated_at - runobj.configPath['general']['date']
-         adapter_sequence_id - runobj.samples['GCGGTA_NNNNTGATA_1'].run_key
-         illumina_index_id - from runobj.run_keys or from each runobj.samples['GCGGTA_NNNNTGATA_1'].barcode_index
-         primer_suite_id - runobj.samples['GCGGTA_NNNNTGATA_1'].primer_suite
-         run_id - self.run_id
-         """
-        pass
+
+        field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, env_package_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id"
+        field_names_arr = field_names_str.split(", ")
+        table_name = "required_metadata_info"
+        vals_part = '"%s", ' * len(field_names_arr)
+        all_insert_req_vals = []
+        for file_prefix, metadata_dict in self.metadata_info_all.items():
+            values_arr = [str(metadata_dict[f]) for f in field_names_arr]
+            vals =  vals_part % tuple(values_arr) + ' NOW()'
+            all_insert_req_vals.append('(%s)' % vals)
+
+        group_vals = self.utils.grouper(all_insert_req_vals, 1)
+        query_tmpl = self.my_conn.make_sql_for_groups(table_name, field_names_str + ', updated_at')
+
+        for group in group_vals:
+            val_part = ", ".join([key for key in group if key is not None])
+            my_sql = query_tmpl % (val_part)
+            print("PPP put_required_metadata sql:")
+            print(my_sql)
+
+        res = self.my_conn.run_groups(group_vals, query_tmpl, join_xpr=', ')
 
     def insert_primer(self):
         pass
@@ -1097,7 +1077,7 @@ class Seq:
         all_insert_pdr_info_vals = []
         for fasta_id, seq in self.fasta_dict.items():
             if (not run_info_ill_id):
-                err_msg = "ERROR: There is no run info yet, please check if it's uploaded to %s" % db_server
+                err_msg = "ERROR: There is no run info yet, please check if it's uploaded to %s" % db_name
                 self.utils.print_both(err_msg)
                 self.seq_errors.append(err_msg)
                 break
