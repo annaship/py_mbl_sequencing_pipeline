@@ -527,6 +527,10 @@ class dbUpload:
     def get_all_metadata_info(self):
         # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
 
+        if self.db_marker == "vamps2":
+            missing_terms = ["env_biome_id", "env_feature_id", "env_material_id", "geo_loc_name_id"]
+            unknown_term_id = self.my_conn.execute_fetch_select("SELECT %s FROM %s WHERE %s = '%s' and ontology_id = 1;" % ("term_id", "term", "term_name", "unknown"))
+
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
         for key, d_val in self.samples_dict.items():
             metadata_info = {k: v for k, v in d_val.items()}
@@ -576,6 +580,8 @@ class dbUpload:
                     target_gene = '18s'
                 metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene),
                 metadata_info['updated_at'] = self.runobj.configPath['general']['date']
+                for term_name in missing_terms:
+                    metadata_info[term_name] = unknown_term_id[0][0]
 
             self.metadata_info_all[key] = metadata_info
 
