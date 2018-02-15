@@ -426,22 +426,12 @@ class dbUpload:
         dna_regions = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
         self.my_conn.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
-        self.insert_project_datasets()
+        self.insert_project()
+        for key, value in self.runobj.samples.items():
+            self.insert_dataset(value)
         self.get_all_metadata_info()
         for key, value in self.runobj.samples.items():
             self.insert_run_info(key)
-
-    def insert_project_datasets(self):
-        for key, value in self.runobj.samples.items():
-            contact_id = self.get_contact_id(value.data_owner)
-            if not contact_id:
-                err_msg = """ERROR: There is no such contact info on %s,
-                    please check if the user %s has an account on VAMPS""" % (self.db_marker, value.data_owner)
-                self.all_errors.append(err_msg)
-                logger.error(err_msg)
-                sys.exit(err_msg)
-            self.insert_project(value, contact_id)
-            self.insert_dataset(value)
 
     def get_contact_v_info(self):
         """
@@ -468,32 +458,46 @@ class dbUpload:
         return self.my_conn.execute_no_fetch(my_sql)
 
     # Refactoring!
-    def insert_project(self, content_row, contact_id):
-        if not contact_id:
-            err_msg = "ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS"
-            self.utils.print_both(err_msg)
+    def insert_project(self):
+        all_vals = set()
+        all_templ = set()
+        for key, content_row in self.runobj.samples.items():
+            contact_id = self.get_contact_id(content_row.data_owner)
+            if not contact_id:
+                err_msg = """ERROR: There is no such contact info on %s,
+                    please check if the user %s has an account on VAMPS""" % (self.db_marker, content_row.data_owner)
+                self.all_errors.append(err_msg)
+                logger.error(err_msg)
+                sys.exit(err_msg)
+
+            logger.debug("project: %s" % content_row.project)
+            fields = "project, title, project_description, rev_project_name, funding"
+            if self.db_marker == "vamps2":
+                fields += ", owner_user_id, created_at"
+                vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
+                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project,
+                       content_row.funding, contact_id)
+
+            elif self.db_marker == "env454":
+                fields += ", env_sample_source_id, contact_id"
+                vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
+                    """ % (
+                content_row.project, content_row.project_title, content_row.project_description, content_row.project,
+                content_row.funding, content_row.env_sample_source_id, contact_id)
+                #         TODO: change! what if we have more self.db_marker?
+
+            all_vals.add(vals)
+            all_templ.add(make_sql_for_groups("project", fields))
+
+        if len(all_templ) > 1:
+            err_msg = "WHY many templates? %s" % all_templ
             self.all_errors.append(err_msg)
+            logger.error(err_msg)
+            sys.exit(err_msg)
 
-        if self.db_marker == "vamps2":
-            fields = "project, title, project_description, rev_project_name, funding, owner_user_id, created_at"
-            vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
-            """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project,
-                   content_row.funding, contact_id)
-            group_vals = self.utils.grouper([vals], 1)
-            query_tmpl = make_sql_for_groups("project", fields)
-            # query_tmpl = self.my_conn.make_sql_w_duplicate("project", fields, ["project"])
-
-            self.my_conn.run_groups(group_vals, query_tmpl)
-
-        elif self.db_marker == "env454":
-            my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
-                ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
-                """ % (
-            content_row.project, content_row.project_title, content_row.project_description, content_row.project,
-            content_row.funding, content_row.env_sample_source_id, contact_id)
-            #         TODO: change! what if we have more self.db_marker?
-            # self.utils.print_both(my_sql)
-            self.my_conn.execute_no_fetch(my_sql)
+        for v in set(all_vals):
+            query_tmpl = list(all_templ)[0]
+            self.my_conn.execute_no_fetch(query_tmpl % v)
 
     def insert_dataset(self, content_row):
         fields = "dataset, dataset_description"
@@ -513,13 +517,13 @@ class dbUpload:
 
     def get_all_metadata_info(self):
         # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
+
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
         for key, d_val in self.samples_dict.items():
-            metadata_info = {}
+            metadata_info = {k: v for k, v in d_val.items()}
+
+            # add ids
             content_row = self.runobj.samples[key]
-            metadata_info['adaptor'] = content_row.adaptor
-            metadata_info['amp_operator'] = content_row.amp_operator
-            metadata_info['barcode'] = content_row.barcode
             metadata_info['contact_id'] = self.get_contact_id(content_row.data_owner)
             if not metadata_info['contact_id']:
                 err_msg = """ERROR: There is no such contact info on %s,
@@ -530,26 +534,18 @@ class dbUpload:
 
             metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
             metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
-            metadata_info[
-                'file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
+            metadata_info['file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
             metadata_info['illumina_index_id'] = self.get_id('illumina_index', content_row.barcode_index)
-            metadata_info['insert_size'] = content_row.insert_size
-            metadata_info['lane'] = content_row.lane
-            metadata_info['overlap'] = content_row.overlap
             if '_' in metadata_info['overlap']:
                 metadata_info['overlap'] = metadata_info['overlap'].split("_")[1]  # hs_compete, ms_partial
             metadata_info['platform'] = self.runobj.platform
             metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
-            metadata_info['project'] = content_row.project
             metadata_info['project_id'] = self.get_id('project', content_row.project)
-            metadata_info['read_length'] = content_row.read_length
             metadata_info['run'] = self.rundate
             metadata_info['run_id'] = self.run_id
             if not self.run_id:
                 metadata_info['run_id'] = self.get_id('run', self.rundate)
             metadata_info['run_key_id'] = self.get_id('run_key', content_row.run_key)
-            metadata_info['seq_operator'] = content_row.seq_operator
-            metadata_info['tubelabel'] = content_row.tubelabel
 
             if self.db_marker == "vamps2":
                 metadata_info['adapter_sequence_id'] = metadata_info['run_key_id']
@@ -569,8 +565,7 @@ class dbUpload:
                 target_gene = '16s'
                 if content_row.taxonomic_domain.lower().startswith(("euk", "its")):
                     target_gene = '18s'
-                metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene,
-                                                              and_part = ' and target_gene = "%s"' % target_gene)
+                metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene),
                 metadata_info['updated_at'] = self.runobj.configPath['general']['date']
 
             self.metadata_info_all[key] = metadata_info
