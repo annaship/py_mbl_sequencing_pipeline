@@ -578,7 +578,7 @@ class dbUpload:
                 target_gene = '16s'
                 if content_row.taxonomic_domain.lower().startswith(("euk", "its")):
                     target_gene = '18s'
-                metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene),
+                metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene)
                 metadata_info['updated_at'] = self.runobj.configPath['general']['date']
                 for term_name in missing_terms:
                     metadata_info[term_name] = unknown_term_id[0][0]
@@ -630,7 +630,7 @@ class dbUpload:
 
     def put_required_metadata(self):
 
-        field_names_str = "dataset_id, target_gene_id, dna_region_id, sequencing_platform_id, domain_id, env_package_id, adapter_sequence_id, illumina_index_id, primer_suite_id, run_id"
+        field_names_str = "adapter_sequence_id, dataset_id, dna_region_id, domain_id, env_biome_id, env_feature_id, env_material_id, env_package_id, geo_loc_name_id, illumina_index_id, primer_suite_id, run_id, sequencing_platform_id, target_gene_id"
         field_names_arr = field_names_str.split(", ")
         table_name = "required_metadata_info"
         vals_part = '"%s", ' * len(field_names_arr)
