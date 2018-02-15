@@ -286,7 +286,7 @@ def chimera(runobj):
 def illumina_chimera(runobj):
     utils = PipelneUtils()
 
-    start = time.time()
+    # start = time.time()
     mychimera = Chimera(runobj)
     #     elapsed = (time.time() - start)
     #     logger.debug(elapsed)
