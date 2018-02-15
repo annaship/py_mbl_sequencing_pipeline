@@ -94,7 +94,7 @@ class MyConnection:
     def show_warnings(self, sql):
         wrngs = self.conn.show_warnings()
         if wrngs:
-            logger.debug(sql)
+            logger.debug(sql[0:1000])
             logger.debug(wrngs)
 
     def execute_no_fetch(self, sql):
@@ -467,6 +467,7 @@ class dbUpload:
             ('%s', 'illumin', '%s');""" % (self.rundate, self.runobj.platform)
         return self.my_conn.execute_no_fetch(my_sql)
 
+    # Refactoring!
     def insert_project(self, content_row, contact_id):
         if not contact_id:
             err_msg = "ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS"
