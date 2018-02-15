@@ -491,7 +491,7 @@ class dbUpload:
             content_row.project, content_row.project_title, content_row.project_description, content_row.project,
             content_row.funding, content_row.env_sample_source_id, contact_id)
             #         TODO: change! what if we have more self.db_marker?
-            self.utils.print_both(my_sql)
+            # self.utils.print_both(my_sql)
             self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
@@ -513,7 +513,7 @@ class dbUpload:
     def get_all_metadata_info(self):
         # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
-        for key in self.runobj.samples:
+        for key, d_val in self.samples_dict.items():
             metadata_info = {}
             content_row = self.runobj.samples[key]
             metadata_info['adaptor'] = content_row.adaptor
@@ -612,7 +612,7 @@ class dbUpload:
                self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform,
                self.metadata_info_all[file_prefix]["illumina_index_id"])
 
-        logger.debug("insert run_info query: %s" % my_sql)
+        # logger.debug("insert run_info query: %s" % my_sql)
 
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
         self.utils.print_both("insert run_info: %s" % cursor_info)
