@@ -99,8 +99,12 @@ class MyConnection:
 
     def execute_no_fetch(self, sql):
         if self.cursor:
-            self.cursor.execute(sql)
-            self.conn.commit()
+            try:
+                self.cursor.execute(sql)
+                self.conn.commit()
+            except mysql.IntegrityError:
+                logger.error(sql[1:1000])
+                raise
             self.show_warnings(sql)
             try:
                 return self.cursor._result.message
