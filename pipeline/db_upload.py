@@ -187,6 +187,7 @@ class dbUpload:
         self.unique_fasta_files = []
         self.all_errors = []  #(+seq_errors)
         self.metadata_info_all = defaultdict(dict)
+        self.all_csv_projects = defaultdict(dict)
 
         if self.runobj.vamps_user_upload:
             site = self.runobj.site
@@ -239,6 +240,7 @@ class dbUpload:
         self.suffix_used        = ""
         self.all_dataset_ids    = self.my_conn.get_all_name_id("dataset")
         self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
+        self.get_all_csv_project_info()
         self.used_project_ids   = defaultdict(list)
         self.filenames          = self.get_fasta_file_names()
         self.fa_files_cnts_in_dir = 0
@@ -427,16 +429,23 @@ class dbUpload:
         for key, value in self.runobj.samples.items():
             self.insert_run_info(key)
 
-    def insert_project_datasets(self):
-        for key, value in self.runobj.samples.items():
-            contact_id = self.get_contact_id(value.data_owner)
+    def get_all_csv_project_info(self):
+        for k, v in self.runobj.samples.items():
+            self.all_csv_projects[v.project]['user'] = v.data_owner
+                # {v.project: v.data_owner for k, v in self.runobj.samples.items()}
+        for pr, user_dict in self.all_csv_projects.items():
+            contact_id = self.get_contact_id(user_dict['user'])
+            self.all_csv_projects[pr]['contact_id'] = contact_id
             if not contact_id:
                 err_msg = """ERROR: There is no such contact info on %s,
-                    please check if the user %s has an account on VAMPS""" % (self.db_marker, value.data_owner)
+                    please check if the user %s has an account on VAMPS""" % (self.db_marker, user_dict['user'])
                 self.all_errors.append(err_msg)
                 logger.error(err_msg)
                 sys.exit(err_msg)
-            self.insert_project(value, contact_id)
+
+    def insert_project_datasets(self):
+        for key, value in self.runobj.samples.items():
+            self.insert_project(value, self.all_csv_projects[value.project]['contact_id'])
             self.insert_dataset(value)
 
     def get_contact_v_info(self):
@@ -483,7 +492,7 @@ class dbUpload:
                 ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
                 """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
 #         TODO: change! what if we have more self.db_marker?
-            self.utils.print_both(my_sql)
+#             self.utils.print_both(my_sql)
             self.my_conn.execute_no_fetch(my_sql)
 
     def insert_dataset(self, content_row):
