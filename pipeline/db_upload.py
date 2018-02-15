@@ -182,6 +182,7 @@ class dbUpload:
         self.db_name     = db_name
         self.utils       = PipelneUtils()
         self.runobj      = runobj
+        self.samples_dict = self.convert_samples_to_dict()
         self.rundate     = self.runobj.run
         self.use_cluster = 1
         self.unique_fasta_files = []
@@ -429,10 +430,27 @@ class dbUpload:
         for key, value in self.runobj.samples.items():
             self.insert_run_info(key)
 
-    def get_all_csv_project_info(self):
+    def convert_samples_to_dict(self):
+        dd = defaultdict(dict)
         for k, v in self.runobj.samples.items():
-            self.all_csv_projects[v.project]['user'] = v.data_owner
+            d = dict(zip(v.__dict__.keys(), v.__dict__.values()))
+            dd[k] = d
+        return dd
+
+    def get_all_csv_project_info(self):
+
+        csv_pr_headers = "project_title, project_description, project, funding, data_owner"
+        if self.db_marker == "env454":
+            csv_pr_headers += ", env_sample_source_id"
+
+        csv_pr_headers_arr = csv_pr_headers.split(", ")
+        for k, v in self.runobj.samples.items():
+            for name in csv_pr_headers_arr:
+                self.all_csv_projects[v.project][name] = v[name]
                 # {v.project: v.data_owner for k, v in self.runobj.samples.items()}
+
+
+
         for pr, user_dict in self.all_csv_projects.items():
             contact_id = self.get_contact_id(user_dict['user'])
             self.all_csv_projects[pr]['contact_id'] = contact_id
@@ -446,7 +464,7 @@ class dbUpload:
     def insert_project_datasets(self):
         for key, value in self.runobj.samples.items():
             # todo: per self.all_csv_project
-            self.insert_project(value, self.all_csv_projects[value.project]['contact_id'])
+            # self.insert_project(value, self.all_csv_projects[value.project]['contact_id'])
             self.insert_dataset(value)
 
     def get_contact_v_info(self):
@@ -472,29 +490,41 @@ class dbUpload:
             ('%s', 'illumin', '%s');""" % (self.rundate, self.runobj.platform)
         return self.my_conn.execute_no_fetch(my_sql)
 
-    def insert_project(self, content_row, contact_id):
-        if not contact_id:
-            err_msg = "ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS"
-            self.utils.print_both(err_msg)
-            self.all_errors.append(err_msg)
 
-        if self.db_marker == "vamps2":
-            fields = "project, title, project_description, rev_project_name, funding, owner_user_id, created_at"
-            vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
-            """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, contact_id)
+    def collect_insert_project_queries(self):
+        for key, value in self.runobj.samples.items():
+            # todo: per self.all_csv_project
+            self.insert_project(value, self.all_csv_projects[value.project]['contact_id'])
+
+            if not contact_id:
+                err_msg = "ERROR: There is no such contact info on env454, please check if the user has an account on VAMPS"
+                self.utils.print_both(err_msg)
+                self.all_errors.append(err_msg)
+
+            all_insert_project_sql = {}
+            fields = "project, title, project_description, rev_project_name, funding"
+
+            if self.db_marker == "vamps2":
+                fields += ", owner_user_id, created_at"
+                vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
+                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project,
+                       content_row.funding, contact_id)
+
+
+            elif self.db_marker == "env454":
+                fields += ", env_sample_source_id, contact_id"
+                vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
+                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project,
+                       content_row.funding, content_row.env_sample_source_id, contact_id)
+
             group_vals = self.utils.grouper([vals], 1)
             query_tmpl = make_sql_for_groups("project", fields)
-            # query_tmpl = self.my_conn.make_sql_w_duplicate("project", fields, ["project"])
+            all_insert_project_sql[query_tmpl] = group_vals
 
-            self.my_conn.run_groups(group_vals, query_tmpl)
+    def insert_project(self, content_row, contact_id):
 
-        elif self.db_marker == "env454":
-            my_sql = """INSERT IGNORE INTO project (project, title, project_description, rev_project_name, funding, env_sample_source_id, contact_id) VALUES
-                ('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s);
-                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project, content_row.funding, content_row.env_sample_source_id, contact_id)
-#         TODO: change! what if we have more self.db_marker?
-#             self.utils.print_both(my_sql)
-            self.my_conn.execute_no_fetch(my_sql)
+
+        self.my_conn.run_groups(group_vals, query_tmpl)
 
     def insert_dataset(self, content_row):
         fields = "dataset, dataset_description"
