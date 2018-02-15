@@ -89,16 +89,17 @@ class MyConnection:
 
     """
 
-    def show_warnings(self):
+    def show_warnings(self, sql):
         wrngs = self.conn.show_warnings()
         if wrngs:
+            logger.debug(sql)
             logger.debug(wrngs)
 
     def execute_no_fetch(self, sql):
         if self.cursor:
             self.cursor.execute(sql)
             self.conn.commit()
-            self.show_warnings()
+            self.show_warnings(sql)
             try:
                 return self.cursor._result.message
             except Exception:
@@ -114,7 +115,7 @@ class MyConnection:
             if self.cursor:
                 self.cursor.execute(sql)
                 self.conn.commit()
-                self.show_warnings()
+                self.show_warnings(sql)
                 return (self.cursor.rowcount, self.cursor.lastrowid)
         except Exception:
             self.utils.print_both("ERROR: query = %s" % sql)
