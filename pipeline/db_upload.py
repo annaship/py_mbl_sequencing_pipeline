@@ -508,7 +508,7 @@ class dbUpload:
             dataset_values = "('%s', '%s')" % (content_row.dataset, content_row.dataset_description)
             # uniq_fields = ['dataset', 'dataset_description']
         my_sql = make_sql_for_groups("dataset", fields) % dataset_values
-        self.utils.print_both(my_sql)
+        # self.utils.print_both(my_sql)
         return self.my_conn.execute_no_fetch(my_sql)
 
     def get_all_metadata_info(self):
