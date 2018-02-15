@@ -445,6 +445,7 @@ class dbUpload:
 
     def insert_project_datasets(self):
         for key, value in self.runobj.samples.items():
+            # todo: per self.all_csv_project
             self.insert_project(value, self.all_csv_projects[value.project]['contact_id'])
             self.insert_dataset(value)
 
@@ -536,7 +537,6 @@ class dbUpload:
             metadata_info['overlap'] = content_row.overlap
             if '_' in metadata_info['overlap']:
                 metadata_info['overlap'] = metadata_info['overlap'].split("_")[1]  # hs_compete, ms_partial
-            metadata_info['overlap'] = content_row.overlap
             metadata_info['platform'] = self.runobj.platform
             metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
             metadata_info['project'] = content_row.project
