@@ -524,8 +524,8 @@ class dbUpload:
             metadata_info['insert_size'] = content_row.insert_size
             metadata_info['lane'] = content_row.lane
             metadata_info['overlap'] = content_row.overlap
-            if metadata_info['overlap'].endswith("complete"):
-                metadata_info['overlap'] = "complete"  # hs_compete
+            if '_' in metadata_info['overlap']:
+                metadata_info['overlap'] = metadata_info['overlap'].split("_")[1]  # hs_compete, ms_partial
             metadata_info['overlap'] = content_row.overlap
             metadata_info['platform'] = self.runobj.platform
             metadata_info['primer_suite_id'] = self.get_id('primer_suite', content_row.primer_suite)
