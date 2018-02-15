@@ -461,6 +461,8 @@ class dbUpload:
     def insert_project(self):
         all_vals = set()
         all_templ = set()
+        all_project_names = set()
+
         for key, content_row in self.runobj.samples.items():
             contact_id = self.get_contact_id(content_row.data_owner)
             if not contact_id:
@@ -470,7 +472,7 @@ class dbUpload:
                 logger.error(err_msg)
                 sys.exit(err_msg)
 
-            logger.debug("project: %s" % content_row.project)
+            all_project_names.add(content_row.project)
             fields = "project, title, project_description, rev_project_name, funding"
             if self.db_marker == "vamps2":
                 fields += ", owner_user_id, created_at"
@@ -488,6 +490,9 @@ class dbUpload:
 
             all_vals.add(vals)
             all_templ.add(make_sql_for_groups("project", fields))
+
+        # todo: use in used_projects and project_ids
+        logger.debug("project: %s" % all_project_names)
 
         if len(all_templ) > 1:
             err_msg = "WHY many templates? %s" % all_templ
@@ -628,11 +633,11 @@ class dbUpload:
         group_vals = self.utils.grouper(all_insert_req_vals, 1)
         query_tmpl = make_sql_for_groups(table_name, field_names_str + ', updated_at')
 
-        for group in group_vals:
-            val_part = ", ".join([key for key in group if key is not None])
-            my_sql = query_tmpl % val_part
-            print("PPP put_required_metadata sql:")
-            print(my_sql)
+        # for group in group_vals:
+        #     val_part = ", ".join([key for key in group if key is not None])
+        #     my_sql = query_tmpl % val_part
+            # print("PPP put_required_metadata sql:")
+            # print(my_sql)
 
         self.my_conn.run_groups(group_vals, query_tmpl, join_xpr = ', ')
 
