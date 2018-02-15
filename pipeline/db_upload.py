@@ -185,6 +185,7 @@ class dbUpload:
         self.db_name = db_name
         self.utils = PipelneUtils()
         self.runobj = runobj
+        self.samples_dict = self.convert_samples_to_dict()
         self.rundate = self.runobj.run
         self.use_cluster = 1
         self.unique_fasta_files = []
@@ -284,6 +285,12 @@ class dbUpload:
             db = C.db_cnf[self.db_marker][is_local]["db"]
 
         self.my_conn = MyConnection(host, db)
+
+    def convert_samples_to_dict(self):
+        dd = defaultdict(dict)
+        for k, v in self.runobj.samples.items():
+            dd[k] = dict(zip(v.__dict__.keys(), v.__dict__.values()))
+        return dd
 
     def check_files_csv(self):
         try:
