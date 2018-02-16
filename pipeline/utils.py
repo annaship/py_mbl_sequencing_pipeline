@@ -559,7 +559,7 @@ example of getting all directory name in illumina_files
             os.makedirs(dir_name)
         except OSError:
             if os.path.isdir(dir_name):
-                logger.error("\nDirectory %s already exists."  % (dir_name))
+                logger.warning("\nDirectory %s already exists."  % (dir_name))
 #                 confirm_msg = "Do you want to continue? (Yes / No) "
 #                 answer = raw_input(confirm_msg)
 #                 if answer != 'Yes':
