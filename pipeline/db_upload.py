@@ -633,7 +633,7 @@ class dbUpload:
         # logger.debug("insert run_info query: %s" % my_sql)
 
         cursor_info = self.my_conn.execute_no_fetch(my_sql)
-        logger.debug("insert run_info: %s" % cursor_info)
+        # logger.debug("insert run_info: %s" % cursor_info)
 
     def put_required_metadata(self):
 
