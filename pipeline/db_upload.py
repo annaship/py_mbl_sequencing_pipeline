@@ -588,6 +588,7 @@ class dbUpload:
         env_sample_source = self.my_conn.execute_fetch_select(
             "SELECT env_source_name FROM env_sample_source WHERE env_sample_source_id = %s" % (
                 content_row.env_sample_source_id))[0][0]
+        logger.debug("EEE env_sample_source: %s" % env_sample_source)
         if not env_sample_source:
             env_sample_source = "unknown"
         return env_sample_source.replace('_', ' ')
