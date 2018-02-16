@@ -1,6 +1,7 @@
 import logging
 import logging.handlers
 import os
+import sys
 
 # create logger with 'spam_application'
 logger = logging.getLogger('')
@@ -16,10 +17,15 @@ FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 # this gets rid of double messages:
 logging.basicConfig(level=logging.DEBUG,format=FORMAT)
 
+running_command_line = " ".join(sys.argv)
+logger.info("START\n%s", running_command_line)
+# logger.debug("Number of arguments: ", len(sys.argv))
+# logger.info("The arguments are: " , str(sys.argv))
+
 # Remove the default FileHandlers if present.
 handler = logging.handlers.RotatingFileHandler(os.path.join(os.getcwd(),"pipeline.log"), maxBytes=10000000, backupCount=10)
 logger.addHandler(handler)
-logger.debug("log path: %s" % handler)
+logger.debug("log path: %s" % handler.baseFilename)
 handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
 
