@@ -568,6 +568,7 @@ class dbUpload:
 
                 metadata_info['domain_id'] = self.get_id('domain', domain_by_adj[content_row.taxonomic_domain])
                 env_sample_source = self.get_env_sample_source(content_row)
+                logger.debug("EEE1 env_sample_source: %s" % env_sample_source)
                 metadata_info['env_package_id'] = self.get_id("env_package", env_sample_source)  # ?
 
                 platform = self.runobj.platform
@@ -588,9 +589,9 @@ class dbUpload:
         env_sample_source = self.my_conn.execute_fetch_select(
             "SELECT env_source_name FROM env_sample_source WHERE env_sample_source_id = %s" % (
                 content_row.env_sample_source_id))[0][0]
-        logger.debug("EEE env_sample_source: %s" % env_sample_source)
         if not env_sample_source:
             env_sample_source = "unknown"
+        logger.debug("EEE env_sample_source: %s" % env_sample_source)
         return env_sample_source.replace('_', ' ')
 
     def insert_run_info(self, file_prefix):
