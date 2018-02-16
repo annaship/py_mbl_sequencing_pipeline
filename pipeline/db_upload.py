@@ -812,15 +812,17 @@ class dbUpload:
     def check_seq_upload(self):
         file_seq_db_counts = self.count_sequence_pdr_info()
         file_seq_orig_count = self.count_seq_from_files_grep()
-
+        msgs = []
         for pr_suite, file_seq_db_count in file_seq_db_counts.items():
             if file_seq_orig_count == file_seq_db_count:
-                self.utils.print_both("All sequences from files made it to %s for %s %s: %s == %s\n" % (
-                self.db_name, self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
+                msg = "All sequences from files made it to %s for %s %s: %s == %s\n" % (
+                self.db_name, self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count)
             else:
-                self.utils.print_both(
-                    "Warning: Amount of sequences from files not equal to the one in the db for %s %s: %s != %s\n" % (
-                    self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count))
+                msg = "Warning: Amount of sequences from files not equal to the one in the db for %s %s: %s != %s\n" % (
+                    self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count)
+            logger.debug(msg)
+            msgs.append(msg)
+        return ", ".join(msgs)
 
     def put_seq_statistics_in_file(self, filename, seq_in_file):
         self.utils.write_seq_frequencies_in_file(self.unique_file_counts, filename, seq_in_file)

@@ -521,7 +521,7 @@ def file_to_db_upload_main(runobj, full_upload):
                                                                 full_upload)
         logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
-    my_file_to_db_upload.check_seq_upload()
+    seq_count_msg = my_file_to_db_upload.check_seq_upload()
 
     projects_and_ids = my_file_to_db_upload.get_project_names()
 
@@ -531,8 +531,8 @@ def file_to_db_upload_main(runobj, full_upload):
     else:
         my_email = 'ashipunova@mbl.edu'
 
-    ready_email_body = """Uploaded to %s on %s\nIn this run: %s\n%s
-    """ % (runobj.database_name, runobj.database_host, projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt)
+    ready_email_body = """Uploaded to %s on %s\nIn this run %s: %s\n%s\n%s
+    """ % (runobj.database_name, runobj.database_host, runobj.run, projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt, seq_count_msg)
 
     my_file_to_db_upload.send_message(my_email, 'Projects uploaded to %s' % db_name, ready_email_body)
 
