@@ -496,7 +496,7 @@ class dbUpload:
             all_templ.add(make_sql_for_groups("project", fields))
 
         # todo: use in used_projects and project_ids
-        logger.debug("project: %s" % all_project_names)
+        logger.debug("projects: %s" % all_project_names)
 
         if len(all_templ) > 1:
             err_msg = "WHY many templates? %s" % all_templ
@@ -567,10 +567,9 @@ class dbUpload:
                 metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset, and_part = and_part)
 
                 metadata_info['domain_id'] = self.get_id('domain', domain_by_adj[content_row.taxonomic_domain])
-                env_sample_source = self.my_conn.execute_fetch_select(
-                    "SELECT env_source_name FROM env_sample_source WHERE env_sample_source_id = %s" % (
-                        content_row.env_sample_source_id))[0][0]
+                env_sample_source = self.get_env_sample_source(content_row)
                 metadata_info['env_package_id'] = self.get_id("env_package", env_sample_source)  # ?
+
                 platform = self.runobj.platform
                 if self.runobj.platform in C.illumina_list:
                     platform = 'Illumina'
@@ -584,6 +583,14 @@ class dbUpload:
                     metadata_info[term_name] = unknown_term_id[0][0]
 
             self.metadata_info_all[key] = metadata_info
+
+    def get_env_sample_source(self, content_row):
+        env_sample_source = self.my_conn.execute_fetch_select(
+            "SELECT env_source_name FROM env_sample_source WHERE env_sample_source_id = %s" % (
+                content_row.env_sample_source_id))[0][0]
+        if not env_sample_source:
+            env_sample_source = "unknown"
+        return env_sample_source.replace('_', ' ')
 
     def insert_run_info(self, file_prefix):
 
