@@ -415,7 +415,8 @@ class dbUpload:
                 pass
         except TypeError:
             error = sys.exc_info()[1]
-            err_msg = "Check if there is a gast file under %s for %s. \nSystem error: %s" % (self.gast_dir, filename, error)
+            err_msg = "Check if there is a gast file under %s for %s. \nSystem error: %s" % (
+            self.gast_dir, filename, error)
             self.utils.print_both(err_msg)
             self.all_errors.append(err_msg)
             pass
@@ -446,7 +447,7 @@ class dbUpload:
 
     def get_contact_id(self, data_owner):
         my_sql = """SELECT %s_id FROM %s WHERE %s = '%s';""" % (
-        self.table_names["contact"], self.table_names["contact"], self.table_names["username"], data_owner)
+            self.table_names["contact"], self.table_names["contact"], self.table_names["username"], data_owner)
 
         res = self.my_conn.execute_fetch_select(my_sql)
         if res:
@@ -462,7 +463,7 @@ class dbUpload:
         all_vals = set()
         all_templ = set()
         all_project_names = set()
-
+        vals = ""
         for key, content_row in self.runobj.samples.items():
             contact_id = self.get_contact_id(content_row.data_owner)
             if not contact_id:
@@ -477,15 +478,17 @@ class dbUpload:
             if self.db_marker == "vamps2":
                 fields += ", owner_user_id, created_at"
                 vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
-                """ % (content_row.project, content_row.project_title, content_row.project_description, content_row.project,
-                       content_row.funding, contact_id)
+                """ % (
+                content_row.project, content_row.project_title, content_row.project_description, content_row.project,
+                content_row.funding, contact_id)
 
             elif self.db_marker == "env454":
                 fields += ", env_sample_source_id, contact_id"
                 vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', %s)
                     """ % (
-                content_row.project, content_row.project_title, content_row.project_description, content_row.project,
-                content_row.funding, content_row.env_sample_source_id, contact_id)
+                    content_row.project, content_row.project_title, content_row.project_description,
+                    content_row.project,
+                    content_row.funding, content_row.env_sample_source_id, contact_id)
                 #         TODO: change! what if we have more self.db_marker?
 
             all_vals.add(vals)
@@ -511,7 +514,7 @@ class dbUpload:
             project_id = self.get_id('project', content_row.project)
             fields += ", project_id, created_at"
             dataset_values = "('%s', '%s', %s, NOW())" % (
-            content_row.dataset, content_row.dataset_description, project_id)
+                content_row.dataset, content_row.dataset_description, project_id)
             # uniq_fields = ['dataset', 'project_id']
         elif self.db_marker == "env454":
             dataset_values = "('%s', '%s')" % (content_row.dataset, content_row.dataset_description)
@@ -525,7 +528,8 @@ class dbUpload:
 
         if self.db_marker == "vamps2":
             missing_terms = ["env_biome_id", "env_feature_id", "env_material_id", "geo_loc_name_id"]
-            unknown_term_id = self.my_conn.execute_fetch_select("SELECT %s FROM %s WHERE %s = '%s' and ontology_id = 1;" % ("term_id", "term", "term_name", "unknown"))
+            unknown_term_id = self.my_conn.execute_fetch_select(
+                "SELECT %s FROM %s WHERE %s = '%s' and ontology_id = 1;" % ("term_id", "term", "term_name", "unknown"))
 
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
         for key, d_val in self.samples_dict.items():
@@ -543,7 +547,8 @@ class dbUpload:
 
             metadata_info['dataset_id'] = self.get_id('dataset', content_row.dataset)
             metadata_info['dna_region_id'] = self.get_id('dna_region', content_row.dna_region)
-            metadata_info['file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
+            metadata_info[
+                'file_prefix'] = content_row.barcode_index + "_" + content_row.run_key + "_" + content_row.lane  # use self.runobj.idx_keys?
             metadata_info['illumina_index_id'] = self.get_id('illumina_index', content_row.barcode_index)
             if '_' in metadata_info['overlap']:
                 metadata_info['overlap'] = metadata_info['overlap'].split("_")[1]  # hs_compete, ms_partial
@@ -632,17 +637,16 @@ class dbUpload:
                     WHERE primer_suite = "%s"
                     AND run = "%s"
                 """ % (
-        self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"],
-        primer_suite, self.rundate)
+            self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"],
+            primer_suite, self.rundate)
         my_sql2 = " AND project in (" + projects + ")"
         my_sql3 = " AND dataset in (" + datasets + ")"
 
-        if (projects != ""):
+        if projects != "":
             my_sql1 += my_sql2
-        if (datasets != ""):
+        if datasets != "":
             my_sql1 += my_sql3
         self.my_conn.execute_no_fetch(my_sql1)
-
 
     # def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
     #     my_sql = ''
@@ -708,8 +712,8 @@ class dbUpload:
                           AND lane = %s
                           AND primer_suite = '%s';
                           """ % (
-            self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"],
-            join_add, self.rundate, lane, primer_suite)
+                self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_pdr_info_table_name"],
+                join_add, self.rundate, lane, primer_suite)
             res = self.my_conn.execute_fetch_select(my_sql)
             try:
                 if int(res[0][0]) > 0:
@@ -749,8 +753,7 @@ class dbUpload:
         #       or
         #         cd /xraid2-2/g454/run_new_pipeline/illumina/20130607/lane_5_A/analysis/reads_overlap/; grep '>' *_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa | wc -l; date
         try:
-            self.suffix_used = \
-            list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
+            self.suffix_used = list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
         except Exception:
             logger.error(
                 "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
@@ -774,7 +777,7 @@ class dbUpload:
         for pr_suite, file_seq_db_count in file_seq_db_counts.items():
             if file_seq_orig_count == file_seq_db_count:
                 msg = "All sequences from files made it to %s for %s %s: %s == %s\n" % (
-                self.db_name, self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count)
+                    self.db_name, self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count)
             else:
                 msg = "Warning: Amount of sequences from files not equal to the one in the db for %s %s: %s != %s\n" % (
                     self.rundate, pr_suite, file_seq_orig_count, file_seq_db_count)
@@ -831,7 +834,7 @@ class dbUpload:
             # self.silva_taxonomy_info_per_seq_list = [[8559950L, 2436599, '0.03900', 0, 0, 83],...
             #         (taxonomy, gast_distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = self.gast_dict
             vals = "(%s,  %s,  '%s',  '%s',  %s,  '%s')" % (
-            sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id)
+                sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id)
             self.silva_taxonomy_info_per_seq_list.append(vals)
         fields = "sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id"
         query_tmpl = make_sql_for_groups("silva_taxonomy_info_per_seq", fields)
@@ -1159,4 +1162,3 @@ class Seq:
 
         logger.debug("insert sequence_uniq_info_ill:")
         self.my_conn.run_groups(group_vals, query_tmpl)
-
