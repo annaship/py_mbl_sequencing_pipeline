@@ -432,7 +432,7 @@ def illumina_files(runobj):
     logger.debug("illumina_files time = %s" % str(elapsed))
 
 
-def env454run_info_upload(runobj):
+def run_info_upload(runobj):
     logger.debug("Start Run info upload to db")
 
     my_read_csv = dbUpload(runobj)
