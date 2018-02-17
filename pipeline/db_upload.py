@@ -434,7 +434,6 @@ class dbUpload:
         for key, value in self.runobj.samples.items():
             self.insert_dataset(value)
         self.get_all_metadata_info()
-        # for key, value in self.runobj.samples.items():
         self.insert_run_info()
 
     def get_contact_v_info(self):
