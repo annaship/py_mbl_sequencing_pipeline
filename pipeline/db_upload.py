@@ -434,8 +434,8 @@ class dbUpload:
         for key, value in self.runobj.samples.items():
             self.insert_dataset(value)
         self.get_all_metadata_info()
-        for key, value in self.runobj.samples.items():
-            self.insert_run_info(key)
+        # for key, value in self.runobj.samples.items():
+        self.insert_run_info()
 
     def get_contact_v_info(self):
         """
@@ -592,48 +592,25 @@ class dbUpload:
             env_sample_source = "unknown"
         return env_sample_source
 
-    def insert_run_info(self, file_prefix):
+    def insert_run_info(self):
+        field_names_str = "adaptor, amp_operator, barcode, dataset_id, dna_region_id, file_prefix, illumina_index_id, insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, run_key_id, seq_operator, tubelabel"
+        if self.db_marker == "env454":
+            field_names_str += ", project_id"
+        field_names_arr = field_names_str.split(", ")
+        table_name = "run_info_ill"
+        vals_part = '"%s", ' * len(field_names_arr)
+        all_insert_run_info_vals = []
+        for file_prefix, metadata_dict in self.metadata_info_all.items():
+            values_arr = [str(metadata_dict[f]) for f in field_names_arr]
+            vals = vals_part % tuple(values_arr) + ' NOW()'
+            all_insert_run_info_vals.append('(%s)' % vals)
 
-        # TODO: combine, use make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
-        if self.db_marker == "vamps2":
-            my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, tubelabel, barcode,
-                                                    adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
-                                                    file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
-                                            VALUES (%s, %s, %s, %s, '%s', '%s',
-                                                    '%s', %s, '%s', '%s', '%s', %s,
-                                                    '%s', %s, %s, '%s', %s);
-        """ % (self.metadata_info_all[file_prefix]["run_key_id"], self.metadata_info_all[file_prefix]["run_id"],
-               self.metadata_info_all[file_prefix]["lane"], self.metadata_info_all[file_prefix]["dataset_id"],
-               self.metadata_info_all[file_prefix]["tubelabel"], self.metadata_info_all[file_prefix]["barcode"],
-               self.metadata_info_all[file_prefix]["adaptor"], self.metadata_info_all[file_prefix]["dna_region_id"],
-               self.metadata_info_all[file_prefix]["amp_operator"], self.metadata_info_all[file_prefix]["seq_operator"],
-               self.metadata_info_all[file_prefix]["overlap"], self.metadata_info_all[file_prefix]["insert_size"],
-               file_prefix, self.metadata_info_all[file_prefix]["read_length"],
-               self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform,
-               self.metadata_info_all[file_prefix]["illumina_index_id"])
+        group_vals = self.utils.grouper(all_insert_run_info_vals, 1)
+        query_tmpl = make_sql_for_groups(table_name, field_names_str + ', updated')
+        logger.debug("insert run_info group_vals: %s" % group_vals)
 
-        elif self.db_marker == "env454":
-            my_sql = """INSERT IGNORE INTO run_info_ill (run_key_id, run_id, lane, dataset_id, project_id, tubelabel, barcode,
-                                                    adaptor, dna_region_id, amp_operator, seq_operator, overlap, insert_size,
-                                                    file_prefix, read_length, primer_suite_id, platform, illumina_index_id)
-                                            VALUES (%s, %s, %s, %s, %s, '%s', '%s',
-                                                    '%s', %s, '%s', '%s', '%s', %s,
-                                                    '%s', %s, %s, '%s', %s);
-        """ % (self.metadata_info_all[file_prefix]["run_key_id"], self.metadata_info_all[file_prefix]["run_id"],
-               self.metadata_info_all[file_prefix]["lane"], self.metadata_info_all[file_prefix]["dataset_id"],
-               self.metadata_info_all[file_prefix]["project_id"], self.metadata_info_all[file_prefix]["tubelabel"],
-               self.metadata_info_all[file_prefix]["barcode"],
-               self.metadata_info_all[file_prefix]["adaptor"], self.metadata_info_all[file_prefix]["dna_region_id"],
-               self.metadata_info_all[file_prefix]["amp_operator"], self.metadata_info_all[file_prefix]["seq_operator"],
-               self.metadata_info_all[file_prefix]["overlap"], self.metadata_info_all[file_prefix]["insert_size"],
-               file_prefix, self.metadata_info_all[file_prefix]["read_length"],
-               self.metadata_info_all[file_prefix]["primer_suite_id"], self.runobj.platform,
-               self.metadata_info_all[file_prefix]["illumina_index_id"])
+        self.my_conn.run_groups(group_vals, query_tmpl, join_xpr = ', ')
 
-        # logger.debug("insert run_info query: %s" % my_sql)
-
-        cursor_info = self.my_conn.execute_no_fetch(my_sql)
-        # logger.debug("insert run_info: %s" % cursor_info)
 
     def put_required_metadata(self):
 
