@@ -747,28 +747,28 @@ class dbUpload:
     #         self.utils.print_both("Unexpected error from 'count_seq_from_file': %s" % sys.exc_info()[0])
     #         raise
 
-    # def count_seq_from_files_grep(self):
-    #     #         grep '>' *-PERFECT_reads.fa.unique
-    #     #       or
-    #     #         cd /xraid2-2/g454/run_new_pipeline/illumina/20130607/lane_5_A/analysis/reads_overlap/; grep '>' *_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa | wc -l; date
-    #     try:
-    #         self.suffix_used = \
-    #         list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
-    #     except Exception:
-    #         logger.error(
-    #             "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
-    #         self.suffix_used = ""
-    #     #         print(self.suffix_used)
-    #     suffix = self.fasta_dir + "/*" + self.suffix_used
-    #     program_name = "grep"
-    #     call_params = " '>' " + suffix
-    #     command_line = program_name + call_params
-    #     p1 = Popen(command_line, stdout = PIPE, shell = True)
-    #     p2 = Popen(split("wc -l"), stdin = p1.stdout, stdout = PIPE)
-    #     #         output = p2.stdout.read().split(" ")[0].strip()
-    #     output, err = p2.communicate()
-    #     #         print(output)
-    #     return int(output.strip())
+    def count_seq_from_files_grep(self):
+        #         grep '>' *-PERFECT_reads.fa.unique
+        #       or
+        #         cd /xraid2-2/g454/run_new_pipeline/illumina/20130607/lane_5_A/analysis/reads_overlap/; grep '>' *_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa | wc -l; date
+        try:
+            self.suffix_used = \
+            list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
+        except Exception:
+            logger.error(
+                "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
+            self.suffix_used = ""
+        #         print(self.suffix_used)
+        suffix = self.fasta_dir + "/*" + self.suffix_used
+        program_name = "grep"
+        call_params = " '>' " + suffix
+        command_line = program_name + call_params
+        p1 = Popen(command_line, stdout = PIPE, shell = True)
+        p2 = Popen(split("wc -l"), stdin = p1.stdout, stdout = PIPE)
+        #         output = p2.stdout.read().split(" ")[0].strip()
+        output, err = p2.communicate()
+        #         print(output)
+        return int(output.strip())
 
     def check_seq_upload(self):
         file_seq_db_counts = self.count_sequence_pdr_info()
