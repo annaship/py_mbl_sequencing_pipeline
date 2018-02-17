@@ -23,7 +23,7 @@ arg_names = sys.argv[1::2]
 arg_vals = sys.argv[2::2]
 args = dict(zip(arg_names, arg_vals))
 
-logger.info("START\n%s", running_command_line)
+logger.debug("START\n%s", running_command_line)
 # logger.debug("Number of arguments: ", len(sys.argv))
 # logger.info("The arguments are: " , str(sys.argv))
 

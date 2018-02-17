@@ -34,7 +34,6 @@ from pipeline.get_ini import readCSV
 import logging
 import argparse
 from pipelineprocessor import process
-import pprint
 
 # pycogent
 # import cogent

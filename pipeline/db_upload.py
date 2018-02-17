@@ -46,8 +46,6 @@ class MyConnection:
         self.conn = None
         self.cursor = None
         self.cursorD = None
-        self.rows = 0
-        self.new_id = None
         self.lastrowid = None
 
         try:
@@ -247,14 +245,13 @@ class dbUpload:
 
         self.unique_file_counts = self.dirs.unique_file_counts
         self.dirs.delete_file(self.unique_file_counts)
-        self.taxonomies = set()
         self.run_id = None
         self.nonchimeric_suffix = "." + C.nonchimeric_suffix  # ".nonchimeric.fa"
         self.fa_unique_suffix = ".fa." + C.unique_suffix  # .fa.unique
         self.v6_unique_suffix = "MERGED_V6_PRIMERS_REMOVED." + C.unique_suffix
         self.suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
         self.suffix_used = ""
-        self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
+        # self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
         self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
         self.used_project_ids = defaultdict(list)
         self.filenames = self.get_fasta_file_names()
@@ -436,11 +433,11 @@ class dbUpload:
         self.get_all_metadata_info()
         self.insert_run_info()
 
-    def get_contact_v_info(self):
-        """
-        TODO: get info from Hilary? from vamps?
-        """
-        pass
+    # def get_contact_v_info(self):
+    #     """
+    #     TODO: get info from Hilary? from vamps?
+    #     """
+    #     pass
 
     def insert_test_contact(self):
         my_sql = '''INSERT IGNORE INTO contact (contact, email, institution, vamps_name, first_name, last_name)
@@ -622,8 +619,8 @@ class dbUpload:
 
         self.insert_metadata(field_names_str, table_name, "updated_at")
 
-    def insert_primer(self):
-        pass
+    # def insert_primer(self):
+    #     pass
 
     def del_sequence_pdr_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
         my_sql = ""
@@ -650,46 +647,46 @@ class dbUpload:
             my_sql = my_sql1 + my_sql2 + my_sql3
         self.my_conn.execute_no_fetch(my_sql)
 
-    def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
-        my_sql = ''
-        my_sql1 = """DELETE FROM run_info_ill
-                    USING run_info_ill
-                    JOIN run USING(run_id)
-                    JOIN project using(project_id)
-                    JOIN primer_suite using(primer_suite_id)
-                    WHERE primer_suite = "%s"
-                    AND run = "%s"
-                """ % (primer_suite, self.rundate)
-        my_sql2 = " AND project in (" + projects + ")"
-        my_sql3 = " AND dataset in (" + datasets + ")"
-        if (projects == "") and (datasets == ""):
-            my_sql = my_sql1
-        elif (projects != "") and (datasets == ""):
-            my_sql = my_sql1 + my_sql2
-        elif (projects == "") and (datasets != ""):
-            my_sql = my_sql1 + my_sql3
-        elif (projects != "") and (datasets != ""):
-            my_sql = my_sql1 + my_sql2 + my_sql3
-        self.my_conn.execute_no_fetch(my_sql)
+    # def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
+    #     my_sql = ''
+    #     my_sql1 = """DELETE FROM run_info_ill
+    #                 USING run_info_ill
+    #                 JOIN run USING(run_id)
+    #                 JOIN project using(project_id)
+    #                 JOIN primer_suite using(primer_suite_id)
+    #                 WHERE primer_suite = "%s"
+    #                 AND run = "%s"
+    #             """ % (primer_suite, self.rundate)
+    #     my_sql2 = " AND project in (" + projects + ")"
+    #     my_sql3 = " AND dataset in (" + datasets + ")"
+    #     if (projects == "") and (datasets == ""):
+    #         my_sql = my_sql1
+    #     elif (projects != "") and (datasets == ""):
+    #         my_sql = my_sql1 + my_sql2
+    #     elif (projects == "") and (datasets != ""):
+    #         my_sql = my_sql1 + my_sql3
+    #     elif (projects != "") and (datasets != ""):
+    #         my_sql = my_sql1 + my_sql2 + my_sql3
+    #     self.my_conn.execute_no_fetch(my_sql)
 
-    def del_sequence_uniq_info(self):
-        my_sql = """DELETE FROM sequence_uniq_info_ill
-                    USING sequence_uniq_info_ill
-                    LEFT JOIN %s USING(%s_id)
-                    WHERE %s_id is NULL;""" % (
-        self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"],
-        self.table_names["sequence_pdr_info_table_name"])
-        self.my_conn.execute_no_fetch(my_sql)
+    # def del_sequence_uniq_info(self):
+    #     my_sql = """DELETE FROM sequence_uniq_info_ill
+    #                 USING sequence_uniq_info_ill
+    #                 LEFT JOIN %s USING(%s_id)
+    #                 WHERE %s_id is NULL;""" % (
+    #     self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"],
+    #     self.table_names["sequence_pdr_info_table_name"])
+    #     self.my_conn.execute_no_fetch(my_sql)
 
-    def del_sequences(self):
-        my_sql = """DELETE FROM %s
-                    USING %s
-                    LEFT JOIN %s USING(%s_id)
-                    WHERE %s_id IS NULL;
-                """ % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"],
-                       self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"],
-                       self.table_names["sequence_pdr_info_table_name"])
-        self.my_conn.execute_no_fetch(my_sql)
+    # def del_sequences(self):
+    #     my_sql = """DELETE FROM %s
+    #                 USING %s
+    #                 LEFT JOIN %s USING(%s_id)
+    #                 WHERE %s_id IS NULL;
+    #             """ % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"],
+    #                    self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"],
+    #                    self.table_names["sequence_pdr_info_table_name"])
+    #     self.my_conn.execute_no_fetch(my_sql)
 
     def count_sequence_pdr_info(self):
         results = {}
@@ -730,48 +727,48 @@ class dbUpload:
         primer_suites = [v.primer_suite for v in self.runobj.samples.values()]
         return list(set(primer_suites))
 
-    def get_dataset_names(self):
-        datasets = [v.dataset for v in self.runobj.samples.values()]
-        return '", "'.join(set(datasets))
+    # def get_dataset_names(self):
+    #     datasets = [v.dataset for v in self.runobj.samples.values()]
+    #     return '", "'.join(set(datasets))
 
     def get_lane(self):
         lane = [v.lane for v in self.runobj.samples.values()]
         return set(lane)
 
-    def count_seq_from_file(self):
-        try:
-            with open(self.unique_file_counts) as fd:
-                file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
-            file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
-            return file_seq_orig_count
-        except IOError as e:
-            self.utils.print_both("Can't open file %s, error = %s" % (self.unique_file_counts, e))
-        except Exception:
-            self.utils.print_both("Unexpected error from 'count_seq_from_file': %s" % sys.exc_info()[0])
-            raise
+    # def count_seq_from_file(self):
+    #     try:
+    #         with open(self.unique_file_counts) as fd:
+    #             file_seq_orig = dict(line.strip().split(None, 1) for line in fd)
+    #         file_seq_orig_count = sum([int(x) for x in file_seq_orig.values()])
+    #         return file_seq_orig_count
+    #     except IOError as e:
+    #         self.utils.print_both("Can't open file %s, error = %s" % (self.unique_file_counts, e))
+    #     except Exception:
+    #         self.utils.print_both("Unexpected error from 'count_seq_from_file': %s" % sys.exc_info()[0])
+    #         raise
 
-    def count_seq_from_files_grep(self):
-        #         grep '>' *-PERFECT_reads.fa.unique
-        #       or
-        #         cd /xraid2-2/g454/run_new_pipeline/illumina/20130607/lane_5_A/analysis/reads_overlap/; grep '>' *_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa | wc -l; date
-        try:
-            self.suffix_used = \
-            list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
-        except Exception:
-            logger.error(
-                "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
-            self.suffix_used = ""
-        #         print(self.suffix_used)
-        suffix = self.fasta_dir + "/*" + self.suffix_used
-        program_name = "grep"
-        call_params = " '>' " + suffix
-        command_line = program_name + call_params
-        p1 = Popen(command_line, stdout = PIPE, shell = True)
-        p2 = Popen(split("wc -l"), stdin = p1.stdout, stdout = PIPE)
-        #         output = p2.stdout.read().split(" ")[0].strip()
-        output, err = p2.communicate()
-        #         print(output)
-        return int(output.strip())
+    # def count_seq_from_files_grep(self):
+    #     #         grep '>' *-PERFECT_reads.fa.unique
+    #     #       or
+    #     #         cd /xraid2-2/g454/run_new_pipeline/illumina/20130607/lane_5_A/analysis/reads_overlap/; grep '>' *_MERGED-MAX-MISMATCH-3.unique.nonchimeric.fa | wc -l; date
+    #     try:
+    #         self.suffix_used = \
+    #         list(set([ext for f in self.unique_fasta_files for ext in self.suff_list if f.endswith(ext)]))[0]
+    #     except Exception:
+    #         logger.error(
+    #             "self.unique_fasta_files = %s, self.suff_list = %s" % (self.unique_fasta_files, self.suff_list))
+    #         self.suffix_used = ""
+    #     #         print(self.suffix_used)
+    #     suffix = self.fasta_dir + "/*" + self.suffix_used
+    #     program_name = "grep"
+    #     call_params = " '>' " + suffix
+    #     command_line = program_name + call_params
+    #     p1 = Popen(command_line, stdout = PIPE, shell = True)
+    #     p2 = Popen(split("wc -l"), stdin = p1.stdout, stdout = PIPE)
+    #     #         output = p2.stdout.read().split(" ")[0].strip()
+    #     output, err = p2.communicate()
+    #     #         print(output)
+    #     return int(output.strip())
 
     def check_seq_upload(self):
         file_seq_db_counts = self.count_sequence_pdr_info()
@@ -1049,9 +1046,6 @@ class Seq:
         self.seq_id_w_silva_taxonomy_info_per_seq_id = []
 
         self.sequences = ""
-        self.taxa = ""
-        self.refhvr_id = ""
-        self.the_rest = ""
 
         self.seq_errors = []
 
