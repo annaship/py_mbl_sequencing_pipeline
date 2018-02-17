@@ -595,13 +595,13 @@ class dbUpload:
     def insert_metadata(self, field_names_str, table_name, update_field_name):
         field_names_arr = field_names_str.split(", ")
         vals_part = '"%s", ' * len(field_names_arr)
-        all_insert_run_info_vals = []
+        all_metadata_vals = []
         for file_prefix, metadata_dict in self.metadata_info_all.items():
             values_arr = [str(metadata_dict[f]) for f in field_names_arr]
             vals = vals_part % tuple(values_arr) + ' NOW()'
-            all_insert_run_info_vals.append('(%s)' % vals)
+            all_metadata_vals.append('(%s)' % vals)
 
-        group_vals = self.utils.grouper(all_insert_run_info_vals, 1)
+        group_vals = self.utils.grouper(all_metadata_vals, 1)
         query_tmpl = make_sql_for_groups(table_name, field_names_str + ", %s" % update_field_name)
         logger.debug("insert %s" % table_name)
 
@@ -614,46 +614,14 @@ class dbUpload:
         if self.db_marker == "env454":
             field_names_str += ", project_id"
 
-        # self.insert_metadata(field_names_str, table_name, "updated")
-
-
-        field_names_arr = field_names_str.split(", ")
-        vals_part = '"%s", ' * len(field_names_arr)
-        all_insert_run_info_vals = []
-        for file_prefix, metadata_dict in self.metadata_info_all.items():
-            values_arr = [str(metadata_dict[f]) for f in field_names_arr]
-            vals = vals_part % tuple(values_arr) + ' NOW()'
-            all_insert_run_info_vals.append('(%s)' % vals)
-
-        group_vals = self.utils.grouper(all_insert_run_info_vals, 1)
-        query_tmpl = make_sql_for_groups(table_name, field_names_str + ', updated')
-        logger.debug("insert run_info group_vals: %s" % group_vals)
-
-        self.my_conn.run_groups(group_vals, query_tmpl, join_xpr = ', ')
-
+        self.insert_metadata(field_names_str, table_name, "updated")
 
     def put_required_metadata(self):
+        table_name = "required_metadata_info"
 
         field_names_str = "adapter_sequence_id, dataset_id, dna_region_id, domain_id, env_biome_id, env_feature_id, env_material_id, env_package_id, geo_loc_name_id, illumina_index_id, primer_suite_id, run_id, sequencing_platform_id, target_gene_id"
-        field_names_arr = field_names_str.split(", ")
-        table_name = "required_metadata_info"
-        vals_part = '"%s", ' * len(field_names_arr)
-        all_insert_req_vals = []
-        for file_prefix, metadata_dict in self.metadata_info_all.items():
-            values_arr = [str(metadata_dict[f]) for f in field_names_arr]
-            vals = vals_part % tuple(values_arr) + ' NOW()'
-            all_insert_req_vals.append('(%s)' % vals)
 
-        group_vals = self.utils.grouper(all_insert_req_vals, 1)
-        query_tmpl = make_sql_for_groups(table_name, field_names_str + ', updated_at')
-
-        # for group in group_vals:
-        #     val_part = ", ".join([key for key in group if key is not None])
-        #     my_sql = query_tmpl % val_part
-            # print("PPP put_required_metadata sql:")
-            # print(my_sql)
-
-        self.my_conn.run_groups(group_vals, query_tmpl, join_xpr = ', ')
+        self.insert_metadata(field_names_str, table_name, "updated_at")
 
     def insert_primer(self):
         pass
