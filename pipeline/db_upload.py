@@ -333,7 +333,7 @@ class dbUpload:
                 return project_and_ids
             except Exception:
                 logger.error("From get_project_names: %s:" % Exception)
-                pass
+                raise
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
@@ -623,7 +623,6 @@ class dbUpload:
     #     pass
 
     def del_sequence_pdr_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
-        my_sql = ""
         my_sql1 = """DELETE FROM %s
                     USING %s JOIN run_info_ill USING (run_info_ill_id)
                     JOIN run USING(run_id)
@@ -637,15 +636,13 @@ class dbUpload:
         primer_suite, self.rundate)
         my_sql2 = " AND project in (" + projects + ")"
         my_sql3 = " AND dataset in (" + datasets + ")"
-        if (projects == "") and (datasets == ""):
-            my_sql = my_sql1
-        elif (projects != "") and (datasets == ""):
-            my_sql = my_sql1 + my_sql2
-        elif (projects == "") and (datasets != ""):
-            my_sql = my_sql1 + my_sql3
-        elif (projects != "") and (datasets != ""):
-            my_sql = my_sql1 + my_sql2 + my_sql3
-        self.my_conn.execute_no_fetch(my_sql)
+
+        if (projects != ""):
+            my_sql1 += my_sql2
+        if (datasets != ""):
+            my_sql1 += my_sql3
+        self.my_conn.execute_no_fetch(my_sql1)
+
 
     # def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
     #     my_sql = ''
