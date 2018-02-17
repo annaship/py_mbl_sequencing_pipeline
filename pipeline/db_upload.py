@@ -592,12 +592,32 @@ class dbUpload:
             env_sample_source = "unknown"
         return env_sample_source
 
+    def insert_metadata(self, field_names_str, table_name, update_field_name):
+        field_names_arr = field_names_str.split(", ")
+        vals_part = '"%s", ' * len(field_names_arr)
+        all_insert_run_info_vals = []
+        for file_prefix, metadata_dict in self.metadata_info_all.items():
+            values_arr = [str(metadata_dict[f]) for f in field_names_arr]
+            vals = vals_part % tuple(values_arr) + ' NOW()'
+            all_insert_run_info_vals.append('(%s)' % vals)
+
+        group_vals = self.utils.grouper(all_insert_run_info_vals, 1)
+        query_tmpl = make_sql_for_groups(table_name, field_names_str + ", %s" % update_field_name)
+        logger.debug("insert %s" % table_name)
+
+        self.my_conn.run_groups(group_vals, query_tmpl, join_xpr = ', ')
+
     def insert_run_info(self):
+        table_name = "run_info_ill"
+
         field_names_str = "adaptor, amp_operator, barcode, dataset_id, dna_region_id, file_prefix, illumina_index_id, insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, run_key_id, seq_operator, tubelabel"
         if self.db_marker == "env454":
             field_names_str += ", project_id"
+
+        # self.insert_metadata(field_names_str, table_name, "updated")
+
+
         field_names_arr = field_names_str.split(", ")
-        table_name = "run_info_ill"
         vals_part = '"%s", ' * len(field_names_arr)
         all_insert_run_info_vals = []
         for file_prefix, metadata_dict in self.metadata_info_all.items():
@@ -1176,7 +1196,7 @@ class Seq:
                                         len(all_insert_sequence_uniq_info_ill_vals))
 
         fields = "%s_id, taxonomy_id, gast_distance, refssu_count, rank_id, refhvr_ids" % (
-        self.table_names["sequence_table_name"])
+            self.table_names["sequence_table_name"])
         query_tmpl = make_sql_for_groups("sequence_uniq_info_ill", fields)
 
         logger.debug("insert sequence_uniq_info_ill:")
