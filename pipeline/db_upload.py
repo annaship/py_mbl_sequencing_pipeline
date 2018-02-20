@@ -1106,6 +1106,7 @@ class Seq:
                         vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
                     except KeyError:
                         logger.error("No such run info, please check a file name and the csv file")
+                        logger.debug(all_dataset_run_info_dict)
 
                 elif current_db_host_name == "env454":
                     vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
