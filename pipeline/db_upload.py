@@ -466,7 +466,7 @@ class dbUpload:
             all_project_names.add(content_row.project)
             fields = "project, title, project_description, rev_project_name, funding"
             if self.db_marker == "vamps2":
-                fields += ", owner_user_id, created_at"
+                fields += ", owner_user_id, updated_at"
                 vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
                 """ % (
                 content_row.project, content_row.project_title, content_row.project_description, content_row.project,
@@ -504,7 +504,7 @@ class dbUpload:
         dataset_values = ""
         if self.db_marker == "vamps2":
             project_id = self.get_id('project', content_row.project)
-            fields += ", project_id, created_at"
+            fields += ", project_id, updated_at"
             dataset_values = "('%s', '%s', %s, NOW())" % (
                 content_row.dataset, content_row.dataset_description, project_id)
             # uniq_fields = ['dataset', 'project_id']
