@@ -523,7 +523,7 @@ def file_to_db_upload_main(runobj, full_upload):
 
     seq_count_msg = my_file_to_db_upload.check_seq_upload()
 
-    projects_and_ids = my_file_to_db_upload.get_project_names()
+    projects_and_ids = my_file_to_db_upload.get_projects_and_ids()
 
     utils = PipelneUtils()
     if db_name == 'vamps2':

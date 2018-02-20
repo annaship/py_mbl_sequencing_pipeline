@@ -254,6 +254,7 @@ class dbUpload:
         # self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
         self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
         self.used_project_ids = defaultdict(list)
+        self.used_project_names = ""
         self.filenames = self.get_fasta_file_names()
         self.fa_files_cnts_in_dir = 0
         self.fa_files_cnts_in_csv = 0
@@ -314,26 +315,15 @@ class dbUpload:
         except KeyError:
             logger.error("No such run info, please check a file name and the csv file")
 
-    # TODO: check if needed, take from all info
-    def get_project_names(self):
-        used_project_ids_str = [str(w) for w in set(self.used_project_ids.values()) if w is not None]
-        if len(used_project_ids_str) == 0:
-            err_msg = "No project were uploaded! Please check files in %s" % self.fasta_dir
-            self.all_errors.append(err_msg)
-            logger.debug(err_msg)
-        else:
-            try:
-                where_part = " WHERE project_id in (%s)" % ", ".join(used_project_ids_str)
-                res = self.my_conn.get_all_name_id("project", "", "", where_part)
-                # can get project from self.runobj.samples['ATCACG_GACAG_1'].project etc.
-                projects, pr_ids = zip(*res)
-                pr_ids_str = (str(w) for w in pr_ids)
-                project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str))
-                # ["%s, id = %s" % (str(pr[0]), str(pr[1])) for pr in res]
-                return project_and_ids
-            except Exception:
-                logger.error("From get_project_names: %s:" % Exception)
-                raise
+    def get_projects_and_ids(self):
+        if len(self.used_project_names) <= 0:
+            self.used_project_names = list(set([content_row.project for key, content_row in self.runobj.samples.items()]))
+        where_part = " WHERE project in ('%s')" % ", ".join(self.used_project_names)
+        res = self.my_conn.get_all_name_id("project", "", "", where_part)
+        projects, pr_ids = zip(*res)
+        pr_ids_str = (str(w) for w in pr_ids)
+        project_and_ids = "projects: %s; ids: %s" % (", ".join(projects), ", ".join(pr_ids_str))
+        return project_and_ids
 
     def get_fasta_file_names(self):
         files_names = self.dirs.get_all_files(self.fasta_dir)
@@ -428,7 +418,7 @@ class dbUpload:
         dna_regions = list(set([self.runobj.samples[key].dna_region for key in self.runobj.samples]))
         self.my_conn.insert_bulk_data('dna_region', dna_regions)
         self.insert_rundate()
-        self.insert_project()
+        self.used_project_names = self.insert_project()
         for key, value in self.runobj.samples.items():
             self.insert_dataset(value)
         self.get_all_metadata_info()
@@ -506,6 +496,8 @@ class dbUpload:
         for v in set(all_vals):
             query_tmpl = list(all_templ)[0]
             self.my_conn.execute_no_fetch(query_tmpl % v)
+
+        return list(all_project_names)
 
     def insert_dataset(self, content_row):
         fields = "dataset, dataset_description"
