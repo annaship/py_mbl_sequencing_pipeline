@@ -288,6 +288,17 @@ class dbUpload:
 
         self.my_conn = MyConnection(host, db)
 
+    def reset_auto_increment(self):
+        auto_increment_queries = []
+        if self.db_marker == "vamps2":
+            auto_increment_queries = ["ALTER TABLE dataset AUTO_INCREMENT = 1;", "ALTER TABLE project AUTO_INCREMENT = 1;", "ALTER TABLE rdp_taxonomy_info_per_seq AUTO_INCREMENT = 1;", "ALTER TABLE run_info_ill AUTO_INCREMENT = 1;", "ALTER TABLE sequence_pdr_info AUTO_INCREMENT = 1;", "ALTER TABLE sequence_uniq_info AUTO_INCREMENT = 1;", "ALTER TABLE sequence AUTO_INCREMENT = 1;", "ALTER TABLE silva_taxonomy_info_per_seq AUTO_INCREMENT = 1;", "ALTER TABLE silva_taxonomy AUTO_INCREMENT = 1;"]
+
+        else:
+            auto_increment_queries = ["ALTER TABLE sequence_pdr_info_ill AUTO_INCREMENT = 1;", "ALTER TABLE sequence_uniq_info_ill AUTO_INCREMENT = 1;", "ALTER TABLE sequence_ill AUTO_INCREMENT = 1;", "ALTER TABLE run_info_ill AUTO_INCREMENT = 1;", "ALTER TABLE dataset AUTO_INCREMENT = 1;", "ALTER TABLE project AUTO_INCREMENT = 1;"]
+
+        for q in auto_increment_queries:
+            self.my_conn.execute_fetch_select(q)
+
     def convert_samples_to_dict(self):
         dd = defaultdict(dict)
         for k, v in self.runobj.samples.items():

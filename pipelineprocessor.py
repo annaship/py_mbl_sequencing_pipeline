@@ -477,7 +477,7 @@ def file_to_db_upload_main(runobj, full_upload):
     sequence_pdr_info_ill
     taxonomy
     sequence_uniq_info_ill
-
+    reset AUTO_INCREMENT
     """
     whole_start = time.time()
 
@@ -521,6 +521,7 @@ def file_to_db_upload_main(runobj, full_upload):
                                                                 full_upload)
         logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
+    my_file_to_db_upload.reset_auto_increment()
     seq_count_msg = my_file_to_db_upload.check_seq_upload()
 
     projects_and_ids = my_file_to_db_upload.get_projects_and_ids()
@@ -545,7 +546,8 @@ def file_to_db_upload_main(runobj, full_upload):
     logger.debug(ready_email_body)
 
     my_file_to_db_upload.all_errors.extend(my_file_to_db_upload.seq.seq_errors)
-    logger.debug('\n=====\nERRORS: \n' + ';\n'.join(my_file_to_db_upload.all_errors))
+    if len(my_file_to_db_upload.all_errors) > 0:
+        logger.debug('\n=====\nERRORS: \n' + ';\n'.join(my_file_to_db_upload.all_errors))
 
     logger.debug("total_time = %s" % total_time)
     whole_elapsed = (time.time() - whole_start)
