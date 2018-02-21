@@ -531,7 +531,8 @@ class dbUpload:
 
         if self.db_marker == "vamps2":
             missing_terms = ["env_biome_id", "env_feature_id", "env_material_id", "geo_loc_name_id"]
-            my_sql = "SELECT %s FROM %s WHERE %s = '%s' and ontology_id = 1;" % ("term_id", "term", "term_name", "unknown")
+            # and ontology_id = 1
+            my_sql = "SELECT %s FROM %s WHERE %s = '%s';" % ("term_id", "term", "term_name", "unknown")
             logger.debug("my_sql from get_all_metadata_info: %s" % my_sql)
             unknown_term_id = self.my_conn.execute_fetch_select(my_sql)
 
