@@ -3,6 +3,17 @@ py_mbl_sequencing_pipeline
 
 py_mbl_sequencing_pipeline
 
+Feb 21 2018
+Changes in Versions:
+Python 3.6.0
+vsearch v2.3.4_linux_x86_64, 125.8GB RAM, 12 cores
+Illumina-utils v2.2
+5.6.30-log MySQL Community Server (GPL)
+fastaunique Feb 10 2018
+mysqlimport  Ver 3.7 Distrib 5.6.12, for linux-glibc2.5 (x86_64)
+gast_ill  Feb  6 2018
+
+--
 May 16 2016
 Current pipeline version is 2.0.
 
@@ -20,15 +31,19 @@ clustergast_tophit Aug 11 2012
 clusterize_vamps Dec 2 13:43 
 gast_ill Aug 3 2015
 
+--
 Apr 1 2015
 vsearch
 
+--
 Feb 3 2015
 Illumina-utils v1.1
 
+--
 Jan 29 2014 
 usearch64
 
+--
 Jun 18 2013
 usearch 6.0.217/x86
 
