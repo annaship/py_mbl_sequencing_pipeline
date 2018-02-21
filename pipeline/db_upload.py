@@ -533,7 +533,7 @@ class dbUpload:
             missing_terms = ["env_biome_id", "env_feature_id", "env_material_id", "geo_loc_name_id"]
             # and ontology_id = 1
             my_sql = "SELECT %s FROM %s WHERE %s = '%s';" % ("term_id", "term", "term_name", "unknown")
-            logger.debug("my_sql from get_all_metadata_info: %s" % my_sql)
+            # logger.debug("my_sql from get_all_metadata_info: %s" % my_sql)
             unknown_term_id = self.my_conn.execute_fetch_select(my_sql)
 
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
@@ -586,12 +586,8 @@ class dbUpload:
                 metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene)
                 metadata_info['updated_at'] = self.runobj.configPath['general']['date']
                 for term_name in missing_terms:
-                    try:
-                        metadata_info[term_name] = unknown_term_id[0][0]
-                    except IndexError:
-                        logger.error("unknown_term_id = %s" % unknown_term_id)
-                        raise
-                    """IndexError: tuple index out of range"""
+                    metadata_info[term_name] = unknown_term_id[0][0]
+
             self.metadata_info_all[key] = metadata_info
 
     def get_env_sample_source(self, content_row):
