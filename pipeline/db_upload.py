@@ -584,8 +584,12 @@ class dbUpload:
                 metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene)
                 metadata_info['updated_at'] = self.runobj.configPath['general']['date']
                 for term_name in missing_terms:
-                    metadata_info[term_name] = unknown_term_id[0][0]
-
+                    try:
+                        metadata_info[term_name] = unknown_term_id[0][0]
+                    except IndexError:
+                        logger.error("unknown_term_id = %s" % unknown_term_id)
+                        raise
+                    """IndexError: tuple index out of range"""
             self.metadata_info_all[key] = metadata_info
 
     def get_env_sample_source(self, content_row):
