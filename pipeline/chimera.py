@@ -368,7 +368,8 @@ class Chimera:
         logger.debug("uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
         return uchime_cmd
 
-    # temp! take from util. change illumina-files to use util, too
+    # TODO: temp! take from util. change illumina-files to use util, too
+    #   create_job_array_script(self, command_line, dir_to_run, files_list, runobj)
     def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
         files_string         = " ".join(files_list)
         files_list_size         = len(files_list)
