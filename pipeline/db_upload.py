@@ -656,47 +656,6 @@ class dbUpload:
             my_sql1 += my_sql3
         self.my_conn.execute_no_fetch(my_sql1)
 
-    # def del_run_info_by_project_dataset(self, projects = "", datasets = "", primer_suite = ""):
-    #     my_sql = ''
-    #     my_sql1 = """DELETE FROM run_info_ill
-    #                 USING run_info_ill
-    #                 JOIN run USING(run_id)
-    #                 JOIN project using(project_id)
-    #                 JOIN primer_suite using(primer_suite_id)
-    #                 WHERE primer_suite = "%s"
-    #                 AND run = "%s"
-    #             """ % (primer_suite, self.rundate)
-    #     my_sql2 = " AND project in (" + projects + ")"
-    #     my_sql3 = " AND dataset in (" + datasets + ")"
-    #     if (projects == "") and (datasets == ""):
-    #         my_sql = my_sql1
-    #     elif (projects != "") and (datasets == ""):
-    #         my_sql = my_sql1 + my_sql2
-    #     elif (projects == "") and (datasets != ""):
-    #         my_sql = my_sql1 + my_sql3
-    #     elif (projects != "") and (datasets != ""):
-    #         my_sql = my_sql1 + my_sql2 + my_sql3
-    #     self.my_conn.execute_no_fetch(my_sql)
-
-    # def del_sequence_uniq_info(self):
-    #     my_sql = """DELETE FROM sequence_uniq_info_ill
-    #                 USING sequence_uniq_info_ill
-    #                 LEFT JOIN %s USING(%s_id)
-    #                 WHERE %s_id is NULL;""" % (
-    #     self.table_names["sequence_pdr_info_table_name"], self.table_names["sequence_table_name"],
-    #     self.table_names["sequence_pdr_info_table_name"])
-    #     self.my_conn.execute_no_fetch(my_sql)
-
-    # def del_sequences(self):
-    #     my_sql = """DELETE FROM %s
-    #                 USING %s
-    #                 LEFT JOIN %s USING(%s_id)
-    #                 WHERE %s_id IS NULL;
-    #             """ % (self.table_names["sequence_table_name"], self.table_names["sequence_table_name"],
-    #                    self.table_names["sequence_table_name"], self.table_names["sequence_pdr_info_table_name"],
-    #                    self.table_names["sequence_pdr_info_table_name"])
-    #     self.my_conn.execute_no_fetch(my_sql)
-
     def count_sequence_pdr_info(self):
         results = {}
         join_add = ""
@@ -1105,6 +1064,7 @@ class Seq:
     def prepare_pdr_info_values(self, run_info_ill_id, all_dataset_run_info_dict, db_name, current_db_host_name):
 
         all_insert_pdr_info_vals = []
+
         for fasta_id, seq in self.fasta_dict.items():
             if not run_info_ill_id:
                 err_msg = "ERROR: There is no run info yet, please check if it's uploaded to %s" % db_name
@@ -1128,6 +1088,10 @@ class Seq:
                     vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
 
                 all_insert_pdr_info_vals.append(vals)
+                fasta_id = ""
+                seq = ""
+                seq_count = 0
+                sequence_id = ""
             except Exception:
                 logger.error("FFF0 fasta_id %s" % fasta_id)
                 logger.error("SSS0 seq %s" % seq)
