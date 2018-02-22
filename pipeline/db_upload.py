@@ -331,8 +331,6 @@ class dbUpload:
             self.used_project_names = list(set([content_row.project for key, content_row in self.runobj.samples.items()]))
         where_part = " WHERE project in ('%s')" % ", ".join(self.used_project_names)
         res = self.my_conn.get_all_name_id("project", "", "", where_part)
-        projects, pr_ids = zip(*res)
-        pr_ids_str = (str(w) for w in pr_ids)
         try:
             projects, pr_ids = zip(*res)
             pr_ids_str = (str(w) for w in pr_ids)
