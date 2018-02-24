@@ -129,7 +129,7 @@ class IlluminaFiles:
         add_arg = " --marker-gene-stringent --retain-only-overlap --max-num-mismatches 0"
         command_line          = program_name + add_arg
         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-        script_file_name      = self.utils.create_job_array_script(command_line, self.dirs.analysis_dir, file_list, self.runobj)
+        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)
         return script_file_name
@@ -143,7 +143,7 @@ class IlluminaFiles:
         if any([s.lower().startswith("archaeal") for s in primer_suite]):
             add_arg += " --archaea"
         program_name = C.trim_primers_cmd + add_arg
-        script_file_name      = self.utils.create_job_array_script(program_name, self.dirs.reads_overlap_dir, merged_file_names, self.runobj)
+        script_file_name      = self.create_job_array_script(program_name, self.dirs.reads_overlap_dir, merged_file_names)
         script_file_name_full = os.path.join(self.dirs.reads_overlap_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.reads_overlap_dir)
         return script_file_name
@@ -178,7 +178,7 @@ class IlluminaFiles:
 #         TODO: this part is the same in perfect overlap - move into a method
         command_line          = program_name + " --enforce-Q30-check " + add_arg
         file_list             = self.dirs.get_all_files_by_ext(self.out_file_path, "ini")
-        script_file_name      = self.utils.create_job_array_script(command_line, self.dirs.analysis_dir, file_list, self.runobj)
+        script_file_name      = self.create_job_array_script(command_line, self.dirs.analysis_dir, file_list)
         script_file_name_full = os.path.join(self.dirs.analysis_dir, script_file_name)
         self.call_sh_script(script_file_name_full, self.dirs.analysis_dir)
         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.dirs.analysis_dir))
@@ -226,46 +226,46 @@ class IlluminaFiles:
         return username + "@mbl.edu"
 
 #     TODO: use from util
-#     def create_job_array_script(self, command_line, dir_to_run, files_list):
-#         files_string         = " ".join(files_list)
-#         files_list_size         = len(files_list)
-#         command_file_name = os.path.basename(command_line.split(" ")[0])
-#         script_file_name  = command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
-#         script_file_name_full = os.path.join(dir_to_run, script_file_name)
-#         log_file_name     = script_file_name + ".sge_script.sh.log"
-#         email_mbl         = self.make_users_email()
-#         text = (
-#                 '''#!/bin/bash
-# #$ -cwd
-# #$ -S /bin/bash
-# #$ -N %s
-# # Giving the name of the output log file
-# #$ -o %s
-# # Combining output/error messages into one file
-# #$ -j y
-# # Send mail to these users
-# #$ -M %s
-# # Send mail at job end (e); -m as sends abort, suspend.
-# #$ -m as
-# #$ -t 1-%s
-# # Now the script will iterate %s times.
-#
-#   file_list=(%s)
-#
-#   i=$(expr $SGE_TASK_ID - 1)
-# #   echo "i = $i"
-#   # . /etc/profile.d/modules.sh
-#   # . /xraid/bioware/bioware-loader.sh
-#   . /xraid/bioware/Modules/etc/profile.modules
-#   module load bioware
-#
-#   echo "%s ${file_list[$i]}"
-#   %s ${file_list[$i]}
-# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
-# # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
-#                 )
-#         self.open_write_close(script_file_name_full, text)
-#         return script_file_name
+    def create_job_array_script(self, command_line, dir_to_run, files_list):
+        files_string         = " ".join(files_list)
+        files_list_size         = len(files_list)
+        command_file_name = os.path.basename(command_line.split(" ")[0])
+        script_file_name  = command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        script_file_name_full = os.path.join(dir_to_run, script_file_name)
+        log_file_name     = script_file_name + ".sge_script.sh.log"
+        email_mbl         = self.make_users_email()
+        text = (
+                '''#!/bin/bash
+#$ -cwd
+#$ -S /bin/bash
+#$ -N %s
+# Giving the name of the output log file
+#$ -o %s
+# Combining output/error messages into one file
+#$ -j y
+# Send mail to these users
+#$ -M %s
+# Send mail at job end (e); -m as sends abort, suspend.
+#$ -m as
+#$ -t 1-%s
+# Now the script will iterate %s times.
+
+  file_list=(%s)
+
+  i=$(expr $SGE_TASK_ID - 1)
+#   echo "i = $i"
+  # . /etc/profile.d/modules.sh
+  # . /xraid/bioware/bioware-loader.sh
+  . /xraid/bioware/Modules/etc/profile.modules
+  module load bioware
+
+  echo "%s ${file_list[$i]}"
+  %s ${file_list[$i]}
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line, command_line)
+# ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
+                )
+        self.open_write_close(script_file_name_full, text)
+        return script_file_name
 
     def filter_mismatches_cluster(self, max_mismatch = 3):
         self.utils.print_both("Filter mismatches if more then %s" % (max_mismatch))
@@ -275,7 +275,7 @@ class IlluminaFiles:
         files_dir = self.dirs.reads_overlap_dir
 
         file_list             = self.dirs.get_all_files_by_ext(files_dir, "_MERGED")
-        script_file_name      = self.utils.create_job_array_script(command_line, files_dir, file_list, self.runobj)
+        script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
         script_file_name_full = os.path.join(files_dir, script_file_name)
         self.utils.call_sh_script(script_file_name_full, files_dir)
         self.utils.print_both("self.dirs.chmod_all(%s)" % (files_dir))
@@ -309,7 +309,7 @@ class IlluminaFiles:
         if len(file_list) == 0:
             file_list         = self.dirs.get_all_files_by_ext(files_dir, "MERGED_V6_PRIMERS_REMOVED")
 
-        script_file_name      = self.utils.create_job_array_script(command_line, files_dir, file_list, self.runobj)
+        script_file_name      = self.create_job_array_script(command_line, files_dir, file_list)
         script_file_name_full = os.path.join(files_dir, script_file_name)
         self.call_sh_script(script_file_name_full, files_dir)
         self.utils.print_both("self.dirs.chmod_all(%s)" % (files_dir))
