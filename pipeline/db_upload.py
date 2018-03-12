@@ -41,7 +41,7 @@ def make_sql_for_groups1(table_name, fields_str, unique_fields):
         %s t1 using(%s)
         WHERE 
         %s
-        """ % (table_name, fields_str, 'AND '.join(unique_1))
+        """ % (table_name, ', '.join(unique_fields), ' AND '.join(unique_1))
 
     # UNION ALL SELECT %s AS %s
 
@@ -826,7 +826,8 @@ class dbUpload:
         print(query_tmpl1)
 
         logger.debug("insert sequence_pdr_info:")
-        self.my_conn.run_groups(group_vals, query_tmpl1)
+        join_xpr = ' UNION ALL SELECT '
+        self.my_conn.run_groups(group_vals, query_tmpl1, join_xpr)
 
     def insert_sequence_uniq_info(self):
         if self.db_marker == "vamps2":
@@ -1081,18 +1082,19 @@ class Seq:
         all_seq = set([val_tmpl % (seq, seq_field) for seq in sequences])
         group_vals = self.utils.grouper(all_seq, 10)
         # group_vals = self.utils.grouper(all_seq, len(all_seq))
-        query_tmpl = make_sql_for_groups(self.table_names["sequence_table_name"],
-                                         self.table_names["sequence_field_name"])
+        # query_tmpl = make_sql_for_groups(self.table_names["sequence_table_name"],
+        #                                  self.table_names["sequence_field_name"])
         logger.debug("insert sequences:")
-        print("q2: insert_seq")
-        print(query_tmpl)
+
         unique_fields = ['sequence_comp']
         query_tmpl1 = make_sql_for_groups1(self.table_names["sequence_table_name"],
                                          self.table_names["sequence_field_name"], unique_fields)
         print("q2a: sequences")
         print(query_tmpl1)
         # self.my_conn.run_groups(group_vals, query_tmpl)
-        self.my_conn.run_groups(group_vals, query_tmpl1, ' UNION ALL SELECT ')
+        # self.my_conn.run_groups(group_vals, query_tmpl1, ' UNION ALL SELECT ')
+        join_xpr = ' UNION ALL SELECT '
+        self.my_conn.run_groups(group_vals, query_tmpl1, join_xpr)
 
     def get_seq_id_dict(self, sequences):
         # TODO: ONCE IN CLASS
@@ -1136,13 +1138,15 @@ class Seq:
                 if current_db_host_name == "vamps2":
                     try:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
-                        vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+                        # vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+                        vals = "%s AS dataset_id, %s AS sequence_id, %s AS seq_count, %s AS classifier_id" % (dataset_id, sequence_id, seq_count, C.classifier_id)
                     except KeyError:
                         logger.error("No such run info, please check a file name and the csv file")
                         logger.debug("From prepare_pdr_info_values, all_dataset_run_info_dict: %s" % all_dataset_run_info_dict)
 
                 elif current_db_host_name == "env454":
-                    vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
+                    # vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
+                    vals = "%s AS run_info_ill_id, %s AS sequence_id, %s AS seq_count" % (run_info_ill_id, sequence_id, seq_count)
 
                 all_insert_pdr_info_vals.append(vals)
                 fasta_id = ""
@@ -1165,7 +1169,8 @@ class Seq:
     def insert_sequence_uniq_info2(self):
         self.get_seq_id_w_silva_taxonomy_info_per_seq_id()
         fields = "sequence_id, silva_taxonomy_info_per_seq_id"
-        sequence_uniq_info_values = ["(%s,  %s)" % (i1, i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id]
+        # sequence_uniq_info_values = ["(%s,  %s)" % (i1, i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id]
+        sequence_uniq_info_values = ["%s AS sequence_id, %s AS get_seq_id_w_silva_taxonomy_info_per_seq_id" % (i1, i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id]
         query_tmpl = make_sql_for_groups("sequence_uniq_info", fields)
         group_vals = self.utils.grouper(sequence_uniq_info_values, len(sequence_uniq_info_values))
         logger.debug("insert sequence_uniq_info_ill:")
@@ -1175,7 +1180,9 @@ class Seq:
         query_tmpl1 = make_sql_for_groups1("sequence_uniq_info", fields, unique_fields)
         print("q3a: insert_sequence_uniq_info2")
         print(query_tmpl1)
-        self.my_conn.run_groups(group_vals, query_tmpl1)
+        join_xpr = ' UNION ALL SELECT '
+
+        self.my_conn.run_groups(group_vals, query_tmpl1, join_xpr)
 
     def insert_sequence_uniq_info_ill(self, gast_dict):
         all_insert_sequence_uniq_info_ill_vals = []
