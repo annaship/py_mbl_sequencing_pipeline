@@ -31,6 +31,44 @@ def make_sql_for_groups(table_name, fields_str):
     my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
     return my_sql_1 + " %s " + my_sql_2
 
+def make_sql_for_groups1(table_name, fields_str, unique_fields):
+    field_list = fields_str.split(",")
+    my_sql_1 = """INSERT IGNORE INTO %s (%s) SELECT i.* FROM """ % (table_name, fields_str)
+    unique_1 = ['t1.%s is null' % x for x in unique_fields]
+    my_sql_m1 = " (SELECT "
+    my_sql_m2 = """) i
+        LEFT JOIN
+        %s t1 using(%s)
+        WHERE 
+        %s
+        """ % (table_name, fields_str, 'AND '.join(unique_1))
+
+    # UNION ALL SELECT %s AS %s
+
+    my_sql_2 = " ON DUPLICATE KEY UPDATE "
+    for field_name in field_list[:-1]:
+        my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
+    my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
+    return my_sql_1 + my_sql_m1 + " %s " + my_sql_m2 + my_sql_2
+
+
+
+# def make_sql_for_groups1(table_name, fields_str, unique_fields):
+#     field_list = fields_str.split(",")
+#     my_sql_1 = """INSERT IGNORE INTO %s (%s) SELECT """ % (table_name, fields_str)
+#     # unique_1 = ['%s = %%s' % x for x in unique_fields]
+#     unique_2 = ['%s is null' % x for x in unique_fields]
+#     my_sql_m = """ FROM mutex LEFT OUTER JOIN %s
+#                     WHERE mutex.i = 1 and %s""" % (table_name, 'AND '.join(unique_2))
+#
+#     # my_sql_m = """ FROM mutex LEFT OUTER JOIN %s ON %s
+#     #                 WHERE mutex.i = 1 and %s""" % (table_name, 'AND '.join(unique_1), 'AND '.join(unique_2))
+#     my_sql_2 = " ON DUPLICATE KEY UPDATE "
+#     for field_name in field_list[:-1]:
+#         my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
+#     my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
+#     return my_sql_1 + " %s " + my_sql_m + my_sql_2
+
 
 class MyConnection:
     """
@@ -141,6 +179,9 @@ class MyConnection:
         for group in group_vals:
             val_part = join_xpr.join([key for key in group if key is not None])
             my_sql = query_tmpl % val_part
+            # if "mutex" in my_sql:
+            #     print("MMM my_sql = ")
+            #     print(my_sql)
             insert_info = self.execute_no_fetch(my_sql)
             logger.debug("insert info = %s" % insert_info)
 
@@ -777,9 +818,15 @@ class dbUpload:
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
         query_tmpl = make_sql_for_groups(table_name, fields)
+        print("q1: insert_pdr_info")
+        print(query_tmpl)
+        unique_fields = ['dataset_id','seq_count','sequence_id']
+        query_tmpl1 = make_sql_for_groups1(table_name, fields, unique_fields)
+        print("q1a: insert_pdr_info")
+        print(query_tmpl1)
 
         logger.debug("insert sequence_pdr_info:")
-        self.my_conn.run_groups(group_vals, query_tmpl)
+        self.my_conn.run_groups(group_vals, query_tmpl1)
 
     def insert_sequence_uniq_info(self):
         if self.db_marker == "vamps2":
@@ -1029,13 +1076,23 @@ class Seq:
         return sequences
 
     def insert_seq(self, sequences):
-        val_tmpl = "(COMPRESS('%s'))"
-        all_seq = set([val_tmpl % seq for seq in sequences])
-        group_vals = self.utils.grouper(all_seq, len(all_seq))
+        seq_field = self.table_names["sequence_field_name"]
+        val_tmpl = " COMPRESS('%s') AS %s "
+        all_seq = set([val_tmpl % (seq, seq_field) for seq in sequences])
+        group_vals = self.utils.grouper(all_seq, 10)
+        # group_vals = self.utils.grouper(all_seq, len(all_seq))
         query_tmpl = make_sql_for_groups(self.table_names["sequence_table_name"],
                                          self.table_names["sequence_field_name"])
         logger.debug("insert sequences:")
-        self.my_conn.run_groups(group_vals, query_tmpl)
+        print("q2: insert_seq")
+        print(query_tmpl)
+        unique_fields = ['sequence_comp']
+        query_tmpl1 = make_sql_for_groups1(self.table_names["sequence_table_name"],
+                                         self.table_names["sequence_field_name"], unique_fields)
+        print("q2a: sequences")
+        print(query_tmpl1)
+        # self.my_conn.run_groups(group_vals, query_tmpl)
+        self.my_conn.run_groups(group_vals, query_tmpl1, ' UNION ALL SELECT ')
 
     def get_seq_id_dict(self, sequences):
         # TODO: ONCE IN CLASS
@@ -1112,7 +1169,13 @@ class Seq:
         query_tmpl = make_sql_for_groups("sequence_uniq_info", fields)
         group_vals = self.utils.grouper(sequence_uniq_info_values, len(sequence_uniq_info_values))
         logger.debug("insert sequence_uniq_info_ill:")
-        self.my_conn.run_groups(group_vals, query_tmpl)
+        print("q3: insert_sequence_uniq_info2")
+        print(query_tmpl)
+        unique_fields = ['sequence_id']
+        query_tmpl1 = make_sql_for_groups1("sequence_uniq_info", fields, unique_fields)
+        print("q3a: insert_sequence_uniq_info2")
+        print(query_tmpl1)
+        self.my_conn.run_groups(group_vals, query_tmpl1)
 
     def insert_sequence_uniq_info_ill(self, gast_dict):
         all_insert_sequence_uniq_info_ill_vals = []
