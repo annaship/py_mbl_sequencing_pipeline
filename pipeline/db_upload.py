@@ -818,12 +818,12 @@ class dbUpload:
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
         query_tmpl = make_sql_for_groups(table_name, fields)
-        print("q1: insert_pdr_info")
-        print(query_tmpl)
+        # print("q1: insert_pdr_info")
+        # print(query_tmpl)
         unique_fields = ['dataset_id','seq_count','sequence_id']
         query_tmpl1 = make_sql_for_groups1(table_name, fields, unique_fields)
-        print("q1a: insert_pdr_info")
-        print(query_tmpl1)
+        # print("q1a: insert_pdr_info")
+        # print(query_tmpl1)
 
         logger.debug("insert sequence_pdr_info:")
         join_xpr = ' UNION ALL SELECT '
@@ -848,15 +848,22 @@ class dbUpload:
             refssu_count = 0
             # self.silva_taxonomy_info_per_seq_list = [[8559950L, 2436599, '0.03900', 0, 0, 83],...
             #         (taxonomy, gast_distance, rank, refssu_count, vote, minrank, taxa_counts, max_pcts, na_pcts, refhvr_ids) = self.gast_dict
-            vals = "(%s,  %s,  '%s',  '%s',  %s,  '%s')" % (
+            # vals = "(%s,  %s,  '%s',  '%s',  %s,  '%s')" % (
+            #     sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id)
+            vals = "%s AS sequence_id, %s AS silva_taxonomy_id, '%s' AS gast_distance, '%s' AS refssu_id, %s AS refssu_count, '%s' AS rank_id" % (
                 sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id)
             self.silva_taxonomy_info_per_seq_list.append(vals)
         fields = "sequence_id, silva_taxonomy_id, gast_distance, refssu_id, refssu_count, rank_id"
-        query_tmpl = make_sql_for_groups("silva_taxonomy_info_per_seq", fields)
+
+        unique_fields = ['sequence_id']
+        query_tmpl1 = make_sql_for_groups1("silva_taxonomy_info_per_seq", fields, unique_fields)
+
+        # query_tmpl = make_sql_for_groups("silva_taxonomy_info_per_seq", fields)
         group_vals = self.utils.grouper(self.silva_taxonomy_info_per_seq_list,
                                         len(self.silva_taxonomy_info_per_seq_list))
         logger.debug("insert silva_taxonomy_info_per_seq:")
-        self.my_conn.run_groups(group_vals, query_tmpl)
+        join_xpr = ' UNION ALL SELECT '
+        self.my_conn.run_groups(group_vals, query_tmpl1, join_xpr)
 
 
 class Taxonomy:
@@ -1080,8 +1087,8 @@ class Seq:
         seq_field = self.table_names["sequence_field_name"]
         val_tmpl = " COMPRESS('%s') AS %s "
         all_seq = set([val_tmpl % (seq, seq_field) for seq in sequences])
-        group_vals = self.utils.grouper(all_seq, 10)
-        # group_vals = self.utils.grouper(all_seq, len(all_seq))
+        # group_vals = self.utils.grouper(all_seq, 10)
+        group_vals = self.utils.grouper(all_seq, len(all_seq))
         # query_tmpl = make_sql_for_groups(self.table_names["sequence_table_name"],
         #                                  self.table_names["sequence_field_name"])
         logger.debug("insert sequences:")
@@ -1089,8 +1096,8 @@ class Seq:
         unique_fields = ['sequence_comp']
         query_tmpl1 = make_sql_for_groups1(self.table_names["sequence_table_name"],
                                          self.table_names["sequence_field_name"], unique_fields)
-        print("q2a: sequences")
-        print(query_tmpl1)
+        # print("q2a: sequences")
+        # print(query_tmpl1)
         # self.my_conn.run_groups(group_vals, query_tmpl)
         # self.my_conn.run_groups(group_vals, query_tmpl1, ' UNION ALL SELECT ')
         join_xpr = ' UNION ALL SELECT '
@@ -1174,12 +1181,12 @@ class Seq:
         query_tmpl = make_sql_for_groups("sequence_uniq_info", fields)
         group_vals = self.utils.grouper(sequence_uniq_info_values, len(sequence_uniq_info_values))
         logger.debug("insert sequence_uniq_info_ill:")
-        print("q3: insert_sequence_uniq_info2")
-        print(query_tmpl)
+        # print("q3: insert_sequence_uniq_info2")
+        # print(query_tmpl)
         unique_fields = ['sequence_id']
         query_tmpl1 = make_sql_for_groups1("sequence_uniq_info", fields, unique_fields)
-        print("q3a: insert_sequence_uniq_info2")
-        print(query_tmpl1)
+        # print("q3a: insert_sequence_uniq_info2")
+        # print(query_tmpl1)
         join_xpr = ' UNION ALL SELECT '
 
         self.my_conn.run_groups(group_vals, query_tmpl1, join_xpr)
