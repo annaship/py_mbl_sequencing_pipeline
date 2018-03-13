@@ -339,6 +339,8 @@ class PipelneUtils:
         
     def grouper(self, iterable, obj_len, fillvalue=None):
         n = 10 ** self.magnitude(obj_len)
+        if n > 1000:
+            n = 1000
         args = [iter(iterable)] * n
         return izip_longest(*args, fillvalue=fillvalue)        
 
