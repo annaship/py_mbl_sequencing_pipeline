@@ -179,9 +179,10 @@ class MyConnection:
         for group in group_vals:
             val_part = join_xpr.join([key for key in group if key is not None])
             my_sql = query_tmpl % val_part
-            # if "mutex" in my_sql:
-            #     print("MMM my_sql = ")
-            #     print(my_sql)
+            # if "sequence_uniq_info_ill" in my_sql:
+                # print("MMM my_sql = ")
+                # print(my_sql)
+                # logger.debug("MMM my_sql = %s" % my_sql)
             insert_info = self.execute_no_fetch(my_sql)
             logger.debug("insert info = %s" % insert_info)
 
@@ -817,10 +818,12 @@ class dbUpload:
         elif self.db_marker == "env454":
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
-        query_tmpl = make_sql_for_groups(table_name, fields)
+        # query_tmpl = make_sql_for_groups(table_name, fields)
         # print("q1: insert_pdr_info")
         # print(query_tmpl)
         unique_fields = ['dataset_id','seq_count','sequence_id']
+        if self.db_marker == "env454":
+            unique_fields = ['run_info_ill_id', 'sequence_ill_id']
         query_tmpl1 = make_sql_for_groups1(table_name, fields, unique_fields)
         # print("q1a: insert_pdr_info")
         # print(query_tmpl1)
@@ -1142,18 +1145,20 @@ class Seq:
 
                 seq_count = int(fasta_id.split('|')[-1].split(':')[-1])
                 vals = ""
+                sequence_id_field = self.table_names["sequence_table_name"] + "_id"
+
                 if current_db_host_name == "vamps2":
                     try:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
                         # vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
-                        vals = "%s AS dataset_id, %s AS sequence_id, %s AS seq_count, %s AS classifier_id" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+                        vals = "%s AS dataset_id, %s AS %s, %s AS seq_count, %s AS classifier_id" % (dataset_id, sequence_id, sequence_id_field, seq_count, C.classifier_id)
                     except KeyError:
                         logger.error("No such run info, please check a file name and the csv file")
                         logger.debug("From prepare_pdr_info_values, all_dataset_run_info_dict: %s" % all_dataset_run_info_dict)
 
                 elif current_db_host_name == "env454":
                     # vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
-                    vals = "%s AS run_info_ill_id, %s AS sequence_id, %s AS seq_count" % (run_info_ill_id, sequence_id, seq_count)
+                    vals = "%s AS run_info_ill_id, %s AS %s, %s AS seq_count" % (run_info_ill_id, sequence_id, sequence_id_field, seq_count)
 
                 all_insert_pdr_info_vals.append(vals)
                 fasta_id = ""
