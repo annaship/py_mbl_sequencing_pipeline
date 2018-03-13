@@ -31,6 +31,7 @@ def make_sql_for_groups(table_name, fields_str):
     my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
     return my_sql_1 + " %s " + my_sql_2
 
+
 def make_sql_for_groups1(table_name, fields_str, unique_fields):
     field_list = fields_str.split(",")
     my_sql_1 = """INSERT IGNORE INTO %s (%s) SELECT i.* FROM """ % (table_name, fields_str)
@@ -50,24 +51,6 @@ def make_sql_for_groups1(table_name, fields_str, unique_fields):
         my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
     my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
     return my_sql_1 + my_sql_m1 + " %s " + my_sql_m2 + my_sql_2
-
-
-
-# def make_sql_for_groups1(table_name, fields_str, unique_fields):
-#     field_list = fields_str.split(",")
-#     my_sql_1 = """INSERT IGNORE INTO %s (%s) SELECT """ % (table_name, fields_str)
-#     # unique_1 = ['%s = %%s' % x for x in unique_fields]
-#     unique_2 = ['%s is null' % x for x in unique_fields]
-#     my_sql_m = """ FROM mutex LEFT OUTER JOIN %s
-#                     WHERE mutex.i = 1 and %s""" % (table_name, 'AND '.join(unique_2))
-#
-#     # my_sql_m = """ FROM mutex LEFT OUTER JOIN %s ON %s
-#     #                 WHERE mutex.i = 1 and %s""" % (table_name, 'AND '.join(unique_1), 'AND '.join(unique_2))
-#     my_sql_2 = " ON DUPLICATE KEY UPDATE "
-#     for field_name in field_list[:-1]:
-#         my_sql_2 = my_sql_2 + " %s = VALUES(%s), " % (field_name.strip(), field_name.strip())
-#     my_sql_2 = my_sql_2 + "  %s = VALUES(%s);" % (field_list[-1].strip(), field_list[-1].strip())
-#     return my_sql_1 + " %s " + my_sql_m + my_sql_2
 
 
 class MyConnection:
