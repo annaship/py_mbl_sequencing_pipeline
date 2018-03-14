@@ -797,14 +797,14 @@ class dbUpload:
         sequence_table_name = self.table_names["sequence_table_name"]
         fields = ""
         if self.db_marker == "vamps2":
-            fields = "dataset_id, %s_id, seq_count, classifier_id" % sequence_table_name
+            fields = "dataset_id, run_info_ill_id, %s_id, seq_count, classifier_id" % sequence_table_name
         elif self.db_marker == "env454":
             fields = "run_info_ill_id, %s_id, seq_count" % sequence_table_name
         table_name = self.table_names["sequence_pdr_info_table_name"]
         # query_tmpl = make_sql_for_groups(table_name, fields)
         # print("q1: insert_pdr_info")
         # print(query_tmpl)
-        unique_fields = ['dataset_id','seq_count','sequence_id']
+        unique_fields = ['dataset_id', 'run_info_ill_id','seq_count','sequence_id']
         if self.db_marker == "env454":
             unique_fields = ['run_info_ill_id', 'sequence_ill_id']
         query_tmpl1 = make_sql_for_groups1(table_name, fields, unique_fields)
@@ -1134,7 +1134,7 @@ class Seq:
                     try:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
                         # vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
-                        vals = "%s AS dataset_id, %s AS %s, %s AS seq_count, %s AS classifier_id" % (dataset_id, sequence_id, sequence_id_field, seq_count, C.classifier_id)
+                        vals = "%s AS dataset_id, %s AS run_info_ill_id, %s AS %s, %s AS seq_count, %s AS classifier_id" % (dataset_id, run_info_ill_id, sequence_id, sequence_id_field, seq_count, C.classifier_id)
                     except KeyError:
                         logger.error("No such run info, please check a file name and the csv file")
                         logger.debug("From prepare_pdr_info_values, all_dataset_run_info_dict: %s" % all_dataset_run_info_dict)
