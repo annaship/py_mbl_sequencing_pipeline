@@ -356,12 +356,14 @@ class Chimera:
         logger.debug("db_cmd_append FROM create_chimera_cmd = %s" % (db_cmd_append))
 
         uchime_cmd += " -uchimeout " + output_file_name
-        """if we need nonchimeric for denovo and db separate we might create them here
-#         uchime_cmd += " -nonchimeras "
-#         uchime_cmd += (output_file_name + self.nonchimeric_suffix)
-"""
+
+        """if we need nonchimeric for denovo and db separate we might create them here"""
+        uchime_cmd += " -nonchimeras "
+        uchime_cmd += (output_file_name + self.nonchimeric_suffix)
+
         uchime_cmd += " -chimeras " + (output_file_name + self.chimeric_suffix)
         uchime_cmd += dir_cmd_append
+
         uchime_cmd += " -notrunclabels"
 
 
