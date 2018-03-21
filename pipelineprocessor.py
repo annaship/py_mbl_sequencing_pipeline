@@ -522,7 +522,7 @@ def file_to_db_upload_main(runobj, full_upload):
         logger.debug("file_to_db_upload_all_but_seq() took %s sec to finish" % (time.time() - start_c))
 
     # doesn't work with mysql 5.6', not needed with no gap auto_increment
-    # my_file_to_db_upload.reset_auto_increment()
+    my_file_to_db_upload.reset_auto_increment()
     seq_count_msg = my_file_to_db_upload.check_seq_upload()
 
     projects_and_ids = my_file_to_db_upload.get_projects_and_ids()
