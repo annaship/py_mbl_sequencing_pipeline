@@ -1143,12 +1143,17 @@ class Seq:
                 elif current_db_host_name == "env454":
                     # vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
                     vals = "%s AS run_info_ill_id, %s AS %s, %s AS seq_count" % (run_info_ill_id, sequence_id, sequence_id_field, seq_count)
+                if dataset_id == 238927 and sequence_id == 1802:
+                    logger.debug(
+                        "DDD11 dataset_id 238927, sequence_id == 1802, seq_count = %s" % (seq_count))
 
                 all_insert_pdr_info_vals.append(vals)
                 fasta_id = ""
                 seq = ""
                 seq_count = 0
                 sequence_id = ""
+
+
             except Exception:
                 logger.error("FFF0 fasta_id %s" % fasta_id)
                 logger.error("SSS0 seq %s" % seq)

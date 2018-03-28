@@ -447,7 +447,7 @@ class PipelneUtils:
 
     def is_local(self):
         logger.debug(os.uname()[1])
-        dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local", "Annas-MacBook.local"]
+        dev_comps = ['ashipunova.mbl.edu', "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local", "Annas-MacBook.local", "Anna’s MacBook Pro", "annasmacbooknew.mbl.edu mblad.mbl.edu printers.mbl.edu jbpc.mbl.edu jbpc-np.mbl.edu"]
         if os.uname()[1] in dev_comps:
             return True
         else:
