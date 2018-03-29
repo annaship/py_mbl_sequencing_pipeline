@@ -295,6 +295,7 @@ class dbUpload:
             self.put_run_info()
             self.put_required_metadata()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
+        self.used_project_datasets = self.get_used_project_datasets()
 
     def get_conn(self):
 
@@ -405,6 +406,11 @@ class dbUpload:
     def get_dataset_per_run_info_id(self):
         all_dataset_run_info_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
         res = self.my_conn.execute_fetch_select(all_dataset_run_info_sql)
+        return dict([(r, d) for r, d in res])
+
+    def get_pdr_inf(self):
+        pdr_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
+        res = self.my_conn.execute_fetch_select(pdr_sql)
         return dict([(r, d) for r, d in res])
 
     def get_id(self, table_name, value, and_part = ""):
@@ -538,6 +544,22 @@ class dbUpload:
             self.my_conn.execute_no_fetch(query_tmpl % v)
 
         return list(all_project_names)
+
+    def get_used_project_datasets(self):
+        used_project_datasets = defaultdict(list)
+        for key, content_row in self.runobj.samples.items():
+            if self.db_marker == "vamps2":
+                project_id = self.get_id('project', content_row.project)
+                my_sql = """SELECT %s FROM %s WHERE %s = '%s' and %s = '%s';""" % (
+                    'dataset_id', 'dataset', 'dataset', content_row.dataset, 'project_id', project_id
+                    )
+                res = self.my_conn.execute_fetch_select(my_sql)
+                # dataset_id = \
+                #
+                #     self.get_id('dataset', content_row.dataset)
+                dataset_id = res[0][0]
+                used_project_datasets[project_id].append(dataset_id)
+        return used_project_datasets
 
     def insert_dataset(self, content_row):
         fields = "dataset, dataset_description"
@@ -1134,6 +1156,9 @@ class Seq:
                 if current_db_host_name == "vamps2":
                     try:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
+                        # if (dataset_id == 8833 and run_info_ill_id == 241 and sequence_id == 1333):
+                        # if sequence_id in self.seq_id_dict.values() and run_info_ill_id in run_info_ill_ids and dataset_id
+
                         # vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
                         vals = "%s AS dataset_id, %s AS run_info_ill_id, %s AS %s, %s AS seq_count, %s AS classifier_id" % (dataset_id, run_info_ill_id, sequence_id, sequence_id_field, seq_count, C.classifier_id)
                     except KeyError:
@@ -1143,9 +1168,6 @@ class Seq:
                 elif current_db_host_name == "env454":
                     # vals = "(%s, %s, %s)" % (run_info_ill_id, sequence_id, seq_count)
                     vals = "%s AS run_info_ill_id, %s AS %s, %s AS seq_count" % (run_info_ill_id, sequence_id, sequence_id_field, seq_count)
-                if dataset_id == 238927 and sequence_id == 1802:
-                    logger.debug(
-                        "DDD11 dataset_id 238927, sequence_id == 1802, seq_count = %s" % (seq_count))
 
                 all_insert_pdr_info_vals.append(vals)
                 fasta_id = ""
