@@ -262,8 +262,11 @@ class dbUpload:
         except Exception:
             raise
 
+        self.used_project_datasets = self.get_used_project_datasets()
+        self.pdr_info = self.get_pdr_info()
+
         self.taxonomy = Taxonomy(self.my_conn)
-        self.seq = Seq(self.taxonomy, self.table_names, self.fasta_dir)
+        self.seq = Seq(self.taxonomy, self.table_names, self.fasta_dir, self.pdr_info)
 
         self.gast_dict = {}
         self.silva_taxonomy_info_per_seq_list = []
@@ -295,7 +298,7 @@ class dbUpload:
             self.put_run_info()
             self.put_required_metadata()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
-        self.used_project_datasets = self.get_used_project_datasets()
+
 
     def get_conn(self):
 
@@ -408,10 +411,14 @@ class dbUpload:
         res = self.my_conn.execute_fetch_select(all_dataset_run_info_sql)
         return dict([(r, d) for r, d in res])
 
-    def get_pdr_inf(self):
-        pdr_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
+    def get_pdr_info(self):
+        used_dats = []
+        for l in self.used_project_datasets.values():
+            used_dats += l
+        used_dats_str = "', '".join(str(x) for x in used_dats)
+        pdr_sql = """SELECT dataset_id, sequence_id, run_info_ill_id FROM sequence_pdr_info WHERE dataset_id in ('%s') """ % (used_dats_str)
         res = self.my_conn.execute_fetch_select(pdr_sql)
-        return dict([(r, d) for r, d in res])
+        return res
 
     def get_id(self, table_name, value, and_part = ""):
         id_name = table_name + '_id'
@@ -1065,7 +1072,7 @@ class Taxonomy:
 
 
 class Seq:
-    def __init__(self, taxonomy, table_names, fasta_dir):
+    def __init__(self, taxonomy, table_names, fasta_dir, pdr_info):
 
         self.utils = PipelneUtils()
         self.taxonomy = taxonomy
@@ -1079,6 +1086,7 @@ class Seq:
         self.sequences = ""
 
         self.seq_errors = []
+        self.pdr_info = pdr_info
 
     def prepare_fasta_dict(self, filename):
         read_fasta = fastalib.ReadFasta(filename)
@@ -1156,10 +1164,9 @@ class Seq:
                 if current_db_host_name == "vamps2":
                     try:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
-                        # if (dataset_id == 8833 and run_info_ill_id == 241 and sequence_id == 1333):
-                        # if sequence_id in self.seq_id_dict.values() and run_info_ill_id in run_info_ill_ids and dataset_id
-
-                        # vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
+                        # t = (dataset_id, sequence_id, run_info_ill_id)
+                        # if t in self.pdr_info:
+                        #     continue
                         vals = "%s AS dataset_id, %s AS run_info_ill_id, %s AS %s, %s AS seq_count, %s AS classifier_id" % (dataset_id, run_info_ill_id, sequence_id, sequence_id_field, seq_count, C.classifier_id)
                     except KeyError:
                         logger.error("No such run info, please check a file name and the csv file")
