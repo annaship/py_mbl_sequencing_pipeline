@@ -690,7 +690,7 @@ class dbUpload:
 
         if self.db_marker == "vamps2":
             join_add = """ JOIN dataset using(dataset_id)
-                       JOIN run_info_ill USING(dataset_id) """
+                       JOIN run_info_ill USING(run_info_ill_id, dataset_id) """
         elif self.db_marker == "env454":
             join_add = """ JOIN run_info_ill USING(run_info_ill_id) """
 
