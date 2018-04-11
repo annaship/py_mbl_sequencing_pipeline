@@ -1016,7 +1016,8 @@ class Taxonomy:
     def get_silva_taxonomy_ids(self):
         self.make_silva_taxonomy_rank_list_w_ids_dict()
 
-        sql_part = ""
+        # sql_part = ""
+        # start2 = time.time()
         sql_part_list = ["%s" % self.make_rank_name_id_t_id_str(rank_w_id_list) for rank_w_id_list in
                          self.silva_taxonomy_rank_list_w_ids_dict.values()]
         sql_inner_part = "  UNION ALL  "
@@ -1026,27 +1027,20 @@ class Taxonomy:
         id_name = "silva_taxonomy_id"
         # where_part = "WHERE " + sql_part
         # silva_taxonomy_ids = self.my_conn.get_all_name_id(table_name, "", field_names, where_part)
+        # elapsed2 = (time.time() - start2)
+        # print("QQQ2 sql_part2 time: %s s" % elapsed2)
 
-        start2 = time.time()
-        my_sql_parts1 = ["""(SELECT %s, %s FROM %s WHERE %s)""" % (field_names, id_name, table_name, "".join(l)) for l in sql_part_list ]
-        elapsed2 = (time.time() - start2)
-        print("QQQ2 sql_part2 time: %s s" % elapsed2)
-
-        start2a = time.time()
         my_sql_parts = []
         for l in sql_part_list:
             where_part = "".join(l)
             my_sql_part = """(SELECT %s, %s FROM %s WHERE %s)""" % (field_names, id_name, table_name, where_part)
             my_sql_parts.append(my_sql_part)
-        elapsed2a = (time.time() - start2a)
-        print("QQQ2a sql_part2 time: %s s" % elapsed2a)
-
         #         self.utils.print_both(("my_sql from get_all_name_id = %s") % my_sql)
         my_sql = sql_inner_part.join(my_sql_parts)
         silva_taxonomy_ids = self.my_conn.execute_fetch_select(my_sql)
-
-        elapsed4 = (time.time() - start2)
-        print("QQQ2 sql_part4 time: %s s" % elapsed4)
+        #
+        # elapsed4 = (time.time() - start2)
+        # print("QQQ2 sql_part4 time: %s s" % elapsed4)
 
         """
         ((2436595L, 2L, 2016066L, 2085666L, 2252460L, 2293035L, 2303053L, 1L, 2148217L), ...
