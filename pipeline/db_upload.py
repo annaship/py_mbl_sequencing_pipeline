@@ -162,13 +162,11 @@ class MyConnection:
         for group in group_vals:
             val_part = join_xpr.join([key for key in group if key is not None])
             my_sql = query_tmpl % val_part
-            # if fetch == True:
-            #     return self.execute_fetch_select(my_sql)
-            # if "SELECT sequence_id, silva_taxonomy_info_per_seq_id" in my_sql:
-            #     print("MMM my_sql = ")
-            #     print(my_sql)
-            #     logger.debug("MMM my_sql = %s" % my_sql)
-            result = self.execute_no_fetch(my_sql)
+            # if "sequence_uniq_info_ill" in my_sql:
+                # print("MMM my_sql = ")
+                # print(my_sql)
+                # logger.debug("MMM my_sql = %s" % my_sql)
+            insert_info = self.execute_no_fetch(my_sql)
             # logger.debug("insert info = %s" % insert_info)
 
     # def make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
@@ -264,11 +262,8 @@ class dbUpload:
         except Exception:
             raise
 
-        self.used_project_datasets = self.get_used_project_datasets()
-        self.pdr_info = self.get_pdr_info()
-
         self.taxonomy = Taxonomy(self.my_conn)
-        self.seq = Seq(self.taxonomy, self.table_names, self.fasta_dir, self.pdr_info)
+        self.seq = Seq(self.taxonomy, self.table_names, self.fasta_dir)
 
         self.gast_dict = {}
         self.silva_taxonomy_info_per_seq_list = []
@@ -300,7 +295,6 @@ class dbUpload:
             self.put_run_info()
             self.put_required_metadata()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
-
 
     def get_conn(self):
 
@@ -412,15 +406,6 @@ class dbUpload:
         all_dataset_run_info_sql = "SELECT run_info_ill_id, dataset_id FROM run_info_ill"
         res = self.my_conn.execute_fetch_select(all_dataset_run_info_sql)
         return dict([(r, d) for r, d in res])
-
-    def get_pdr_info(self):
-        used_dats = []
-        for l in self.used_project_datasets.values():
-            used_dats += l
-        used_dats_str = "', '".join(str(x) for x in used_dats)
-        pdr_sql = """SELECT dataset_id, sequence_id, run_info_ill_id FROM sequence_pdr_info WHERE dataset_id in ('%s') """ % (used_dats_str)
-        res = self.my_conn.execute_fetch_select(pdr_sql)
-        return res
 
     def get_id(self, table_name, value, and_part = ""):
         id_name = table_name + '_id'
@@ -553,22 +538,6 @@ class dbUpload:
             self.my_conn.execute_no_fetch(query_tmpl % v)
 
         return list(all_project_names)
-
-    def get_used_project_datasets(self):
-        used_project_datasets = defaultdict(list)
-        for key, content_row in self.runobj.samples.items():
-            if self.db_marker == "vamps2":
-                project_id = self.get_id('project', content_row.project)
-                my_sql = """SELECT %s FROM %s WHERE %s = '%s' and %s = '%s';""" % (
-                    'dataset_id', 'dataset', 'dataset', content_row.dataset, 'project_id', project_id
-                    )
-                res = self.my_conn.execute_fetch_select(my_sql)
-                # dataset_id = \
-                #
-                #     self.get_id('dataset', content_row.dataset)
-                dataset_id = res[0][0]
-                used_project_datasets[project_id].append(dataset_id)
-        return used_project_datasets
 
     def insert_dataset(self, content_row):
         fields = "dataset, dataset_description"
@@ -1074,7 +1043,7 @@ class Taxonomy:
 
 
 class Seq:
-    def __init__(self, taxonomy, table_names, fasta_dir, pdr_info):
+    def __init__(self, taxonomy, table_names, fasta_dir):
 
         self.utils = PipelneUtils()
         self.taxonomy = taxonomy
@@ -1088,7 +1057,6 @@ class Seq:
         self.sequences = ""
 
         self.seq_errors = []
-        self.pdr_info = pdr_info
 
     def prepare_fasta_dict(self, filename):
         read_fasta = fastalib.ReadFasta(filename)
@@ -1166,9 +1134,7 @@ class Seq:
                 if current_db_host_name == "vamps2":
                     try:
                         dataset_id = all_dataset_run_info_dict[run_info_ill_id]
-                        # t = (dataset_id, sequence_id, run_info_ill_id)
-                        # if t in self.pdr_info:
-                        #     continue
+                        # vals = "(%s, %s, %s, %s)" % (dataset_id, sequence_id, seq_count, C.classifier_id)
                         vals = "%s AS dataset_id, %s AS run_info_ill_id, %s AS %s, %s AS seq_count, %s AS classifier_id" % (dataset_id, run_info_ill_id, sequence_id, sequence_id_field, seq_count, C.classifier_id)
                     except KeyError:
                         logger.error("No such run info, please check a file name and the csv file")
@@ -1183,8 +1149,6 @@ class Seq:
                 seq = ""
                 seq_count = 0
                 sequence_id = ""
-
-
             except Exception:
                 logger.error("FFF0 fasta_id %s" % fasta_id)
                 logger.error("SSS0 seq %s" % seq)
@@ -1203,6 +1167,7 @@ class Seq:
             val_part = ", ".join([key for key in group if key is not None])
             my_sql = query_tmpl % val_part
             self.seq_id_w_silva_taxonomy_info_per_seq_id.extend(self.my_conn.execute_fetch_select(my_sql))
+
 
     def insert_sequence_uniq_info2(self):
         self.get_seq_id_w_silva_taxonomy_info_per_seq_id()
@@ -1243,3 +1208,4 @@ class Seq:
 
         logger.debug("insert sequence_uniq_info_ill:")
         self.my_conn.run_groups(group_vals, query_tmpl)
+        
