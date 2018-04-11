@@ -1192,38 +1192,17 @@ class Seq:
         return all_insert_pdr_info_vals
 
     def get_seq_id_w_silva_taxonomy_info_per_seq_id(self):
+        logger.debug("get_seq_id_w_silva_taxonomy_info_per_seq_id:")
         sequence_ids_strs = [str(i) for i in self.seq_id_dict.values()]
         field_names = "sequence_id, silva_taxonomy_info_per_seq_id"
         where_part = 'WHERE sequence_id in (%s)'
         query_tmpl = """SELECT %s FROM %s %s""" % (field_names, "silva_taxonomy_info_per_seq", where_part)
-
         group_vals = self.utils.grouper(sequence_ids_strs,
                                         len(sequence_ids_strs))
-        logger.debug("insert silva_taxonomy_info_per_seq:")
-
         for group in group_vals:
             val_part = ", ".join([key for key in group if key is not None])
             my_sql = query_tmpl % val_part
-            # if "SELECT sequence_id, silva_taxonomy_info_per_seq_id" in my_sql:
-            #     print("MMM my_sql = ")
-            #     print(my_sql)
-            #     logger.debug("MMM my_sql = %s" % my_sql)
-            # if fetch == True:
             self.seq_id_w_silva_taxonomy_info_per_seq_id.extend(self.my_conn.execute_fetch_select(my_sql))
-        # if fetch == True:
-        #     return self.execute_fetch_select(my_sql)
-        # if "SELECT sequence_id, silva_taxonomy_info_per_seq_id" in my_sql:
-        #     print("MMM my_sql = ")
-        #     print(my_sql)
-        #     logger.debug("MMM my_sql = %s" % my_sql)
-
-
-        # self.seq_id_w_silva_taxonomy_info_per_seq_id = self.my_conn.run_groups(group_vals, query_tmpl)
-
-
-        # self.seq_id_w_silva_taxonomy_info_per_seq_id = self.my_conn.get_all_name_id("silva_taxonomy_info_per_seq",
-        #                                                                             "silva_taxonomy_info_per_seq_id",
-        #                                                                             "sequence_id", where_part)
 
     def insert_sequence_uniq_info2(self):
         self.get_seq_id_w_silva_taxonomy_info_per_seq_id()
