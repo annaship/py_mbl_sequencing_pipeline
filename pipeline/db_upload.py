@@ -162,11 +162,13 @@ class MyConnection:
         for group in group_vals:
             val_part = join_xpr.join([key for key in group if key is not None])
             my_sql = query_tmpl % val_part
-            if "SELECT sequence_id, silva_taxonomy_info_per_seq_id" in my_sql:
-                print("MMM my_sql = ")
-                print(my_sql)
-                logger.debug("MMM my_sql = %s" % my_sql)
-            insert_info = self.execute_no_fetch(my_sql)
+            # if fetch == True:
+            #     return self.execute_fetch_select(my_sql)
+            # if "SELECT sequence_id, silva_taxonomy_info_per_seq_id" in my_sql:
+            #     print("MMM my_sql = ")
+            #     print(my_sql)
+            #     logger.debug("MMM my_sql = %s" % my_sql)
+            result = self.execute_no_fetch(my_sql)
             # logger.debug("insert info = %s" % insert_info)
 
     # def make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
@@ -1198,7 +1200,25 @@ class Seq:
         group_vals = self.utils.grouper(sequence_ids_strs,
                                         len(sequence_ids_strs))
         logger.debug("insert silva_taxonomy_info_per_seq:")
-        self.my_conn.run_groups(group_vals, query_tmpl)
+
+        for group in group_vals:
+            val_part = ", ".join([key for key in group if key is not None])
+            my_sql = query_tmpl % val_part
+            # if "SELECT sequence_id, silva_taxonomy_info_per_seq_id" in my_sql:
+            #     print("MMM my_sql = ")
+            #     print(my_sql)
+            #     logger.debug("MMM my_sql = %s" % my_sql)
+            # if fetch == True:
+            self.seq_id_w_silva_taxonomy_info_per_seq_id.extend(self.my_conn.execute_fetch_select(my_sql))
+        # if fetch == True:
+        #     return self.execute_fetch_select(my_sql)
+        # if "SELECT sequence_id, silva_taxonomy_info_per_seq_id" in my_sql:
+        #     print("MMM my_sql = ")
+        #     print(my_sql)
+        #     logger.debug("MMM my_sql = %s" % my_sql)
+
+
+        # self.seq_id_w_silva_taxonomy_info_per_seq_id = self.my_conn.run_groups(group_vals, query_tmpl)
 
 
         # self.seq_id_w_silva_taxonomy_info_per_seq_id = self.my_conn.get_all_name_id("silva_taxonomy_info_per_seq",
