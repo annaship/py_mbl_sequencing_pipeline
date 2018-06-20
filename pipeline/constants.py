@@ -413,9 +413,9 @@ chimera_checking_its_refdb   = '/groups/g454/blastdbs/fungalITS.fa'
 chimera_checking_abskew      = '1.9'
 
 ########### VAMPS UPLOAD ###########################################################################
-ranks = ('domain','phylum','class','orderx','family','genus','species','strain')
-domains = ('Archaea','Bacteria','Eukarya','Organelle','Unknown')
-domain_adj = ('Archaeal','Bacterial','Eukaryal','Organelle','Unknown') #Fungal
+ranks = ('domain', 'phylum', 'class', 'orderx', 'family', 'genus', 'species', 'strain')
+domains = ('Archaea', 'Bacteria', 'Eukarya', 'Organelle', 'Unknown')
+domain_adj = ('Archaeal', 'Bacterial', 'Eukaryal', 'Organelle', 'Unknown') #Fungal
 
 database_tables = {
 'vamps_user_uploads': {

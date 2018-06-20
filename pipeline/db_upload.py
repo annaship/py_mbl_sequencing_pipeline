@@ -410,6 +410,8 @@ class dbUpload:
     def get_id(self, table_name, value, and_part = ""):
         id_name = table_name + '_id'
         my_sql = """SELECT %s FROM %s WHERE %s = '%s' %s;""" % (id_name, table_name, table_name, value, and_part)
+        print("MMMMY my_sql")
+        print(my_sql)
         res = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])
@@ -566,6 +568,8 @@ class dbUpload:
             unknown_term_id = self.my_conn.execute_fetch_select(my_sql)
 
         domain_by_adj = dict(zip(C.domain_adj, C.domains))
+        domain_by_adj['Fungal'] = 'Eukarya'
+        # ,  'Fungal'
         for key, d_val in self.samples_dict.items():
             metadata_info = {k: v for k, v in d_val.items()}
 
@@ -610,7 +614,7 @@ class dbUpload:
                     platform = 'Illumina'
                 metadata_info['sequencing_platform_id'] = self.get_id('sequencing_platform', platform)
                 target_gene = '16s'
-                if content_row.taxonomic_domain.lower().startswith(("euk", "its")):
+                if content_row.taxonomic_domain.lower().startswith(("euk", "its", "fung")):
                     target_gene = '18s'
                 metadata_info['target_gene_id'] = self.get_id('target_gene', target_gene)
                 metadata_info['updated_at'] = self.runobj.configPath['general']['date']
