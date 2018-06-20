@@ -410,8 +410,6 @@ class dbUpload:
     def get_id(self, table_name, value, and_part = ""):
         id_name = table_name + '_id'
         my_sql = """SELECT %s FROM %s WHERE %s = '%s' %s;""" % (id_name, table_name, table_name, value, and_part)
-        print("MMMMY my_sql")
-        print(my_sql)
         res = self.my_conn.execute_fetch_select(my_sql)
         if res:
             return int(res[0][0])
