@@ -247,8 +247,6 @@ class IlluminaFiles:
 #$ -M %s
 # Send mail at job end (e); -m as sends abort, suspend.
 #$ -m as
-# max_running_tasks (works on cricket Jul 2018)
-#$ -tc 15
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
