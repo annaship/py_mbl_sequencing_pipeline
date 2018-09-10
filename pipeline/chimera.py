@@ -408,6 +408,7 @@ class Chimera:
   # . /bioware/bioware-loader.sh
   . /bioware/root/Modules/etc/profile.modules
   module load bioware
+  module load vsearch
 
   INFILE=${file_list[$i]}
 
