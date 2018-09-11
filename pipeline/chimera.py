@@ -373,7 +373,7 @@ class Chimera:
     def get_sge_slot_number(self):
         result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
         a1 = result.stdout.decode('utf-8').split()
-        a2 = [i for i in a1 if i.startswith('qc:slots')]
+        a2 = [i for i in a1 if i.startswith('qc:slots')] # qc:slots=80
         return list(set(a2))[0].split("=")[-1]
 
     # TODO: temp! take from util. change illumina-files to use util, too
