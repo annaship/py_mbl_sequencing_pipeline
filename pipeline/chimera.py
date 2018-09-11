@@ -370,11 +370,20 @@ class Chimera:
         logger.debug("uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
         return uchime_cmd
 
+    def get_sge_slot_number(self):
+        result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
+        a1 = result.stdout.decode('utf-8').split()
+        a2 = [i for i in a1 if i.startswith('qc:slots')]
+        return list(set(a2))[0].split("=")[-1]
+
     # TODO: temp! take from util. change illumina-files to use util, too
     #   create_job_array_script(self, command_line, dir_to_run, files_list, runobj)
     def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
-        files_string         = " ".join(files_list)
-        files_list_size         = len(files_list)
+        sge_slot_number = self.get_sge_slot_number()
+        logger.debug("sge_slot_number FROM create_job_array_script = %s" % (sge_slot_number))
+
+        files_string    = " ".join(files_list)
+        files_list_size = len(files_list)
 #         command_file_name = os.path.basename(command_line.split(" ")[0])
         script_file_name  = script_file_name_base + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         script_file_name_full = os.path.join(dir_to_run, script_file_name)
@@ -395,7 +404,7 @@ class Chimera:
 #$ -m as
 # max_running_tasks (works on cricket Jul 2018)
 #$ -tc 15
-#$ -pe allslots 80
+#$ -pe allslots %s
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
@@ -417,7 +426,7 @@ class Chimera:
   echo "%s"
   %s
   %s
-''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
+''' % (script_file_name, log_file_name, email_mbl, sge_slot_number, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
 # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
                 )
         self.utils.open_write_close(script_file_name_full, text)
