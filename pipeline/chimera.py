@@ -373,7 +373,7 @@ class Chimera:
     def get_sge_slot_number(self):
         result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
         a1 = result.stdout.decode('utf-8').split()
-        a2 = [i for i in a1 if i.startswith('qc:slots')] # qc:slots=80
+        a2 = [i for i in a1 if i.startswith('qc:slots')] #works on cricket Jul 2018 qc:slots=80
         return list(set(a2))[0].split("=")[-1]
 
     # TODO: temp! take from util. change illumina-files to use util, too
@@ -402,8 +402,9 @@ class Chimera:
 #$ -M %s
 # Send mail at job end (e); -m as sends abort, suspend.
 #$ -m as
-# max_running_tasks (works on cricket Jul 2018)
+# max_running_tasks
 #$ -tc 15
+# Use the allslots pe and all available slots on that cluster
 #$ -pe allslots %s
 #$ -t 1-%s
 # Now the script will iterate %s times.
