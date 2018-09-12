@@ -263,7 +263,7 @@ class Chimera:
 
         return cluster_done
 
-    def create_chimera_cmd(self, ref_db, threads=1):
+    def create_chimera_cmd(self, ref_db):
         """
         /usr/local/bin/vsearch
         -uchime_denovo
@@ -299,8 +299,8 @@ class Chimera:
             if (opt == "-uchime_ref"):
                 ref_add = "-strand plus -db %s" % ref_db
 
-            uchime_cmd = """%s %s %s -threads %s -uchimeout %s -chimeras %s%s -notrunclabels %s
-            """ % (self.usearch_cmd, opt, input_file_name, threads, output_file_name, output_file_name, self.chimeric_suffix, ref_add)
+            uchime_cmd = """%s %s %s -uchimeout %s -chimeras %s%s -notrunclabels %s
+            """ % (self.usearch_cmd, opt, input_file_name, output_file_name, output_file_name, self.chimeric_suffix, ref_add)
             logger.debug("UUU = uchime_cmd = %s" % uchime_cmd)
             logger.debug("+++")
             command_line.append(uchime_cmd)
@@ -370,18 +370,25 @@ class Chimera:
         logger.debug("uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
         return uchime_cmd
 
+    def get_sge_slot_number(self):
+        result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
+        a1 = result.stdout.decode('utf-8').split()
+        a2 = [i for i in a1 if i.startswith('qc:slots')] #works on cricket Jul 2018 qc:slots=80
+        return list(set(a2))[0].split("=")[-1]
+
     # TODO: temp! take from util. change illumina-files to use util, too
     #   create_job_array_script(self, command_line, dir_to_run, files_list, runobj)
-    def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list, sge_pe="allslots", sge_slots="1"):
-        files_string         = " ".join(files_list)
-        files_list_size         = len(files_list)
+    def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
+        sge_slot_number = self.get_sge_slot_number()
+        logger.debug("sge_slot_number FROM create_job_array_script = %s" % (sge_slot_number))
+
+        files_string    = " ".join(files_list)
+        files_list_size = len(files_list)
 #         command_file_name = os.path.basename(command_line.split(" ")[0])
         script_file_name  = script_file_name_base + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         script_file_name_full = os.path.join(dir_to_run, script_file_name)
         log_file_name     = script_file_name + ".sge_script.sh.log"
         email_mbl         = self.utils.make_users_email()
-
-        # $ -pe %s %s should be #$ -pe allslots 80
         text = (
                 '''#!/bin/bash
 #$ -cwd
@@ -395,9 +402,10 @@ class Chimera:
 #$ -M %s
 # Send mail at job end (e); -m as sends abort, suspend.
 #$ -m as
-# max_running_tasks (works on cricket Jul 2018)
+# max_running_tasks
 #$ -tc 15
-#$ -pe %s %s
+# Use the allslots pe and all available slots on that cluster
+#$ -pe allslots %s
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
@@ -405,8 +413,6 @@ class Chimera:
 
   i=$(expr $SGE_TASK_ID - 1)
   echo "i = $i"
-  # . /etc/profile.d/modules.sh
-  # . /bioware/bioware-loader.sh
   . /bioware/root/Modules/etc/profile.modules
   module load bioware
   module load vsearch
@@ -421,7 +427,7 @@ class Chimera:
   echo "%s"
   %s
   %s
-''' % (script_file_name, log_file_name, email_mbl, sge_pe, sge_slots, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
+''' % (script_file_name, log_file_name, email_mbl, sge_slot_number, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
 # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
                 )
         self.utils.open_write_close(script_file_name_full, text)
@@ -429,12 +435,6 @@ class Chimera:
 
     def chimera_checking(self):
         chimera_region_found = False
-	# request a single slot for each vsearch job in the allslots parallel environment
-        sge_slots = "1"
-        sge_pe = "allslots"
-	# tell vsearch to run with only one thread, this value should match sge_slots
-	# That is one thread per processor; multiprocessing notwithstanding.
-        threads = sge_slots
 
         file_list   = self.dirs.get_all_files_by_ext(self.indir, self.chg_suffix)
         logger.debug("FFF = file_list = %s" % (file_list))
@@ -446,8 +446,8 @@ class Chimera:
         else:
             logger.debug('region not checked: ' +  dna_region)
         ref_db = self.get_ref_db(dna_region)
-        command_line = self.create_chimera_cmd(ref_db, sge_slots)
-        sh_script_file_name = self.create_job_array_script("chimera_checking", command_line, self.indir, file_list, sge_pe, sge_slots)
+        command_line = self.create_chimera_cmd(ref_db)
+        sh_script_file_name = self.create_job_array_script("chimera_checking", command_line, self.indir, file_list)
         script_file_name_full = os.path.join(self.indir, sh_script_file_name)
         self.utils.call_sh_script(script_file_name_full, self.indir)
         self.utils.print_both("self.dirs.chmod_all(%s)" % (self.indir))
@@ -688,7 +688,7 @@ class Chimera:
 
 
                 except OSError:
-                    e = sys.exc_info()[1]                    
+                    e = sys.exc_info()[1]
                     self.utils.print_both("Error: Problems with this command: %s" % (uchime_cmd))
                     if self.utils.is_local():
                         print >>sys.stderr, "Error: Execution of %s failed: %s" % (uchime_cmd, e)
