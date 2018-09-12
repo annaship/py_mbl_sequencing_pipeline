@@ -381,6 +381,7 @@ class Chimera:
         log_file_name     = script_file_name + ".sge_script.sh.log"
         email_mbl         = self.utils.make_users_email()
 
+        # $ -pe %s %s should be #$ -pe allslots 80
         text = (
                 '''#!/bin/bash
 #$ -cwd
