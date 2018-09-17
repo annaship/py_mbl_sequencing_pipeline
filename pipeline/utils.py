@@ -342,8 +342,8 @@ class PipelneUtils:
             n = 10 ** self.magnitude(obj_len)
         except ValueError:
             if obj_len == 0:
-                print("The gast file is empty.")
-                n = 10
+                print("ATTENTION! The gast file is empty.")
+                raise
         except:
             print("An unexpected error occurred")
             raise
