@@ -338,7 +338,16 @@ class PipelneUtils:
         print(message)
         
     def grouper(self, iterable, obj_len, fillvalue=None):
-        n = 10 ** self.magnitude(obj_len)
+        try:
+            n = 10 ** self.magnitude(obj_len)
+        except ValueError:
+            if obj_len == 0:
+                print("The gast file is empty.")
+                n = 10
+        except:
+            print("An unexpected error occurred")
+            raise
+
         if n > 1000:
             n = 1000
         args = [iter(iterable)] * n
