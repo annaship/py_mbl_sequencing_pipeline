@@ -433,6 +433,41 @@ class Chimera:
         self.utils.open_write_close(script_file_name_full, text)
         return script_file_name
 
+    def create_not_SGE_script(self, script_file_name_base, command_line, dir_to_run, files_list):
+
+        files_string = " ".join(files_list)
+        script_file_name = script_file_name_base + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
+        script_file_name_full = os.path.join(dir_to_run, script_file_name)
+        text = (
+                '''#!/bin/bash
+
+    file_list=(%s)
+
+    . /bioware/root/Modules/etc/profile.modules
+    module load bioware
+    module load vsearch
+
+    n=0
+    for INFILE in "${file_list[@]}"
+    do      
+    n=$[n + 1]
+    echo $n
+    echo "INFILE = $INFILE"
+    filename=$(basename $INFILE)
+    filename_base="${filename%.*}"
+    echo "filename_base = $filename_base"
+
+    echo "%s"
+    echo "%s"
+    %s
+    %s
+    done
+    ''' % (files_string, command_line[0], command_line[1], command_line[0], command_line[1])
+            # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
+        )
+        self.utils.open_write_close(script_file_name_full, text)
+        return script_file_name
+
     def chimera_checking(self):
         chimera_region_found = False
 
