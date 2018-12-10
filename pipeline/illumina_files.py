@@ -253,9 +253,11 @@ class IlluminaFiles:
   file_list=(%s)
 
   i=$(expr $SGE_TASK_ID - 1)
-#   echo "i = $i"
+  # echo "i = $i"
   # . /etc/profile.d/modules.sh
   # . /xraid/bioware/bioware-loader.sh
+
+  shopt -s expand_aliases # It will expand aliases that are loaded via modules
   . /xraid/bioware/Modules/etc/profile.modules
   module load bioware
 
