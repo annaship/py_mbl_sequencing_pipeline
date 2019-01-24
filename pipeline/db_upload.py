@@ -555,6 +555,14 @@ class dbUpload:
         # self.utils.print_both(my_sql)
         return self.my_conn.execute_no_fetch(my_sql)
 
+    def convert_env_sample_source(self, env_sample_source):
+        env_sample_source_replaced = ""
+        if (env_sample_source == "miscellaneous_natural_or_artificial_environment"):
+            env_sample_source_replaced = "miscellaneous"
+        else:
+            env_sample_source_replaced = env_sample_source.replace("_", " ")
+        return env_sample_source_replaced
+
     def get_all_metadata_info(self):
         # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
 
@@ -605,7 +613,8 @@ class dbUpload:
 
                 metadata_info['domain_id'] = self.get_id('domain', domain_by_adj[content_row.taxonomic_domain])
                 env_sample_source = self.get_env_sample_source(content_row)
-                metadata_info['env_package_id'] = self.get_id("env_package", env_sample_source)  # ?
+                converted_env_sample_source = self.convert_env_sample_source(env_sample_source)
+                metadata_info['env_package_id'] = self.get_id("env_package", converted_env_sample_source)
 
                 platform = self.runobj.platform
                 if self.runobj.platform in C.illumina_list:
