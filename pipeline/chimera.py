@@ -378,6 +378,9 @@ class Chimera:
 
     # TODO: temp! take from util. change illumina-files to use util, too
     #   create_job_array_script(self, command_line, dir_to_run, files_list, runobj)
+    # feb 25 2019 removed, because didn't work on grendel
+    #  Use the allslots pe and all available slots on that cluster
+    # #$ -pe allslots %s
     def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
         sge_slot_number = self.get_sge_slot_number()
         logger.debug("sge_slot_number FROM create_job_array_script = %s" % (sge_slot_number))
@@ -404,8 +407,6 @@ class Chimera:
 #$ -m as
 # max_running_tasks
 #$ -tc 15
-# Use the allslots pe and all available slots on that cluster
-#$ -pe allslots %s
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
