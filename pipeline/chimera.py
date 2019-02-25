@@ -370,7 +370,16 @@ class Chimera:
         logger.debug("uchime_cmd FROM create_chimera_cmd = %s" % (uchime_cmd))
         return uchime_cmd
 
-    def get_sge_slot_number(self):
+    def get_sge_cluster_name(self):
+        result = subprocess.run(['qstat', '-F'], stdout = subprocess.PIPE)
+        a1 = result.stdout.decode('utf-8').split()
+        for line in a1:
+            if (line.find("hostname") != -1):
+                hostname = "cluster5-"
+
+        return list(set(a2))[0].split("=")[-1]
+
+    def get_sge_slot_number(self): # doesn't work on cricket because: 	qc:slots=12 and qc:slots=8
         result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
         a1 = result.stdout.decode('utf-8').split()
         a2 = [i for i in a1 if i.startswith('qc:slots')] #works on cricket Jul 2018 qc:slots=80
@@ -382,8 +391,8 @@ class Chimera:
     #  Use the allslots pe and all available slots on that cluster
     # #$ -pe allslots %s
     def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
-        sge_slot_number = self.get_sge_slot_number()
-        logger.debug("sge_slot_number FROM create_job_array_script = %s" % (sge_slot_number))
+        # sge_slot_number = self.get_sge_slot_number()
+        # logger.debug("sge_slot_number FROM create_job_array_script = %s" % (sge_slot_number))
 
         files_string    = " ".join(files_list)
         files_list_size = len(files_list)
@@ -428,7 +437,7 @@ class Chimera:
   echo "%s"
   %s
   %s
-''' % (script_file_name, log_file_name, email_mbl, sge_slot_number, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
+''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
 # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
                 )
         self.utils.open_write_close(script_file_name_full, text)
