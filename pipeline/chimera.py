@@ -387,9 +387,12 @@ class Chimera:
     def get_sge_slot_number(self): # doesn't work on cricket because: 	qc:slots=12 and qc:slots=8
       result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
       a1 = result.stdout.decode('utf-8').split()
+      slots = []
       for line in a1:
-          if line.startswith('qc:slots'):
-                  return line.split("=")[-1]
+         if line.startswith('qc:slots'):
+             slots.append(int(line.split("=")[-1]))
+      slots_uniq = set(slots)
+      return max(slots_uniq)
 
     # TODO: temp! take from util. change illumina-files to use util, too
     #   create_job_array_script(self, command_line, dir_to_run, files_list, runobj)
