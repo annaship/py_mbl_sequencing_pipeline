@@ -455,17 +455,19 @@ class PipelneUtils:
             logger.error(Exception)
 
     def is_local(self):
-        logger.debug(os.uname()[1])
+        curr_hostname = os.uname()[1]
+        logger.debug('curr_hostname: ' curr_hostname)
         dev_comps = ["ashipunova.mbl.edu", "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local", "Annas-MacBook.local", "Anna's MacBook Pro", "annasmacbooknew.mbl.edu mblad.mbl.edu printers.mbl.edu jbpc.mbl.edu jbpc-np.mbl.edu"] 
-        if os.uname()[1] in dev_comps:
+        if curr_hostname in dev_comps:
             return True
         else:
             return False
 
     def is_vamps(self):
-        logger.debug(os.uname()[1])
-        dev_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private', 'vampsdev', 'vampsdb']
-        if os.uname()[1] in dev_comps:
+        curr_hostname = os.uname()[1]
+        logger.debug('curr_hostname: ' curr_hostname)
+        vamps_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private', 'vampsdev', 'vampsdb']
+        if curr_hostname in vamps_comps:
             return True
         else:
             return False
