@@ -392,7 +392,7 @@ class Chimera:
          if line.startswith('qc:slots'):
              slots.append(int(line.split("=")[-1]))
       slots_uniq = set(slots)
-      return max(slots_uniq)
+      return min(slots_uniq)
 
     # TODO: temp! take from util. change illumina-files to use util, too
     #   create_job_array_script(self, command_line, dir_to_run, files_list, runobj)
