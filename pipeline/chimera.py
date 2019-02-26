@@ -37,6 +37,12 @@ class Chimera:
         self.nonchimeric_suffix = "." + C.nonchimeric_suffix #".nonchimeric.fa"
         self.chimeric_suffix    = ".chimeric.fa"
         self.base_suffix        = "unique" + self.chimeras_suffix
+        
+        self.cluster_slots = {
+          "grendel": [12, 8],
+          "cricket": [40],
+          "cluster5": [32]          
+        }
 
         try:
             if self.runobj.lane_name:
@@ -371,28 +377,30 @@ class Chimera:
         return uchime_cmd
 
     def get_sge_cluster_name(self):
-        result = subprocess.run(['qstat', '-F'], stdout = subprocess.PIPE)
-        a1 = result.stdout.decode('utf-8').split()
-        for line in a1:
-            if (line.find("hostname") != -1):
-                hostname = "cluster5-"
-
-        return list(set(a2))[0].split("=")[-1]
+      # import subprocess
+      result = subprocess.run(['qstat', '-F'], stdout = subprocess.PIPE)
+      a1 = result.stdout.decode('utf-8').split()
+      for line in a1:
+          if (line.find("hostname") != -1): #qf:hostname=grendel-01.bpcservers.private
+                  return line.split("=")[1].split("-")[0]
 
     def get_sge_slot_number(self): # doesn't work on cricket because: 	qc:slots=12 and qc:slots=8
-        result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
-        a1 = result.stdout.decode('utf-8').split()
-        a2 = [i for i in a1 if i.startswith('qc:slots')] #works on cricket Jul 2018 qc:slots=80
-        return list(set(a2))[0].split("=")[-1]
+      result = subprocess.run(['qstat', '-F', 'slots'], stdout = subprocess.PIPE)
+      a1 = result.stdout.decode('utf-8').split()
+      for line in a1:
+          if line.startswith('qc:slots'):
+                  return line.split("=")[-1]
 
     # TODO: temp! take from util. change illumina-files to use util, too
     #   create_job_array_script(self, command_line, dir_to_run, files_list, runobj)
-    # feb 25 2019 removed, because didn't work on grendel
+    # feb 25 2019 removed, because didn't work on grendel:
     #  Use the allslots pe and all available slots on that cluster
     # #$ -pe allslots %s
     def create_job_array_script(self, script_file_name_base, command_line, dir_to_run, files_list):
         # sge_slot_number = self.get_sge_slot_number()
-        # logger.debug("sge_slot_number FROM create_job_array_script = %s" % (sge_slot_number))
+        sge_cluster_name = self.get_sge_cluster_name()
+        sge_slot_number  = self.cluster_slots[sge_cluster_name][0]
+        logger.debug("sge_slot_number FROM create_job_array_script = %s" % (sge_slot_number))
 
         files_string    = " ".join(files_list)
         files_list_size = len(files_list)
@@ -416,6 +424,8 @@ class Chimera:
 #$ -m as
 # max_running_tasks
 #$ -tc 15
+-# Use the allslots pe and all available slots on that cluster
+#$ -pe allslots %s
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
@@ -437,7 +447,7 @@ class Chimera:
   echo "%s"
   %s
   %s
-''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
+''' % (script_file_name, log_file_name, email_mbl, sge_slot_number, files_list_size, files_list_size, files_string, command_line[0], command_line[1], command_line[0], command_line[1])
 # ''' % (script_file_name, log_file_name, email_mbl, files_list_size, files_list_size, files_string, command_line)
                 )
         self.utils.open_write_close(script_file_name_full, text)
