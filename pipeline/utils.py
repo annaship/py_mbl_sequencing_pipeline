@@ -456,7 +456,7 @@ class PipelneUtils:
 
     def is_local(self):
         curr_hostname = os.uname()[1]
-        logger.debug('curr_hostname: ' curr_hostname)
+        logger.debug("curr_hostname: %s" % curr_hostname) 
         dev_comps = ["ashipunova.mbl.edu", "as-macbook.home", "as-macbook.local", "Ashipunova.local", "Annas-MacBook-new.local", "Annas-MacBook.local", "Anna's MacBook Pro", "annasmacbooknew.mbl.edu mblad.mbl.edu printers.mbl.edu jbpc.mbl.edu jbpc-np.mbl.edu"] 
         if curr_hostname in dev_comps:
             return True
@@ -464,8 +464,8 @@ class PipelneUtils:
             return False
 
     def is_vamps(self):
-        curr_hostname = os.uname()[1]
-        logger.debug('curr_hostname: ' curr_hostname)
+        curr_hostname = os.uname()[1] 
+        logger.debug("curr_hostname: %s" % curr_hostname) 
         vamps_comps = ['bpcweb8','bpcweb7','bpcweb7.bpcservers.private', 'bpcweb8.bpcservers.private', 'vampsdev', 'vampsdb']
         if curr_hostname in vamps_comps:
             return True
