@@ -488,7 +488,7 @@ class dbUpload:
             ('%s', 'illumin', '%s');""" % (self.rundate, self.runobj.platform)
         return self.my_conn.execute_no_fetch(my_sql)
 
-    # Refactoring!
+    # Needs refactoring!
     def insert_project(self):
         all_vals = set()
         all_templ = set()
@@ -506,11 +506,17 @@ class dbUpload:
             all_project_names.add(content_row.project)
             fields = "project, title, project_description, rev_project_name, funding"
             if self.db_marker == "vamps2":
-                fields += ", owner_user_id, updated_at"
-                vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
+                is_permanent = 1;
+                fields += ", owner_user_id, updated_at, permanent"
+                vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW(), %s)
                 """ % (
                 content_row.project, content_row.project_title, content_row.project_description, content_row.project,
-                content_row.funding, contact_id)
+                content_row.funding, contact_id, is_permanent)
+                # fields += ", owner_user_id, updated_at"
+                # vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
+                # """ % (
+                # content_row.project, content_row.project_title, content_row.project_description, content_row.project,
+                # content_row.funding, contact_id)
 
             elif self.db_marker == "env454":
                 fields += ", env_sample_source_id, contact_id"
