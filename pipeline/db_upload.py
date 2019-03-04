@@ -512,11 +512,6 @@ class dbUpload:
                 """ % (
                 content_row.project, content_row.project_title, content_row.project_description, content_row.project,
                 content_row.funding, contact_id, is_permanent)
-                # fields += ", owner_user_id, updated_at"
-                # vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW())
-                # """ % (
-                # content_row.project, content_row.project_title, content_row.project_description, content_row.project,
-                # content_row.funding, contact_id)
 
             elif self.db_marker == "env454":
                 fields += ", env_sample_source_id, contact_id"
