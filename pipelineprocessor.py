@@ -587,11 +587,11 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_li
 
             start_fasta_next = time.time()
 
-            start_insert_pdf_info_time = 0
-            start_insert_pdf_info_time = time.time()
+            start_insert_pdr_info_time = 0
+            start_insert_pdr_info_time = time.time()
 
             my_file_to_db_upload.insert_pdr_info(run_info_ill_id)
-            insert_pdf_info_time = (time.time() - start_insert_pdf_info_time)
+            insert_pdr_info_time = (time.time() - start_insert_pdr_info_time)
 
             start_insert_taxonomy_time = 0
             start_insert_taxonomy_time = time.time()
@@ -604,7 +604,7 @@ def file_to_db_upload_all_but_seq(my_file_to_db_upload, filename, no_run_info_li
             insert_sequence_uniq_info_time = (time.time() - start_insert_sequence_uniq_info_time)
 
             logger.debug("start_fasta_loop took %s sec to finish" % (time.time() - start_fasta_next))
-            logger.debug("insert_pdf_info_query_time took %s sec to finish" % insert_pdf_info_time)
+            logger.debug("insert_pdf_info_query_time took %s sec to finish" % insert_pdr_info_time)
             logger.debug("start_insert_taxonomy_upload_time took %s sec to finish" % insert_taxonomy_time)
             logger.debug("insert_sequence_uniq_info_time took %s sec to finish" % insert_sequence_uniq_info_time)
 

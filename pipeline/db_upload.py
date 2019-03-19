@@ -106,7 +106,7 @@ class MyConnection:
 
     """
     for msg in cur.fetchwarnings():
-    print "Warning: {msg}".format(msg=msg[2])
+    print("Warning: {msg}".format(msg=msg[2]))
 
     """
 
@@ -277,7 +277,6 @@ class dbUpload:
         self.suff_list = [self.nonchimeric_suffix, self.fa_unique_suffix, self.v6_unique_suffix]
         self.suffix_used = ""
         # self.all_dataset_ids = self.my_conn.get_all_name_id("dataset")
-        self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
         self.used_project_ids = defaultdict(list)
         self.used_project_names = ""
         self.filenames = self.get_fasta_file_names()
@@ -294,6 +293,7 @@ class dbUpload:
                 logger.debug("WARNING: There is different amount of files in the csv and in %s" % self.fasta_dir)
             self.put_run_info()
             self.put_required_metadata()
+        self.all_project_dataset_ids_dict = self.get_project_id_per_dataset_id()
         self.all_dataset_run_info_dict = self.get_dataset_per_run_info_id()
 
     def get_conn(self):
@@ -314,7 +314,6 @@ class dbUpload:
         self.my_conn = MyConnection(host, db)
 
     def reset_auto_increment(self):
-        auto_increment_queries = []
         if self.db_marker == "vamps2":
             auto_increment_queries = ["ALTER TABLE dataset AUTO_INCREMENT = 1;", "ALTER TABLE project AUTO_INCREMENT = 1;", "ALTER TABLE rdp_taxonomy_info_per_seq AUTO_INCREMENT = 1;", "ALTER TABLE run_info_ill AUTO_INCREMENT = 1;", "ALTER TABLE silva_taxonomy AUTO_INCREMENT = 1;"]
         #     UNION: "ALTER TABLE sequence_pdr_info AUTO_INCREMENT = 1;", "ALTER TABLE sequence_uniq_info AUTO_INCREMENT = 1;", "ALTER TABLE sequence AUTO_INCREMENT = 1;", "ALTER TABLE silva_taxonomy_info_per_seq AUTO_INCREMENT = 1;",
@@ -446,7 +445,7 @@ class dbUpload:
         except TypeError:
             error = sys.exc_info()[1]
             err_msg = "Check if there is a gast file under %s for %s. \nSystem error: %s" % (
-            self.gast_dir, filename, error)
+                self.gast_dir, filename, error)
             self.utils.print_both(err_msg)
             self.all_errors.append(err_msg)
             pass
@@ -506,12 +505,12 @@ class dbUpload:
             all_project_names.add(content_row.project)
             fields = "project, title, project_description, rev_project_name, funding"
             if self.db_marker == "vamps2":
-                is_permanent = 1;
+                is_permanent = 1
                 fields += ", owner_user_id, updated_at, permanent"
                 vals = """('%s', '%s', '%s', reverse('%s'), '%s', '%s', NOW(), %s)
                 """ % (
-                content_row.project, content_row.project_title, content_row.project_description, content_row.project,
-                content_row.funding, contact_id, is_permanent)
+                    content_row.project, content_row.project_title, content_row.project_description, content_row.project,
+                    content_row.funding, contact_id, is_permanent)
 
             elif self.db_marker == "env454":
                 fields += ", env_sample_source_id, contact_id"
@@ -557,7 +556,6 @@ class dbUpload:
         return self.my_conn.execute_no_fetch(my_sql)
 
     def convert_env_sample_source(self, env_sample_source):
-        env_sample_source_replaced = ""
         if (env_sample_source == "miscellaneous_natural_or_artificial_environment"):
             env_sample_source_replaced = "miscellaneous"
         else:
@@ -566,7 +564,8 @@ class dbUpload:
 
     def get_all_metadata_info(self):
         # get_all_metadata_info todo: get all repeated first into dicts. insert_size, lane, overlap, platform, primer_suite_id, read_length, run_id, seq_operator, domain_id, sequencing_platform_id, target_gene_id, updated_at
-
+        missing_terms = []
+        unknown_term_id = []
         if self.db_marker == "vamps2":
             missing_terms = ["env_biome_id", "env_feature_id", "env_material_id", "geo_loc_name_id"]
             # and ontology_id = 1
@@ -817,7 +816,7 @@ class dbUpload:
         # query_tmpl = make_sql_for_groups(table_name, fields)
         # print("q1: insert_pdr_info")
         # print(query_tmpl)
-        unique_fields = ['dataset_id', 'run_info_ill_id','seq_count','sequence_id']
+        unique_fields = ['dataset_id', 'run_info_ill_id', 'seq_count', 'sequence_id']
         if self.db_marker == "env454":
             unique_fields = ['run_info_ill_id', 'sequence_ill_id']
         query_tmpl1 = make_sql_for_groups1(table_name, fields, unique_fields)
@@ -1107,7 +1106,7 @@ class Seq:
 
         unique_fields = ['sequence_comp']
         query_tmpl1 = make_sql_for_groups1(self.table_names["sequence_table_name"],
-                                         self.table_names["sequence_field_name"], unique_fields)
+                                            self.table_names["sequence_field_name"], unique_fields)
         # print("q2a: sequences")
         # print(query_tmpl1)
         # self.my_conn.run_groups(group_vals, query_tmpl)
@@ -1193,13 +1192,12 @@ class Seq:
             my_sql = query_tmpl % val_part
             self.seq_id_w_silva_taxonomy_info_per_seq_id.extend(self.my_conn.execute_fetch_select(my_sql))
 
-
     def insert_sequence_uniq_info2(self):
         self.get_seq_id_w_silva_taxonomy_info_per_seq_id()
         fields = "sequence_id, silva_taxonomy_info_per_seq_id"
         # sequence_uniq_info_values = ["(%s,  %s)" % (i1, i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id]
         sequence_uniq_info_values = ["%s AS sequence_id, %s AS get_seq_id_w_silva_taxonomy_info_per_seq_id" % (i1, i2) for i1, i2 in self.seq_id_w_silva_taxonomy_info_per_seq_id]
-        query_tmpl = make_sql_for_groups("sequence_uniq_info", fields)
+        # query_tmpl = make_sql_for_groups("sequence_uniq_info", fields)
         group_vals = self.utils.grouper(sequence_uniq_info_values, len(sequence_uniq_info_values))
         logger.debug("insert sequence_uniq_info_ill:")
         # print("q3: insert_sequence_uniq_info2")
