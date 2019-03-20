@@ -113,7 +113,10 @@ class MyConnection:
     def show_warnings(self, sql):
         wrngs = self.conn.show_warnings()
         if wrngs:
-            logger.debug(sql[0:1000])
+            short_sql = sql[0:1000].split(" ")
+            short_sql = " ".join(short_sql[0:12]) + "..."
+            logger.debug("Show_warnings: ")
+            logger.debug(short_sql)
             logger.debug(wrngs)
 
     def execute_no_fetch(self, sql):
