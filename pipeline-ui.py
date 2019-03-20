@@ -283,6 +283,7 @@ if __name__ == '__main__':
         logger.debug("\n=== START ===\n")
         for line in lines:
             line = line.strip()
+            logger.debug("line in INI: ")
             logger.debug(line)
         logger.debug("==== END ====\n")
         sys.exit()

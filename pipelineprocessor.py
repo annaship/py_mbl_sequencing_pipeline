@@ -544,6 +544,7 @@ def file_to_db_upload_main(runobj, full_upload):
         utils.print_both(err_msg)
         my_file_to_db_upload.all_errors.append(err_msg)
 
+    logger.debug("From file_to_db_upload_main. ready_email_body: ")
     logger.debug(ready_email_body)
 
     my_file_to_db_upload.all_errors.extend(my_file_to_db_upload.seq.seq_errors)
@@ -767,6 +768,7 @@ def status(runobj):
     logger.debug("STATUS LOG: ")
     for line in lines:
         line = line.strip()
+        logger.debug("line in run_status_file: ")
         logger.debug(line)
     logger.debug("=" * 40 + "\n")
 
@@ -783,6 +785,7 @@ def clean(runobj):
             logger.debug("Removing run:", runobj.run_date)
             for f in file_names:
                 file_path = os.path.join(runobj.output_dir, f)
+                logger.debug("file_path: ")
                 logger.debug(file_path)
                 os.remove(os.path.join(runobj.output_dir, f))
                 # should we also remove STATUS.txt and *.ini and start again?
@@ -807,6 +810,7 @@ def get_keys(runobj):
                 idx_keys = runobj.idx_keys
                 ct = 0
                 for h in runobj.samples:
+                    logger.debug("get_keys, h:")
                     logger.debug(h)
                     #                    logger.debug(h,runobj.samples[h]) #TypeError: not all arguments converted during string formatting
                     ct += 1

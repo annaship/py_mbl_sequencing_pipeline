@@ -224,7 +224,7 @@ class Gast:
                     grep_cmd = ['grep', '-c', '>', unique_file]
                     self.logger.debug( ' '.join(grep_cmd) )
                     facount = subprocess.check_output(grep_cmd).strip()
-                    self.logger.debug( key+' count '+facount)
+                    self.logger.debug('From gast.py, if cluster_nodes' + key + ' count ' + facount)
                     calcnode_cmd = [calcnodes, '-t', str(facount), '-n', str(cluster_nodes), '-f', '1']
 
                     calcout = subprocess.check_output(calcnode_cmd).strip()
@@ -338,6 +338,7 @@ class Gast:
                         else:
                             self.logger.debug("NOT using cluster for vsearch")
                             subprocess.call(grep_cmd, shell=True)
+                            self.logger.debug("grep_cmd: ")
                             self.logger.debug(grep_cmd)
 
                 else:

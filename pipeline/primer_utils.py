@@ -27,7 +27,7 @@ def trim_stop_seq( stop_seqs, seq, trim_type, start, end ):
 
     for anchor in stop_seqs:
         anchor_length = len(anchor)
-        logger.debug( anchor + " " + str(start) + " " + str(end)  + " " + str(len(seq)))
+        logger.debug("trim_stop_seq: " + anchor + " " + str(start) + " " + str(end)  + " " + str(len(seq)))
         for pos in range(start,end):
             seq_window = seq[pos:pos+anchor_length]
 

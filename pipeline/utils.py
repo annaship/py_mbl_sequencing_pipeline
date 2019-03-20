@@ -537,6 +537,7 @@ class PipelneUtils:
 # '2009-01-05 22'
 
     def print_both(self, message):
+        logger.debug("print_both: ")
         print(message)
         logger.debug(message)
         

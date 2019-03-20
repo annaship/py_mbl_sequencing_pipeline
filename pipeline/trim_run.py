@@ -607,6 +607,7 @@ class TrimRun( object ):
         trimmed_sequence = raw_sequence
 
         delete_reason = ''
+        logger.debug("do_trim: read_id + raw_sequence")
         logger.debug(read_id  + '\t' + raw_sequence)
 
         # check for N's
