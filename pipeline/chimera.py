@@ -411,7 +411,8 @@ class Chimera:
         script_file_name  = script_file_name_base + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         script_file_name_full = os.path.join(dir_to_run, script_file_name)
         log_file_name     = script_file_name + ".sge_script.sh.log"
-        email_mbl         = self.utils.make_users_email()
+        email_mbl         = C.email_mbl
+        # self.utils.make_users_email()
         text = (
                 '''#!/bin/bash
 #$ -cwd

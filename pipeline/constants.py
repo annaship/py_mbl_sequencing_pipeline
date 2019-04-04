@@ -445,6 +445,8 @@ database_tables = {
 # TODO: make dynamic
 classifier_id = 2
 
+email_mbl = "ashipunova@mbl.edu"
+
 ####################################################################################################
 
 

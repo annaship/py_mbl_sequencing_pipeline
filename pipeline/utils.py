@@ -401,7 +401,8 @@ class PipelneUtils:
         script_file_name  = command_file_name + "_" + runobj.run + "_" + runobj.lane_name + ".sh"
         script_file_name_full = os.path.join(dir_to_run, script_file_name)
         log_file_name     = script_file_name + ".sge_script.sh.log"
-        email_mbl         = self.make_users_email()
+        # email_mbl         = self.make_users_email()
+        email_mbl = C.email_mbl
         text = (
                 '''#!/bin/bash
 #$ -cwd

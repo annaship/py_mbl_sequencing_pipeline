@@ -226,6 +226,9 @@ class IlluminaFiles:
         return username + "@mbl.edu"
 
 #     TODO: use from util
+#     Removed by Hilary's request:
+#     # Send mail at job end (e); -m as sends abort, suspend.
+#     #$ -m as
     def create_job_array_script(self, command_line, dir_to_run, files_list):
         files_string         = " ".join(files_list)
         files_list_size         = len(files_list)
@@ -233,7 +236,8 @@ class IlluminaFiles:
         script_file_name  = command_file_name + "_" + self.runobj.run + "_" + self.runobj.lane_name + ".sh"
         script_file_name_full = os.path.join(dir_to_run, script_file_name)
         log_file_name     = script_file_name + ".sge_script.sh.log"
-        email_mbl         = self.make_users_email()
+        # email_mbl         = self.make_users_email()
+        email_mbl = C.email_mbl
         text = (
                 '''#!/bin/bash
 #$ -cwd
@@ -245,8 +249,6 @@ class IlluminaFiles:
 #$ -j y
 # Send mail to these users
 #$ -M %s
-# Send mail at job end (e); -m as sends abort, suspend.
-#$ -m as
 #$ -t 1-%s
 # Now the script will iterate %s times.
 
