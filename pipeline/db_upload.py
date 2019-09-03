@@ -165,12 +165,12 @@ class MyConnection:
         for group in group_vals:
             val_part = join_xpr.join([key for key in group if key is not None])
             my_sql = query_tmpl % val_part
-            # if "sequence_uniq_info_ill" in my_sql:
-                # print("MMM my_sql = ")
-                # print(my_sql)
-                # logger.debug("MMM my_sql = %s" % my_sql)
+            if "run_info_ill" in my_sql:
+                print("MMM my_sql = ")
+                print(my_sql)
+                logger.debug("MMM my_sql = %s" % my_sql)
             insert_info = self.execute_no_fetch(my_sql)
-            # logger.debug("insert info = %s" % insert_info)
+            logger.debug("insert info = %s" % insert_info)
 
     # def make_sql_w_duplicate(self, table_name, fields_str, unique_key_fields_arr):
     #     my_sql_1 = "INSERT IGNORE INTO %s (%s) VALUES " % (table_name, fields_str)
@@ -555,7 +555,7 @@ class dbUpload:
             dataset_values = "('%s', '%s')" % (content_row.dataset, content_row.dataset_description)
             # uniq_fields = ['dataset', 'dataset_description']
         my_sql = make_sql_for_groups("dataset", fields) % dataset_values
-        self.utils.print_both(my_sql)
+        # self.utils.print_both(my_sql)
         return self.my_conn.execute_no_fetch(my_sql)
 
     def convert_env_sample_source(self, env_sample_source):
