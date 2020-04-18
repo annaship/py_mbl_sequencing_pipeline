@@ -531,7 +531,7 @@ def file_to_db_upload_main(runobj, full_upload):
     if db_name == 'vamps2':
         my_email = 'vamps@mbl.edu'
     else:
-        my_email = 'ashipunova@mbl.edu'
+        my_email = 'vamps@mbl.edu'
 
     ready_email_body = """Uploaded to %s on %s\nIn this run %s: %s\n%s\n%s
     """ % (runobj.database_name, runobj.database_host, runobj.run, projects_and_ids, my_file_to_db_upload.equal_amnt_files_txt, seq_count_msg)
